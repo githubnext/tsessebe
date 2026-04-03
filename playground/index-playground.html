@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Index &amp; RangeIndex Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 2rem; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+    }
+    .output {
+      background: #1c2333;
+      border: 1px solid var(--green);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      color: var(--green);
+      margin-bottom: 1.5rem;
+      white-space: pre-wrap;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>🏷️ Index &amp; RangeIndex</h1>
+  <p>
+    The <code>Index</code> type is the immutable, ordered sequence of labels
+    that underpins both <code>Series</code> (row axis) and <code>DataFrame</code>
+    (row + column axes). <code>RangeIndex</code> is a memory-efficient subclass
+    for integer ranges.
+  </p>
+
+  <div class="section">
+    <h2>Creating an Index</h2>
+    <pre>
+import { Index, RangeIndex } from "tsb";
+
+// String labels
+const labels = new Index(["a", "b", "c", "d"], "letters");
+// → Index([a, b, c, d], name='letters')
+
+// Numeric labels
+const nums = new Index([10, 20, 30]);
+// → Index([10, 20, 30])
+
+// RangeIndex (memory-efficient integer range)
+const range = new RangeIndex(5);
+// → RangeIndex(start=0, stop=5, step=1)  →  [0, 1, 2, 3, 4]
+
+const stepped = new RangeIndex(0, 10, 2);
+// → RangeIndex(start=0, stop=10, step=2)  →  [0, 2, 4, 6, 8]
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Properties</h2>
+    <pre>
+const idx = new Index(["x", "y", "z"], "axis");
+
+idx.size            // 3
+idx.shape           // [3]
+idx.ndim            // 1
+idx.empty           // false
+idx.name            // "axis"
+idx.isUnique        // true
+idx.hasDuplicates   // false
+idx.isMonotonicIncreasing  // true (x &lt; y &lt; z)
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Label Look-up</h2>
+    <pre>
+const idx = new Index(["a", "b", "c", "a"]);
+
+idx.getLoc("b")     // 1         (unique → single int)
+idx.getLoc("a")     // [0, 3]    (duplicated → array)
+idx.contains("c")   // true
+idx.isin(["a", "c"]) // [true, false, true, true]
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Set Operations</h2>
+    <pre>
+const a = new Index([1, 2, 3]);
+const b = new Index([2, 3, 4]);
+
+a.union(b)                // Index([1, 2, 3, 4])
+a.intersection(b)         // Index([2, 3])
+a.difference(b)           // Index([1])
+a.symmetricDifference(b)  // Index([1, 4])
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Sorting &amp; Aggregation</h2>
+    <pre>
+const idx = new Index([30, 10, 20]);
+
+idx.sortValues()     // Index([10, 20, 30])
+idx.argsort()        // [1, 2, 0]
+idx.min()            // 10
+idx.max()            // 30
+idx.argmin()         // 1
+idx.argmax()         // 0
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Manipulation (immutable — always returns new Index)</h2>
+    <pre>
+const idx = new Index(["a", "b", "c"]);
+
+idx.append(new Index(["d", "e"]))  // Index([a, b, c, d, e])
+idx.insert(1, "x")                 // Index([a, x, b, c])
+idx.delete(0)                      // Index([b, c])
+idx.drop(["b"])                    // Index([a, c])
+idx.rename("new_name")             // Index([a, b, c], name='new_name')
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>Missing Values</h2>
+    <pre>
+const idx = new Index([1, null, 3]);
+
+idx.isna()    // [false, true, false]
+idx.notna()   // [true, false, true]
+idx.dropna()  // Index([1, 3])
+idx.fillna(0) // Index([1, 0, 3])
+    </pre>
+  </div>
+
+  <div class="section">
+    <h2>RangeIndex — Memory Efficient</h2>
+    <pre>
+// Only stores start/stop/step — values computed on the fly
+const r = new RangeIndex(0, 1_000_000);
+r.size    // 1000000
+r.at(500) // 500
+
+// Negative step
+const desc = new RangeIndex(10, 0, -2);
+desc.toArray()  // [10, 8, 6, 4, 2]
+
+// Slicing preserves RangeIndex type
+r.slice(10, 20)  // RangeIndex(start=10, stop=20, step=1)
+    </pre>
+  </div>
+
+  <footer style="text-align: center; padding: 2rem 0; color: #8b949e; font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 2rem;">
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+</body>
+</html>

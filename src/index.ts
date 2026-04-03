@@ -10,11 +10,22 @@
 // Planned export structure (mirrors pandas top-level API):
 //   export * from "./core/frame.ts";        // DataFrame
 //   export * from "./core/series.ts";       // Series
-//   export * from "./core/index.ts";        // Index types
 //   export * from "./core/dtypes.ts";       // Dtype system
 //   export * from "./io/read_csv.ts";       // I/O utilities
 //   ... (see .autoloop/memory/migration-plan.md for full roadmap)
 
 export const TSB_VERSION = "0.0.1";
 
-export type { } from "./types.ts";
+export type {
+  Axis,
+  DtypeName,
+  FillMethod,
+  JoinHow,
+  Label,
+  Scalar,
+  SortOrder,
+} from "./types.ts";
+
+export { Index } from "./core/index.ts";
+export type { IndexOptions } from "./core/index.ts";
+export { RangeIndex } from "./core/index.ts";

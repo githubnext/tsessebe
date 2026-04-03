@@ -29,7 +29,8 @@
         "all": true
       },
       "performance": {
-        "all": true
+        "all": true,
+        "noBarrelFile": "off"
       },
       "security": {
         "all": true
@@ -51,11 +52,16 @@
       "semicolons": "always"
     }
   },
-  "typescript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "trailingCommas": "all",
-      "semicolons": "always"
+  "overrides": [
+    {
+      "include": ["**/*.ts", "**/*.tsx"],
+      "javascript": {
+        "formatter": {
+          "quoteStyle": "double",
+          "trailingCommas": "all",
+          "semicolons": "always"
+        }
+      }
     }
-  }
+  ]
 }
