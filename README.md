@@ -2,15 +2,15 @@
 
 A TypeScript port of [pandas](https://github.com/pandas-dev/pandas), built from first principles using [Autoloop](https://github.com/githubnext/autoloop) — an automated research and experimentation platform that runs iterative optimization loops on [GitHub Agentic Workflows](https://github.github.com/gh-aw/).
 
-**Package name:** `tsb` — all imports and internal usage use `tsb`, not `tsessebe`.
+## Project conventions
 
-## Stack
-
-- **Runtime & tooling:** [Bun](https://bun.sh)
-- **Language:** TypeScript — strict mode, no `any`, zero escape hatches
-- **Dependencies:** None for core library. External deps only where absolutely required for non-core functionality (e.g. WASM compilation toolchain).
-- **Linting:** Strictest possible config — Biome or equivalent, zero warnings tolerated
-- **Testing:** 100% coverage across unit tests, property-based tests, fuzz tests, and Playwright e2e tests for the web playground
+- **Package name:** `tsb` — all imports and usage use `tsb`, not `tsessebe`. `import { DataFrame } from 'tsb'`
+- **Runtime & tooling:** [Bun](https://bun.sh) for everything — runtime, bundler, test runner, package manager
+- **Language:** TypeScript in strictest mode — no `any`, no `as` casts, no `@ts-ignore`, no escape hatches
+- **Dependencies:** Zero for core library. External deps only where absolutely required for non-core tooling (e.g. Playwright, WASM toolchains).
+- **Linting:** Biome with all rules enabled, zero warnings tolerated
+- **Testing:** 100% coverage — unit, property-based (fast-check), fuzz, and Playwright e2e for the web playground
+- **Build from scratch:** Every pandas feature is implemented from first principles. No wrapping or porting existing JS/TS data libraries.
 
 ## Goals
 
