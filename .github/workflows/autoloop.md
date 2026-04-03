@@ -459,6 +459,9 @@ steps:
 
 source: githubnext/autoloop
 engine: copilot
+
+features:
+  copilot-requests: true
 ---
 
 # Autoloop

@@ -107,6 +107,9 @@ steps:
       else:
           print(f"\n✅ All {len(branches)} branch(es) synced successfully.")
       PYEOF
+
+features:
+  copilot-requests: true
 ---
 
 Sync all autoloop/* branches with the default branch.
