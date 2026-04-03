@@ -10,12 +10,22 @@
 
 import { describe, expect, it } from "bun:test";
 import { TSB_VERSION } from "../src/index.ts";
-import type { Axis, DtypeName, FillMethod, JoinHow, Label, Scalar, SortOrder } from "../src/types.ts";
+import type {
+  Axis,
+  DtypeName,
+  FillMethod,
+  JoinHow,
+  Label,
+  Scalar,
+  SortOrder,
+} from "../src/index.ts";
+
+const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
 describe("tsb package foundation", () => {
   it("exports TSB_VERSION as a semver-shaped string", () => {
     expect(TSB_VERSION).toBeTypeOf("string");
-    expect(TSB_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(TSB_VERSION).toMatch(SEMVER_RE);
   });
 
   it("TSB_VERSION is 0.0.1 at project inception", () => {
@@ -29,7 +39,7 @@ describe("type exports compile correctly", () => {
     const _num: Scalar = 42;
     const _str: Scalar = "hello";
     const _bool: Scalar = true;
-    const _big: Scalar = BigInt(9007199254740993);
+    const _big: Scalar = BigInt("9007199254740993");
     const _null: Scalar = null;
     const _undef: Scalar = undefined;
     const _date: Scalar = new Date();
@@ -64,11 +74,22 @@ describe("type exports compile correctly", () => {
 
   it("DtypeName covers all planned numeric and structured types", () => {
     const dtypes: DtypeName[] = [
-      "int8", "int16", "int32", "int64",
-      "uint8", "uint16", "uint32", "uint64",
-      "float32", "float64",
-      "bool", "string", "object",
-      "datetime", "timedelta", "category",
+      "int8",
+      "int16",
+      "int32",
+      "int64",
+      "uint8",
+      "uint16",
+      "uint32",
+      "uint64",
+      "float32",
+      "float64",
+      "bool",
+      "string",
+      "object",
+      "datetime",
+      "timedelta",
+      "category",
     ];
     expect(dtypes.length).toBe(16);
   });

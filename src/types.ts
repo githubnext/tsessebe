@@ -7,14 +7,7 @@
  */
 
 /** Scalar value types — the atomic units of data in tsb. */
-export type Scalar =
-  | number
-  | string
-  | boolean
-  | bigint
-  | null
-  | undefined
-  | Date;
+export type Scalar = number | string | boolean | bigint | null | undefined | Date;
 
 /** A label used to identify rows or columns (similar to pandas Index). */
 export type Label = number | string | boolean | null;
