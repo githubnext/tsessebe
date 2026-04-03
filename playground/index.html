@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — TypeScript pandas | Interactive Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.5rem; color: var(--accent); }
+    header p { color: #8b949e; font-size: 0.95rem; }
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .hero {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    .hero h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      color: #8b949e;
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    .status-badge {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--orange);
+      color: var(--orange);
+      padding: 0.3rem 0.8rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+    }
+    .feature-card h3 {
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    .feature-card p { color: #8b949e; font-size: 0.875rem; }
+    .feature-card .status {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--orange);
+    }
+    .feature-card .status.done { color: var(--green); }
+    code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>tsb</h1>
+      <p>A TypeScript port of pandas, built from first principles</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="status-badge">🚧 Under Construction — Foundation Phase</span>
+      <h2>pandas for TypeScript</h2>
+      <p>
+        <code>tsb</code> is a ground-up TypeScript implementation of the pandas data
+        manipulation library, with full API parity, strict types, and an interactive
+        playground for every feature.
+      </p>
+    </section>
+
+    <section>
+      <h2 style="margin-bottom: 1rem; font-size: 1.25rem;">Feature Roadmap</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>📐 Project Foundation</h3>
+          <p>Bun, TypeScript (strict), Biome linting, CI, Pages deployment, type system.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📊 Series</h3>
+          <p>1-D labeled array — the core building block of tsb data structures.</p>
+          <div class="status">⏳ Planned</div>
+        </div>
+        <div class="feature-card">
+          <h3>🗃️ DataFrame</h3>
+          <p>2-D labeled table with heterogeneous columns, the heart of pandas.</p>
+          <div class="status">⏳ Planned</div>
+        </div>
+        <div class="feature-card">
+          <h3>🏷️ Index</h3>
+          <p>Immutable labeled axis — <a href="index-playground.html" style="color: var(--accent);">Index&lt;T&gt;</a>, RangeIndex.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔢 Dtypes</h3>
+          <p>Rich dtype system: int/float/bool/string/datetime/category.</p>
+          <div class="status">⏳ Planned</div>
+        </div>
+        <div class="feature-card">
+          <h3>📥 I/O</h3>
+          <p>read_csv, read_json, read_parquet, to_csv, to_json.</p>
+          <div class="status">⏳ Planned</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built by <a href="https://github.com/githubnext/autoloop" style="color: var(--accent);">Autoloop</a> — an automated research and experimentation platform.</p>
+  </footer>
+</body>
+</html>

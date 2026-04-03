@@ -1,0 +1,6 @@
+[test]
+preload = ["./tests/setup.ts"]
+coverage = true
+
+[install]
+exact = true
