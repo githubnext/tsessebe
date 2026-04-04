@@ -10,11 +10,11 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T12:48:00Z |
-| Iteration Count | 21 |
-| Best Metric | 32 |
+| Last Run | 2026-04-04T13:25:00Z |
+| Iteration Count | 22 |
+| Best Metric | 33 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-multiindex-21` |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-timedelta-22` |
 | PR | — |
 | Steering Issue | — |
 | Paused | false |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -38,7 +38,7 @@
 
 ## 🎯 Current Priorities
 
-MultiIndex done (metric=32). Next priorities:
+MultiIndex done (metric=33). Next priorities:
 1. ~~**DateTime accessor** (`src/core/datetime.ts`)~~ — ✅ Done (Iteration 12)
 2. ~~**Sorting utilities** (`src/core/sort.ts`)~~ — ✅ Done (Iteration 13)
 3. ~~**Indexing/selection** (`src/core/indexing.ts`)~~ — ✅ Done (Iteration 14)
@@ -49,7 +49,8 @@ MultiIndex done (metric=32). Next priorities:
 8. ~~**Statistical functions** (`src/stats/`)~~ — ✅ Done (Iteration 19)
 9. ~~**Categorical data** (`src/core/categorical.ts`)~~ — ✅ Done (Iteration 20)
 10. ~~**MultiIndex** (`src/core/multi-index.ts`)~~ — ✅ Done (Iteration 21)
-11. **Timedelta** (`src/core/timedelta.ts`) — duration/time-delta type with arithmetic
+11. ~~**Timedelta** (`src/core/timedelta.ts`)~~ — ✅ Done (Iteration 22)
+12. **IntervalIndex** (`src/core/interval-index.ts`) — interval/range type with closed parameter
 
 ---
 
@@ -58,6 +59,7 @@ MultiIndex done (metric=32). Next priorities:
 - **General**: `exactOptionalPropertyTypes`: use `?? null` not undefined. `noUncheckedIndexedAccess`: guard array accesses. Complexity ≤15: extract helpers. `useBlockStatements`: braces everywhere. `useTopLevelRegex`: move regex to top level. `useNumberNamespace`: `Number.NaN`. `import fc from "fast-check"` (default import). `biome check --write --unsafe` auto-fixes Array<T>→T[].
 - **Imports**: `useImportRestrictions` — import from barrel `../core/index.ts` not direct files. `import type` for type-only imports. Circular ESM deps (strings/datetime/categorical) are fine.
 - **Build env**: `bun` not available — use `node_modules/.bin/biome` and `node_modules/.bin/tsc`. Pre-existing TS errors in window/io/tests — only validate new file has 0 errors.
+- **Timedelta** (Iter 22): Store as ms integer. `floorDiv`/`floorMod` helpers for Python-style floor-division decomposition (components always non-negative). `Timedelta` NOT in `Scalar` type — `TimedeltaAccessor` accepts numbers (ms) or strings. Accessor's `_mapTd` returns ms numbers to stay within Scalar. Two top-level regex (PANDAS_RE + UNIT_RE) for biome compliance.
 - **MultiIndex** (Iter 21): levels+codes compressed storage. Complexity extractors: `buildTargetCodes`/`filterByTargetCodes`/`compareAtLevel`/`makeSortComparator`. Avoid `toFrame()` (potential circular dep); use `toRecord()` instead.
 - **Stats** (Iter 19): skew/kurtosis use sample std (ddof=1). G1 = n/((n-1)(n-2))·Σ((xi-x̄)/s)³.
 - **Merge** (Iter 10): composite keys use `\x00`+`__NULL__` for nulls; sentinel `-1` = right-only row.
@@ -77,13 +79,21 @@ Index, Dtype, Series, DataFrame all implemented.
 - ~~**MultiIndex**~~ ✅ (Iter 21)
 
 ### Phase 3+ — Advanced
-**Next**: Timedelta (`src/core/timedelta.ts`) — duration type with arithmetic, `Series.dt.total_seconds()` etc. · IntervalIndex · read_parquet · plotting
+**Next**: IntervalIndex (`src/core/interval-index.ts`) — interval type with closed parameter (left/right/both/neither), `pd.interval_range()`, overlaps, contains. · Then: `read_parquet`, plotting
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 22 — 2026-04-04 13:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23979784867)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/core/timedelta.ts` — `Timedelta` class (ms storage, pandas-format string parsing, floor-modulo component decomposition matching pandas `days`/`seconds`/`microseconds`/`milliseconds`, `total_seconds`, arithmetic/comparison, `toString`) + `TimedeltaAccessor` (`Series.timedelta`: `total_seconds`, `days`, `seconds`, `microseconds`, `milliseconds`, `abs`, `neg`, `floor`/`ceil`/`round(freq)`)
+- **Metric**: 33 (previous best: 32, delta: +1)
+- **Commit**: 08d964f
+- **Notes**: 68 tests (65 unit + 3 property-based). Key: don't add Timedelta to Scalar type (avoids circular dep chain) — accessor works with numbers-as-ms and strings. Two top-level regex for biome compliance. `floorDiv`/`floorMod` helpers for Python-style decomposition.
 
 ### Iteration 21 — 2026-04-04 12:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23979192962)
 
