@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Indexing &amp; Selection</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --surface: #1c1e2a;
+        --border: #2a2d3e;
+        --accent: #7c6af7;
+        --text: #e2e4f0;
+        --muted: #8890aa;
+        --green: #4caf82;
+        --red: #e05a5a;
+        --code-bg: #141620;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--bg); color: var(--text);
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 15px; line-height: 1.65;
+        padding: 32px 24px; max-width: 860px; margin: 0 auto;
+      }
+      h1 { font-size: 2rem; color: var(--accent); margin-bottom: 6px; }
+      h2 { font-size: 1.2rem; margin: 32px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+      p { color: var(--muted); margin-bottom: 12px; }
+      a { color: var(--accent); }
+      .badge {
+        display: inline-block; background: var(--surface);
+        border: 1px solid var(--border); border-radius: 4px;
+        font-size: 12px; padding: 2px 8px; color: var(--muted); margin-left: 8px;
+      }
+      .card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 10px; padding: 20px; margin-bottom: 20px;
+      }
+      .card h3 { font-size: 1rem; margin-bottom: 10px; color: var(--accent); }
+      textarea {
+        width: 100%; font-family: "Fira Code", "Cascadia Code", monospace;
+        font-size: 13px; background: var(--code-bg); color: var(--text);
+        border: 1px solid var(--border); border-radius: 6px;
+        padding: 12px; resize: vertical; min-height: 140px;
+      }
+      button {
+        margin-top: 10px; padding: 8px 20px;
+        background: var(--accent); color: #fff; border: none;
+        border-radius: 6px; cursor: pointer; font-size: 14px;
+      }
+      button:hover { opacity: 0.9; }
+      .output {
+        margin-top: 10px; padding: 12px;
+        background: var(--code-bg); border-radius: 6px;
+        font-family: monospace; font-size: 13px; white-space: pre-wrap;
+        min-height: 40px; color: var(--text);
+      }
+      .output.ok  { border-left: 3px solid var(--green); }
+      .output.err { border-left: 3px solid var(--red); color: var(--red); }
+      code { background: var(--code-bg); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
+      table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; }
+      th, td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+      th { background: var(--code-bg); color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Indexing &amp; Selection <span class="badge">tsb</span></h1>
+    <p>
+      tsb provides pandas-style label-based and position-based selection via
+      <code>locSeries</code>, <code>ilocSeries</code>, <code>locDataFrame</code>,
+      <code>ilocDataFrame</code>, <code>atDataFrame</code>, and <code>iatDataFrame</code>.
+      A <code>Slice</code> class replaces Python's <code>start:stop:step</code> syntax.
+    </p>
+
+    <h2>Slice — positional range selection</h2>
+
+    <table>
+      <thead><tr><th>Python</th><th>tsb equivalent</th></tr></thead>
+      <tbody>
+        <tr><td><code>s[1:4]</code></td><td><code>new Slice(1, 4)</code></td></tr>
+        <tr><td><code>s[::2]</code></td><td><code>new Slice(null, null, 2)</code></td></tr>
+        <tr><td><code>s[::-1]</code></td><td><code>new Slice(null, null, -1)</code></td></tr>
+        <tr><td><code>s[-2:]</code></td><td><code>new Slice(-2)</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Interactive Examples</h2>
+
+    <div class="card">
+      <h3>Series — loc (label-based)</h3>
+      <textarea id="ex1">const s = new tsb.Series({ data: [10, 20, 30, 40, 50], index: new tsb.Index(["a","b","c","d","e"]) });
+
+// Scalar by label
+print("s.at('c'):", tsb.locSeries(s, "c"));
+
+// Array of labels
+print("loc(['a','e']):", tsb.locSeries(s, ["a","e"]).values);
+
+// Boolean mask
+print("loc(mask):", tsb.locSeries(s, [true,false,true,false,true]).values);
+
+// Slice (positional range)
+print("loc(Slice(1,4)):", tsb.locSeries(s, new tsb.Slice(1,4)).values);</textarea>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <div class="output" id="out1"></div>
+    </div>
+
+    <div class="card">
+      <h3>Series — iloc (position-based)</h3>
+      <textarea id="ex2">const s = new tsb.Series({ data: [10, 20, 30, 40, 50] });
+
+// Scalar by position
+print("iloc(2):", tsb.ilocSeries(s, 2));
+
+// Negative index
+print("iloc(-1):", tsb.ilocSeries(s, -1));
+
+// Array of positions
+print("iloc([0,2,4]):", tsb.ilocSeries(s, [0,2,4]).values);
+
+// Boolean mask
+print("iloc(mask):", tsb.ilocSeries(s, [true,false,true,false,true]).values);
+
+// Reverse with step
+print("iloc(Slice(4,null,-1)):", tsb.ilocSeries(s, new tsb.Slice(4,null,-1)).values);</textarea>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <div class="output" id="out2"></div>
+    </div>
+
+    <div class="card">
+      <h3>DataFrame — 2D loc/iloc</h3>
+      <textarea id="ex3">const df = tsb.DataFrame.fromColumns({
+  name: ["Alice","Bob","Carol","Dave"],
+  age: [30, 25, 35, 28],
+  score: [90, 85, 95, 80],
+});
+
+// Rows by boolean mask (age > 27)
+const adults = tsb.locDataFrame(df, [true,false,true,true]);
+print("adults:", adults.toRecords());
+
+// Rows by Slice, columns by names
+const sub = tsb.locDataFrame(df, new tsb.Slice(0,3), ["name","score"]);
+print("sub cols:", sub.toRecords());
+
+// Positional: rows 0&2, column 0
+const cell = tsb.ilocDataFrame(df, [0,2], [0]);
+print("iloc rows [0,2] col 0:", cell.toRecords());
+
+// Scalar access
+print("at(2,'score'):", tsb.atDataFrame(df, 2, "score"));
+print("iat(1,1):",     tsb.iatDataFrame(df, 1, 1));</textarea>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <div class="output" id="out3"></div>
+    </div>
+
+    <div class="card">
+      <h3>Explore — edit &amp; run any code</h3>
+      <textarea id="sandbox" style="min-height:200px">// Combine with other tsb features
+const prices = new tsb.Series({ data: [120, 85, 200, 160, 95, 130], name: "price" });
+
+// Select values above the median
+const med = prices.median();
+const mask = prices.values.map(v => v > med);
+print("Above median:", tsb.locSeries(prices, mask).values);
+
+// Reverse the Series
+print("Reversed:", tsb.ilocSeries(prices, new tsb.Slice(null, null, -1)).values);
+
+// Every other element
+print("Every other:", tsb.ilocSeries(prices, new tsb.Slice(null, null, 2)).values);</textarea>
+      <button onclick="run('sandbox','sandout')">▶ Run</button>
+      <div class="output" id="sandout"></div>
+    </div>
+
+    <script type="module">
+      import * as tsb from "./runtime.js";
+      window.tsb = tsb;
+
+      window.print = (...args) => {
+        window._printBuf = (window._printBuf ?? "") + args.join(" ") + "\n";
+      };
+
+      window.run = async (inputId, outputId) => {
+        const code = document.getElementById(inputId).value;
+        const el   = document.getElementById(outputId);
+        window._printBuf = "";
+        try {
+          const fn = new Function(
+            "tsb", "print",
+            `"use strict"; ${code}`
+          );
+          fn(window.tsb, window.print);
+          el.textContent = window._printBuf || "(no output)";
+          el.className   = "output ok";
+        } catch (e) {
+          el.textContent = String(e);
+          el.className   = "output err";
+        }
+      };
+    </script>
+  </body>
+</html>
