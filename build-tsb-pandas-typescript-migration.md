@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T07:30:00Z |
-| Iteration Count | 10 |
-| Best Metric | 11 |
+| Last Run | 2026-04-04T07:48:00Z |
+| Iteration Count | 11 |
+| Best Metric | 12 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -38,10 +38,10 @@
 
 ## 🎯 Current Priorities
 
-Merge done (metric=11). Next priorities in order:
-1. **Missing data** (`src/core/missing.ts`) — isna, fillna, dropna, interpolate standalone utilities
-2. **DateTime accessor** (`src/core/datetime.ts`) — Series.dt accessor: year/month/day/hour/minute/dayofweek etc.
-3. **Sorting** (`src/core/sort.ts`) — sort_values, sort_index standalone functions
+Missing data done (metric=12). Next priorities in order:
+1. **DateTime accessor** (`src/core/datetime.ts`) — Series.dt accessor: year/month/day/hour/minute/dayofweek etc.
+2. **Sorting** (`src/core/sort.ts`) — sort_values, sort_index standalone functions
+3. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers
 
 ---
 
@@ -55,7 +55,8 @@ Merge done (metric=11). Next priorities in order:
 - Iteration 5 (DataFrame): Column-oriented storage using `ReadonlyMap<string, Series<Scalar>>` is the right model. Biome's `useLiteralKeys` vs TypeScript's `noPropertyAccessFromIndexSignature` for `Record<string, T>` types — resolve by testing with `toEqual({...})` patterns instead of property access. Extract helper functions to satisfy `noExcessiveCognitiveComplexity` (max 15). `compareScalarPair` and `computeColumnStats` are good examples of extracted helpers. Use `biome check --write` to auto-fix formatting issues. PR creation has failed in previous iterations due to protected-file restrictions — the current branch setup from `main` should work better.
 - Iteration 10 (merge): `merge()` in `src/merge/merge.ts` — build right-side key index as `Map<compositeKey, number[]>` then scan left rows. The sentinel value `-1` on leftRows signals a right-only row (for right/outer joins). Composite keys use `\x00` delimiter + `__NULL__` for nulls to avoid false collisions. `left_on`/`right_on` pairs allow different key names per side; `left_index`/`right_index` wraps the index values in a synthetic Series. Suffix disambiguation applies only to non-key columns that appear in both tables.
 
-- Iteration 9 (Series.str): `StringAccessor` in `strings.ts` — import it in `series.ts` as a circular ESM dep that works fine (only used in method bodies). Move regex literals to module top level to satisfy `useTopLevelRegex`. Extract helpers (`replaceBounded`, `replaceAll`) to avoid `noExcessiveCognitiveComplexity`. Bug: `_selectRows` in `frame.ts` was using sliced original index labels for column Series — fix by using `new RangeIndex(positions.length)` for column Series (DataFrame.index preserves original labels, column Series get fresh 0-based index). Bug: `DataFrameGroupBy.sum/mean/std` was including non-numeric columns — fix by adding `numericOnly` param to `_valueCols()`.
+- Iteration 9 (Series.str): `StringAccessor` in `strings.ts`. Circular ESM dep works fine. Move regex to top level (`useTopLevelRegex`). Extract helpers to avoid `noExcessiveCognitiveComplexity`. Fix: `_selectRows` column Series use fresh RangeIndex. Fix: GroupBy aggregation numeric-only.
+- Iteration 11 (missing data): Test files MUST import from `src/index.ts` (`useImportRestrictions` nursery rule). `df.columns` → `Index<string>`, iterate via `.values`. Use `df.get(name)` (returns `undefined`) not `df.col(name)` (throws). `Index.getLoc(key)` returns `number | readonly number[]`. Extract helpers for complexity (max 15). `!(a && b)` preferred over `!a || !b`.
 
 ---
 
@@ -79,54 +80,40 @@ Merge done (metric=11). Next priorities in order:
 7. Comparison and boolean operations
 8. ~~**String accessor** (Series.str)~~ ✅ Done (Iteration 9)
 9. DateTime accessor (Series.dt)
-10. Missing data handling (isna, fillna, dropna, interpolate)
+10. ~~**Missing data handling**~~ ✅ Done (Iteration 11) — isna/notna, ffill/bfill, fillna, dropna, interpolate
 11. Sorting (sort_values, sort_index)
 12. ~~**Groupby**~~ ✅ Done (Iteration 6)
 13. **Merging/joining** (merge, join, **concat**) — ~~concat~~ ✅ Done (Iteration 7), ~~merge~~ ✅ Done (Iteration 10)
 14. Reshaping (pivot, melt, stack, unstack, crosstab)
 15. Window functions (rolling, expanding, ewm)
 
-### Phase 3 — I/O (iterations 16-20)
-16. read_csv / to_csv
-17. read_json / to_json
-18. read_parquet (WASM-assisted)
-19. read_excel
-20. from_dict / from_records
-
-### Phase 4 — Statistics & Advanced
-21. Statistical methods (describe, corr, cov, quantile)
-22. Categorical dtype
-23. MultiIndex full support
-24. Timedelta and Period types
-25. Sparse arrays
+### Phase 3+ — I/O, Stats, Advanced
+16-20. read_csv/json/parquet, to_csv/json, from_dict/records
+21-25. describe/corr/cov, Categorical, MultiIndex, Timedelta, Sparse
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 10 — 2026-04-04 07:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974130597)
+### Iteration 11 — 2026-04-04 07:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974522158)
 
 - **Status**: ✅ Accepted
-- **Change**: Implemented `merge()` (`src/merge/merge.ts`) — database-style joins with inner/left/right/outer, `on`/`left_on`/`right_on`, index-based join, suffix disambiguation, many-to-many support.
-- **Metric**: 11 (previous best: 10, delta: +1)
-- **Commit**: 40058db
-- **Notes**: Composite-key index approach handles multi-column keys cleanly. Sentinel `-1` on leftRows marks right-only rows. TypeScript compiles cleanly (only tsconfig deprecation warnings from tsc 6.x).
+- **Change**: Implemented `src/core/missing.ts` — full missing-data utility suite: `isna`/`notna`/`isnull`/`notnull`, `ffill`/`bfill` (with limit), `fillnaSeries`/`fillnaDataFrame` (value or method), `dropnaSeries`, `dropnaDataFrame` (axis/how/thresh/subset), `interpolate`/`interpolateDataFrame`.
+- **Metric**: 12 (previous best: 11, delta: +1)
+- **Commit**: 4c2a1ea
+- **Notes**: 50+ unit tests + 4 property-based tests. All lint/typecheck clean.
 
-### Iteration 9 — 2026-04-04 06:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973555676)
+### Iteration 10 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974130597)
+- **Status**: ✅ Accepted | **Metric**: 11 (+1) | **Commit**: 40058db
+- **Change**: `merge()` — database-style joins inner/left/right/outer, on/left_on/right_on, many-to-many.
 
-- **Status**: ✅ Accepted
-- **Change**: Implemented `StringAccessor` (`src/core/strings.ts`) — 20+ vectorized string methods on `Series.str`. Fixed `_selectRows` bug (column Series now use fresh RangeIndex). Fixed `GroupBy.sum/mean/std` to aggregate numeric-only columns.
-- **Metric**: 10 (previous best: 9, delta: +1)
-- **Commit**: 6bd3f36
-- **Notes**: Circular ESM imports (strings.ts↔series.ts) work fine when symbols are only used in method bodies. Bug fixes resolved 10 failing tests. `useTopLevelRegex` lint rule requires regex constants at module top level.
+### Iteration 9 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973555676)
+- **Status**: ✅ Accepted | **Metric**: 10 (+1) | **Commit**: 6bd3f36
+- **Change**: StringAccessor `strings.ts` — 20+ vectorized string methods on Series.str.
 
-### Iteration 8 — 2026-04-04 06:24 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973131426)
-
-- **Status**: ✅ Accepted
-- **Change**: Implemented index-aligned arithmetic — `src/core/ops.ts` with `alignSeries`, `alignedBinaryOp`, `alignDataFrames`, `alignedDataFrameBinaryOp`. Updated `Series._scalarOp` to align on index (pandas semantics). Added `DataFrame.add/sub/mul/div/floordiv/mod/pow`. 30+ unit tests + 3 property-based tests. Playground page.
-- **Metric**: 9 (previous best: 8, delta: +1)
-- **Commit**: 6fb9189
-- **Notes**: No circular deps — ops.ts imports Series/DataFrame but they inline their own alignment helpers. Use `Index.contains()` not `.has()`. Switch default clause required.
+### Iteration 8 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973131426)
+- **Status**: ✅ Accepted | **Metric**: 9 (+1) | **Commit**: 6fb9189
+- **Change**: Aligned arithmetic `ops.ts` — alignSeries/alignedBinaryOp/alignDataFrames. DataFrame.add/sub/mul/div.
 
 ### Iteration 7 — 2026-04-04 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972580333)
 
