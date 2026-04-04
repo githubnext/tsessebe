@@ -29,3 +29,7 @@ export type {
 export { Index } from "./core/index.ts";
 export type { IndexOptions } from "./core/index.ts";
 export { RangeIndex } from "./core/index.ts";
+export { Dtype } from "./core/dtype.ts";
+export type { DtypeKind, ItemSize } from "./core/dtype.ts";
+export { Series } from "./core/series.ts";
+export type { SeriesOptions } from "./core/series.ts";
