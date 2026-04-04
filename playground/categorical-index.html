@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CategoricalIndex — tsb playground</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav><a href="index.html">← tsb playground</a></nav>
+
+  <h1>CategoricalIndex</h1>
+  <p class="subtitle">
+    An <code>Index</code> backed by a fixed-vocabulary <code>Categorical</code> array.
+    Internally uses integer codes for memory efficiency — great for string-heavy axes.
+  </p>
+
+  <section>
+    <h2>1 — Basic construction</h2>
+    <pre class="runnable" data-target="out1">
+import { CategoricalIndex } from "tsb";
+
+const ci = new CategoricalIndex(["a", "b", "a", "c", null]);
+
+console.log("values:    ", ci.values);
+// ["a", "b", "a", "c", null]
+
+console.log("categories:", ci.categories);
+// ["a", "b", "c"]  ← inferred from unique non-null values
+
+console.log("codes:     ", ci.codes);
+// [0, 1, 0, 2, -1]  ← -1 for null/missing
+
+console.log("ordered:   ", ci.ordered);
+// false
+    </pre>
+    <div id="out1" class="output"></div>
+  </section>
+
+  <section>
+    <h2>2 — Explicit categories &amp; ordered</h2>
+    <pre class="runnable" data-target="out2">
+import { CategoricalIndex } from "tsb";
+
+const sizes = new CategoricalIndex(
+  ["large", "small", "medium"],
+  { categories: ["small", "medium", "large"], ordered: true }
+);
+
+console.log("categories:", sizes.categories);
+// ["small", "medium", "large"]
+
+console.log("isMonotonicIncreasing:", sizes.isMonotonicIncreasing);
+// false  (data is "large, small, medium")
+
+const sorted = sizes.sortValues();
+console.log("sorted:", sorted.values);
+// ["small", "medium", "large"]
+
+console.log("sorted ascending:", sorted.isMonotonicIncreasing);
+// true
+    </pre>
+    <div id="out2" class="output"></div>
+  </section>
+
+  <section>
+    <h2>3 — Category management</h2>
+    <pre class="runnable" data-target="out3">
+import { CategoricalIndex } from "tsb";
+
+let ci = new CategoricalIndex(["a", "b", "c"]);
+
+// rename every category
+const renamed = ci.renameCategories(["x", "y", "z"]);
+console.log("renamed:", renamed.values); // ["x", "y", "z"]
+
+// add new categories (data unchanged)
+const extended = ci.addCategories(["d", "e"]);
+console.log("extended categories:", extended.categories); // ["a","b","c","d","e"]
+
+// remove a category — its values become null
+const removed = ci.removeCategories(["b"]);
+console.log("removed 'b':", removed.values); // ["a", null, "c"]
+
+// remove unused categories
+const sparse = new CategoricalIndex(["a", "a"], { categories: ["a", "b", "c"] });
+console.log("before:", sparse.categories);         // ["a","b","c"]
+console.log("after:  ", sparse.removeUnusedCategories().categories); // ["a"]
+    </pre>
+    <div id="out3" class="output"></div>
+  </section>
+
+  <section>
+    <h2>4 — Ordered comparisons</h2>
+    <pre class="runnable" data-target="out4">
+import { CategoricalIndex } from "tsb";
+
+const ci = new CategoricalIndex(
+  ["medium", "low", "high", "low", "high"],
+  { categories: ["low", "medium", "high"], ordered: true }
+);
+
+const asc = ci.sortValues();
+console.log("ascending: ", asc.values);   // ["low","low","medium","high","high"]
+
+const desc = ci.sortValues(false);
+console.log("descending:", desc.values);  // ["high","high","medium","low","low"]
+
+// asOrdered / asUnordered
+const unordered = ci.asUnordered();
+console.log("unordered:", unordered.ordered); // false
+console.log("reordered:", unordered.asOrdered().ordered); // true
+    </pre>
+    <div id="out4" class="output"></div>
+  </section>
+
+  <section>
+    <h2>5 — Inherited Index methods</h2>
+    <pre class="runnable" data-target="out5">
+import { CategoricalIndex } from "tsb";
+
+const ci = new CategoricalIndex(["a", "b", "a", "c"]);
+
+console.log("size:       ", ci.size);          // 4
+console.log("isUnique:   ", ci.isUnique);      // false
+console.log("nunique:    ", ci.nunique());     // 3
+console.log("contains b: ", ci.contains("b")); // true
+console.log("getLoc a:   ", ci.getLoc("a"));   // [0, 2]
+console.log("isin [a,c]: ", ci.isin(["a","c"])); // [true,false,true,true]
+console.log("isna:       ", ci.isna());        // [false,false,false,false]
+
+// set operations still work
+const ci2 = new CategoricalIndex(["b", "c", "d"]);
+console.log("union:      ", ci.union(ci2).values);
+    </pre>
+    <div id="out5" class="output"></div>
+  </section>
+
+  <script type="module" src="runtime.js"></script>
+</body>
+</html>
