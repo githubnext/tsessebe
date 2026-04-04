@@ -62,6 +62,16 @@
           "semicolons": "always"
         }
       }
+    },
+    {
+      "include": ["tests/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noSecrets": "off"
+          }
+        }
+      }
     }
   ]
 }
