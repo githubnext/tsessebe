@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Series.dt — DateTime Accessor</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #0d1117;
+        color: #e6edf3;
+      }
+      h1 { color: #58a6ff; }
+      h2 { color: #79c0ff; margin-top: 2em; }
+      a { color: #58a6ff; }
+      .desc { color: #8b949e; margin-bottom: 1em; }
+      .cell {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin: 16px 0;
+        overflow: hidden;
+      }
+      .cell-header {
+        padding: 8px 16px;
+        background: #21262d;
+        font-size: 12px;
+        color: #8b949e;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        background: #0d1117;
+        color: #e6edf3;
+        border: none;
+        padding: 16px;
+        font-family: "Fira Code", "Cascadia Code", monospace;
+        font-size: 14px;
+        resize: vertical;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .output {
+        padding: 12px 16px;
+        background: #0d1117;
+        border-top: 1px solid #30363d;
+        font-family: monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        color: #3fb950;
+        min-height: 40px;
+      }
+      .output.error { color: #f85149; }
+      button {
+        background: #238636;
+        color: #fff;
+        border: none;
+        padding: 4px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      button:hover { background: #2ea043; }
+      code { background: #161b22; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">← back to tsb playground</a></p>
+    <h1>Series.dt — DateTime Accessor</h1>
+    <p class="desc">
+      Vectorized datetime operations for a <code>Series</code>. Mirrors pandas'
+      <code>Series.dt</code> accessor. Values may be <code>Date</code> objects,
+      ISO-8601 strings, or millisecond timestamps. Missing values propagate as
+      <code>null</code>.
+    </p>
+
+    <h2>Calendar components</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>year / month / day / hour / minute / second</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const dates = new tsb.Series({
+  data: ["2021-01-15T14:30:45", "2022-06-30T09:00:00", "2023-12-25T23:59:59", null],
+  index: ["a", "b", "c", "d"],
+});
+
+console.log("year:  ", [...dates.dt.year.values]);
+console.log("month: ", [...dates.dt.month.values]);
+console.log("day:   ", [...dates.dt.day.values]);
+console.log("hour:  ", [...dates.dt.hour.values]);
+console.log("minute:", [...dates.dt.minute.values]);
+console.log("second:", [...dates.dt.second.values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <div class="cell">
+      <div class="cell-header">
+        <span>quarter / dayofyear / week</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const dates = new tsb.Series({
+  data: ["2021-01-01", "2021-04-01", "2021-07-01", "2021-10-01"],
+});
+
+console.log("quarter:   ", [...dates.dt.quarter.values]);
+console.log("dayofyear: ", [...dates.dt.dayofyear.values]);
+console.log("week:      ", [...dates.dt.week.values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Day of week (Mon=0, Sun=6)</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>dayofweek — matches pandas convention</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+// Jan 4 2021 = Monday, Jan 10 2021 = Sunday
+const dates = new tsb.Series({
+  data: ["2021-01-04", "2021-01-05", "2021-01-06", "2021-01-09", "2021-01-10"],
+  index: ["Mon", "Tue", "Wed", "Sat", "Sun"],
+});
+
+console.log("dayofweek:", [...dates.dt.dayofweek.values]);
+// → [0, 1, 2, 5, 6]
+
+console.log("is_weekday:", [...dates.dt.is_weekday.values]);
+console.log("is_weekend:", [...dates.dt.is_weekend.values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Month / quarter / year boundary flags</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>is_month_start / is_month_end / is_year_start / is_year_end</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const dates = new tsb.Series({
+  data: ["2021-01-01", "2021-01-31", "2021-03-31", "2021-04-01", "2021-12-31", "2021-06-15"],
+});
+
+console.log("is_month_start:  ", [...dates.dt.is_month_start.values]);
+console.log("is_month_end:    ", [...dates.dt.is_month_end.values]);
+console.log("is_quarter_start:", [...dates.dt.is_quarter_start.values]);
+console.log("is_quarter_end:  ", [...dates.dt.is_quarter_end.values]);
+console.log("is_year_start:   ", [...dates.dt.is_year_start.values]);
+console.log("is_year_end:     ", [...dates.dt.is_year_end.values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <div class="cell">
+      <div class="cell-header">
+        <span>is_leap_year / days_in_month</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const dates = new tsb.Series({
+  data: ["2020-02-15", "2021-02-15", "2000-02-15", "1900-02-15"],
+  index: ["2020", "2021", "2000", "1900"],
+});
+
+console.log("is_leap_year:", [...dates.dt.is_leap_year.values]);
+// → [1, 0, 1, 0]  (2020 and 2000 are leap years; 1900 is NOT)
+
+console.log("days_in_month:", [...dates.dt.days_in_month.values]);
+// → [29, 28, 29, 28]
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>String formatting with strftime</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>strftime — format dates as strings</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const dates = new tsb.Series({
+  data: ["2021-01-04T09:05:03", "2021-06-15T14:30:00", "2021-12-25T00:00:00"],
+});
+
+console.log("ISO date: ", [...dates.dt.strftime("%Y-%m-%d").values]);
+console.log("US date:  ", [...dates.dt.strftime("%m/%d/%Y").values]);
+console.log("12h time: ", [...dates.dt.strftime("%I:%M %p").values]);
+console.log("Full:     ", [...dates.dt.strftime("%A, %B %d %Y").values]);
+console.log("Week/day: ", [...dates.dt.strftime("W%V day %j").values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <div class="cell">
+      <div class="cell-header">
+        <span>date() and time() helpers</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const timestamps = new tsb.Series({
+  data: ["2021-03-15T14:30:45", "2022-11-01T00:00:01", null],
+});
+
+console.log("date():", [...timestamps.dt.date().values]);
+// → ["2021-03-15", "2022-11-01", null]
+
+console.log("time():", [...timestamps.dt.time().values]);
+// → ["14:30:45", "00:00:01", null]
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Normalization</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>normalize — floor datetime to midnight</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const ts = new tsb.Series({
+  data: ["2021-03-15T14:30:45", "2021-06-01T23:59:59", null],
+});
+
+const normed = ts.dt.normalize();
+// Each element is now a Date at midnight
+console.log("normalized dates:");
+normed.values.forEach((v, i) => {
+  if (v === null) {
+    console.log(`  [${i}] null`);
+  } else {
+    console.log(`  [${i}] ${v.toISOString()}`);
+  }
+});
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Epoch utilities</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>total_seconds / timestamp_ms</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const dates = new tsb.Series({
+  data: [new Date("2021-01-01T00:00:00.000Z"), new Date("2021-07-04T12:00:00.000Z")],
+});
+
+console.log("total_seconds:", [...dates.dt.total_seconds().values]);
+console.log("timestamp_ms: ", [...dates.dt.timestamp_ms().values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Mixed value types</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>Date objects, ISO strings, and ms timestamps in one Series</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const mixed = new tsb.Series({
+  data: [
+    new Date("2021-03-01"),          // Date object
+    "2022-09-15",                     // ISO string
+    new Date("2020-01-01").getTime(), // ms timestamp
+    null,                             // missing
+  ],
+  index: ["Date", "string", "number", "null"],
+});
+
+console.log("year: ", [...mixed.dt.year.values]);
+console.log("month:", [...mixed.dt.month.values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <script src="playground-runtime.js"></script>
+    <script>
+      async function run(btn) {
+        const cell = btn.closest(".cell");
+        const code = cell.querySelector("textarea").value;
+        const out = cell.querySelector(".output");
+        out.textContent = "Running…";
+        out.className = "output";
+        try {
+          const result = await window.__tsbPlayground(code);
+          out.textContent = result || "(no output)";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "output error";
+        }
+      }
+    </script>
+  </body>
+</html>
