@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T04:58:00Z |
-| Iteration Count | 5 |
-| Best Metric | 6 |
+| Last Run | 2026-04-04T05:20:00Z |
+| Iteration Count | 6 |
+| Best Metric | 7 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | — |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-next` |
+| PR | (see PR created this run) |
 | Steering Issue | — |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -38,10 +38,10 @@
 
 ## 🎯 Current Priorities
 
-DataFrame is now done (metric=6). Next priorities in order:
-1. **GroupBy** (`src/groupby/groupby.ts`) — the split-apply-combine engine; `groupby()`, `agg()`, `transform()`, `apply()`
-2. **concat** (`src/merge/concat.ts`) — combine DataFrames along an axis; prerequisite for many real-world workflows
-3. **Arithmetic operations** on Series+Series and DataFrame+DataFrame with broadcasting
+GroupBy is done (metric=7). Next priorities in order:
+1. **concat** (`src/merge/concat.ts`) — combine DataFrames/Series along an axis; prerequisite for many real-world workflows
+2. **Arithmetic operations** (`src/core/ops.ts`) — Series+Series, DataFrame+DataFrame with broadcasting, alignment by index
+3. **Missing data** (`src/core/missing.ts`) — isna/notna/fillna/dropna with all fill strategies
 
 ---
 
@@ -53,6 +53,7 @@ DataFrame is now done (metric=6). Next priorities in order:
 - The `autoloop/build-tsb-pandas-typescript-migration` branch should be created from main (which has merged PRs), not from the stale autoloop branch that tracked old commit SHAs.
 - Iteration 5 (DataFrame): Column-oriented storage using `ReadonlyMap<string, Series<Scalar>>` is the right model. Biome's `useLiteralKeys` vs TypeScript's `noPropertyAccessFromIndexSignature` for `Record<string, T>` types — resolve by testing with `toEqual({...})` patterns instead of property access. Extract helper functions to satisfy `noExcessiveCognitiveComplexity` (max 15). `compareScalarPair` and `computeColumnStats` are good examples of extracted helpers. Use `biome check --write` to auto-fix formatting issues. PR creation has failed in previous iterations due to protected-file restrictions — the current branch setup from `main` should work better.
 - Iteration 4 (previous): DataFrame was implemented but PR creation failed silently. The state file was updated in repo-memory but no code reached the repository. Always verify commits actually reach the repo.
+- Iteration 6 (GroupBy): Keep group key types as `Label` (not `Scalar`) to avoid complications with Map equality and Index construction. Use `toLabel()` helper to coerce bigint/Date scalars. Multi-column groupby: composite tab-separated string keys (no MultiIndex yet). Tests should import from the barrel (`src/index.ts`) rather than individual files, per Biome's `useImportRestrictions` rule. The `arrGet()` helper cleanly handles `noUncheckedIndexedAccess` for array access in groupby loops. Circular import avoidance: keep GroupBy as standalone functions (`seriesGroupBy()`, `dataFrameGroupBy()`) rather than instance methods on Series/DataFrame.
 
 ---
 
@@ -72,34 +73,29 @@ DataFrame is now done (metric=6). Next priorities in order:
 5. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers; MultiIndex groundwork
 
 ### Phase 2 — Operations (iterations 6-15)
-6. Arithmetic operations (Series + Series, DataFrame + DataFrame, broadcasting)
-7. Comparison and boolean operations
-8. String accessor (Series.str)
-9. DateTime accessor (Series.dt)
-10. Missing data handling (isna, fillna, dropna, interpolate)
-11. Sorting (sort_values, sort_index)
-12. **Groupby** (groupby, agg, transform, apply) ← high priority
-13. **Merging/joining** (merge, join, concat) ← high priority
+6. ~~**Groupby** (groupby, agg, transform, apply)~~ — ✅ Done (Iteration 6)
+7. **Merging/joining** (concat, merge, join) ← high priority
+8. Arithmetic operations (Series + Series, DataFrame + DataFrame, broadcasting)
 14. Reshaping (pivot, melt, stack, unstack, crosstab)
 15. Window functions (rolling, expanding, ewm)
 
 ### Phase 3 — I/O (iterations 16-20)
-16. read_csv / to_csv
-17. read_json / to_json
-18. read_parquet (WASM-assisted)
-19. read_excel
-20. from_dict / from_records
+16-20. read_csv, read_json, read_parquet (WASM), read_excel, from_dict/from_records
 
 ### Phase 4 — Statistics & Advanced
-21. Statistical methods (describe, corr, cov, quantile)
-22. Categorical dtype
-23. MultiIndex full support
-24. Timedelta and Period types
-25. Sparse arrays
+21-25. describe/corr/cov, Categorical dtype, MultiIndex, Timedelta/Period, Sparse arrays
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 6 — 2026-04-04 05:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23971938070)
+
+- **Status**: ✅ Accepted
+- **Change**: Implemented `SeriesGroupBy` and `DataFrameGroupBy` — split-apply-combine engine with sum/mean/min/max/count/first/last/std, agg(func|name|spec), transform, apply, getGroup, Symbol.iterator. 35+ tests + 4 fast-check property tests.
+- **Metric**: 7 (previous best: 6, delta: +1)
+- **Commit**: 8aa0900
+- **Notes**: Group keys are `Label` (not `Scalar`) to allow clean Index construction. `toLabel()` helper coerces bigint/Date. Multi-column keys are tab-separated composite strings. Circular import avoidance: standalone functions rather than instance methods. Biome/TSC clean except for missing bun-types in CI-less environment.
 
 ### Iteration 5 — 2026-04-04 04:58 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23971604724)
 
@@ -127,15 +123,13 @@ DataFrame is now done (metric=6). Next priorities in order:
 ### Iteration 2 — 2026-04-03 19:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23958625367)
 
 - **Status**: ✅ Accepted
-- **Change**: Implemented Dtype system — immutable singleton descriptors for all 16 pandas dtypes with kind classification, itemsize, type predicates, safe casting rules, commonType(), and Dtype.inferFrom(). Also fixed pre-existing `noUncheckedIndexedAccess` errors in base-index.ts and widened Index<T> method signatures to accept `Label` for ergonomic API.
-- **Metric**: 4 (previous best: 1, delta: +3)
+- **Change**: Dtype system — 16 pandas dtypes as immutable singletons, type predicates, safe casting, commonType(), inferFrom(). Fixed noUncheckedIndexedAccess errors in base-index.ts.
+- **Metric**: 4 (delta: +3, Index/RangeIndex already in copilot branch)
 - **Commit**: a45d5c1
-- **Notes**: Major jump of +3 because the Index system (base-index.ts + range-index.ts) was already in place from the copilot branch — the branch was created from there. Dtype adds 1 new file. The metric now reflects: types.ts + base-index.ts + range-index.ts + dtype.ts = 4.
 
 ### Iteration 1 — 2026-04-03 16:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23954278176)
 
 - **Status**: ✅ Accepted
-- **Change**: Established complete project foundation — package.json, tsconfig.json (strictest), biome.json, bunfig.toml, src/index.ts, src/types.ts, tests/index.test.ts, CI workflow, Pages deployment workflow, playground/index.html, AGENTS.md, CLAUDE.md
-- **Metric**: 1 (baseline established — `src/types.ts` counts as 1 exported feature module)
+- **Change**: Project foundation — package.json, tsconfig.json (strict), biome.json, bunfig.toml, src/index.ts, src/types.ts, CI, Pages, playground, AGENTS.md, CLAUDE.md
+- **Metric**: 1 (baseline)
 - **Commit**: see PR
-- **Notes**: First iteration always accepted as baseline. Foundation is solid — strict TypeScript, Biome linting, Bun test runner, CI/CD, Pages deployment all configured. Next step is the Index type system.
