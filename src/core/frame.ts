@@ -17,6 +17,7 @@
  * ```
  */
 
+import { DataFrameGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
 import { RangeIndex } from "./range-index.ts";
@@ -600,6 +601,91 @@ export class DataFrame {
     return formatDataFrame(this._columns, this.index, this.columns);
   }
 
+  // ─── arithmetic ───────────────────────────────────────────────────────────
+
+  /**
+   * Element-wise addition.
+   *
+   * - **scalar `other`**: adds `other` to every numeric cell.
+   * - **DataFrame `other`**: aligns on both row and column indexes, then adds.
+   *   Missing cells produce `null`.
+   *
+   * @param fillValue - Fill value for missing cells when aligning two DataFrames.
+   */
+  add(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => a + b, fillValue);
+  }
+
+  /**
+   * Element-wise subtraction.
+   *
+   * - **scalar `other`**: subtracts `other` from every numeric cell.
+   * - **DataFrame `other`**: aligns on both indexes, then subtracts.
+   */
+  sub(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => a - b, fillValue);
+  }
+
+  /**
+   * Element-wise multiplication.
+   *
+   * - **scalar `other`**: multiplies every numeric cell by `other`.
+   * - **DataFrame `other`**: aligns on both indexes, then multiplies.
+   */
+  mul(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => a * b, fillValue);
+  }
+
+  /**
+   * Element-wise (true) division.
+   *
+   * - **scalar `other`**: divides every numeric cell by `other`.
+   * - **DataFrame `other`**: aligns on both indexes, then divides.
+   */
+  div(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => a / b, fillValue);
+  }
+
+  /**
+   * Element-wise floor division.
+   */
+  floordiv(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => Math.floor(a / b), fillValue);
+  }
+
+  /**
+   * Element-wise modulo.
+   */
+  mod(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => a % b, fillValue);
+  }
+
+  /**
+   * Element-wise exponentiation.
+   */
+  pow(other: number | DataFrame, fillValue: number | null = null): DataFrame {
+    return this._dfBinaryOp(other, (a, b) => a ** b, fillValue);
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the DataFrame by one or more columns.
+   *
+   * Returns a `DataFrameGroupBy` object that can be used to apply
+   * aggregation, transformation, or filtering operations on each group.
+   *
+   * @example
+   * ```ts
+   * df.groupby("dept").sum();
+   * df.groupby(["dept", "region"]).mean();
+   * ```
+   */
+  groupby(by: string | readonly string[]): DataFrameGroupBy {
+    const cols = typeof by === "string" ? [by] : [...by];
+    return new DataFrameGroupBy(this, cols);
+  }
+
   // ─── private helpers ──────────────────────────────────────────────────────
 
   private _sliceRows(start: number, end: number): DataFrame {
@@ -609,10 +695,12 @@ export class DataFrame {
 
   private _selectRows(positions: readonly number[]): DataFrame {
     const newIndex = new Index<Label>(selectByPositions(this.index.values as Label[], positions));
+    // Column Series get a fresh RangeIndex so that integer-positional `.at(i)` works.
+    const colRangeIndex = new RangeIndex(positions.length) as unknown as Index<Label>;
     const colMap = new Map<string, Series<Scalar>>();
     for (const [name, series] of this._columns) {
       const newData = selectByPositions(series.values as Scalar[], positions);
-      colMap.set(name, new Series({ data: newData, index: newIndex }));
+      colMap.set(name, new Series({ data: newData, index: colRangeIndex, dtype: series.dtype }));
     }
     return new DataFrame(colMap, newIndex);
   }
@@ -620,9 +708,84 @@ export class DataFrame {
   private _colAgg(fn: (s: Series<Scalar>) => Scalar): Series<Scalar> {
     return applyOverColumns(fn, this._columns, this.columns);
   }
+
+  /** Core implementation for DataFrame binary operations (scalar or aligned DataFrame). */
+  private _dfBinaryOp(
+    other: number | DataFrame,
+    fn: (a: number, b: number) => number,
+    fillValue: number | null,
+  ): DataFrame {
+    if (!(other instanceof DataFrame)) {
+      const b = other as number;
+      const cols: Record<string, readonly Scalar[]> = {};
+      for (const [name, series] of this._columns) {
+        cols[name] = series.values.map((v) => {
+          if (v === null || v === undefined || (typeof v === "number" && Number.isNaN(v))) {
+            return null;
+          }
+          return fn(v as unknown as number, b);
+        });
+      }
+      return DataFrame.fromColumns(cols, { index: this.index });
+    }
+    // Align both DataFrames on row and column indexes
+    const rowIdx = this.index.union(other.index) as Index<Label>;
+    const colIdx = this.columns.union(other.columns) as Index<Label>;
+    const left = reindexDf(this, rowIdx, colIdx);
+    const right = reindexDf(other, rowIdx, colIdx);
+    const cols: Record<string, readonly Scalar[]> = {};
+    for (const colLabel of colIdx.values) {
+      const colName = String(colLabel);
+      const lSeries = left.col(colName);
+      const rSeries = right.col(colName);
+      const data: Scalar[] = lSeries.values.map((l, i) => {
+        const r = rSeries.values[i] as Scalar;
+        const a = isMissing(l) ? fillValue : (l as unknown as number);
+        const b = isMissing(r) ? fillValue : (r as unknown as number);
+        if (a === null || b === null) {
+          return null;
+        }
+        return fn(a, b);
+      });
+      cols[colName] = data;
+    }
+    return DataFrame.fromColumns(cols, { index: rowIdx });
+  }
 }
 
 // ─── module-level helpers (extracted to keep methods lean) ───────────────────
+
+/**
+ * Reindex a DataFrame to `rowIndex` and `colIndex`, filling missing cells
+ * with `null`.  Used internally by `_dfBinaryOp` for alignment.
+ */
+function reindexDf(df: DataFrame, rowIndex: Index<Label>, colIndex: Index<Label>): DataFrame {
+  const labelToPos = new Map<Label, number>();
+  const dfRowLabels = df.index.values;
+  for (let i = 0; i < dfRowLabels.length; i++) {
+    const lbl = dfRowLabels[i] as Label;
+    if (!labelToPos.has(lbl)) {
+      labelToPos.set(lbl, i);
+    }
+  }
+  const cols: Record<string, readonly Scalar[]> = {};
+  for (const colLabel of colIndex.values) {
+    const colName = String(colLabel);
+    const data: Scalar[] = rowIndex.values.map((rowLbl) => {
+      const pos = labelToPos.get(rowLbl);
+      if (pos === undefined) {
+        return null;
+      }
+      if (!df.columns.contains(colLabel)) {
+        return null;
+      }
+      const v = df.col(colName).values[pos];
+      return v !== undefined ? (v as Scalar) : null;
+    });
+    cols[colName] = data;
+  }
+  return DataFrame.fromColumns(cols, { index: rowIndex });
+}
 
 function resolveRowIndex(nRows: number, supplied?: Index<Label> | readonly Label[]): Index<Label> {
   if (supplied === undefined) {
