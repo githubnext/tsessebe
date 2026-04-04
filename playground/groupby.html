@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — GroupBy</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <style>
+      body { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+      h1 { color: #2563eb; }
+      h2 { color: #1e40af; border-bottom: 2px solid #bfdbfe; padding-bottom: 0.3rem; }
+      pre { background: #1e1e2e; color: #cdd6f4; border-radius: 8px; padding: 1.2rem; overflow-x: auto; }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.9rem; }
+      .output { background: #0f172a; color: #7dd3fc; border-radius: 8px; padding: 1rem; margin-top: 0.5rem; white-space: pre; font-family: monospace; }
+      .note { background: #eff6ff; border-left: 4px solid #2563eb; padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; }
+      nav { margin-bottom: 2rem; }
+      nav a { margin-right: 1rem; color: #2563eb; text-decoration: none; }
+      nav a:hover { text-decoration: underline; }
+      .api-table th { background: #eff6ff; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">← tsb Home</a>
+      <a href="series-playground.html">Series</a>
+      <a href="dataframe.html">DataFrame</a>
+    </nav>
+
+    <h1>🔗 GroupBy — Split-Apply-Combine</h1>
+    <p class="note">
+      <strong>GroupBy</strong> is pandas' answer to SQL's <code>GROUP BY</code> clause.
+      It implements the <em>split → apply → combine</em> pattern:
+      split a data structure into groups, apply a function to each group
+      independently, then combine the results.
+    </p>
+
+    <h2>Quick Start</h2>
+    <pre><code>import { DataFrame } from "tsb";
+import { dataFrameGroupBy } from "tsb";
+
+const df = DataFrame.fromRecords([
+  { city: "NYC",   sales: 100 },
+  { city: "LA",    sales:  80 },
+  { city: "NYC",   sales:  60 },
+  { city: "LA",    sales: 120 },
+  { city: "Chicago", sales: 50 },
+]);
+
+const grp = dataFrameGroupBy(df, "city");
+
+grp.sum().toString();
+// city     │ sales
+// ─────────┼───────
+// NYC      │ 160
+// LA       │ 200
+// Chicago  │ 50</code></pre>
+
+    <h2>Creating a GroupBy Object</h2>
+
+    <h3>For DataFrames</h3>
+    <pre><code>// Group by a single column
+const g1 = dataFrameGroupBy(df, "city");
+
+// Group by multiple columns (composite key)
+const g2 = dataFrameGroupBy(df, ["region", "city"]);</code></pre>
+
+    <h3>For Series</h3>
+    <pre><code>import { Series } from "tsb";
+import { seriesGroupBy } from "tsb";
+
+const s = new Series({ data: [10, 20, 30, 40], name: "sales" });
+
+// Group by an external array of labels
+const g1 = seriesGroupBy(s, ["East", "West", "East", "West"]);
+
+// Group by the series' own index
+const indexed = new Series({ data: [1, 2, 3], index: ["a", "b", "a"] });
+const g2 = seriesGroupBy(indexed, "index");
+
+// Group by another Series
+const keys = new Series({ data: ["Q1", "Q2", "Q1", "Q2"] });
+const g3 = seriesGroupBy(s, keys);</code></pre>
+
+    <h2>Built-in Aggregations</h2>
+    <pre><code>const grp = dataFrameGroupBy(df, "city");
+
+grp.sum()    // total per group
+grp.mean()   // arithmetic mean per group
+grp.min()    // minimum per group
+grp.max()    // maximum per group
+grp.count()  // non-null count per group
+grp.first()  // first value per group
+grp.last()   // last value per group
+grp.std()    // sample standard deviation per group</code></pre>
+
+    <div class="output">city     │ sales
+─────────┼───────
+NYC      │ 160
+LA       │ 200
+Chicago  │ 50</div>
+
+    <h2>Custom Aggregation with <code>agg()</code></h2>
+    <pre><code>// Same function for all columns
+grp.agg("sum")
+grp.agg(vals => vals.length)   // custom: count rows per group
+
+// Different functions per column
+grp.agg({ sales: "sum", discount: "mean" })</code></pre>
+
+    <h2>Transform — Same Shape as Input</h2>
+    <p>
+      Unlike aggregation (which returns one row per group), <code>transform()</code>
+      returns a result with the same number of rows as the source.
+      Each element is replaced by the result of applying the function to its group.
+    </p>
+    <pre><code>const scores = new Series({ data: [80, 90, 70, 85, 95] });
+const teams  = ["A", "B", "A", "B", "A"];
+
+// Subtract the group mean (demeaning / z-score numerator)
+const demeaned = seriesGroupBy(scores, teams).transform(vals => {
+  const mean = vals.reduce((a, b) => (a as number) + (b as number), 0) / vals.length;
+  return vals.map(v => (v as number) - (mean as number));
+});
+// [80-81.67, 90-87.5, 70-81.67, 85-87.5, 95-81.67]
+// ≈ [-1.67, 2.5, -11.67, -2.5, 13.33]</code></pre>
+
+    <h2>Apply — Arbitrary Function per Group</h2>
+    <pre><code>// Compute a custom scalar per group
+const result = seriesGroupBy(scores, teams).apply(group => {
+  const max = Math.max(...group.values as number[]);
+  const min = Math.min(...group.values as number[]);
+  return max - min;
+});
+// A: range = 95 - 70 = 25
+// B: range = 90 - 85 = 5</code></pre>
+
+    <h2>Inspecting Groups</h2>
+    <pre><code>const grp = dataFrameGroupBy(df, "city");
+
+grp.ngroups          // 3
+grp.groupKeys        // ["NYC", "LA", "Chicago"]
+grp.groups           // Map: "NYC" → [0, 2], "LA" → [1, 3], …
+
+// Get the sub-DataFrame for one group
+grp.getGroup("NYC")
+
+// Iterate over all groups
+for (const [key, subDf] of grp) {
+  console.log(key, subDf.shape);
+}</code></pre>
+
+    <h2>API Reference</h2>
+    <table class="api-table">
+      <thead>
+        <tr><th>Function / Method</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>seriesGroupBy(s, by)</code></td><td>Create a SeriesGroupBy from a Series and keys</td></tr>
+        <tr><td><code>dataFrameGroupBy(df, by)</code></td><td>Create a DataFrameGroupBy from a DataFrame and column(s)</td></tr>
+        <tr><td><code>.sum()</code></td><td>Sum per group</td></tr>
+        <tr><td><code>.mean()</code></td><td>Mean per group</td></tr>
+        <tr><td><code>.min() / .max()</code></td><td>Min / max per group</td></tr>
+        <tr><td><code>.count()</code></td><td>Non-null count per group</td></tr>
+        <tr><td><code>.first() / .last()</code></td><td>First / last value per group</td></tr>
+        <tr><td><code>.std()</code></td><td>Sample standard deviation per group</td></tr>
+        <tr><td><code>.agg(func | name | spec)</code></td><td>Aggregate with custom function(s)</td></tr>
+        <tr><td><code>.transform(func)</code></td><td>Transform, preserving shape</td></tr>
+        <tr><td><code>.apply(func)</code></td><td>Apply arbitrary function per group</td></tr>
+        <tr><td><code>.getGroup(key)</code></td><td>Retrieve a single group</td></tr>
+        <tr><td><code>[Symbol.iterator]</code></td><td>Iterate over [key, group] pairs</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Pandas Equivalents</h2>
+    <pre><code>// pandas                    tsb
+// df.groupby("col").sum()   dataFrameGroupBy(df, "col").sum()
+// df.groupby("col").agg({}) dataFrameGroupBy(df, "col").agg({})
+// s.groupby(keys).mean()    seriesGroupBy(s, keys).mean()
+// s.groupby(keys).transform seriesGroupBy(s, keys).transform
+// grp.get_group("A")        grp.getGroup("A")</code></pre>
+
+    <footer style="margin-top: 3rem; color: #64748b; font-size: 0.85rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+      tsb — TypeScript port of pandas &nbsp;|&nbsp;
+      <a href="https://github.com/githubnext/tsessebe">GitHub</a>
+    </footer>
+  </body>
+</html>

@@ -35,3 +35,6 @@ export { Series } from "./core/index.ts";
 export type { SeriesOptions } from "./core/index.ts";
 export { DataFrame } from "./core/index.ts";
 export type { DataFrameOptions } from "./core/index.ts";
+
+export { SeriesGroupBy, DataFrameGroupBy, seriesGroupBy, dataFrameGroupBy } from "./groupby/index.ts";
+export type { AggFunc, AggSpec, BuiltinAgg } from "./groupby/index.ts";
