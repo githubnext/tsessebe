@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — concat Tutorial</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    header a { color: #8b949e; font-size: 0.9rem; text-decoration: none; }
+    header a:hover { color: var(--accent); }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin: 2rem 0 0.75rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+    p { color: #8b949e; margin-bottom: 0.75rem; }
+    code { font-family: var(--font-mono); font-size: 0.88rem; background: #21262d; padding: 0.1em 0.35em; border-radius: 3px; }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    .example-header {
+      background: #21262d;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      color: #8b949e;
+      border-bottom: 1px solid var(--border);
+    }
+    pre {
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+    .cmt { color: #8b949e; }
+    .out {
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+    }
+    .out-label { font-size: 0.8rem; color: #8b949e; margin-bottom: 0.5rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 4px 10px; border: 1px solid var(--border); }
+    th { background: #21262d; color: var(--accent); }
+    td { font-family: var(--font-mono); }
+    footer {
+      text-align: center;
+      color: #8b949e;
+      font-size: 0.8rem;
+      padding: 2rem;
+      margin-top: 3rem;
+      border-top: 1px solid var(--border);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.2em 0.55em;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+    .badge-axis0 { background: #1f6feb44; color: #58a6ff; border: 1px solid #1f6feb; }
+    .badge-axis1 { background: #388bfd22; color: #79c0ff; border: 1px solid #388bfd; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>tsb</h1>
+  <a href="index.html">← All features</a>
+  <span style="color:#8b949e">concat</span>
+</header>
+
+<main>
+  <p style="margin-top:1rem">
+    <code>concat(objs, options?)</code> combines Series or DataFrames along either axis.
+    It mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.concat.html" style="color:var(--accent)">pandas.concat</a>.
+  </p>
+
+  <!-- 1. Axis=0 Series -->
+  <h2>1 · Stack Series vertically <span class="badge badge-axis0">axis=0</span></h2>
+  <p>The default axis stacks rows. Index labels are preserved and concatenated.</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">import</span> { Series, concat } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> s1 = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">10</span>, <span class="num">20</span>], index: [<span class="str">"a"</span>, <span class="str">"b"</span>] });
+<span class="kw">const</span> s2 = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">30</span>, <span class="num">40</span>], index: [<span class="str">"c"</span>, <span class="str">"d"</span>] });
+
+<span class="fn">concat</span>([s1, s2]);</pre>
+    <div class="out">
+      <div class="out-label">Output — Series, length 4</div>
+      <table>
+        <thead><tr><th>(index)</th><th>value</th></tr></thead>
+        <tbody>
+          <tr><td>a</td><td>10</td></tr>
+          <tr><td>b</td><td>20</td></tr>
+          <tr><td>c</td><td>30</td></tr>
+          <tr><td>d</td><td>40</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. Axis=0 DataFrame outer -->
+  <h2>2 · Stack DataFrames vertically — outer join <span class="badge badge-axis0">axis=0</span></h2>
+  <p>
+    When DataFrames have different columns, <code>join="outer"</code> (default) fills gaps with
+    <code>null</code>.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">import</span> { DataFrame, concat } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> df1 = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>], b: [<span class="num">3</span>, <span class="num">4</span>] });
+<span class="kw">const</span> df2 = DataFrame.<span class="fn">fromColumns</span>({ b: [<span class="num">5</span>], c: [<span class="num">6</span>] });
+
+<span class="fn">concat</span>([df1, df2]);              <span class="cmt">// join="outer" by default</span></pre>
+    <div class="out">
+      <div class="out-label">Output — 3 rows × 3 cols (null fills missing values)</div>
+      <table>
+        <thead><tr><th>(index)</th><th>a</th><th>b</th><th>c</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>1</td><td>3</td><td>null</td></tr>
+          <tr><td>1</td><td>2</td><td>4</td><td>null</td></tr>
+          <tr><td>2</td><td>null</td><td>5</td><td>6</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Axis=0 DataFrame inner -->
+  <h2>3 · Stack DataFrames vertically — inner join <span class="badge badge-axis0">axis=0</span></h2>
+  <p>
+    Pass <code>join="inner"</code> to keep only columns shared by all DataFrames.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="fn">concat</span>([df1, df2], { join: <span class="str">"inner"</span> });</pre>
+    <div class="out">
+      <div class="out-label">Output — 3 rows × 1 col (only "b" is common)</div>
+      <table>
+        <thead><tr><th>(index)</th><th>b</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>3</td></tr>
+          <tr><td>1</td><td>4</td></tr>
+          <tr><td>2</td><td>5</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. ignoreIndex -->
+  <h2>4 · Reset the index</h2>
+  <p>
+    Set <code>ignoreIndex: true</code> to discard incoming labels and get a clean
+    <code>RangeIndex</code>.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">const</span> a = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">1</span>, <span class="num">2</span>], index: [<span class="str">"x"</span>, <span class="str">"y"</span>] });
+<span class="kw">const</span> b = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">3</span>], index: [<span class="str">"z"</span>] });
+
+<span class="fn">concat</span>([a, b], { ignoreIndex: <span class="kw">true</span> });</pre>
+    <div class="out">
+      <div class="out-label">Output — index is 0, 1, 2</div>
+      <table>
+        <thead><tr><th>(index)</th><th>value</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>1</td></tr>
+          <tr><td>1</td><td>2</td></tr>
+          <tr><td>2</td><td>3</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. axis=1 Series → DataFrame -->
+  <h2>5 · Combine Series as columns <span class="badge badge-axis1">axis=1</span></h2>
+  <p>
+    With <code>axis=1</code>, each Series becomes a column of the result DataFrame.
+    Series <code>name</code> is used as the column label.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">const</span> age  = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">25</span>, <span class="num">30</span>, <span class="num">35</span>], name: <span class="str">"age"</span> });
+<span class="kw">const</span> score = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">88</span>, <span class="num">92</span>, <span class="num">79</span>], name: <span class="str">"score"</span> });
+
+<span class="fn">concat</span>([age, score], { axis: <span class="num">1</span> });</pre>
+    <div class="out">
+      <div class="out-label">Output — DataFrame 3 × 2</div>
+      <table>
+        <thead><tr><th>(index)</th><th>age</th><th>score</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>25</td><td>88</td></tr>
+          <tr><td>1</td><td>30</td><td>92</td></tr>
+          <tr><td>2</td><td>35</td><td>79</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. axis=1 DataFrame -->
+  <h2>6 · Merge DataFrames side by side <span class="badge badge-axis1">axis=1</span></h2>
+  <p>
+    With <code>axis=1</code>, DataFrames are merged column-wise; rows are aligned on
+    the row index.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">const</span> left  = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>], b: [<span class="num">3</span>, <span class="num">4</span>] });
+<span class="kw">const</span> right = DataFrame.<span class="fn">fromColumns</span>({ c: [<span class="num">5</span>, <span class="num">6</span>], d: [<span class="num">7</span>, <span class="num">8</span>] });
+
+<span class="fn">concat</span>([left, right], { axis: <span class="num">1</span> });</pre>
+    <div class="out">
+      <div class="out-label">Output — DataFrame 2 × 4</div>
+      <table>
+        <thead><tr><th>(index)</th><th>a</th><th>b</th><th>c</th><th>d</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>1</td><td>3</td><td>5</td><td>7</td></tr>
+          <tr><td>1</td><td>2</td><td>4</td><td>6</td><td>8</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 7. axis=1 outer join with different row indexes -->
+  <h2>7 · axis=1 with unaligned row indexes</h2>
+  <p>
+    When Series (or DataFrames) have different row-indexes on <code>axis=1</code>,
+    the outer join fills missing values with <code>null</code>.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">const</span> s1 = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">1</span>, <span class="num">2</span>], index: [<span class="str">"a"</span>, <span class="str">"b"</span>], name: <span class="str">"s1"</span> });
+<span class="kw">const</span> s2 = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">3</span>, <span class="num">4</span>], index: [<span class="str">"b"</span>, <span class="str">"c"</span>], name: <span class="str">"s2"</span> });
+
+<span class="fn">concat</span>([s1, s2], { axis: <span class="num">1</span> });  <span class="cmt">// outer (default)</span></pre>
+    <div class="out">
+      <div class="out-label">Output — 3 rows (union of "a","b","c")</div>
+      <table>
+        <thead><tr><th>(index)</th><th>s1</th><th>s2</th></tr></thead>
+        <tbody>
+          <tr><td>a</td><td>1</td><td>null</td></tr>
+          <tr><td>b</td><td>2</td><td>3</td></tr>
+          <tr><td>c</td><td>null</td><td>4</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- API Reference -->
+  <h2>API Reference</h2>
+  <table>
+    <thead>
+      <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>axis</code></td><td><code>0 | 1 | "index" | "columns"</code></td><td><code>0</code></td><td>Stack rows (0) or columns (1)</td></tr>
+      <tr><td><code>join</code></td><td><code>"outer" | "inner"</code></td><td><code>"outer"</code></td><td>Union or intersection of labels on the other axis</td></tr>
+      <tr><td><code>ignoreIndex</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Reset the concatenation axis to a RangeIndex</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Supported combinations</h2>
+  <table>
+    <thead>
+      <tr><th>Input type</th><th>axis=0 result</th><th>axis=1 result</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Series[]</td><td>Series</td><td>DataFrame</td></tr>
+      <tr><td>DataFrame[]</td><td>DataFrame</td><td>DataFrame</td></tr>
+    </tbody>
+  </table>
+
+</main>
+
+<footer>
+  tsb — a TypeScript port of pandas, built from first principles.
+</footer>
+
+</body>
+</html>
