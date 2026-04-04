@@ -2,7 +2,7 @@
  * Tests for Series.
  */
 import { describe, expect, it } from "bun:test";
-import { Dtype, Index, Series } from "../../src/core/index.ts";
+import { Dtype, Index, Series } from "../../src/index.ts";
 describe("Series", () => {
   describe("construction", () => {
     it("creates from numeric array with default RangeIndex", () => {
@@ -99,30 +99,30 @@ describe("Series", () => {
     const a = new Series({ data: [1, 2, 3] });
     const b = new Series({ data: [4, 5, 6] });
 
-    it("add scalar", () => expect(a.add(10 as never).values).toEqual([11, 12, 13]));
-    it("add series", () => expect(a.add(b as never).values).toEqual([5, 7, 9]));
-    it("sub series", () => expect(b.sub(a as never).values).toEqual([3, 3, 3]));
-    it("mul scalar", () => expect(a.mul(2 as never).values).toEqual([2, 4, 6]));
-    it("div series", () => expect(b.div(a as never).values).toEqual([4, 2.5, 2]));
-    it("mod", () => expect(b.mod(a as never).values).toEqual([0, 1, 0]));
-    it("pow", () => expect(a.pow(2 as never).values).toEqual([1, 4, 9]));
-    it("floordiv", () => expect(b.floordiv(a as never).values).toEqual([4, 2, 2]));
+    it("add scalar", () => expect(a.add(10).values).toEqual([11, 12, 13]));
+    it("add series", () => expect(a.add(b).values).toEqual([5, 7, 9]));
+    it("sub series", () => expect(b.sub(a).values).toEqual([3, 3, 3]));
+    it("mul scalar", () => expect(a.mul(2).values).toEqual([2, 4, 6]));
+    it("div series", () => expect(b.div(a).values).toEqual([4, 2.5, 2]));
+    it("mod", () => expect(b.mod(a).values).toEqual([0, 1, 0]));
+    it("pow", () => expect(a.pow(2).values).toEqual([1, 4, 9]));
+    it("floordiv", () => expect(b.floordiv(a).values).toEqual([4, 2, 2]));
 
     it("throws when sizes differ", () => {
       const c = new Series({ data: [1, 2] });
-      expect(() => a.add(c as never)).toThrow(RangeError);
+      expect(() => a.add(c)).toThrow(RangeError);
     });
   });
 
   describe("comparison", () => {
     const s = new Series({ data: [1, 2, 3] });
 
-    it("eq", () => expect(s.eq(2 as never).values).toEqual([false, true, false]));
-    it("ne", () => expect(s.ne(2 as never).values).toEqual([true, false, true]));
-    it("lt", () => expect(s.lt(2 as never).values).toEqual([true, false, false]));
-    it("le", () => expect(s.le(2 as never).values).toEqual([true, true, false]));
-    it("gt", () => expect(s.gt(2 as never).values).toEqual([false, false, true]));
-    it("ge", () => expect(s.ge(2 as never).values).toEqual([false, true, true]));
+    it("eq", () => expect(s.eq(2).values).toEqual([false, true, false]));
+    it("ne", () => expect(s.ne(2).values).toEqual([true, false, true]));
+    it("lt", () => expect(s.lt(2).values).toEqual([true, false, false]));
+    it("le", () => expect(s.le(2).values).toEqual([true, true, false]));
+    it("gt", () => expect(s.gt(2).values).toEqual([false, false, true]));
+    it("ge", () => expect(s.ge(2).values).toEqual([false, true, true]));
   });
 
   describe("filter", () => {
@@ -134,7 +134,7 @@ describe("Series", () => {
     });
 
     it("filters by boolean Series", () => {
-      const mask = s.gt(2 as never);
+      const mask = s.gt(2);
       const result = s.filter(mask);
       expect(result.values).toEqual([3, 4, 5]);
     });
@@ -173,7 +173,7 @@ describe("Series", () => {
     it("nunique", () => expect(s.nunique()).toBe(5));
 
     it("sum with nulls skips them", () => {
-      const s2 = new Series({ data: [1, null, 2, null, 3] as never[] });
+      const s2 = new Series({ data: [1, null, 2, null, 3] });
       expect(s2.sum()).toBe(6);
     });
 
@@ -245,7 +245,7 @@ describe("Series", () => {
   describe("isin", () => {
     it("returns boolean mask", () => {
       const s = new Series({ data: [1, 2, 3, 4] });
-      expect(s.isin([2, 4] as never[]).values).toEqual([false, true, false, true]);
+      expect(s.isin([2, 4]).values).toEqual([false, true, false, true]);
     });
   });
 

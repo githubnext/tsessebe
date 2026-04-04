@@ -2,7 +2,7 @@
  * Tests for the Dtype system.
  */
 import { describe, expect, it } from "bun:test";
-import { Dtype } from "../../src/core/index.ts";
+import { Dtype } from "../../src/index.ts";
 
 describe("Dtype", () => {
   describe("singletons", () => {
