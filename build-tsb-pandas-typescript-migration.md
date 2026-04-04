@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T08:47:00Z |
-| Iteration Count | 13 |
-| Best Metric | 14 |
+| Last Run | 2026-04-04T09:22:00Z |
+| Iteration Count | 14 |
+| Best Metric | 15 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-sort-13` |
-| PR | #aw_pr13 |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-indexing-14-e855a3b-1775294315` |
+| PR | — |
 | Steering Issue | — |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -30,19 +30,20 @@
 
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
-**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-sort-13`](../../tree/autoloop/build-tsb-pandas-typescript-migration-sort-13)
-**Pull Request**: #aw_pr13
+**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-indexing-14-e855a3b-1775294315`](../../tree/autoloop/build-tsb-pandas-typescript-migration-indexing-14-e855a3b-1775294315)
+**Pull Request**: —
 **Steering Issue**: —
 
 ---
 
 ## 🎯 Current Priorities
 
-Missing data done (metric=12). DateTime accessor done (metric=13). Sorting utilities done (metric=14). Next priorities in order:
+Missing data done (metric=12). DateTime accessor done (metric=13). Sorting utilities done (metric=14). Indexing done (metric=15). Next priorities in order:
 1. ~~**DateTime accessor** (`src/core/datetime.ts`)~~ — ✅ Done (Iteration 12)
 2. ~~**Sorting utilities** (`src/core/sort.ts`)~~ — ✅ Done (Iteration 13)
-3. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers
+3. ~~**Indexing/selection** (`src/core/indexing.ts`)~~ — ✅ Done (Iteration 14)
 4. **Comparison/boolean ops** (`src/core/compare.ts`) — eq/ne/lt/gt/le/ge returning boolean Series/DataFrame
+5. **Reshaping** (`src/reshape/`) — pivot, melt, stack, unstack
 
 ---
 
@@ -58,6 +59,7 @@ Missing data done (metric=12). DateTime accessor done (metric=13). Sorting utili
 - Iter 11 (missing): Test files import from `src/index.ts` (`useImportRestrictions`). `df.get(name)` (→ undefined) not `df.col(name)` (throws).
 - Iter 12 (datetime): Extract helpers outside class for complexity. `(getDay() + 6) % 7` for Mon=0 dayofweek. Property tests with `fc.date()`.
 - Iter 13 (sort): Use `import type { Index }` when only used as type annotation. Aggressive helper extraction needed for rank's 5-method algorithm. `biome check --write` auto-formats long signatures.
+- Iter 14 (indexing): Biome v2.4.x via npx is incompatible with project's biome.json (1.9.4 schema). Install `@biomejs/biome@1.9.4` in node_modules for correct linting. `resolveILocPositions`/`resolveLocPositions` hit complexity 15 limit — extract `boolMaskToPositions`, `normaliseSinglePos`, `labelToPositions`, `labelArrayToPositions`. `exactOptionalPropertyTypes`: use `?? null` not just undefined for `name` field in SeriesOptions. Use `import fc from "fast-check"` (default import), not `import * as fc`.
 
 ---
 
@@ -75,7 +77,7 @@ Index, Dtype, Series, DataFrame all implemented.
 ### Phase 2 — Operations (active)
 - ~~Arithmetic~~ ✅ (Iter 8) · ~~String accessor~~ ✅ (Iter 9) · ~~DateTime accessor~~ ✅ (Iter 12)
 - ~~Missing data~~ ✅ (Iter 11) · ~~Groupby~~ ✅ (Iter 6) · ~~concat~~ ✅ (Iter 7) · ~~merge~~ ✅ (Iter 10)
-- ~~Sorting utilities~~ ✅ (Iter 13) · **Next**: Comparison/boolean ops · Indexing (.loc/.iloc)
+- ~~Sorting utilities~~ ✅ (Iter 13) · ~~Indexing/selection~~ ✅ (Iter 14) · **Next**: Comparison/boolean ops
 - **Later**: Reshaping (pivot/melt/stack/unstack) · Window functions (rolling/expanding/ewm)
 
 ### Phase 3+ — I/O, Stats, Advanced
@@ -84,6 +86,14 @@ read_csv/json/parquet · to_csv/json · describe/corr/cov · Categorical · Mult
 ---
 
 ## 📊 Iteration History
+
+### Iteration 14 — 2026-04-04 09:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23975921449)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/core/indexing.ts` — Slice (start:stop:step), locSeries/ilocSeries (scalar/array/BooleanMask/Slice), locDataFrame/ilocDataFrame (2D row+col selection), atDataFrame/iatDataFrame.
+- **Metric**: 15 (previous best: 14, delta: +1)
+- **Commit**: de3cab8
+- **Notes**: 50+ unit tests + 3 property-based tests. Biome 1.9.4 lint + TypeScript typecheck clean. Helper extraction for complexity compliance; `?? null` for exactOptionalPropertyTypes on Series name field.
 
 ### Iteration 13 — 2026-04-04 08:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23975470093)
 
