@@ -12,7 +12,7 @@ description: |
   - Maintains a living experiment log as a GitHub issue
 
 on:
-  schedule: every 6h
+  schedule: every 30m
   workflow_dispatch:
     inputs:
       program:
