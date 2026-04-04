@@ -10,11 +10,11 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T14:45:00Z |
-| Iteration Count | 25 |
-| Best Metric | 36 |
+| Last Run | 2026-04-04T15:10:00Z |
+| Iteration Count | 26 |
+| Best Metric | 37 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-datetime-tz-25` |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-to-datetime-26-e492f613a82be201` |
 | PR | — |
 | Steering Issue | — |
 | Paused | false |
@@ -30,7 +30,7 @@
 
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
-**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-datetime-tz-25`](../../tree/autoloop/build-tsb-pandas-typescript-migration-datetime-tz-25)
+**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-to-datetime-26-e492f613a82be201`](../../tree/autoloop/build-tsb-pandas-typescript-migration-to-datetime-26-e492f613a82be201)
 **Pull Request**: —
 **Steering Issue**: —
 
@@ -53,7 +53,8 @@ MultiIndex done (metric=33). Next priorities:
 12. ~~**IntervalIndex** (`src/core/interval-index.ts`)~~ — ✅ Done (Iteration 23)
 13. ~~**CategoricalIndex** (`src/core/categorical-index.ts`)~~ — ✅ Done (Iteration 24)
 14. ~~**DatetimeTZDtype / DatetimeIndex**~~ (`src/core/datetime-index.ts`) — ✅ Done (Iteration 25)
-15. **Next**: `read_parquet` (binary Parquet I/O), `plotting` module, or `pd.to_datetime` / `pd.to_timedelta` utilities
+15. ~~**`pd.to_datetime` / `strptime`**~~ (`src/core/to_datetime.ts`) — ✅ Done (Iteration 26)
+16. **Next**: `to_timedelta()` utility, `read_parquet` (binary Parquet I/O via pure TS), or `plotting` module
 
 ---
 
@@ -61,7 +62,8 @@ MultiIndex done (metric=33). Next priorities:
 
 - **General**: `exactOptionalPropertyTypes`: use `?? null` not undefined. `noUncheckedIndexedAccess`: guard array accesses. Complexity ≤15: extract helpers. `useBlockStatements`: braces everywhere. `useTopLevelRegex`: move regex to top level. `useNumberNamespace`: `Number.NaN`. `import fc from "fast-check"` (default import). `biome check --write --unsafe` auto-fixes Array<T>→T[].
 - **Imports**: `useImportRestrictions` — import from barrel `../core/index.ts` not direct files. `import type` for type-only imports. Circular ESM deps (strings/datetime/categorical) are fine.
-- **Build env**: `bun` not available — use `node_modules/.bin/biome` and `node_modules/.bin/tsc`. Pre-existing TS errors in window/io/tests — only validate new file has 0 errors.
+- **Build env**: `bun` not available — use `node_modules/.bin/biome` and `node_modules/.bin/tsc`. Pre-existing TS errors in window/io/tests — only validate new file has 0 errors. `create_pull_request` safeoutputs tool fails with "no commits found" — seems to require unstaged changes rather than pre-committed branches.
+- **to_datetime** (Iter 26): Sequential char-scanner strptime cleaner than regex-building. Extract helper functions for CC≤15. All regex at top level. Function overloads for scalar/array return types. `DatetimeIndex` constructor accepts `DateLike|null|undefined` directly. `create_pull_request` tool fails ("no commits found") when branch is pre-committed but not pushed.
 - **DatetimeIndex** (Iter 25): `Date` is not a `Label` (Label = number|string|boolean|null), so `DatetimeIndex` cannot extend `Index<T>`. Implement as standalone class with own `_values: readonly Date[]` and Index-like interface. Timezone handling via `Intl.DateTimeFormat.formatToParts` works without dependencies but `applyPart` helper must be split from `applyParts` to keep cognitive complexity ≤15.
 - **CategoricalIndex** (Iter 24): Extends `Index<Label>` via `super(cat.toArray(), name)`. `fromCategorical` factory for clean construction. Monotonicity uses category-position codes when `ordered=true`. `sortByCategoryOrder` helper keeps `sortValues` complexity low by using codes for comparison. Category management delegates fully to `Categorical` instance methods. No barrel imports needed for `Categorical` (direct import from `./categorical.ts`).
 - **IntervalIndex** (Iter 23): `Interval` class needs no imports from core barrel (standalone numeric type). `intervalsOverlap` helper with touching-endpoint logic (both sides must include the shared point). `resolveRangeParams` extractor keeps `intervalRange` complexity low. `extractLeft/Right/Mid/Length` helpers for clean property getters. `maskContains`/`maskOverlaps` for vectorized ops. fromIntervals inherits `closed` from first element (empty→"right" default).
@@ -87,15 +89,23 @@ Index, Dtype, Series, DataFrame all implemented.
 - ~~**IntervalIndex**~~ ✅ (Iter 23)
 - ~~**CategoricalIndex**~~ ✅ (Iter 24)
 - ~~**DatetimeIndex / DatetimeTZDtype**~~ ✅ (Iter 25)
+- ~~**to_datetime / strptime**~~ ✅ (Iter 26)
 
 ### Phase 3+ — Advanced
-**Next**: `read_parquet` (binary Parquet I/O via pure TS), `pd.to_datetime` / `pd.to_timedelta` utilities, or `plotting` module (Vega/Canvas-based charting).
+**Next**: `to_timedelta()` utility (`src/core/to_timedelta.ts`), `read_parquet` (binary Parquet I/O via pure TS), or `plotting` module (Vega/Canvas-based charting).
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 26 — 2026-04-04 15:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23981537369)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/core/to_datetime.ts` — `to_datetime()` (scalar→Date / array→DatetimeIndex), `strptime()` (format directives %Y %y %m %d %H %M %S %f %z %%), `parseDatetime()`. Options: ISO auto-detect, numeric units (ns/us/ms/s/m/min/h/D), origins (unix/julian/Date), dayfirst/yearfirst, utc/tz, errors:raise/coerce.
+- **Metric**: 37 (previous best: 36, delta: +1) · **Commit**: c26aaf2
+- **Notes**: Sequential char-scanner strptime cleaner than regex-building. Function overloads give correct scalar/array return types. `create_pull_request` tool failed this run — commits on branch but no remote PR created.
 
 ### Iteration 25 — 2026-04-04 14:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23981104668)
 
