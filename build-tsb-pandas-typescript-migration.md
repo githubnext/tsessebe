@@ -10,11 +10,11 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T16:10:00Z |
-| Iteration Count | 28 |
+| Last Run | 2026-04-04T16:55:00Z |
+| Iteration Count | 29 |
 | Best Metric | 38 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-to-datetime-timedelta-28-e855a3b` |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-to-datetime-29` |
 | PR | — |
 | Steering Issue | — |
 | Paused | false |
@@ -30,7 +30,7 @@
 
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
-**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-to-datetime-timedelta-28-e855a3b`](../../tree/autoloop/build-tsb-pandas-typescript-migration-to-datetime-timedelta-28-e855a3b)
+**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-to-datetime-29`](../../tree/autoloop/build-tsb-pandas-typescript-migration-to-datetime-29)
 **Pull Request**: —
 **Steering Issue**: —
 
@@ -38,17 +38,17 @@
 
 ## 🎯 Current Priorities
 
-Iterations 12–28 all complete. Next: `read_parquet` (Parquet I/O via pure TS) or `plotting` module.
-- ✅ Done through Iter 28: datetime, sort, indexing, compare, reshape, window, I/O, stats, categorical, MultiIndex, Timedelta, IntervalIndex, CategoricalIndex, DatetimeIndex, to_datetime, to_timedelta.
+Iterations 12–29 all complete. Next: `get_dummies`, `cut`/`qcut`, or `read_parquet`.
+- ✅ Done through Iter 29: datetime, sort, indexing, compare, reshape, window, I/O, stats, categorical, MultiIndex, Timedelta, IntervalIndex, CategoricalIndex, DatetimeIndex, to_datetime, to_timedelta/TimedeltaIndex.
 
 ---
 
 ## 📚 Lessons Learned
 
 - **General**: `exactOptionalPropertyTypes`: use `?? null` not undefined. `noUncheckedIndexedAccess`: guard array accesses. Complexity ≤15: extract helpers. `useBlockStatements`: braces everywhere. `useTopLevelRegex`: move regex to top level. `useNumberNamespace`: `Number.NaN`. `import fc from "fast-check"` (default import). `biome check --write --unsafe` auto-fixes Array<T>→T[].
-- **Imports**: `useImportRestrictions` — import from barrel `../core/index.ts` not direct files. `import type` for type-only imports. Circular ESM deps (strings/datetime/categorical) are fine.
-- **Build env**: `bun` not available — use `node_modules/.bin/biome` and `node_modules/.bin/tsc`. Pre-existing TS errors in window/io/tests — only validate new file has 0 errors. `create_pull_request` safeoutputs tool fails with "no commits found" — seems to require unstaged changes rather than pre-committed branches.
-- **to_datetime+to_timedelta** (Iter 28): State file best_metric may diverge from actual remote branches when push fails. Always verify actual branch state before comparing. `exactOptionalPropertyTypes` requires `if (x !== undefined) { field = x }` not `field = x ?? undefined`. Extract `ParseState` mutable object + `applyResult()` helper to reduce strptime CC. `resolveYMD()` + `parseTimeMs()` helpers reduce `resolveSlashDate` CC. `grpFloat()` helper reduces parseIso CC. `formatIso()` top-level function for strformat lambda. `TimedeltaIndex.subtract()` uses `td.sub()` not `td.subtract()`.
+- **Imports**: `useImportRestrictions` — import from `../../src/index.ts` not direct files (tests), import from barrel `../core/index.ts` not direct files (other src). `import type` for type-only imports. Circular ESM deps (strings/datetime/categorical) are fine.
+- **Build env**: `bun` not available — use `node_modules/.bin/biome` and `node_modules/.bin/tsc`. Pre-existing TS errors in window/io/tests — only validate new file has 0 errors. `create_pull_request` safeoutputs tool fails with "no commits found" — persistent issue; accepted iterations accumulate on branches without auto-PR. `useDefaultSwitchClause` requires `default:` in every switch statement.
+- **to_datetime** (Iter 29): Extract `onParseError(raw, fmt, errors)` + `parseStringVal(val, opts)` helpers from `coerceOne` to keep CC≤15. strptime via `buildStrptimeRegex` + capture group list + `applyCapture` state mutation. `DIRECTIVE_RE = /%[YymdHIMSfp%]/g` at top level. `resolveHour12` separate helper. 12h clock requires `state.hour12` flag.
 - **DatetimeIndex** (Iter 25): `Date` is not a `Label` (Label = number|string|boolean|null), so `DatetimeIndex` cannot extend `Index<T>`. Implement as standalone class with own `_values: readonly Date[]` and Index-like interface. Timezone handling via `Intl.DateTimeFormat.formatToParts` works without dependencies but `applyPart` helper must be split from `applyParts` to keep cognitive complexity ≤15.
 - **CategoricalIndex** (Iter 24): Extends `Index<Label>` via `super(cat.toArray(), name)`. `fromCategorical` factory. Monotonicity uses category-position codes when `ordered=true`. Direct import from `./categorical.ts` avoids circular dep.
 - **IntervalIndex** (Iter 23): Standalone numeric type. `intervalsOverlap` helper. `resolveRangeParams` extractor. `maskContains`/`maskOverlaps` for vectorized ops.
@@ -74,17 +74,28 @@ Index, Dtype, Series, DataFrame all implemented.
 - ~~**IntervalIndex**~~ ✅ (Iter 23)
 - ~~**CategoricalIndex**~~ ✅ (Iter 24)
 - ~~**DatetimeIndex / DatetimeTZDtype**~~ ✅ (Iter 25)
-- ~~**to_datetime / strptime**~~ ✅ (Iter 28)
-- ~~**to_timedelta / TimedeltaIndex**~~ ✅ (Iter 28)
+- ~~**to_datetime / strptime**~~ ✅ (Iter 29)
+- ~~**to_timedelta / TimedeltaIndex**~~ ✅ (Iter 29)
 
 ### Phase 3+ — Advanced
-**Next**: `read_parquet` (binary Parquet I/O via pure TS), or `plotting` module (Vega/Canvas-based charting).
+**Next candidates**:
+- `get_dummies` — one-hot encoding of categorical variables
+- `cut` / `qcut` — binning of continuous variables
+- `read_parquet` — binary Parquet I/O via pure TS (complex)
+- `plotting` — Vega/Canvas-based charting (complex)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 29 — 2026-04-04 16:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23983178519)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/core/to_datetime.ts` + `src/core/to_timedelta.ts` — re-implemented lost iters 26–28. `to_datetime()` supports ISO 8601, custom strptime format (10 directives incl. %Y/%m/%d/%H/%I/%M/%S/%f/%p/%y), numeric units (s/ms/us/ns), Date passthrough, errors='raise'/'coerce'/'ignore', utc/tz/name. `to_timedelta()` + `TimedeltaIndex` with vectorised accessors, sum/mean/min/max, sort_values, add/sub, strformat. Playground page to_datetime.html added.
+- **Metric**: 38 (previous committed best: 36, delta: +2 vs actual remote baseline) · **Commit**: ca425ed
+- **Notes**: Branch `autoloop/build-tsb-pandas-typescript-migration-to-datetime-29`. PR creation tool continues to fail with "no commits found" — changes committed but PR not auto-created. Biome clean (0 errors), tsc 0 errors on new files. `useDefaultSwitchClause` requires `default:` in all switch statements; `noExcessiveCognitiveComplexity` ≤15 required extracting `onParseError` + `parseStringVal` helpers from `coerceOne`.
 
 ### Iteration 28 — 2026-04-04 16:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23982568406)
 
