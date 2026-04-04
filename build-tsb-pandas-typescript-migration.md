@@ -10,11 +10,11 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T10:12:00Z |
-| Iteration Count | 16 |
-| Best Metric | 19 |
+| Last Run | 2026-04-04T10:53:00Z |
+| Iteration Count | 17 |
+| Best Metric | 22 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-reshape-16` |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-window-17` |
 | PR | — |
 | Steering Issue | — |
 | Paused | false |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -30,7 +30,7 @@
 
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
-**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-reshape-16`](../../tree/autoloop/build-tsb-pandas-typescript-migration-reshape-16)
+**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-window-17`](../../tree/autoloop/build-tsb-pandas-typescript-migration-window-17)
 **Pull Request**: —
 **Steering Issue**: —
 
@@ -38,13 +38,14 @@
 
 ## 🎯 Current Priorities
 
-Reshaping done (metric=19). Next priorities in order:
+Reshaping done (metric=19). Window functions done (metric=22). Next priorities in order:
 1. ~~**DateTime accessor** (`src/core/datetime.ts`)~~ — ✅ Done (Iteration 12)
 2. ~~**Sorting utilities** (`src/core/sort.ts`)~~ — ✅ Done (Iteration 13)
 3. ~~**Indexing/selection** (`src/core/indexing.ts`)~~ — ✅ Done (Iteration 14)
 4. ~~**Comparison/boolean ops** (`src/core/compare.ts`)~~ — ✅ Done (Iteration 15)
 5. ~~**Reshaping** (`src/reshape/`)~~ — ✅ Done (Iteration 16)
-6. **Window functions** (`src/window/`) — rolling, expanding, ewm
+6. ~~**Window functions** (`src/window/`)~~ — ✅ Done (Iteration 17)
+7. **I/O utilities** (`src/io/`) — read_csv, read_json, to_csv, to_json
 
 ---
 
@@ -63,6 +64,7 @@ Reshaping done (metric=19). Next priorities in order:
 - Iter 14 (indexing): Biome v2.4.x via npx is incompatible with project's biome.json (1.9.4 schema). Install `@biomejs/biome@1.9.4` in node_modules for correct linting. `resolveILocPositions`/`resolveLocPositions` hit complexity 15 limit — extract `boolMaskToPositions`, `normaliseSinglePos`, `labelToPositions`, `labelArrayToPositions`. `exactOptionalPropertyTypes`: use `?? null` not just undefined for `name` field in SeriesOptions. Use `import fc from "fast-check"` (default import), not `import * as fc`.
 
 - Iter 16 (reshape): `pivot` uses `JSON.stringify` for composite keys (handles null/boolean labels). Complexity 15 limit: extract `collectRowKeys`/`accumulateCells`/`buildPivotTableData` for pivotTable; extract `buildMeltOutputs`/`buildStackOutputs`/`assembleStackResult` for melt/stack. Import `Series` type at top of module to avoid inline `import("...")` in function signatures. `biome check --fix --unsafe` auto-fixes `useAtIndex`/`useTemplate`/`useBlockStatements`.
+- Iter 17 (window): `useImportRestrictions` requires importing from barrel `../core/index.ts` not directly from `../core/frame.ts` etc. Biome auto-fix converts direct imports to `import type { X }` first; manually consolidate all into `import { DataFrame, Series } from "../core/index.ts"` + `import type { Index }`. `useBlockStatements`: one-liner `if/for` must have braces. `useNumberNamespace`: use `Number.NaN` not bare `NaN`.
 
 ---
 
@@ -80,8 +82,8 @@ Index, Dtype, Series, DataFrame all implemented.
 ### Phase 2 — Operations (active)
 - ~~Arithmetic~~ ✅ (Iter 8) · ~~String accessor~~ ✅ (Iter 9) · ~~DateTime accessor~~ ✅ (Iter 12)
 - ~~Missing data~~ ✅ (Iter 11) · ~~Groupby~~ ✅ (Iter 6) · ~~concat~~ ✅ (Iter 7) · ~~merge~~ ✅ (Iter 10)
-- ~~Sorting utilities~~ ✅ (Iter 13) · ~~Indexing/selection~~ ✅ (Iter 14) · ~~Comparison/boolean ops~~ ✅ (Iter 15) · ~~Reshaping~~ ✅ (Iter 16)
-- **Next**: Window functions (rolling/expanding/ewm)
+- ~~Sorting utilities~~ ✅ (Iter 13) · ~~Indexing/selection~~ ✅ (Iter 14) · ~~Comparison/boolean ops~~ ✅ (Iter 15) · ~~Reshaping~~ ✅ (Iter 16) · ~~Window functions~~ ✅ (Iter 17)
+- **Next**: I/O utilities (read_csv/json, to_csv/json)
 
 ### Phase 3+ — I/O, Stats, Advanced
 read_csv/json/parquet · to_csv/json · describe/corr/cov · Categorical · MultiIndex · Timedelta
@@ -91,6 +93,14 @@ read_csv/json/parquet · to_csv/json · describe/corr/cov · Categorical · Mult
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 17 — 2026-04-04 10:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23977302713)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/window/` — rolling (mean/sum/min/max/count/std/var/median/apply, minPeriods, center), expanding (cumulative stats), ewm (adjusted + recursive, alpha/com/span/halflife). DataFrameRolling/Expanding/EWM apply column-wise.
+- **Metric**: 22 (previous best: 19, delta: +3)
+- **Commit**: c0b018f
+- **Notes**: 74 unit tests + 4 property-based tests. Import from `../core/index.ts` barrel (useImportRestrictions). All three window families clean in one iteration.
 
 ### Iteration 16 — 2026-04-04 10:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23976785305)
 
@@ -124,21 +134,10 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: 688f640
 - **Notes**: 40+ unit tests + 5 property-based tests. Biome lint + TypeScript typecheck clean. `computeRanks` split into `assignInitialRanks`, `applyDensePass`, `normaliseToPct` to satisfy `noExcessiveCognitiveComplexity` (max 15).
 
-### Iteration 12 — 2026-04-04 08:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974951477)
-- **Status**: ✅ Accepted | **Metric**: 13 (+1) | **Commit**: 6ce8c17
-- **Change**: `src/core/datetime.ts` — Series.dt: calendar components, ISO week, dayofweek (Mon=0), strftime (17 directives). 78 unit + 6 property tests.
-
-### Iteration 11 — 2026-04-04 07:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974522158)
-- **Status**: ✅ Accepted | **Metric**: 12 (+1) | **Commit**: 4c2a1ea
-- **Change**: `src/core/missing.ts` — isna/notna/ffill/bfill/fillna/dropna/interpolate for Series & DataFrame. 50+ unit + 4 property tests.
-
-### Iteration 10 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974130597)
-- **Status**: ✅ Accepted | **Metric**: 11 (+1) | **Commit**: 40058db
-- **Change**: `merge()` — inner/left/right/outer joins, on/left_on/right_on, many-to-many.
-
-### Iteration 9 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973555676)
-- **Status**: ✅ Accepted | **Metric**: 10 (+1) | **Commit**: 6bd3f36
-- **Change**: `strings.ts` StringAccessor — 20+ vectorized string methods on Series.str.
+### Iterations 9–16 (summary)
+- Iter 16 ✅ reshape: pivot/pivotTable/melt/stack/unstack (19) · Iter 15 ✅ compare.ts (16)
+- Iter 14 ✅ indexing.ts (15) · Iter 13 ✅ sort.ts (14) · Iter 12 ✅ datetime.ts (13)
+- Iter 11 ✅ missing.ts (12) · Iter 10 ✅ merge (11) · Iter 9 ✅ strings.ts (10)
 
 ### Iterations 1–8 (summary)
 - Iter 8 ✅ ops.ts aligned arithmetic (9) · Iter 7 ✅ concat (8) · Iter 6 ✅ GroupBy (7)
