@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Sorting Utilities</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <style>
+      body {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .output {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        min-height: 80px;
+        white-space: pre-wrap;
+      }
+      .output.error {
+        color: #f87171;
+      }
+      textarea {
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        background: #0ea5e9;
+        color: white;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="nav-links">
+      <a href="index.html">← Back to tsb playground</a>
+    </div>
+
+    <h1>Sorting Utilities <span class="badge">New</span></h1>
+    <p>
+      tsb provides high-level sorting utilities that complement the built-in
+      <code>sortValues</code>/<code>sortIndex</code> methods on Series and
+      DataFrame. These match the pandas API for <code>nlargest</code>,
+      <code>nsmallest</code>, and <code>rank</code>.
+    </p>
+
+    <script src="playground-runtime.js"></script>
+
+    <hr />
+    <h2>1. nlargest / nsmallest (Series)</h2>
+    <p>
+      Select the top-n or bottom-n values from a Series, preserving the original
+      index order of the selected rows.
+    </p>
+    <textarea id="code-n1" rows="16">
+const { Series, nlargest, nsmallest } = tsb;
+
+const scores = new Series({ data: [88, 92, 75, 99, 83, 92], name: "score" });
+console.log("All scores:", scores.values.join(", "));
+
+const top3 = nlargest(scores, 3);
+console.log("\nTop 3 scores (nlargest):");
+console.log("  values:", top3.values.join(", "));
+console.log("  index:", top3.index.values.join(", "));
+
+const bottom2 = nsmallest(scores, 2);
+console.log("\nBottom 2 scores (nsmallest):");
+console.log("  values:", bottom2.values.join(", "));
+console.log("  index:", bottom2.index.values.join(", "));
+</textarea>
+    <button onclick="runCode('code-n1', 'out-n1')">▶ Run</button>
+    <div class="output" id="out-n1"></div>
+
+    <hr />
+    <h2>2. nlargest with keep options</h2>
+    <p>
+      When there are ties at the boundary, control which tied value is selected
+      with the <code>keep</code> option: <code>"first"</code>,
+      <code>"last"</code>, or <code>"all"</code>.
+    </p>
+    <textarea id="code-keep" rows="22">
+const { Series, nlargest } = tsb;
+
+// Two equal maximum values at positions 0 and 3
+const s = new Series({ data: [10, 8, 6, 10, 4], index: ["a", "b", "c", "d", "e"] });
+console.log("Data:", s.values.join(", "), "  index:", s.index.values.join(", "));
+
+// keep="first" (default): use first occurrence
+const first = nlargest(s, 1);
+console.log("\nnlargest(1, keep='first'):", first.values[0], "at index", first.index.values[0]);
+
+// keep="last": use last occurrence
+const last = nlargest(s, 1, { keep: "last" });
+console.log("nlargest(1, keep='last'):", last.values[0], "at index", last.index.values[0]);
+
+// keep="all": include ALL tied values at boundary
+const all = nlargest(s, 1, { keep: "all" });
+console.log("nlargest(1, keep='all'):", all.values.join(", "), "at index", all.index.values.join(", "));
+</textarea>
+    <button onclick="runCode('code-keep', 'out-keep')">▶ Run</button>
+    <div class="output" id="out-keep"></div>
+
+    <hr />
+    <h2>3. dataFrameNlargest / dataFrameNsmallest</h2>
+    <p>
+      Select the n rows with the largest (or smallest) values in one or more
+      columns, returning a full DataFrame.
+    </p>
+    <textarea id="code-dfn" rows="24">
+const { DataFrame, dataFrameNlargest, dataFrameNsmallest } = tsb;
+
+const df = DataFrame.fromRecords([
+  { name: "Alice",  score: 88, age: 30 },
+  { name: "Bob",    score: 95, age: 25 },
+  { name: "Carol",  score: 72, age: 35 },
+  { name: "Dave",   score: 95, age: 22 },
+  { name: "Eve",    score: 61, age: 28 },
+]);
+
+const top2 = dataFrameNlargest(df, 2, "score");
+console.log("Top 2 by score:");
+for (let i = 0; i < top2.index.size; i++) {
+  const name = top2.get("name")?.values[i];
+  const score = top2.get("score")?.values[i];
+  console.log(" ", name, "→", score);
+}
+
+const bottom2 = dataFrameNsmallest(df, 2, "age");
+console.log("\nBottom 2 by age:");
+for (let i = 0; i < bottom2.index.size; i++) {
+  const name = bottom2.get("name")?.values[i];
+  const age = bottom2.get("age")?.values[i];
+  console.log(" ", name, "→ age", age);
+}
+</textarea>
+    <button onclick="runCode('code-dfn', 'out-dfn')">▶ Run</button>
+    <div class="output" id="out-dfn"></div>
+
+    <hr />
+    <h2>4. rank — Series ranking</h2>
+    <p>
+      Compute numeric ranks for each element. Ties are broken according to
+      <code>method</code>. Ranks are 1-based; use <code>pct: true</code> for
+      fractional (0, 1] ranks.
+    </p>
+    <textarea id="code-rank" rows="26">
+const { Series, rank } = tsb;
+
+const s = new Series({ data: [3, 1, 4, 1, 5], name: "val" });
+console.log("Values:", s.values.join(", "));
+
+const avg = rank(s);
+console.log("\nrank (method='average'):", avg.values.join(", "));
+
+const minR = rank(s, { method: "min" });
+console.log("rank (method='min'):    ", minR.values.join(", "));
+
+const maxR = rank(s, { method: "max" });
+console.log("rank (method='max'):    ", maxR.values.join(", "));
+
+const dense = rank(s, { method: "dense" });
+console.log("rank (method='dense'):  ", dense.values.join(", "));
+
+const desc = rank(s, { ascending: false });
+console.log("rank (ascending=false): ", desc.values.join(", "));
+
+const pct = rank(s, { pct: true });
+console.log("rank (pct=true):        ", pct.values.map(v => v.toFixed(2)).join(", "));
+</textarea>
+    <button onclick="runCode('code-rank', 'out-rank')">▶ Run</button>
+    <div class="output" id="out-rank"></div>
+
+    <hr />
+    <h2>5. rank with NaN handling</h2>
+    <p>
+      Control where missing values appear in the ranked output using
+      <code>naOption: "keep"</code> (default), <code>"top"</code>, or
+      <code>"bottom"</code>.
+    </p>
+    <textarea id="code-rankna" rows="22">
+const { Series, rank } = tsb;
+
+const s = new Series({ data: [1, null, 3, null, 2] });
+console.log("Values:", s.values.join(", "));
+
+const keep = rank(s, { naOption: "keep" });
+console.log("\nnaOption='keep':  ", keep.values.map(v => v == null || isNaN(v) ? "NaN" : v).join(", "));
+
+const top = rank(s, { naOption: "top" });
+console.log("naOption='top':   ", top.values.join(", "));
+
+const bottom = rank(s, { naOption: "bottom" });
+console.log("naOption='bottom':", bottom.values.join(", "));
+</textarea>
+    <button onclick="runCode('code-rankna', 'out-rankna')">▶ Run</button>
+    <div class="output" id="out-rankna"></div>
+
+    <hr />
+    <h2>6. rankDataFrame</h2>
+    <p>
+      Rank each column of a DataFrame independently, returning a new DataFrame
+      of float ranks.
+    </p>
+    <textarea id="code-rankdf" rows="22">
+const { DataFrame, rankDataFrame } = tsb;
+
+const df = DataFrame.fromRecords([
+  { math: 90, english: 75, science: 85 },
+  { math: 75, english: 90, science: 70 },
+  { math: 85, english: 80, science: 95 },
+]);
+
+const ranked = rankDataFrame(df);
+console.log("Ranked DataFrame (each column ranked 1-3):");
+for (const [col, series] of ranked.items()) {
+  console.log(" ", col, ":", series.values.join(", "));
+}
+
+const pctRanked = rankDataFrame(df, { pct: true });
+console.log("\nPercentile-ranked:");
+for (const [col, series] of pctRanked.items()) {
+  console.log(" ", col, ":", series.values.map(v => v.toFixed(2)).join(", "));
+}
+</textarea>
+    <button onclick="runCode('code-rankdf', 'out-rankdf')">▶ Run</button>
+    <div class="output" id="out-rankdf"></div>
+
+    <hr />
+    <h2>API Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th>Description</th>
+          <th>pandas equivalent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>nlargest(series, n, {keep?})</code></td>
+          <td>n largest values from a Series</td>
+          <td><code>Series.nlargest()</code></td>
+        </tr>
+        <tr>
+          <td><code>nsmallest(series, n, {keep?})</code></td>
+          <td>n smallest values from a Series</td>
+          <td><code>Series.nsmallest()</code></td>
+        </tr>
+        <tr>
+          <td><code>dataFrameNlargest(df, n, columns, {keep?})</code></td>
+          <td>n rows with largest column values</td>
+          <td><code>DataFrame.nlargest()</code></td>
+        </tr>
+        <tr>
+          <td><code>dataFrameNsmallest(df, n, columns, {keep?})</code></td>
+          <td>n rows with smallest column values</td>
+          <td><code>DataFrame.nsmallest()</code></td>
+        </tr>
+        <tr>
+          <td><code>rank(series, {method?, ascending?, naOption?, pct?})</code></td>
+          <td>Rank each element of a Series</td>
+          <td><code>Series.rank()</code></td>
+        </tr>
+        <tr>
+          <td><code>rankDataFrame(df, {method?, ascending?, naOption?, pct?})</code></td>
+          <td>Rank each column of a DataFrame</td>
+          <td><code>DataFrame.rank()</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><a href="index.html">← Back to tsb playground index</a></p>
+  </body>
+</html>
