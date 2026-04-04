@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IntervalIndex — tsb Playground</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --border: #2e3148;
+        --accent: #7c6af5;
+        --text: #e2e8f0;
+        --muted: #8892a4;
+        --success: #34d399;
+        --error: #f87171;
+        --code-bg: #12141e;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        padding: 2rem 1rem;
+      }
+      .container { max-width: 860px; margin: 0 auto; }
+      header { margin-bottom: 2.5rem; }
+      header h1 { font-size: 2rem; color: var(--accent); }
+      header p { color: var(--muted); margin-top: 0.5rem; }
+      nav { margin-bottom: 2rem; }
+      nav a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+      nav a:hover { text-decoration: underline; }
+      section { margin-bottom: 3rem; }
+      h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+      .demo {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+      }
+      .demo-label {
+        background: var(--code-bg);
+        color: var(--muted);
+        font-size: 0.8rem;
+        padding: 0.4rem 1rem;
+        border-bottom: 1px solid var(--border);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      textarea {
+        width: 100%;
+        min-height: 160px;
+        background: var(--code-bg);
+        color: var(--text);
+        border: none;
+        padding: 1rem;
+        font-family: "Fira Code", "Cascadia Code", monospace;
+        font-size: 0.88rem;
+        resize: vertical;
+        outline: none;
+      }
+      .actions {
+        padding: 0.75rem 1rem;
+        background: var(--surface);
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+      }
+      button {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 0.45rem 1.1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      button:hover { filter: brightness(1.15); }
+      .output {
+        background: var(--code-bg);
+        border-top: 1px solid var(--border);
+        padding: 0.9rem 1rem;
+        font-family: "Fira Code", monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+        color: var(--success);
+        min-height: 2.5rem;
+      }
+      .output.error { color: var(--error); }
+      .pill {
+        display: inline-block;
+        background: var(--border);
+        border-radius: 4px;
+        padding: 0.1rem 0.5rem;
+        font-family: monospace;
+        font-size: 0.82rem;
+        color: var(--accent);
+      }
+      p { color: var(--muted); margin-bottom: 0.75rem; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <nav><a href="index.html">← Back to tsb Playground</a></nav>
+      <header>
+        <h1>IntervalIndex</h1>
+        <p>
+          Interval types and range-based indexing — a TypeScript port of
+          <span class="pill">pandas.Interval</span> and <span class="pill">pd.IntervalIndex</span>.
+        </p>
+      </header>
+
+      <!-- 1. Interval basics -->
+      <section>
+        <h2>1. Interval basics</h2>
+        <p>
+          An <span class="pill">Interval</span> holds a <code>left</code> and <code>right</code>
+          endpoint. The <span class="pill">closed</span> parameter controls which sides are
+          included: <code>"left"</code>, <code>"right"</code> (default), <code>"both"</code>, or
+          <code>"neither"</code>.
+        </p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code1">
+const { Interval } = tsb;
+
+const iv = new Interval(0, 1, "right"); // (0, 1]
+console.log("toString:", iv.toString());
+console.log("left:", iv.left, "right:", iv.right, "closed:", iv.closed);
+console.log("mid:", iv.mid, "length:", iv.length);
+console.log("isOpen:", iv.isOpen, "isClosed:", iv.isClosed);
+
+const both = new Interval(0, 1, "both"); // [0, 1]
+console.log("both:", both.toString(), "isClosed:", both.isClosed);
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code1','out1')">▶ Run</button>
+          </div>
+          <div class="output" id="out1">Press Run to execute…</div>
+        </div>
+      </section>
+
+      <!-- 2. contains -->
+      <section>
+        <h2>2. Interval.contains</h2>
+        <p>Check if a scalar value falls inside the interval.</p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code2">
+const { Interval } = tsb;
+
+const iv = new Interval(0, 1, "right"); // (0, 1]
+console.log("0 in (0,1]:", iv.contains(0));   // false
+console.log("0.5 in (0,1]:", iv.contains(0.5)); // true
+console.log("1 in (0,1]:", iv.contains(1));   // true
+
+const open = new Interval(0, 1, "neither"); // (0, 1)
+console.log("0 in (0,1):", open.contains(0)); // false
+console.log("1 in (0,1):", open.contains(1)); // false
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code2','out2')">▶ Run</button>
+          </div>
+          <div class="output" id="out2">Press Run to execute…</div>
+        </div>
+      </section>
+
+      <!-- 3. overlaps -->
+      <section>
+        <h2>3. Interval.overlaps</h2>
+        <p>Check if two intervals share at least one point.</p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code3">
+const { Interval } = tsb;
+
+const a = new Interval(0, 2);
+const b = new Interval(1, 3);
+const c = new Interval(5, 6);
+
+console.log("a overlaps b:", a.overlaps(b)); // true
+console.log("a overlaps c:", a.overlaps(c)); // false
+
+// Touching endpoints — depends on closed
+const x = new Interval(0, 1, "right"); // (0, 1]
+const y = new Interval(1, 2, "left");  // [1, 2)
+console.log("(0,1] overlaps [1,2):", x.overlaps(y)); // true
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code3','out3')">▶ Run</button>
+          </div>
+          <div class="output" id="out3">Press Run to execute…</div>
+        </div>
+      </section>
+
+      <!-- 4. IntervalIndex.fromBreaks -->
+      <section>
+        <h2>4. IntervalIndex.fromBreaks</h2>
+        <p>Build an index from consecutive break points — each adjacent pair becomes one interval.</p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code4">
+const { IntervalIndex } = tsb;
+
+const idx = IntervalIndex.fromBreaks([0, 1, 2, 3]);
+console.log("size:", idx.size);
+console.log("left:", idx.left);
+console.log("right:", idx.right);
+console.log("mid:", idx.mid);
+console.log("length:", idx.length);
+console.log(idx.toString());
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code4','out4')">▶ Run</button>
+          </div>
+          <div class="output" id="out4">Press Run to execute…</div>
+        </div>
+      </section>
+
+      <!-- 5. IntervalIndex.contains / overlaps -->
+      <section>
+        <h2>5. Vectorized contains &amp; overlaps</h2>
+        <p>Query an entire index at once — returns a boolean array.</p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code5">
+const { Interval, IntervalIndex } = tsb;
+
+const idx = IntervalIndex.fromBreaks([0, 2, 4, 6]);
+console.log("contains(1.5):", idx.contains(1.5)); // [true, false, false]
+console.log("contains(4):",   idx.contains(4));   // [false, true, false] (right-closed)
+console.log("contains(7):",   idx.contains(7));   // [false, false, false]
+
+const query = new Interval(1, 3);
+console.log("overlaps((1,3]):", idx.overlaps(query)); // [true, true, false]
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code5','out5')">▶ Run</button>
+          </div>
+          <div class="output" id="out5">Press Run to execute…</div>
+        </div>
+      </section>
+
+      <!-- 6. intervalRange -->
+      <section>
+        <h2>6. intervalRange — pd.interval_range</h2>
+        <p>Generate evenly-spaced intervals from a start/end with <code>periods</code> or <code>freq</code>.</p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code6">
+const { intervalRange } = tsb;
+
+// 4 equal intervals over [0, 4)
+const a = intervalRange(0, 4, { periods: 4 });
+console.log("periods=4:", a.toString());
+
+// step of 2 over [0, 6)
+const b = intervalRange(0, 6, { freq: 2, closed: "left" });
+console.log("freq=2, closed=left:", b.toString());
+
+// Single period
+const c = intervalRange(10, 20, { periods: 1, closed: "both" });
+console.log("single:", c.get(0).toString());
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code6','out6')">▶ Run</button>
+          </div>
+          <div class="output" id="out6">Press Run to execute…</div>
+        </div>
+      </section>
+
+      <!-- 7. setClosed / fromArrays / fromIntervals -->
+      <section>
+        <h2>7. fromArrays, fromIntervals, setClosed</h2>
+        <p>Additional factory methods and the <code>setClosed</code> transformer.</p>
+        <div class="demo">
+          <div class="demo-label">Code</div>
+          <textarea id="code7">
+const { Interval, IntervalIndex } = tsb;
+
+// fromArrays
+const idx = IntervalIndex.fromArrays([0, 2, 4], [2, 4, 6], "right");
+console.log("fromArrays:", idx.toString());
+
+// fromIntervals
+const ivs = [new Interval(0, 5, "both"), new Interval(5, 10, "both")];
+const idx2 = IntervalIndex.fromIntervals(ivs);
+console.log("fromIntervals:", idx2.toString());
+
+// setClosed
+const reopen = idx.setClosed("neither");
+console.log("after setClosed(neither):", reopen.get(0).toString());
+
+// equals
+const same = IntervalIndex.fromBreaks([0, 2, 4, 6]);
+console.log("equals same breaks:", idx.equals(same));
+          </textarea>
+          <div class="actions">
+            <button onclick="run('code7','out7')">▶ Run</button>
+          </div>
+          <div class="output" id="out7">Press Run to execute…</div>
+        </div>
+      </section>
+    </div>
+
+    <script src="playground-runtime.js"></script>
+    <script>
+      async function run(codeId, outId) {
+        const code = document.getElementById(codeId).value.trim();
+        const out = document.getElementById(outId);
+        out.textContent = "Running…";
+        out.className = "output";
+        try {
+          const result = await window.__tsbRun(code);
+          out.textContent = result || "(no output)";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "output error";
+        }
+      }
+    </script>
+  </body>
+</html>
