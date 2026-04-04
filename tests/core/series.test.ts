@@ -108,9 +108,32 @@ describe("Series", () => {
     it("pow", () => expect(a.pow(2).values).toEqual([1, 4, 9]));
     it("floordiv", () => expect(b.floordiv(a).values).toEqual([4, 2, 2]));
 
-    it("throws when sizes differ", () => {
+    it("aligns on index when sizes differ (pandas semantics)", () => {
+      // a has index [0,1,2], c has index [0,1] → outer join → [0,1,2]
+      // result: [1+1, 2+2, NaN]
       const c = new Series({ data: [1, 2] });
-      expect(() => a.add(c)).toThrow(RangeError);
+      const result = a.add(c);
+      expect(result.size).toBe(3);
+      expect(result.values[0]).toBe(2);
+      expect(result.values[1]).toBe(4);
+      expect(Number.isNaN(result.values[2] as number)).toBe(true);
+    });
+
+    it("aligns by label, not position", () => {
+      const x = new Series({ data: [10, 20, 30], index: new Index(["a", "b", "c"]) });
+      const y = new Series({ data: [1, 3], index: new Index(["a", "c"]) });
+      const result = x.add(y);
+      // union index: a, b, c
+      expect(result.values[0]).toBe(11); // a: 10+1
+      expect(Number.isNaN(result.values[1] as number)).toBe(true); // b: no match in y
+      expect(result.values[2]).toBe(33); // c: 30+3
+    });
+
+    it("fill_value replaces missing before op", () => {
+      const x = new Series({ data: [10, 20, 30], index: new Index(["a", "b", "c"]) });
+      const y = new Series({ data: [1, 3], index: new Index(["a", "c"]) });
+      const result = x.add(y, 0);
+      expect(result.values).toEqual([11, 20, 33]);
     });
   });
 
