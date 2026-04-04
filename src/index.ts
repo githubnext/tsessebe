@@ -35,3 +35,17 @@ export { Series } from "./core/index.ts";
 export type { SeriesOptions } from "./core/index.ts";
 export { DataFrame } from "./core/index.ts";
 export type { DataFrameOptions } from "./core/index.ts";
+export { concat } from "./merge/index.ts";
+export type { ConcatOptions } from "./merge/index.ts";
+export { merge } from "./merge/index.ts";
+export type { MergeOptions } from "./merge/index.ts";
+export { DataFrameGroupBy, SeriesGroupBy } from "./groupby/index.ts";
+export type { AggFn, AggName, AggSpec } from "./groupby/index.ts";
+export {
+  alignSeries,
+  alignedBinaryOp,
+  alignDataFrames,
+  alignedDataFrameBinaryOp,
+} from "./core/index.ts";
+export type { AlignJoin, SeriesAlignResult, DataFrameAlignResult } from "./core/index.ts";
+export { StringAccessor } from "./core/index.ts";

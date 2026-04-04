@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — GroupBy Tutorial</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    header a { color: #8b949e; font-size: 0.9rem; text-decoration: none; }
+    header a:hover { color: var(--accent); }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 2rem 0 0.5rem;
+      color: var(--accent);
+    }
+    p { margin: 0.5rem 0 1rem; color: #8b949e; }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .example-header {
+      background: #0d1117;
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .example-header span { color: var(--green); font-weight: 600; }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+    .cmt { color: #8b949e; font-style: italic; }
+    .out {
+      background: #0d1117;
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--green);
+    }
+    .out-label {
+      color: #8b949e;
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    th {
+      background: #0d1117;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      text-align: left;
+    }
+    td {
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.8rem;
+      color: var(--text);
+    }
+    tr:nth-child(even) td { background: #0d1117; }
+    .badge {
+      display: inline-block;
+      background: #21262d;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--orange);
+    }
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>tsb</h1>
+  <a href="index.html">← All features</a>
+  <span style="flex:1"></span>
+  <span class="badge">GroupBy</span>
+</header>
+
+<main>
+
+  <h2>GroupBy: Split–Apply–Combine</h2>
+  <p>
+    The GroupBy engine lets you split a DataFrame (or Series) into groups, apply an aggregation
+    or transformation to each group, and combine the results — mirroring
+    <code>pandas.DataFrame.groupby()</code>.
+  </p>
+
+  <!-- 1. Basic groupby + sum -->
+  <h2>1 · Basic groupby + sum</h2>
+  <p>Group by a single column and aggregate with a built-in function:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">import</span> { DataFrame } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  dept:  [<span class="str">"A"</span>, <span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>],
+  sales: [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>, <span class="num">50</span>],
+  bonus: [<span class="num">1</span>,  <span class="num">2</span>,  <span class="num">3</span>,  <span class="num">4</span>,  <span class="num">5</span> ],
+});
+
+<span class="kw">const</span> result = df.<span class="fn">groupby</span>(<span class="str">"dept"</span>).<span class="fn">sum</span>();
+<span class="fn">console</span>.<span class="fn">log</span>(result.<span class="fn">toString</span>());</pre>
+    <div class="out">
+      <div class="out-label">Output</div>
+      <table>
+        <thead><tr><th>(index)</th><th>sales</th><th>bonus</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>30</td><td>3</td></tr>
+          <tr><td>B</td><td>70</td><td>7</td></tr>
+          <tr><td>C</td><td>50</td><td>5</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 2. Multiple aggregations -->
+  <h2>2 · Per-column aggregation specs</h2>
+  <p>Apply different aggregation functions to different columns using an object spec:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre>df.<span class="fn">groupby</span>(<span class="str">"dept"</span>).<span class="fn">agg</span>({
+  sales: <span class="str">"sum"</span>,
+  bonus: <span class="str">"mean"</span>,
+});</pre>
+    <div class="out">
+      <div class="out-label">Output</div>
+      <table>
+        <thead><tr><th>(index)</th><th>sales</th><th>bonus</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>30</td><td>1.5</td></tr>
+          <tr><td>B</td><td>70</td><td>3.5</td></tr>
+          <tr><td>C</td><td>50</td><td>5</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 3. Custom aggregation function -->
+  <h2>3 · Custom aggregation function</h2>
+  <p>Pass any function <code>(vals: readonly Scalar[]) =&gt; Scalar</code>:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="cmt">// Range = max − min per group</span>
+df.<span class="fn">groupby</span>(<span class="str">"dept"</span>).<span class="fn">agg</span>((vals) => {
+  <span class="kw">const</span> nums = vals.<span class="fn">filter</span>((v): v <span class="kw">is</span> number => <span class="kw">typeof</span> v === <span class="str">"number"</span>);
+  <span class="kw">if</span> (nums.length === <span class="num">0</span>) <span class="kw">return</span> <span class="num">0</span>;
+  <span class="kw">return</span> Math.<span class="fn">max</span>(...nums) - Math.<span class="fn">min</span>(...nums);
+});</pre>
+    <div class="out">
+      <div class="out-label">Output (sales range)</div>
+      <table>
+        <thead><tr><th>(index)</th><th>sales</th><th>bonus</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>10</td><td>1</td></tr>
+          <tr><td>B</td><td>10</td><td>1</td></tr>
+          <tr><td>C</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. transform -->
+  <h2>4 · transform()</h2>
+  <p>
+    Unlike <code>agg()</code>, <code>transform()</code> returns a same-shape DataFrame —
+    useful for broadcasting group statistics back to the original rows.
+  </p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="cmt">// Subtract group mean (demeaning)</span>
+<span class="kw">const</span> demeaned = df.<span class="fn">groupby</span>(<span class="str">"dept"</span>).<span class="fn">transform</span>((vals, col) => {
+  <span class="kw">if</span> (col === <span class="str">"dept"</span>) <span class="kw">return</span> vals;
+  <span class="kw">const</span> nums = vals.<span class="fn">filter</span>((v): v <span class="kw">is</span> number => <span class="kw">typeof</span> v === <span class="str">"number"</span>);
+  <span class="kw">const</span> mean = nums.<span class="fn">reduce</span>((a, b) => a + b, <span class="num">0</span>) / nums.length;
+  <span class="kw">return</span> vals.<span class="fn">map</span>((v) => (<span class="kw">typeof</span> v === <span class="str">"number"</span> ? v - mean : v));
+});</pre>
+    <div class="out">
+      <div class="out-label">Output (same shape, values demeaned)</div>
+      <table>
+        <thead><tr><th>(index)</th><th>dept</th><th>sales</th><th>bonus</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>A</td><td>-5</td><td>-0.5</td></tr>
+          <tr><td>1</td><td>A</td><td>5</td><td>0.5</td></tr>
+          <tr><td>2</td><td>B</td><td>-5</td><td>-0.5</td></tr>
+          <tr><td>3</td><td>B</td><td>5</td><td>0.5</td></tr>
+          <tr><td>4</td><td>C</td><td>0</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. apply -->
+  <h2>5 · apply()</h2>
+  <p>Run arbitrary logic on each sub-DataFrame and concatenate the results:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="cmt">// Keep only the top-sales row from each dept</span>
+<span class="kw">const</span> topRows = df.<span class="fn">groupby</span>(<span class="str">"dept"</span>).<span class="fn">apply</span>((sub) =>
+  sub.<span class="fn">sortValues</span>(<span class="str">"sales"</span>, <span class="kw">false</span>).<span class="fn">head</span>(<span class="num">1</span>),
+);</pre>
+    <div class="out">
+      <div class="out-label">Output</div>
+      <table>
+        <thead><tr><th>(index)</th><th>dept</th><th>sales</th><th>bonus</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>A</td><td>20</td><td>2</td></tr>
+          <tr><td>3</td><td>B</td><td>40</td><td>4</td></tr>
+          <tr><td>4</td><td>C</td><td>50</td><td>5</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 6. filter -->
+  <h2>6 · filter()</h2>
+  <p>Keep only the rows belonging to groups that pass a predicate:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="cmt">// Keep only groups with more than 1 row</span>
+<span class="kw">const</span> big = df.<span class="fn">groupby</span>(<span class="str">"dept"</span>).<span class="fn">filter</span>((sub) => sub.shape[<span class="num">0</span>] > <span class="num">1</span>);</pre>
+    <div class="out">
+      <div class="out-label">Output (C dropped — only 1 row)</div>
+      <table>
+        <thead><tr><th>(index)</th><th>dept</th><th>sales</th><th>bonus</th></tr></thead>
+        <tbody>
+          <tr><td>0</td><td>A</td><td>10</td><td>1</td></tr>
+          <tr><td>1</td><td>A</td><td>20</td><td>2</td></tr>
+          <tr><td>2</td><td>B</td><td>30</td><td>3</td></tr>
+          <tr><td>3</td><td>B</td><td>40</td><td>4</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 7. size + ngroups -->
+  <h2>7 · size() and ngroups</h2>
+  <p>Inspect the structure of the groups:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">const</span> gb = df.<span class="fn">groupby</span>(<span class="str">"dept"</span>);
+
+gb.ngroups;        <span class="cmt">// 3</span>
+gb.<span class="fn">groupKeys</span>();   <span class="cmt">// ["A", "B", "C"]</span>
+gb.<span class="fn">size</span>();        <span class="cmt">// Series { A: 2, B: 2, C: 1 }</span></pre>
+    <div class="out">
+      <div class="out-label">gb.size()</div>
+      <table>
+        <thead><tr><th>(index)</th><th>size</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>2</td></tr>
+          <tr><td>B</td><td>2</td></tr>
+          <tr><td>C</td><td>1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 8. Multi-key groupby -->
+  <h2>8 · Multi-key groupby</h2>
+  <p>Group by an array of column names:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">const</span> df2 = DataFrame.<span class="fn">fromColumns</span>({
+  dept:   [<span class="str">"A"</span>, <span class="str">"A"</span>, <span class="str">"A"</span>, <span class="str">"B"</span>],
+  region: [<span class="str">"E"</span>, <span class="str">"E"</span>, <span class="str">"W"</span>, <span class="str">"E"</span>],
+  sales:  [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>, <span class="num">40</span>],
+});
+
+df2.<span class="fn">groupby</span>([<span class="str">"dept"</span>, <span class="str">"region"</span>]).<span class="fn">sum</span>();</pre>
+    <div class="out">
+      <div class="out-label">3 composite groups</div>
+      <table>
+        <thead><tr><th>(index)</th><th>sales</th></tr></thead>
+        <tbody>
+          <tr><td>A__SEP__E</td><td>30</td></tr>
+          <tr><td>A__SEP__W</td><td>30</td></tr>
+          <tr><td>B__SEP__E</td><td>40</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 9. SeriesGroupBy -->
+  <h2>9 · SeriesGroupBy</h2>
+  <p>Series also supports <code>groupby()</code>, accepting an array of key values:</p>
+  <div class="example">
+    <div class="example-header"><span>TypeScript</span></div>
+    <pre><span class="kw">import</span> { Series } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> s = <span class="kw">new</span> <span class="fn">Series</span>({ data: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>] });
+s.<span class="fn">groupby</span>([<span class="str">"A"</span>, <span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"B"</span>]).<span class="fn">sum</span>();
+<span class="cmt">// Series { A: 3, B: 7 }</span></pre>
+    <div class="out">
+      <div class="out-label">Output</div>
+      <table>
+        <thead><tr><th>(index)</th><th>value</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>3</td></tr>
+          <tr><td>B</td><td>7</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- API Reference -->
+  <h2>API Reference</h2>
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>groupby(by)</code></td><td>Group by column name(s) → DataFrameGroupBy</td></tr>
+      <tr><td><code>.sum()</code></td><td>Sum of each group (numeric columns)</td></tr>
+      <tr><td><code>.mean()</code></td><td>Mean of each group</td></tr>
+      <tr><td><code>.min()</code></td><td>Minimum per group</td></tr>
+      <tr><td><code>.max()</code></td><td>Maximum per group</td></tr>
+      <tr><td><code>.count()</code></td><td>Count non-null values per group</td></tr>
+      <tr><td><code>.std()</code></td><td>Sample standard deviation per group</td></tr>
+      <tr><td><code>.first()</code></td><td>First non-null value per group</td></tr>
+      <tr><td><code>.last()</code></td><td>Last non-null value per group</td></tr>
+      <tr><td><code>.size()</code></td><td>Number of rows per group (Series)</td></tr>
+      <tr><td><code>.agg(spec)</code></td><td>Apply named agg / custom fn / per-column specs</td></tr>
+      <tr><td><code>.transform(fn)</code></td><td>Same-shape result; broadcast group stats back</td></tr>
+      <tr><td><code>.apply(fn)</code></td><td>Arbitrary per-group function; results concatenated</td></tr>
+      <tr><td><code>.filter(pred)</code></td><td>Keep rows from groups that pass predicate</td></tr>
+      <tr><td><code>.getGroup(key)</code></td><td>Extract sub-DataFrame for a single key</td></tr>
+      <tr><td><code>.ngroups</code></td><td>Number of groups</td></tr>
+      <tr><td><code>.groupKeys</code></td><td>Array of group key labels</td></tr>
+      <tr><td><code>.groups</code></td><td>Map from key → row labels</td></tr>
+    </tbody>
+  </table>
+
+</main>
+
+<footer>
+  tsb — a TypeScript port of pandas, built from first principles.
+</footer>
+
+</body>
+</html>
