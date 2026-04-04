@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T07:48:00Z |
-| Iteration Count | 11 |
-| Best Metric | 12 |
+| Last Run | 2026-04-04T08:25:00Z |
+| Iteration Count | 12 |
+| Best Metric | 13 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | — |
+| PR | #aw_pr12 |
 | Steering Issue | — |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,15 +31,15 @@
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: (see PR created this run — #aw_pr10)
+**Pull Request**: #aw_pr12
 **Steering Issue**: —
 
 ---
 
 ## 🎯 Current Priorities
 
-Missing data done (metric=12). Next priorities in order:
-1. **DateTime accessor** (`src/core/datetime.ts`) — Series.dt accessor: year/month/day/hour/minute/dayofweek etc.
+Missing data done (metric=12). DateTime accessor done (metric=13). Next priorities in order:
+1. ~~**DateTime accessor** (`src/core/datetime.ts`)~~ — ✅ Done (Iteration 12)
 2. **Sorting** (`src/core/sort.ts`) — sort_values, sort_index standalone functions
 3. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers
 
@@ -57,6 +57,7 @@ Missing data done (metric=12). Next priorities in order:
 
 - Iteration 9 (Series.str): `StringAccessor` in `strings.ts`. Circular ESM dep works fine. Move regex to top level (`useTopLevelRegex`). Extract helpers to avoid `noExcessiveCognitiveComplexity`. Fix: `_selectRows` column Series use fresh RangeIndex. Fix: GroupBy aggregation numeric-only.
 - Iteration 11 (missing data): Test files MUST import from `src/index.ts` (`useImportRestrictions` nursery rule). `df.columns` → `Index<string>`, iterate via `.values`. Use `df.get(name)` (returns `undefined`) not `df.col(name)` (throws). `Index.getLoc(key)` returns `number | readonly number[]`. Extract helpers for complexity (max 15). `!(a && b)` preferred over `!a || !b`.
+- Iteration 12 (datetime): `DateTimeAccessor` in `datetime.ts` — accept Date, ISO string, or ms number. Extract all helper functions outside the class (`getIsoWeek`, `daysInMonth`, etc.) to satisfy `noExcessiveCognitiveComplexity`. Use `Date.getDay()` (0=Sun) and shift to pandas Mon=0 convention with `(getDay() + 6) % 7`. `strftime` uses a `replace(/%[A-Za-z%]/g, ...)` approach — keep regex at top level won't work for inline switch, so inline it in the method body. ISO week algorithm: set to nearest Thursday, find year start, calc weeks. Property-based tests with `fc.date()` can validate all numeric outputs are in-range.
 
 ---
 
@@ -68,32 +69,29 @@ Missing data done (metric=12). Next priorities in order:
 
 ## 🔭 Future Directions
 
-### Phase 1 — Core Foundation (next 5 iterations)
-1. ~~**Index** (`src/core/index.ts`)~~ — ✅ Done (by Copilot agent, merged into main)
-2. ~~**Dtype system** (`src/core/dtype.ts`)~~ — ✅ Done (Iteration 2/3)
-3. ~~**Series** (`src/core/series.ts`)~~ — ✅ Done (Iteration 3)
-4. ~~**DataFrame** (`src/core/frame.ts`)~~ — ✅ Done (Iteration 5)
-5. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers; MultiIndex groundwork
+### Phase 1 — Core Foundation ✅ Done
+Index, Dtype, Series, DataFrame all implemented.
 
-### Phase 2 — Operations (iterations 6-15)
-6. ~~**Arithmetic operations** (Series + Series, DataFrame + DataFrame, broadcasting)~~ ✅ Done (Iteration 8)
-7. Comparison and boolean operations
-8. ~~**String accessor** (Series.str)~~ ✅ Done (Iteration 9)
-9. DateTime accessor (Series.dt)
-10. ~~**Missing data handling**~~ ✅ Done (Iteration 11) — isna/notna, ffill/bfill, fillna, dropna, interpolate
-11. Sorting (sort_values, sort_index)
-12. ~~**Groupby**~~ ✅ Done (Iteration 6)
-13. **Merging/joining** (merge, join, **concat**) — ~~concat~~ ✅ Done (Iteration 7), ~~merge~~ ✅ Done (Iteration 10)
-14. Reshaping (pivot, melt, stack, unstack, crosstab)
-15. Window functions (rolling, expanding, ewm)
+### Phase 2 — Operations (active)
+- ~~Arithmetic~~ ✅ (Iter 8) · ~~String accessor~~ ✅ (Iter 9) · ~~DateTime accessor~~ ✅ (Iter 12)
+- ~~Missing data~~ ✅ (Iter 11) · ~~Groupby~~ ✅ (Iter 6) · ~~concat~~ ✅ (Iter 7) · ~~merge~~ ✅ (Iter 10)
+- **Next**: Sorting (sort_values/sort_index) · Comparison/boolean ops · Indexing (.loc/.iloc)
+- **Later**: Reshaping (pivot/melt/stack/unstack) · Window functions (rolling/expanding/ewm)
 
 ### Phase 3+ — I/O, Stats, Advanced
-16-20. read_csv/json/parquet, to_csv/json, from_dict/records
-21-25. describe/corr/cov, Categorical, MultiIndex, Timedelta, Sparse
+read_csv/json/parquet · to_csv/json · describe/corr/cov · Categorical · MultiIndex · Timedelta
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 12 — 2026-04-04 08:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974951477)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/core/datetime.ts` — `Series.dt` DateTime accessor: calendar components, quarter, dayofyear, ISO week, dayofweek (Mon=0), boundary flags, strftime with 17 directives, date()/time() helpers, normalize(), total_seconds(), timestamp_ms(). Accepts Date, ISO string, or ms number.
+- **Metric**: 13 (previous best: 12, delta: +1)
+- **Commit**: 6ce8c17
+- **Notes**: 78 unit tests + 6 property-based tests. 100% line coverage. `getIsoWeek` and other helpers extracted as module-level functions. Use `(getDay() + 6) % 7` for pandas Mon=0 dayofweek convention.
 
 ### Iteration 11 — 2026-04-04 07:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974522158)
 
@@ -115,13 +113,11 @@ Missing data done (metric=12). Next priorities in order:
 - **Status**: ✅ Accepted | **Metric**: 9 (+1) | **Commit**: 6fb9189
 - **Change**: Aligned arithmetic `ops.ts` — alignSeries/alignedBinaryOp/alignDataFrames. DataFrame.add/sub/mul/div.
 
-### Iteration 7 — 2026-04-04 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972580333)
-
+### Iteration 7 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972580333)
 - **Status**: ✅ Accepted | **Metric**: 8 (+1) | **Commit**: ee507e5
 - **Change**: `concat()` — axis=0/1, outer/inner join, ignoreIndex.
 
-### Iteration 6 — 2026-04-04 05:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972003902)
-
+### Iteration 6 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972003902)
 - **Status**: ✅ Accepted | **Metric**: 7 (+1) | **Commit**: 57d00f3
 - **Change**: `GroupBy` — DataFrameGroupBy and SeriesGroupBy: sum/mean/min/max/count/std/first/last/size, agg, transform, apply, filter.
 
