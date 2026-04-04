@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — DataFrame Tutorial</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    header a { color: #8b949e; font-size: 0.9rem; text-decoration: none; }
+    header a:hover { color: var(--accent); }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 2rem 0 0.5rem;
+      color: var(--accent);
+    }
+    p { margin: 0.5rem 0 1rem; color: #8b949e; }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .example-header {
+      background: #0d1117;
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .example-header span { color: var(--green); font-weight: 600; }
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+    .cmt { color: #8b949e; font-style: italic; }
+    .out {
+      background: #0d1117;
+      border-top: 1px solid var(--border);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--green);
+    }
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 4px;
+      background: #1f3a5a;
+      color: var(--accent);
+      margin-right: 0.5rem;
+    }
+    .note {
+      background: #1a2232;
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      margin: 1rem 0 1.5rem;
+      font-size: 0.9rem;
+      color: #cdd9e5;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🗃️ DataFrame</h1>
+  </div>
+  <a href="index.html">← Back to tsb Playground</a>
+</header>
+<main>
+
+  <p>
+    <code>DataFrame</code> is the heart of <strong>tsb</strong>: a two-dimensional, column-oriented
+    table where every column is a typed <code>Series</code>. It mirrors <code>pandas.DataFrame</code>
+    with a fully strict TypeScript API.
+  </p>
+
+  <!-- ── Construction ─────────────────────────────────────────────────── -->
+  <h2>Construction</h2>
+  <p>Three factory methods cover the most common shapes of input data.</p>
+
+  <div class="example">
+    <div class="example-header">
+      <span>fromColumns</span>
+      <span class="tag">most common</span>
+    </div>
+    <pre><code><span class="kw">import</span> { DataFrame } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Carol"</span>],
+  age:   [<span class="num">30</span>, <span class="num">25</span>, <span class="num">35</span>],
+  score: [<span class="num">90</span>, <span class="num">80</span>, <span class="num">95</span>],
+});
+
+console.log(df.<span class="fn">toString</span>());</code></pre>
+    <div class="out">         name  age  score
+-----------------------
+0  Alice    30   90
+1  Bob      25   80
+2  Carol    35   95</div>
+  </div>
+
+  <div class="example">
+    <div class="example-header">
+      <span>fromRecords</span>
+      <span class="tag">array of objects</span>
+    </div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromRecords</span>([
+  { city: <span class="str">"London"</span>, pop: <span class="num">9_000_000</span> },
+  { city: <span class="str">"Tokyo"</span>,  pop: <span class="num">14_000_000</span> },
+  { city: <span class="str">"NYC"</span>,    pop: <span class="num">8_300_000</span> },
+]);
+
+df.shape;  <span class="cmt">// [3, 2]</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header">
+      <span>from2D</span>
+      <span class="tag">matrix</span>
+    </div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">from2D</span>(
+  [[<span class="num">1</span>, <span class="num">4</span>], [<span class="num">2</span>, <span class="num">5</span>], [<span class="num">3</span>, <span class="num">6</span>]],
+  [<span class="str">"a"</span>, <span class="str">"b"</span>],
+);
+
+df.<span class="fn">col</span>(<span class="str">"a"</span>).<span class="fn">values</span>;  <span class="cmt">// [1, 2, 3]</span></code></pre>
+  </div>
+
+  <!-- ── Shape & Properties ────────────────────────────────────────────── -->
+  <h2>Shape &amp; Properties</h2>
+
+  <div class="example">
+    <div class="example-header"><span>shape / ndim / size / empty</span></div>
+    <pre><code>df.shape;  <span class="cmt">// [3, 3]  — [rows, cols]</span>
+df.ndim;   <span class="cmt">// 2</span>
+df.size;   <span class="cmt">// 9  — rows × cols</span>
+df.empty;  <span class="cmt">// false</span>
+
+df.index;    <span class="cmt">// RangeIndex(0, 1, 2)</span>
+df.columns;  <span class="cmt">// Index(["name", "age", "score"])</span></code></pre>
+  </div>
+
+  <!-- ── Column Access ─────────────────────────────────────────────────── -->
+  <h2>Column Access</h2>
+
+  <div class="example">
+    <div class="example-header"><span>col / get / has</span></div>
+    <pre><code>df.<span class="fn">col</span>(<span class="str">"age"</span>);         <span class="cmt">// Series — throws if missing</span>
+df.<span class="fn">get</span>(<span class="str">"age"</span>);         <span class="cmt">// Series | undefined</span>
+df.<span class="fn">has</span>(<span class="str">"age"</span>);         <span class="cmt">// true</span>
+df.<span class="fn">col</span>(<span class="str">"age"</span>).<span class="fn">mean</span>(); <span class="cmt">// 30</span></code></pre>
+  </div>
+
+  <!-- ── Slicing ────────────────────────────────────────────────────────── -->
+  <h2>Slicing</h2>
+
+  <div class="example">
+    <div class="example-header"><span>head / tail / iloc / loc</span></div>
+    <pre><code>df.<span class="fn">head</span>(<span class="num">2</span>);               <span class="cmt">// first 2 rows</span>
+df.<span class="fn">tail</span>(<span class="num">1</span>);               <span class="cmt">// last row</span>
+df.<span class="fn">iloc</span>([<span class="num">0</span>, <span class="num">2</span>]);          <span class="cmt">// rows at positions 0 and 2</span>
+df.<span class="fn">loc</span>([<span class="str">"Alice"</span>]);         <span class="cmt">// rows where index label = "Alice"</span></code></pre>
+  </div>
+
+  <!-- ── Column Mutations ──────────────────────────────────────────────── -->
+  <h2>Column Mutations</h2>
+  <div class="note">All mutation methods return a <strong>new</strong> DataFrame — tsb is immutable.</div>
+
+  <div class="example">
+    <div class="example-header"><span>assign / drop / select / rename</span></div>
+    <pre><code><span class="cmt">// Add or replace a column</span>
+<span class="kw">const</span> df2 = df.<span class="fn">assign</span>({ bonus: [<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>] });
+
+<span class="cmt">// Remove columns</span>
+<span class="kw">const</span> df3 = df.<span class="fn">drop</span>([<span class="str">"score"</span>]);
+
+<span class="cmt">// Reorder / subset columns</span>
+<span class="kw">const</span> df4 = df.<span class="fn">select</span>([<span class="str">"age"</span>, <span class="str">"name"</span>]);
+
+<span class="cmt">// Rename a column</span>
+<span class="kw">const</span> df5 = df.<span class="fn">rename</span>({ age: <span class="str">"years"</span> });</code></pre>
+  </div>
+
+  <!-- ── Missing Values ───────────────────────────────────────────────── -->
+  <h2>Missing Values</h2>
+
+  <div class="example">
+    <div class="example-header"><span>isna / notna / dropna / fillna</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  a: [<span class="num">1</span>, <span class="kw">null</span>, <span class="num">3</span>],
+  b: [<span class="num">4</span>, <span class="num">5</span>, <span class="kw">null</span>],
+});
+
+df.<span class="fn">isna</span>().<span class="fn">toRecords</span>();   <span class="cmt">// [{ a: false, b: false }, ...]</span>
+df.<span class="fn">dropna</span>().shape;       <span class="cmt">// [1, 2] — only row 0 has no nulls</span>
+df.<span class="fn">fillna</span>(<span class="num">0</span>).toRecords(); <span class="cmt">// nulls → 0</span></code></pre>
+  </div>
+
+  <!-- ── Aggregations ──────────────────────────────────────────────────── -->
+  <h2>Aggregations</h2>
+
+  <div class="example">
+    <div class="example-header"><span>sum / mean / min / max / std / count / describe</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  a: [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>],
+  b: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+});
+
+df.<span class="fn">sum</span>();   <span class="cmt">// Series { a: 60, b: 6 }</span>
+df.<span class="fn">mean</span>();  <span class="cmt">// Series { a: 20, b: 2 }</span>
+df.<span class="fn">min</span>();   <span class="cmt">// Series { a: 10, b: 1 }</span>
+df.<span class="fn">max</span>();   <span class="cmt">// Series { a: 30, b: 3 }</span>
+
+df.<span class="fn">describe</span>();
+<span class="cmt">// DataFrame with rows: count, mean, std, min, max</span>
+<span class="cmt">// columns: a, b</span></code></pre>
+  </div>
+
+  <!-- ── Sorting ────────────────────────────────────────────────────────── -->
+  <h2>Sorting</h2>
+
+  <div class="example">
+    <div class="example-header"><span>sortValues / sortIndex</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Carol"</span>],
+  score: [<span class="num">90</span>, <span class="num">80</span>, <span class="num">95</span>],
+});
+
+<span class="cmt">// Sort ascending</span>
+df.<span class="fn">sortValues</span>(<span class="str">"score"</span>).<span class="fn">col</span>(<span class="str">"name"</span>).<span class="fn">values</span>;
+<span class="cmt">// ["Bob", "Alice", "Carol"]</span>
+
+<span class="cmt">// Sort descending</span>
+df.<span class="fn">sortValues</span>(<span class="str">"score"</span>, <span class="kw">false</span>).<span class="fn">col</span>(<span class="str">"name"</span>).<span class="fn">values</span>;
+<span class="cmt">// ["Carol", "Alice", "Bob"]</span>
+
+<span class="cmt">// Multi-column sort</span>
+df.<span class="fn">sortValues</span>([<span class="str">"group"</span>, <span class="str">"score"</span>], [<span class="kw">true</span>, <span class="kw">false</span>]);</code></pre>
+  </div>
+
+  <!-- ── Apply ──────────────────────────────────────────────────────────── -->
+  <h2>Apply</h2>
+
+  <div class="example">
+    <div class="example-header"><span>apply(fn, axis)</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>], b: [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>] });
+
+<span class="cmt">// axis=0: apply to each column</span>
+df.<span class="fn">apply</span>((s) => s.<span class="fn">sum</span>(), <span class="num">0</span>);
+<span class="cmt">// Series { a: 6, b: 15 }</span>
+
+<span class="cmt">// axis=1: apply to each row</span>
+df.<span class="fn">apply</span>((s) => s.<span class="fn">sum</span>(), <span class="num">1</span>);
+<span class="cmt">// Series [5, 7, 9]</span></code></pre>
+  </div>
+
+  <!-- ── Iteration ─────────────────────────────────────────────────────── -->
+  <h2>Iteration</h2>
+
+  <div class="example">
+    <div class="example-header"><span>items / iterrows</span></div>
+    <pre><code><span class="cmt">// Iterate over (columnName, Series) pairs</span>
+<span class="kw">for</span> (<span class="kw">const</span> [name, col] <span class="kw">of</span> df.<span class="fn">items</span>()) {
+  console.<span class="fn">log</span>(name, col.<span class="fn">sum</span>());
+}
+
+<span class="cmt">// Iterate over (rowLabel, rowSeries) pairs</span>
+<span class="kw">for</span> (<span class="kw">const</span> [label, row] <span class="kw">of</span> df.<span class="fn">iterrows</span>()) {
+  console.<span class="fn">log</span>(label, row.<span class="fn">toObject</span>());
+}</code></pre>
+  </div>
+
+  <!-- ── Conversion ─────────────────────────────────────────────────────── -->
+  <h2>Conversion</h2>
+
+  <div class="example">
+    <div class="example-header"><span>toRecords / toDict / toArray</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>], b: [<span class="num">3</span>, <span class="num">4</span>] });
+
+df.<span class="fn">toRecords</span>();
+<span class="cmt">// [{ a: 1, b: 3 }, { a: 2, b: 4 }]</span>
+
+df.<span class="fn">toDict</span>();
+<span class="cmt">// { a: [1, 2], b: [3, 4] }</span>
+
+df.<span class="fn">toArray</span>();
+<span class="cmt">// [[1, 3], [2, 4]]</span></code></pre>
+  </div>
+
+  <!-- ── Index Manipulation ────────────────────────────────────────────── -->
+  <h2>Index Manipulation</h2>
+
+  <div class="example">
+    <div class="example-header"><span>setIndex / resetIndex</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>],
+  score: [<span class="num">90</span>, <span class="num">80</span>],
+});
+
+<span class="cmt">// Promote "name" to the row index</span>
+<span class="kw">const</span> indexed = df.<span class="fn">setIndex</span>(<span class="str">"name"</span>);
+indexed.index.values;  <span class="cmt">// ["Alice", "Bob"]</span>
+indexed.columns.values; <span class="cmt">// ["score"]</span>
+
+<span class="cmt">// Restore a numeric index</span>
+<span class="kw">const</span> reset = indexed.<span class="fn">resetIndex</span>();
+reset.columns.values; <span class="cmt">// ["index", "score"]</span></code></pre>
+  </div>
+
+  <p style="margin-top: 2rem; font-size: 0.85rem; color: #484f58;">
+    tsb is a TypeScript port of pandas, built from first principles.
+    &mdash; <a href="index.html" style="color: var(--accent);">← Back to Playground</a>
+  </p>
+
+</main>
+</body>
+</html>

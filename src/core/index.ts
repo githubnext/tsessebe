@@ -5,3 +5,5 @@ export { Dtype } from "./dtype.ts";
 export type { DtypeKind, ItemSize } from "./dtype.ts";
 export { Series } from "./series.ts";
 export type { SeriesOptions } from "./series.ts";
+export { DataFrame } from "./frame.ts";
+export type { DataFrameOptions } from "./frame.ts";

@@ -33,3 +33,5 @@ export { Dtype } from "./core/index.ts";
 export type { DtypeKind, ItemSize } from "./core/index.ts";
 export { Series } from "./core/index.ts";
 export type { SeriesOptions } from "./core/index.ts";
+export { DataFrame } from "./core/index.ts";
+export type { DataFrameOptions } from "./core/index.ts";
