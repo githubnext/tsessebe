@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — MultiIndex</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+    h1 { color: #1a1a2e; }
+    h2 { color: #16213e; border-bottom: 2px solid #eee; padding-bottom: .25rem; margin-top: 2rem; }
+    pre { background: #f4f4f8; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .output { background: #e8f5e9; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 4px; margin-top: .5rem; }
+    .note { background: #fff3e0; border-left: 4px solid #ff9800; padding: .75rem 1rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; font-size: .9em; }
+    th { background: #f4f4f8; }
+    a { color: #1976d2; }
+    nav { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+
+<nav><a href="index.html">← Back to tsb playground</a></nav>
+
+<h1>🗂️ MultiIndex</h1>
+<p>
+  tsb's <strong>MultiIndex</strong> is a multi-level hierarchical index — the
+  TypeScript equivalent of <code>pandas.MultiIndex</code>.  Where a normal
+  <code>Index</code> labels each row with a single value, a <code>MultiIndex</code>
+  labels each row with a <em>tuple</em> of values, one per level.
+</p>
+<p>
+  Internally the data is stored efficiently as an array of per-level
+  <strong>distinct label arrays</strong> (<em>levels</em>) plus parallel arrays of
+  <strong>integer codes</strong> that index into those levels.  This
+  representation is compact when the same label combinations repeat across many rows.
+</p>
+
+<h2>Creating a MultiIndex</h2>
+
+<h3>fromArrays — parallel label arrays</h3>
+<pre><code>import { MultiIndex } from "tsb";
+
+// Two parallel arrays — one per level
+const mi = MultiIndex.fromArrays(
+  [["a", "a", "b", "b"], [1, 2, 1, 2]],
+  ["letter", "number"],   // optional level names
+);
+
+mi.size;      // 4
+mi.nlevels;   // 2
+mi.names;     // ["letter", "number"]
+mi.at(0);     // ["a", 1]
+mi.at(-1);    // ["b", 2]</code></pre>
+<div class="output">MultiIndex([("a", 1), ("a", 2), ("b", 1), ("b", 2)], names=['letter', 'number'])</div>
+
+<h3>fromTuples — array of label tuples</h3>
+<pre><code>const mi2 = MultiIndex.fromTuples(
+  [["US", "CA"], ["US", "TX"], ["EU", "DE"]],
+  ["region", "country"],
+);
+
+mi2.size;   // 3
+mi2.at(1);  // ["US", "TX"]</code></pre>
+
+<h3>fromProduct — Cartesian product</h3>
+<pre><code>// All combinations of letters × numbers
+const mi3 = MultiIndex.fromProduct(
+  [["a", "b", "c"], [1, 2]],
+  ["letter", "number"],
+);
+
+mi3.size;     // 6 (3 × 2)
+mi3.toArray();
+// [["a",1], ["a",2], ["b",1], ["b",2], ["c",1], ["c",2]]</code></pre>
+
+<h2>Accessing Level Values</h2>
+<p>
+  <code>getLevelValues(level)</code> returns a flat <code>Index&lt;Label&gt;</code>
+  of all labels at the given level — the labels in their original (non-unique) order,
+  one per row.
+</p>
+<pre><code>const mi = MultiIndex.fromArrays(
+  [["a", "a", "b", "b"], [1, 2, 1, 2]],
+  ["letter", "number"],
+);
+
+mi.getLevelValues(0).toArray();   // ["a", "a", "b", "b"]
+mi.getLevelValues(1).toArray();   // [1, 2, 1, 2]
+mi.getLevelValues("letter").toArray();  // same — resolve by name
+</code></pre>
+
+<p>
+  The <code>levels</code> property gives you the <em>distinct</em> labels per level:
+</p>
+<pre><code>mi.levels[0].toArray();  // ["a", "b"]  (sorted unique values)
+mi.levels[1].toArray();  // [1, 2]</code></pre>
+
+<h2>Lookup by Key</h2>
+<p>
+  <code>getLoc(key)</code> finds the positional index (or indices) of a tuple.
+  Partial keys (shorter than <code>nlevels</code>) match all rows whose first
+  levels match.
+</p>
+<pre><code>const mi = MultiIndex.fromTuples(
+  [["a", 1], ["a", 2], ["b", 1], ["b", 2]],
+  ["letter", "number"],
+);
+
+mi.getLoc(["a", 1]);  // 0   ← single match, returns number
+mi.getLoc(["a"]);     // [0, 1]  ← partial key, returns number[]
+mi.contains(["b", 2]);  // true
+mi.contains(["z", 9]);  // false</code></pre>
+
+<h2>Manipulation</h2>
+
+<h3>droplevel</h3>
+<pre><code>const mi = MultiIndex.fromTuples(
+  [["a", 1, "x"], ["b", 2, "y"]],
+  ["p", "q", "r"],
+);
+
+// Drop one level — returns Index<Label> when only one remains
+const idx = mi.droplevel([0, 2]);   // drops "p" and "r" → Index([1, 2])
+
+// Drop to a 2-level MultiIndex
+const mi2 = mi.droplevel(2);  // drops "r" → MultiIndex 2 levels
+</code></pre>
+
+<h3>swaplevel</h3>
+<pre><code>const mi = MultiIndex.fromTuples(
+  [["a", 1], ["b", 2]],
+  ["letter", "number"],
+);
+
+const swapped = mi.swaplevel(0, 1);
+swapped.at(0);    // [1, "a"]
+swapped.names;    // ["number", "letter"]</code></pre>
+
+<h3>setNames / setLevels / setCodes</h3>
+<pre><code>const mi = MultiIndex.fromTuples([["a", 1], ["b", 2]]);
+
+const renamed = mi.setNames(["letter", "number"]);
+renamed.names;  // ["letter", "number"]
+
+// Replace the distinct values for level 0
+const updated = mi.setLevels(["A", "B"], 0);
+updated.levels[0].toArray();  // ["A", "B"]</code></pre>
+
+<h2>Sorting</h2>
+<pre><code>const mi = MultiIndex.fromTuples([
+  ["b", 2], ["a", 1], ["a", 2], ["b", 1],
+]);
+
+const sorted = mi.sortValues();  // ascending (default)
+sorted.toArray();
+// [["a",1], ["a",2], ["b",1], ["b",2]]
+
+// Per-level direction: first level ascending, second descending
+const sorted2 = mi.sortValues([true, false]);
+sorted2.toArray();
+// [["a",2], ["a",1], ["b",2], ["b",1]]</code></pre>
+
+<h2>Set Operations</h2>
+<pre><code>const m1 = MultiIndex.fromTuples([["a", 1], ["b", 2]]);
+const m2 = MultiIndex.fromTuples([["c", 3], ["d", 4]]);
+
+const combined = m1.append(m2);
+combined.size;   // 4
+combined.at(2);  // ["c", 3]
+
+m1.equals(MultiIndex.fromTuples([["a", 1], ["b", 2]]));  // true</code></pre>
+
+<h2>Conversion</h2>
+<pre><code>const mi = MultiIndex.fromTuples(
+  [["a", 1], ["b", 2]],
+  ["letter", "number"],
+);
+
+// All tuples as an array
+mi.toArray();   // [["a",1], ["b",2]]
+
+// As a plain object for DataFrame construction
+mi.toRecord();  // { letter: ["a", "b"], number: [1, 2] }
+
+// Deduplication
+const dup = MultiIndex.fromTuples([["a", 1], ["b", 2], ["a", 1]]);
+dup.nunique();           // 2
+dup.dropDuplicates().toArray();  // [["a",1], ["b",2]]</code></pre>
+
+<h2>Iteration</h2>
+<pre><code>const mi = MultiIndex.fromTuples([["a", 1], ["b", 2], ["c", 3]]);
+
+for (const [letter, num] of mi) {
+  console.log(`${String(letter)}-${String(num)}`);
+}
+// "a-1"
+// "b-2"
+// "c-3"</code></pre>
+
+<h2>Inspecting the Structure</h2>
+<pre><code>const mi = MultiIndex.fromProduct(
+  [["Q1","Q2"], [2023, 2024]],
+  ["quarter", "year"],
+);
+
+mi.size;     // 4
+mi.nlevels;  // 2
+mi.shape;    // [4, 2]
+mi.ndim;     // 2 (always)
+mi.isUnique;            // true
+mi.isMonotonicIncreasing;  // true (product is already sorted)
+
+console.log(mi.toString());
+// MultiIndex([(Q1, 2023), (Q1, 2024), (Q2, 2023), (Q2, 2024)],
+//            names=['quarter', 'year'])</code></pre>
+
+<div class="note">
+  <strong>Tip:</strong> Use <code>MultiIndex.fromProduct</code> when building
+  panel datasets (e.g. entity × time).  Use <code>fromTuples</code> when you
+  already have the row labels.  Use <code>fromArrays</code> when your data
+  arrives as separate per-level columns.
+</div>
+
+<h2>API Summary</h2>
+<table>
+  <thead>
+    <tr><th>Member</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>MultiIndex.fromArrays(arrays, names?)</code></td><td>Build from parallel label arrays</td></tr>
+    <tr><td><code>MultiIndex.fromTuples(tuples, names?)</code></td><td>Build from array of tuples</td></tr>
+    <tr><td><code>MultiIndex.fromProduct(iterables, names?)</code></td><td>Build Cartesian product</td></tr>
+    <tr><td><code>.size</code></td><td>Number of entries</td></tr>
+    <tr><td><code>.nlevels</code></td><td>Number of levels</td></tr>
+    <tr><td><code>.levels</code></td><td>Per-level distinct Index objects</td></tr>
+    <tr><td><code>.codes</code></td><td>Per-level integer code arrays</td></tr>
+    <tr><td><code>.names</code></td><td>Level names array</td></tr>
+    <tr><td><code>.shape</code></td><td><code>[size, nlevels]</code></td></tr>
+    <tr><td><code>.isUnique</code></td><td>All tuples distinct?</td></tr>
+    <tr><td><code>.isMonotonicIncreasing</code></td><td>Lexicographically sorted ascending?</td></tr>
+    <tr><td><code>.isMonotonicDecreasing</code></td><td>Lexicographically sorted descending?</td></tr>
+    <tr><td><code>.at(i)</code></td><td>Tuple at position <code>i</code> (supports negative)</td></tr>
+    <tr><td><code>.values</code></td><td>All tuples as readonly array</td></tr>
+    <tr><td><code>.getLevelValues(level)</code></td><td>Flat Index of labels at one level</td></tr>
+    <tr><td><code>.getLoc(key)</code></td><td>Position(s) of a (partial) key</td></tr>
+    <tr><td><code>.contains(key)</code></td><td>Key existence check</td></tr>
+    <tr><td><code>.droplevel(level)</code></td><td>Remove one or more levels</td></tr>
+    <tr><td><code>.swaplevel(i, j)</code></td><td>Swap two levels</td></tr>
+    <tr><td><code>.setNames(names)</code></td><td>Rename all levels</td></tr>
+    <tr><td><code>.setLevels(values, level)</code></td><td>Replace distinct values for a level</td></tr>
+    <tr><td><code>.setCodes(codes, level)</code></td><td>Replace code array for a level</td></tr>
+    <tr><td><code>.sortValues(ascending?)</code></td><td>Lexicographic sort</td></tr>
+    <tr><td><code>.append(other)</code></td><td>Concatenate two MultiIndexes</td></tr>
+    <tr><td><code>.equals(other)</code></td><td>Element-wise equality check</td></tr>
+    <tr><td><code>.toArray() / .toList()</code></td><td>All tuples as plain array</td></tr>
+    <tr><td><code>.toRecord()</code></td><td>Level-name → label-array mapping</td></tr>
+    <tr><td><code>.nunique()</code></td><td>Count of distinct tuples</td></tr>
+    <tr><td><code>.dropDuplicates()</code></td><td>Remove duplicate entries</td></tr>
+    <tr><td><code>[Symbol.iterator]()</code></td><td><code>for…of</code> over tuples</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>
