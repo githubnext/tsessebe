@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timedelta · tsb playground</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="breadcrumb">
+      <a href="index.html">tsb playground</a> › Timedelta
+    </nav>
+
+    <h1>Timedelta</h1>
+    <p class="lead">
+      A fixed-size duration type mirroring <code>pandas.Timedelta</code>. Store durations as
+      milliseconds internally, with arithmetic, comparison, and component access. The
+      <code>Series.timedelta</code> accessor applies vectorized operations to duration-valued
+      Series.
+    </p>
+
+    <section>
+      <h2>1 · Constructing a Timedelta</h2>
+      <p>
+        Pass a number + unit, or a pandas-style string. The default unit is milliseconds
+        (<code>"ms"</code>).
+      </p>
+      <pre><code class="language-ts" id="ex1">import { Timedelta } from "tsb";
+
+// Numeric constructor (value, unit)
+const oneHour    = new Timedelta(1, "h");
+const thirtyMin  = new Timedelta(30, "m");
+const twoWeeks   = new Timedelta(2, "W");
+const fiveHundMs = new Timedelta(500);        // default unit = ms
+
+console.log(oneHour.total_seconds());         // 3600
+console.log(thirtyMin.total_seconds());       // 1800
+console.log(twoWeeks.days);                   // 14
+console.log(fiveHundMs.milliseconds);         // 500
+
+// String constructor — pandas-style "N days HH:MM:SS"
+const td1 = new Timedelta("1 days 01:30:00");
+console.log(td1.total_seconds());             // 91800
+
+// String constructor — plain "N unit"
+const td2 = new Timedelta("90 minutes");
+console.log(td2.total_seconds());             // 5400
+
+// Static helpers
+const td3 = Timedelta.fromMilliseconds(3_600_000);
+console.log(td3.days, td3.seconds);           // 0 3600
+
+const td4 = Timedelta.parse("2 hours");
+console.log(td4.total_seconds());             // 7200
+</code></pre>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <pre id="out1" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>2 · Component accessors</h2>
+      <p>
+        Decompose a duration into <code>days</code>, <code>seconds</code>,
+        <code>microseconds</code>, and <code>milliseconds</code>, following pandas semantics
+        (floor division — always non-negative components).
+      </p>
+      <pre><code class="language-ts" id="ex2">import { Timedelta } from "tsb";
+
+const td = new Timedelta("2 days 03:30:01.250");
+
+console.log(td.days);          // 2
+console.log(td.seconds);       // 12601  (3*3600 + 30*60 + 1)
+console.log(td.milliseconds);  // 250
+console.log(td.microseconds);  // 250000
+
+// Negative timedelta component decomposition
+const neg = new Timedelta(-86_399_000);   // -1 day + 1 second
+
+console.log(neg.days);     // -1   (floor division)
+console.log(neg.seconds);  //  1   (0..86399 remainder)
+</code></pre>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <pre id="out2" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>3 · Arithmetic</h2>
+      <p>
+        Add, subtract, multiply, divide timedeltas. All operations return a new
+        <code>Timedelta</code>.
+      </p>
+      <pre><code class="language-ts" id="ex3">import { Timedelta } from "tsb";
+
+const a = new Timedelta(1, "h");    // 1 hour
+const b = new Timedelta(30, "m");   // 30 minutes
+
+// add / sub
+console.log(a.add(b).total_seconds());   // 5400  (1.5 h)
+console.log(a.sub(b).total_seconds());   // 1800  (0.5 h)
+
+// mul / divScalar
+console.log(a.mul(2.5).total_seconds());      // 9000  (2.5 h)
+console.log(a.divScalar(4).total_seconds()); // 900   (15 min)
+
+// divTimedelta — returns unitless ratio
+console.log(a.divTimedelta(b));  // 2
+
+// neg / abs
+console.log(a.neg().total_seconds());  // -3600
+console.log(a.neg().abs().total_seconds());  // 3600
+</code></pre>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <pre id="out3" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>4 · Comparison</h2>
+      <pre><code class="language-ts" id="ex4">import { Timedelta } from "tsb";
+
+const a = new Timedelta(1, "h");
+const b = new Timedelta(2, "h");
+const c = new Timedelta(3600, "s");   // same as a
+
+console.log(a.eq(c));   // true
+console.log(a.ne(b));   // true
+console.log(a.lt(b));   // true
+console.log(b.gt(a));   // true
+console.log(a.le(c));   // true  (≤, equal case)
+console.log(a.ge(a));   // true
+</code></pre>
+      <button onclick="run('ex4','out4')">▶ Run</button>
+      <pre id="out4" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>5 · Series.timedelta accessor</h2>
+      <p>
+        The <code>.timedelta</code> accessor on <code>Series</code> applies vectorized
+        timedelta operations. Values may be numbers (milliseconds) or pandas-style
+        timedelta strings. Null values propagate.
+      </p>
+      <pre><code class="language-ts" id="ex5">import { Series } from "tsb";
+
+// Numeric (ms) series
+const s = new Series({ data: [1_000, 60_000, 3_600_000, null] });
+
+console.log(s.timedelta.total_seconds().values);  // [1, 60, 3600, null]
+console.log(s.timedelta.days.values);              // [0, 0, 0, null]
+console.log(s.timedelta.seconds.values);           // [1, 60, 0, null]
+
+// String series
+const s2 = new Series({ data: ["1 days 00:00:00", "30 minutes", "2 hours"] });
+console.log(s2.timedelta.total_seconds().values);  // [86400, 1800, 7200]
+console.log(s2.timedelta.days.values);             // [1, 0, 0]
+</code></pre>
+      <button onclick="run('ex5','out5')">▶ Run</button>
+      <pre id="out5" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>6 · floor / ceil / round</h2>
+      <p>
+        Snap each element to the nearest multiple of a frequency (in milliseconds).
+      </p>
+      <pre><code class="language-ts" id="ex6">import { Series } from "tsb";
+
+const s = new Series({ data: [1_500, 3_700, 59_200, -1_500] });
+
+const SEC  = 1_000;
+const MIN  = 60_000;
+
+// Floor to nearest second
+console.log(s.timedelta.floor(SEC).values);   // [1000, 3000, 59000, -2000]
+
+// Ceil to nearest second
+console.log(s.timedelta.ceil(SEC).values);    // [2000, 4000, 60000, -1000]
+
+// Round to nearest second
+console.log(s.timedelta.round(SEC).values);   // [2000, 4000, 59000, -2000]
+
+// Floor to nearest minute
+console.log(s.timedelta.floor(MIN).values);   // [0, 0, 0, -60000]
+</code></pre>
+      <button onclick="run('ex6','out6')">▶ Run</button>
+      <pre id="out6" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>7 · abs / neg</h2>
+      <pre><code class="language-ts" id="ex7">import { Series } from "tsb";
+
+const s = new Series({ data: [5_000, -3_000, 0, null] });
+
+console.log(s.timedelta.abs().values);  // [5000, 3000, 0, null]
+console.log(s.timedelta.neg().values);  // [-5000, 3000, 0, null]
+</code></pre>
+      <button onclick="run('ex7','out7')">▶ Run</button>
+      <pre id="out7" class="output"></pre>
+    </section>
+
+    <section>
+      <h2>8 · toString</h2>
+      <p>
+        String representation mirrors <code>pandas.Timedelta.__str__</code>: positive durations
+        show <code>"N days HH:MM:SS"</code>; negative durations with a time remainder show
+        <code>"-N days +HH:MM:SS"</code>.
+      </p>
+      <pre><code class="language-ts" id="ex8">import { Timedelta } from "tsb";
+
+console.log(new Timedelta(0).toString());                       // "0 days 00:00:00"
+console.log(new Timedelta(1, "D").toString());                  // "1 day 00:00:00"
+console.log(new Timedelta(2, "D").add(new Timedelta(90, "m")).toString());
+//                                                               "2 days 01:30:00"
+console.log(new Timedelta(1500).toString());                    // "0 days 00:00:01.500"
+console.log(new Timedelta(-86_399_000).toString());             // "-1 days +00:00:01"
+</code></pre>
+      <button onclick="run('ex8','out8')">▶ Run</button>
+      <pre id="out8" class="output"></pre>
+    </section>
+
+    <script src="runtime.js"></script>
+  </body>
+</html>

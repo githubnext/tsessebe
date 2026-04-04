@@ -7,10 +7,15 @@
  * missing-value handling.
  */
 
+import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
+import { CategoricalAccessor } from "./categorical.ts";
+import { DateTimeAccessor } from "./datetime.ts";
 import { Dtype } from "./dtype.ts";
 import { RangeIndex } from "./range-index.ts";
+import { StringAccessor } from "./strings.ts";
+import { TimedeltaAccessor } from "./timedelta.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -22,6 +27,18 @@ function defaultIndex(n: number): Index<Label> {
 /** True when the value should be treated as missing (null, undefined, or NaN). */
 function isMissing(v: Scalar): boolean {
   return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+}
+
+/** Build a map from label → first-occurrence index for alignment. */
+function buildIndexMap(labels: readonly Label[]): Map<Label, number> {
+  const map = new Map<Label, number>();
+  for (let i = 0; i < labels.length; i++) {
+    const lbl = labels[i] as Label;
+    if (!map.has(lbl)) {
+      map.set(lbl, i);
+    }
+  }
+  return map;
 }
 
 /** Compare two scalar values with null/NaN handling for sorting. */
@@ -214,12 +231,23 @@ export class Series<T extends Scalar = Scalar> {
 
   // ─── arithmetic ───────────────────────────────────────────────────────────
 
+  /**
+   * Apply a binary numeric operation to this Series and `other`.
+   *
+   * - **scalar `other`**: applies `fn` element-wise, preserving the index.
+   * - **Series `other`**: aligns the two Series on their indexes first
+   *   (union by default), then applies `fn`.  Labels present in only one
+   *   Series produce `NaN` in the result (pandas semantics).
+   *
+   * @param fillValue - Optional fill value substituted for missing labels
+   *   before `fn` is applied.  Defaults to `null` (propagate as `NaN`).
+   */
   private _scalarOp(
     other: number | Series<Scalar>,
     fn: (a: number, b: number) => number,
+    fillValue: number | null = null,
   ): Series<number> {
-    const isScalar = !(other instanceof Series);
-    if (isScalar) {
+    if (!(other instanceof Series)) {
       const b = other as number;
       const newData = this._values.map((v) => {
         const a = v as unknown as number;
@@ -232,58 +260,64 @@ export class Series<T extends Scalar = Scalar> {
         name: this.name,
       });
     }
-    const o = other as Series<Scalar>;
-    if (o.size !== this.size) {
-      throw new RangeError(
-        `Cannot operate on Series of different sizes: ${this.size} vs ${o.size}`,
-      );
-    }
-    const newData = this._values.map((v, i) => {
-      const a = v as unknown as number;
-      const b = o._values[i] as unknown as number;
+    // Index-aligned Series + Series (mirrors pandas.Series arithmetic)
+    const o = other;
+    const alignedIdx = this.index.union(o.index) as Index<Label>;
+    const leftMap = buildIndexMap(this.index.values as readonly Label[]);
+    const rightMap = buildIndexMap(o.index.values as readonly Label[]);
+    const newData = alignedIdx.values.map((lbl) => {
+      const li = leftMap.get(lbl);
+      const ri = rightMap.get(lbl);
+      const lv = li !== undefined ? (this._values[li] as unknown as number | null) : null;
+      const rv = ri !== undefined ? (o._values[ri] as unknown as number | null) : null;
+      const a = lv === null || lv === undefined ? fillValue : lv;
+      const b = rv === null || rv === undefined ? fillValue : rv;
+      if (a === null || b === null) {
+        return Number.NaN;
+      }
       return fn(a, b);
     });
     return new Series<number>({
       data: newData,
-      index: this.index,
+      index: alignedIdx,
       dtype: Dtype.float64,
       name: this.name,
     });
   }
 
-  /** Element-wise addition. */
-  add(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => a + b);
+  /** Element-wise addition. Aligns on index when `other` is a Series. */
+  add(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => a + b, fillValue);
   }
 
-  /** Element-wise subtraction. */
-  sub(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => a - b);
+  /** Element-wise subtraction. Aligns on index when `other` is a Series. */
+  sub(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => a - b, fillValue);
   }
 
-  /** Element-wise multiplication. */
-  mul(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => a * b);
+  /** Element-wise multiplication. Aligns on index when `other` is a Series. */
+  mul(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => a * b, fillValue);
   }
 
-  /** Element-wise division (true division, returns float). */
-  div(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => a / b);
+  /** Element-wise division (true division). Aligns on index when `other` is a Series. */
+  div(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => a / b, fillValue);
   }
 
-  /** Element-wise floor division. */
-  floordiv(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => Math.floor(a / b));
+  /** Element-wise floor division. Aligns on index when `other` is a Series. */
+  floordiv(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => Math.floor(a / b), fillValue);
   }
 
-  /** Element-wise modulo. */
-  mod(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => a % b);
+  /** Element-wise modulo. Aligns on index when `other` is a Series. */
+  mod(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => a % b, fillValue);
   }
 
-  /** Element-wise exponentiation. */
-  pow(other: number | Series<Scalar>): Series<number> {
-    return this._scalarOp(other, (a, b) => a ** b);
+  /** Element-wise exponentiation. Aligns on index when `other` is a Series. */
+  pow(other: number | Series<Scalar>, fillValue: number | null = null): Series<number> {
+    return this._scalarOp(other, (a, b) => a ** b, fillValue);
   }
 
   // ─── comparison ───────────────────────────────────────────────────────────
@@ -700,5 +734,93 @@ export class Series<T extends Scalar = Scalar> {
     const rows = this._values.map((v, i) => `${String(this.index.at(i))}\t${String(v)}`).join("\n");
     const footer = `Name: ${this.name ?? "(unnamed)"}, dtype: ${this.dtype.name}, Length: ${this.size}`;
     return `${rows}\n${footer}`;
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the Series by an array of key values (or another Series).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.groupby(["A", "A", "B", "B"]).sum();
+   * // Series { A: 3, B: 7 }
+   * ```
+   */
+  groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
+    return new SeriesGroupBy(this as Series<Scalar>, by);
+  }
+
+  // ─── string accessor ──────────────────────────────────────────────────────
+
+  /**
+   * Vectorized string methods for a string-valued Series.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["hello", "world"] });
+   * s.str.upper().values; // ["HELLO", "WORLD"]
+   * ```
+   */
+  get str(): StringAccessor {
+    return new StringAccessor(this as Series<Scalar>);
+  }
+
+  // ─── datetime accessor ────────────────────────────────────────────────────
+
+  /**
+   * Vectorized datetime component accessors for a datetime-valued Series.
+   *
+   * Values may be `Date` objects, ISO-8601 strings, or ms-since-epoch numbers.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["2021-01-15", "2022-06-30"] });
+   * s.dt.year.values;      // [2021, 2022]
+   * s.dt.month.values;     // [1, 6]
+   * s.dt.dayofweek.values; // [4, 3]  (Friday, Thursday)
+   * ```
+   */
+  get dt(): DateTimeAccessor {
+    return new DateTimeAccessor(this as Series<Scalar>);
+  }
+
+  // ─── categorical accessor ─────────────────────────────────────────────────
+
+  /**
+   * Categorical methods for a categorical-valued Series.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["a", "b", "a", "c"] });
+   * s.cat.categories;    // ["a", "b", "c"]
+   * s.cat.codes.values;  // [0, 1, 0, 2]
+   * ```
+   */
+  get cat(): CategoricalAccessor {
+    return new CategoricalAccessor(this as Series<Scalar>);
+  }
+
+  // ─── timedelta accessor ───────────────────────────────────────────────────
+
+  /**
+   * Vectorized timedelta operations for a duration-valued Series.
+   *
+   * Values may be numbers (treated as milliseconds) or pandas-style
+   * timedelta strings such as `"1 days 01:30:00"` or `"2 hours"`.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1000, 60_000, 3_600_000] });
+   * s.timedelta.total_seconds().values; // [1, 60, 3600]
+   * s.timedelta.days.values;            // [0, 0, 0]
+   *
+   * const s2 = new Series({ data: ["1 days 01:00:00", "30 minutes"] });
+   * s2.timedelta.total_seconds().values; // [90000, 1800]
+   * ```
+   */
+  get timedelta(): TimedeltaAccessor {
+    return new TimedeltaAccessor(this as Series<Scalar>);
   }
 }

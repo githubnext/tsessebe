@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Statistical Functions</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+    h1 { color: #1a1a2e; }
+    h2 { color: #16213e; border-bottom: 2px solid #eee; padding-bottom: .25rem; margin-top: 2rem; }
+    pre { background: #f4f4f8; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .output { background: #e8f5e9; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 4px; margin-top: .5rem; }
+    .note { background: #fff3e0; border-left: 4px solid #ff9800; padding: .75rem 1rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; font-size: .9em; }
+    th { background: #f4f4f8; }
+    a { color: #1976d2; }
+    nav { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+
+<nav><a href="index.html">← Back to tsb playground</a></nav>
+
+<h1>📊 Statistical Functions</h1>
+<p>
+  tsb implements the core statistical functions from <code>pandas</code>:
+  <strong>describe</strong>, <strong>corr</strong>, <strong>cov</strong>,
+  <strong>skew</strong>, and <strong>kurtosis</strong>.
+</p>
+
+<h2>describe — Summary Statistics</h2>
+<p>
+  <code>describe(series)</code> computes summary statistics for a Series.
+  Numeric Series returns <em>count, mean, std, min, 25%, 50%, 75%, max</em>.
+  Non-numeric Series returns <em>count, unique, top, freq</em>.
+</p>
+
+<pre><code>import { Series, DataFrame, describe, describeDataFrame } from "tsb";
+
+const scores = new Series({ data: [72, 85, 90, 68, 95, 78, 88], name: "scores" });
+const stats = describe(scores);
+// Series {
+//   count: 7,   mean: 82.28...,  std: 9.46...,
+//   min: 68,   "25%": 75,       "50%": 85,    "75%": 89,  max: 95
+// }
+
+const df = DataFrame.fromColumns({
+  math:    [90, 80, 70, 85],
+  english: [75, 88, 92, 60],
+  science: [82, 79, 95, 88],
+});
+const summary = describeDataFrame(df);
+// DataFrame (8 × 3) — rows are stat names, columns are math/english/science</code></pre>
+
+<h3>Output shape</h3>
+<table>
+  <thead><tr><th>Statistic</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>count</td><td>Number of non-missing values</td></tr>
+    <tr><td>mean</td><td>Arithmetic mean</td></tr>
+    <tr><td>std</td><td>Sample standard deviation (ddof=1)</td></tr>
+    <tr><td>min / max</td><td>Minimum / maximum value</td></tr>
+    <tr><td>25% / 50% / 75%</td><td>Percentiles (linear interpolation)</td></tr>
+  </tbody>
+</table>
+
+<h2>corr — Correlation</h2>
+<p>
+  <code>corrSeries(a, b, method?)</code> computes the pairwise correlation coefficient.
+  <code>corrDataFrame(df, method?)</code> returns a correlation matrix.
+  Three methods are supported:
+</p>
+<ul>
+  <li><strong>pearson</strong> (default) — linear correlation</li>
+  <li><strong>spearman</strong> — rank-based, monotone relationships</li>
+  <li><strong>kendall</strong> — Kendall's tau-b, ordinal association</li>
+</ul>
+
+<pre><code>import { Series, DataFrame, corrSeries, corrDataFrame } from "tsb";
+
+const temp   = new Series({ data: [20, 25, 30, 35, 40] });  // temperature °C
+const iceCream = new Series({ data: [100, 150, 200, 250, 300] });  // units sold
+
+corrSeries(temp, iceCream);               // 1.0 — perfect linear correlation
+corrSeries(temp, iceCream, "spearman");   // 1.0 — perfect rank correlation
+corrSeries(temp, iceCream, "kendall");    // 1.0 — perfect concordance
+
+// Correlation matrix
+const df = DataFrame.fromColumns({
+  x: [1, 2, 3, 4, 5],
+  y: [5, 4, 3, 2, 1],   // perfectly anti-correlated with x
+  z: [2, 2, 2, 2, 2],   // constant — undefined correlation (NaN)
+});
+corrDataFrame(df);
+// DataFrame 3×3:
+//     x     y     z
+// x   1    -1    NaN
+// y  -1     1    NaN
+// z  NaN  NaN     1</code></pre>
+
+<h2>cov — Covariance</h2>
+<p>
+  <code>covSeries(a, b, ddof?)</code> computes sample covariance (ddof=1 by default).
+  <code>covDataFrame(df, ddof?)</code> returns a covariance matrix.
+</p>
+<p>
+  The diagonal of <code>covDataFrame</code> equals the column-wise <code>Series.var()</code>.
+</p>
+
+<pre><code>import { Series, DataFrame, covSeries, covDataFrame } from "tsb";
+
+const a = new Series({ data: [1, 2, 3, 4, 5] });
+const b = new Series({ data: [5, 4, 3, 2, 1] });
+
+covSeries(a, b);      // -2.5 (negative covariance — inversely related)
+covSeries(a, a);      // 2.5  (== a.var())
+covSeries(a, b, 0);   // -2.0 (population covariance)
+
+const df = DataFrame.fromColumns({ a: [1,2,3,4,5], b: [5,4,3,2,1] });
+covDataFrame(df);
+// DataFrame 2×2:
+//     a     b
+// a   2.5  -2.5
+// b  -2.5   2.5</code></pre>
+
+<h2>skew — Skewness</h2>
+<p>
+  <code>skewSeries(s)</code> computes the adjusted Fisher–Pearson skewness coefficient
+  (same formula as <code>pandas.Series.skew</code> with <code>bias=False</code>).
+  Requires at least 3 non-missing values; returns <code>NaN</code> otherwise.
+</p>
+<ul>
+  <li><strong>&gt; 0</strong> — right-skewed (long right tail)</li>
+  <li><strong>= 0</strong> — symmetric</li>
+  <li><strong>&lt; 0</strong> — left-skewed (long left tail)</li>
+</ul>
+
+<pre><code>import { Series, DataFrame, skewSeries, skewDataFrame } from "tsb";
+
+const symmetric    = new Series({ data: [1, 2, 3, 4, 5] });
+const rightSkewed  = new Series({ data: [1, 1, 1, 1, 10] });
+const leftSkewed   = new Series({ data: [-10, 1, 1, 1, 1] });
+
+skewSeries(symmetric);    // ≈ 0
+skewSeries(rightSkewed);  // > 0
+skewSeries(leftSkewed);   // < 0
+
+// Per-column skewness
+const df = DataFrame.fromColumns({
+  normal: [1, 2, 3, 4, 5],
+  skewed: [1, 1, 1, 2, 10],
+});
+skewDataFrame(df);
+// Series { normal: ≈0, skewed: >0 } indexed by column name</code></pre>
+
+<h2>kurtosis / kurt — Excess Kurtosis</h2>
+<p>
+  <code>kurtosisSeries(s)</code> (alias <code>kurtSeries</code>) computes adjusted
+  excess kurtosis (Fisher definition, same as <code>pandas.Series.kurt</code>).
+  Requires at least 4 non-missing values.
+</p>
+<ul>
+  <li><strong>&gt; 0</strong> — leptokurtic (heavy tails, sharp peak)</li>
+  <li><strong>= 0</strong> — mesokurtic (normal-like)</li>
+  <li><strong>&lt; 0</strong> — platykurtic (light tails, flat peak)</li>
+</ul>
+
+<pre><code>import { Series, DataFrame, kurtosisSeries, kurtSeries, kurtosisDataFrame, kurtDataFrame } from "tsb";
+
+const uniform = new Series({ data: [1, 2, 3, 4, 5] });        // platykurtic
+const peaky   = new Series({ data: [0, 0, 0, 0, 0, 0, 100] }); // leptokurtic
+
+kurtosisSeries(uniform);  // ≈ -1.3 (platykurtic)
+kurtSeries(peaky);        // > 0 (leptokurtic)
+
+// Per-column excess kurtosis
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3, 4, 5],
+  b: [0, 0, 0, 0, 100],
+});
+kurtosisDataFrame(df);   // Series { a: ≈-1.3, b: >0 }
+kurtDataFrame(df);       // same — alias</code></pre>
+
+<h2>Handling Missing Values</h2>
+<p>
+  All functions automatically skip <code>null</code>, <code>undefined</code>, and <code>NaN</code>
+  values. For <code>corrSeries</code> / <code>covSeries</code>, pairwise-complete
+  observations are used — a row is only excluded if <em>either</em> Series has a missing value
+  at that position.
+</p>
+
+<pre><code>import { Series, corrSeries } from "tsb";
+
+const a = new Series({ data: [1, null, 3, 4, 5] });
+const b = new Series({ data: [2, 4,    6, 8, 10] });
+
+corrSeries(a, b);
+// Uses positions 0, 2, 3, 4 (position 1 skipped because a[1] is null)
+// Result: 1.0 (still perfect linear correlation on remaining values)</code></pre>
+
+<div class="note">
+  <strong>Formula note:</strong> Skewness and kurtosis use the adjusted Fisher–Pearson
+  standardized moment coefficients (unbiased for small samples), matching pandas' default
+  <code>bias=False</code> behaviour.
+</div>
+
+</body>
+</html>

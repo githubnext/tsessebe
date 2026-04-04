@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Alignment & Arithmetic</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html" class="back">← Back to Playground</a>
+    <h1>🔢 Alignment &amp; Arithmetic</h1>
+    <p class="subtitle">
+      Index-aware arithmetic that aligns on labels before operating — just like pandas.
+    </p>
+  </header>
+
+  <main>
+    <!-- ── 1. The problem with position-based arithmetic ───────────────── -->
+    <section class="tutorial-step">
+      <h2>1. Why alignment matters</h2>
+      <p>
+        In a labeled Series, adding by <em>position</em> silently produces wrong answers when
+        the indexes don't match. <strong>tsb</strong> aligns on <em>labels</em> first, just
+        like pandas.
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="12">
+// Two Series with the SAME labels — aligned by label, same result as positional
+const prices2023 = new tsb.Series({ data: [100, 200, 150], index: new tsb.Index(["AAPL","GOOG","MSFT"]) });
+const prices2024 = new tsb.Series({ data: [180, 220, 160], index: new tsb.Index(["AAPL","GOOG","MSFT"]) });
+
+const growth = prices2024.sub(prices2023);
+console.log("Growth (label-aligned):", Object.fromEntries(
+  growth.index.values.map((k, i) => [k, growth.values[i]])
+));
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+
+    <!-- ── 2. Mismatched index → NaN for missing ──────────────────────── -->
+    <section class="tutorial-step">
+      <h2>2. Mismatched indexes produce NaN</h2>
+      <p>
+        When a label is present in one Series but not the other, the result is <code>NaN</code>
+        (the pandas convention for "missing after alignment").
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="14">
+// Monday + Wednesday prices — Tuesday is missing in the second series
+const week1 = new tsb.Series({ data: [10, 11, 12], index: new tsb.Index(["Mon","Tue","Wed"]) });
+const week2 = new tsb.Series({ data: [20, 22], index: new tsb.Index(["Mon","Wed"]) });
+
+const combined = week1.add(week2);
+console.log("Index:", [...combined.index.values]);
+console.log("Values:", [...combined.values]);
+// Mon: 10+20=30, Tue: 11+NaN=NaN, Wed: 12+22=34
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+
+    <!-- ── 3. fillValue to avoid NaN ─────────────────────────────────── -->
+    <section class="tutorial-step">
+      <h2>3. Use <code>fillValue</code> to avoid NaN</h2>
+      <p>
+        Pass a <code>fillValue</code> as the second argument to substitute for missing values
+        before the operation is applied.
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="14">
+const week1 = new tsb.Series({ data: [10, 11, 12], index: new tsb.Index(["Mon","Tue","Wed"]) });
+const week2 = new tsb.Series({ data: [20, 22], index: new tsb.Index(["Mon","Wed"]) });
+
+// fill_value=0: treat missing as 0 (identity for addition)
+const safe = week1.add(week2, 0);
+console.log("With fillValue=0:", [...safe.values]);  // [30, 11, 34]
+
+// fill_value=1: treat missing as 1 (identity for multiplication)
+const mul = week1.mul(week2, 1);
+console.log("Mul with fillValue=1:", [...mul.values]); // [200, 11, 264]
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+
+    <!-- ── 4. alignSeries standalone ──────────────────────────────────── -->
+    <section class="tutorial-step">
+      <h2>4. <code>alignSeries()</code> — inspect alignment</h2>
+      <p>
+        <code>alignSeries(a, b, join?)</code> returns <code>{ left, right, index }</code> so
+        you can inspect exactly how two Series align before operating.
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="18">
+const a = new tsb.Series({ data: [1, 2, 3], index: new tsb.Index(["a","b","c"]) });
+const b = new tsb.Series({ data: [10, 30], index: new tsb.Index(["a","c"]) });
+
+// Outer (default): union of labels
+const { left, right, index } = tsb.alignSeries(a, b, "outer");
+console.log("Outer index:", [...index.values]);
+console.log("Left:  ", [...left.values]);
+console.log("Right: ", [...right.values]);
+
+// Inner: only common labels
+const inner = tsb.alignSeries(a, b, "inner");
+console.log("Inner index:", [...inner.index.values]);
+console.log("Inner left: ", [...inner.left.values]);
+console.log("Inner right:", [...inner.right.values]);
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+
+    <!-- ── 5. alignedBinaryOp ─────────────────────────────────────────── -->
+    <section class="tutorial-step">
+      <h2>5. <code>alignedBinaryOp()</code> — custom binary ops</h2>
+      <p>
+        Apply any binary function to two aligned Series.  Useful for operations beyond
+        the built-in <code>add / sub / mul / div</code>.
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="14">
+const a = new tsb.Series({ data: [4, 9, 16], index: new tsb.Index(["x","y","z"]) });
+const b = new tsb.Series({ data: [2, 4], index: new tsb.Index(["x","z"]) });
+
+// Custom op: √a / b
+const result = tsb.alignedBinaryOp(a, b, (x, y) => Math.sqrt(x) / y, "outer");
+console.log("Index:", [...result.index.values]);
+console.log("Values:", result.values.map(v => typeof v === "number" && !isNaN(v) ? v.toFixed(3) : String(v)));
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+
+    <!-- ── 6. DataFrame arithmetic ────────────────────────────────────── -->
+    <section class="tutorial-step">
+      <h2>6. DataFrame arithmetic</h2>
+      <p>
+        DataFrames support the same arithmetic API: both scalar and DataFrame operands.
+        With a DataFrame operand, both rows <em>and</em> columns are aligned.
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="20">
+const revenue = tsb.DataFrame.fromColumns({
+  Q1: [100, 200, 150],
+  Q2: [120, 180, 160],
+}, { index: new tsb.Index(["AAPL", "GOOG", "MSFT"]) });
+
+// Scalar: add 10 to every cell
+console.log("Revenue + 10:");
+const boosted = revenue.add(10);
+console.log("Q1:", [...boosted.col("Q1").values]);
+
+// DataFrame: add budget
+const budget = tsb.DataFrame.fromColumns({
+  Q1: [90, 190, 140],
+  Q2: [100, 160, 140],
+}, { index: new tsb.Index(["AAPL", "GOOG", "MSFT"]) });
+
+const diff = revenue.sub(budget);
+console.log("Revenue - Budget Q1:", [...diff.col("Q1").values]);
+console.log("Revenue - Budget Q2:", [...diff.col("Q2").values]);
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+
+    <!-- ── 7. DataFrame mismatched columns ────────────────────────────── -->
+    <section class="tutorial-step">
+      <h2>7. DataFrame alignment with mismatched columns</h2>
+      <p>
+        When two DataFrames have different columns, the result includes all columns
+        (outer join).  Missing cells become <code>null</code> (or use <code>fillValue</code>).
+      </p>
+      <div class="editor-run">
+        <textarea class="editor" rows="18">
+const left = tsb.DataFrame.fromColumns({ x: [1, 2, 3], y: [4, 5, 6] });
+const right = tsb.DataFrame.fromColumns({ y: [10, 20, 30], z: [100, 200, 300] });
+
+// left has x, y — right has y, z
+// outer add: x and z are missing on the other side → null
+const result = left.add(right);
+console.log("columns:", [...result.columns.values]);
+console.log("x:", [...result.col("x").values]);   // [null, null, null] — x not in right
+console.log("y:", [...result.col("y").values]);   // [14, 25, 36]
+console.log("z:", [...result.col("z").values]);   // [null, null, null] — z not in left
+
+// With fillValue=0: treat missing columns as zeros
+const filled = left.add(right, 0);
+console.log("x (fillValue=0):", [...filled.col("x").values]);  // [1, 2, 3]
+console.log("z (fillValue=0):", [...filled.col("z").values]);  // [100, 200, 300]
+        </textarea>
+        <button class="run-btn">▶ Run</button>
+        <pre class="output"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="playground-runtime.js"></script>
+</body>
+</html>

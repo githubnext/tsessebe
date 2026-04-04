@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Window Functions</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <style>
+      body {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .output {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        min-height: 80px;
+        white-space: pre-wrap;
+      }
+      .output.error {
+        color: #f87171;
+      }
+      textarea {
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        background: #0ea5e9;
+        color: white;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="nav-links">
+      <a href="index.html">← Back to tsb playground</a>
+    </div>
+
+    <h1>Window Functions <span class="badge">New</span></h1>
+    <p>
+      tsb supports three families of window-based aggregation, mirroring the
+      pandas <code>rolling</code>, <code>expanding</code>, and <code>ewm</code>
+      APIs. All operate on <code>Series</code> (and column-wise on
+      <code>DataFrame</code>).
+    </p>
+
+    <section>
+      <h2>Rolling Window</h2>
+      <p>
+        A <strong>rolling window</strong> aggregates over a fixed-size window of
+        the most recent observations. Set <code>minPeriods</code> to allow
+        partial windows; use <code>center: true</code> for symmetric windows.
+      </p>
+      <textarea id="rolling-code" rows="18">
+// 3-period trailing moving average and sum
+const prices = new Series({ data: [100, 102, 101, 105, 103, 108] });
+
+const ma3 = rolling(prices, 3).mean();
+print("3-period moving average:", ma3.values);
+// [null, null, 101, 102.67, 103, 105.33]
+
+const sum3 = rolling(prices, 3).sum();
+print("3-period rolling sum:", sum3.values);
+
+const std3 = rolling(prices, 3).std();
+print("3-period std:", std3.values.map(v => v === null ? null : +v.toFixed(4)));
+
+// minPeriods=1: compute even with partial window
+const maMin1 = rolling(prices, 3, { minPeriods: 1 }).mean();
+print("Moving avg (minPeriods=1):", maMin1.values.map(v => v === null ? null : +v.toFixed(4)));
+
+// Custom apply function
+const diff = rolling(prices, 2, { minPeriods: 2 }).apply(
+  (vals) => (vals[1] ?? 0) - (vals[0] ?? 0)
+);
+print("Day-over-day change:", diff.values);
+      </textarea>
+      <button onclick="runCode('rolling-code', 'rolling-out')">▶ Run</button>
+      <div id="rolling-out" class="output">Click "Run" to execute</div>
+    </section>
+
+    <section>
+      <h2>Expanding Window</h2>
+      <p>
+        An <strong>expanding window</strong> grows with each observation: at
+        position <em>i</em> it covers all values from 0 to <em>i</em>. This
+        computes cumulative statistics.
+      </p>
+      <textarea id="expanding-code" rows="14">
+// Cumulative statistics
+const returns = new Series({ data: [0.02, -0.01, 0.03, 0.01, -0.02, 0.04] });
+
+const cumMean = expanding(returns).mean();
+print("Cumulative mean:", cumMean.values.map(v => +(v ?? 0).toFixed(4)));
+
+const cumMax = expanding(returns).max();
+print("Cumulative max:", cumMax.values);
+
+const cumStd = expanding(returns).std();
+print("Cumulative std:", cumStd.values.map(v => v === null ? null : +v.toFixed(4)));
+
+// Expanding on a DataFrame (column-wise)
+const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 8, 6, 4] });
+const cumSum = expanding(df).sum();
+print("DataFrame expanding sum:");
+print("  a:", cumSum.col("a").values);
+print("  b:", cumSum.col("b").values);
+      </textarea>
+      <button onclick="runCode('expanding-code', 'expanding-out')">▶ Run</button>
+      <div id="expanding-out" class="output">Click "Run" to execute</div>
+    </section>
+
+    <section>
+      <h2>Exponentially Weighted Moving (EWM)</h2>
+      <p>
+        <strong>EWM</strong> applies exponentially decreasing weights to past
+        observations. Specify the decay using <code>alpha</code> (direct),
+        <code>span</code>, <code>com</code> (center-of-mass), or
+        <code>halflife</code>. Use <code>adjust: false</code> for the
+        recursive formula.
+      </p>
+      <textarea id="ewm-code" rows="22">
+// EWM mean with span=3 (alpha = 2/(3+1) = 0.5)
+const s = new Series({ data: [1, 2, 3, 4, 5, 6] });
+
+const emaSpan3 = ewm(s, { span: 3 }).mean();
+print("EWM mean (span=3):", emaSpan3.values.map(v => +(v ?? 0).toFixed(4)));
+
+// Compare adjusted vs non-adjusted
+const adjusted = ewm(s, { alpha: 0.5, adjust: true }).mean();
+const recursive = ewm(s, { alpha: 0.5, adjust: false }).mean();
+print("Adjusted (alpha=0.5):", adjusted.values.map(v => +(v ?? 0).toFixed(4)));
+print("Recursive (alpha=0.5):", recursive.values.map(v => +(v ?? 0).toFixed(4)));
+
+// EWM std and var
+const ewmStd = ewm(s, { span: 3 }).std();
+const ewmVar = ewm(s, { span: 3 }).var();
+print("EWM std:", ewmStd.values.map(v => v === null ? null : +v.toFixed(4)));
+print("EWM var:", ewmVar.values.map(v => v === null ? null : +v.toFixed(4)));
+
+// EWM on a DataFrame column-wise
+const df2 = DataFrame.fromColumns({ close: [100, 101, 99, 103, 102] });
+const ema = ewm(df2, { span: 3 }).mean();
+print("DataFrame EWM mean (close):", ema.col("close").values.map(v => +(v ?? 0).toFixed(2)));
+      </textarea>
+      <button onclick="runCode('ewm-code', 'ewm-out')">▶ Run</button>
+      <div id="ewm-out" class="output">Click "Run" to execute</div>
+    </section>
+
+    <section>
+      <h2>Rolling on DataFrame</h2>
+      <p>
+        All rolling aggregation functions also work on <code>DataFrame</code>,
+        computing each column independently.
+      </p>
+      <textarea id="df-rolling-code" rows="12">
+// Rolling mean on a multi-column DataFrame
+const df = DataFrame.fromColumns({
+  open:  [100, 102, 101, 105, 103],
+  close: [101, 103, 102, 106, 104],
+  vol:   [1000, 1200, 900, 1100, 950],
+});
+
+const ma2 = rolling(df, 2).mean();
+print("2-period rolling mean:");
+print("  open:", ma2.col("open").values);
+print("  close:", ma2.col("close").values);
+print("  vol:", ma2.col("vol").values);
+      </textarea>
+      <button onclick="runCode('df-rolling-code', 'df-rolling-out')">▶ Run</button>
+      <div id="df-rolling-out" class="output">Click "Run" to execute</div>
+    </section>
+
+    <script src="playground-runtime.js"></script>
+    <script>
+      function runCode(inputId, outputId) {
+        const code = document.getElementById(inputId).value.trim();
+        const outEl = document.getElementById(outputId);
+        outEl.className = "output";
+        const lines = [];
+        function print(...args) {
+          lines.push(args.map(a => JSON.stringify(a, null, 0)).join(" "));
+        }
+        try {
+          const fn = new Function(
+            "Series", "DataFrame", "rolling", "expanding", "ewm", "print",
+            code,
+          );
+          const { Series, DataFrame, rolling, expanding, ewm } = window.__tsb__;
+          fn(Series, DataFrame, rolling, expanding, ewm, print);
+          outEl.textContent = lines.join("\n") || "(no output)";
+        } catch (e) {
+          outEl.className = "output error";
+          outEl.textContent = String(e);
+        }
+      }
+    </script>
+  </body>
+</html>
