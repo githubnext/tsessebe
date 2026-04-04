@@ -7,3 +7,5 @@ export { Series } from "./series.ts";
 export type { SeriesOptions } from "./series.ts";
 export { DataFrame } from "./frame.ts";
 export type { DataFrameOptions } from "./frame.ts";
+export { alignSeries, alignedBinaryOp, alignDataFrames, alignedDataFrameBinaryOp } from "./ops.ts";
+export type { AlignJoin, SeriesAlignResult, DataFrameAlignResult } from "./ops.ts";
