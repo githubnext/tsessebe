@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Reshaping: pivot, melt, stack, unstack</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <style>
+      body {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .output {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        min-height: 80px;
+        white-space: pre-wrap;
+      }
+      .output.error {
+        color: #f87171;
+      }
+      textarea {
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        background: #0ea5e9;
+        color: white;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="nav-links">
+      <a href="index.html">← Back to tsb playground</a>
+    </div>
+
+    <h1>Reshaping <span class="badge">New</span></h1>
+    <p>
+      tsb provides four reshaping utilities that mirror the pandas reshaping
+      API: <code>pivot</code>, <code>pivotTable</code>, <code>melt</code>,
+      <code>stack</code>, and <code>unstack</code>. These convert DataFrames
+      between wide and long formats.
+    </p>
+
+    <script src="playground-runtime.js"></script>
+
+    <hr />
+    <h2>1. pivot — wide from long</h2>
+    <p>
+      <code>pivot(df, {index, columns, values})</code> reshapes a long-format
+      DataFrame into a wide-format one. Each unique value in the
+      <code>columns</code> column becomes a new column header. Raises an error
+      if there are duplicate <code>(index, columns)</code> pairs — use
+      <code>pivotTable</code> for aggregation.
+    </p>
+    <textarea id="code-pivot" rows="30">
+const { DataFrame, pivot } = tsb;
+
+// Long-format temperature data
+const df = DataFrame.fromColumns({
+  date:  ["2020-01", "2020-01", "2020-02", "2020-02", "2020-03", "2020-03"],
+  city:  ["London",  "Paris",  "London",  "Paris",   "London",  "Paris"],
+  temp:  [5,         8,         7,         10,         9,         13],
+});
+
+console.log("Input (long format):");
+console.log("date     | city   | temp");
+for (const [, row] of df.iterrows()) {
+  const date = row.at(0) ?? row.values[0];
+  console.log(`${String(row.values[0]).padEnd(9)}| ${String(row.values[1]).padEnd(7)}| ${row.values[2]}`);
+}
+
+const wide = pivot(df, { index: "date", columns: "city", values: "temp" });
+
+console.log("\nOutput (wide format):");
+console.log("date     | London | Paris");
+for (const [label, row] of wide.iterrows()) {
+  console.log(`${String(label).padEnd(9)}| ${String(row.values[0]).padEnd(7)}| ${row.values[1]}`);
+}
+
+console.log("\nColumns:", [...wide.columns.values]);
+console.log("Index:  ", [...wide.index.values]);
+</textarea>
+    <button onclick="runCode('code-pivot', 'out-pivot')">▶ Run</button>
+    <div class="output" id="out-pivot"></div>
+
+    <hr />
+    <h2>2. pivotTable — aggregate duplicates</h2>
+    <p>
+      <code>pivotTable(df, {values, index, columns, aggfunc})</code> works like
+      <code>pivot</code> but aggregates duplicate <code>(index, columns)</code>
+      combinations. Supported aggregation functions: <code>"mean"</code> (default),
+      <code>"sum"</code>, <code>"count"</code>, <code>"min"</code>,
+      <code>"max"</code>, <code>"first"</code>, <code>"last"</code>.
+    </p>
+    <textarea id="code-pt" rows="32">
+const { DataFrame, pivotTable } = tsb;
+
+const df = DataFrame.fromColumns({
+  region:  ["N", "N", "N", "S", "S", "S", "E", "E"],
+  product: ["A", "A", "B", "A", "B", "B", "A", "B"],
+  revenue: [10,   20,  30,  40,  50,  60,  70,  80],
+});
+
+console.log("=== aggfunc: sum ===");
+const ptSum = pivotTable(df, {
+  index: "region", columns: "product", values: "revenue", aggfunc: "sum",
+});
+console.log("region |  A  |  B");
+for (const [label, row] of ptSum.iterrows()) {
+  console.log(`${String(label).padEnd(7)}| ${String(row.values[0]).padEnd(4)}| ${row.values[1]}`);
+}
+
+console.log("\n=== aggfunc: count ===");
+const ptCount = pivotTable(df, {
+  index: "region", columns: "product", values: "revenue", aggfunc: "count",
+});
+for (const [label, row] of ptCount.iterrows()) {
+  console.log(`${String(label)}: A=${row.values[0]}, B=${row.values[1]}`);
+}
+
+console.log("\n=== multi-column index ===");
+const ptMulti = pivotTable(df, {
+  index: ["region", "product"], columns: "product", values: "revenue", aggfunc: "sum",
+});
+console.log("Shape:", ptMulti.shape);
+</textarea>
+    <button onclick="runCode('code-pt', 'out-pt')">▶ Run</button>
+    <div class="output" id="out-pt"></div>
+
+    <hr />
+    <h2>3. melt — wide to long</h2>
+    <p>
+      <code>melt(df, {id_vars, value_vars, var_name, value_name})</code>
+      unpivots a wide DataFrame into a long format. Identifier columns are
+      preserved; value columns are "melted" into two new columns holding the
+      original column name and value.
+    </p>
+    <textarea id="code-melt" rows="32">
+const { DataFrame, melt } = tsb;
+
+const wide = DataFrame.fromColumns({
+  student: ["Alice", "Bob", "Carol"],
+  math:    [90,      75,    85],
+  english: [80,      85,    70],
+  science: [95,      65,    88],
+});
+
+console.log("Input (wide format):");
+console.log("student | math | english | science");
+for (const [, row] of wide.iterrows()) {
+  const [s, m, e, sc] = row.values;
+  console.log(`${String(s).padEnd(8)}| ${m}    | ${e}       | ${sc}`);
+}
+
+const long = melt(wide, { id_vars: ["student"] });
+
+console.log("\nOutput (long format) — first 6 rows:");
+console.log("student | variable | value");
+let n = 0;
+for (const [, row] of long.iterrows()) {
+  if (n++ >= 6) break;
+  const [s, v, val] = row.values;
+  console.log(`${String(s).padEnd(8)}| ${String(v).padEnd(9)}| ${val}`);
+}
+console.log(`... total ${long.shape[0]} rows`);
+
+// Custom variable/value names
+const renamed = melt(wide, {
+  id_vars: ["student"],
+  var_name: "subject",
+  value_name: "score",
+});
+console.log("\nCustom names:", [...renamed.columns.values]);
+</textarea>
+    <button onclick="runCode('code-melt', 'out-melt')">▶ Run</button>
+    <div class="output" id="out-melt"></div>
+
+    <hr />
+    <h2>4. stack — collapse column axis into rows</h2>
+    <p>
+      <code>stack(df, options)</code> converts a wide DataFrame to a long
+      format, adding a <code>"_index"</code> column with original row labels,
+      a <code>"variable"</code> column with column names, and a
+      <code>"value"</code> column with values. Because tsb does not yet support
+      MultiIndex, the original row-index is stored as a separate column rather
+      than becoming a second index level (as in pandas).
+    </p>
+    <textarea id="code-stack" rows="28">
+const { DataFrame, Index, stack } = tsb;
+
+const df = DataFrame.fromColumns(
+  { A: [1, 2, 3], B: [4, 5, 6], C: [7, 8, 9] },
+  { index: new Index(["x", "y", "z"]) },
+);
+
+console.log("Input DataFrame (index: x, y, z):");
+console.log("     A | B | C");
+for (const [label, row] of df.iterrows()) {
+  console.log(`${String(label)}  -> ${row.values.join(" | ")}`);
+}
+
+const long = stack(df);
+
+console.log(`\nstacked shape: ${long.shape}`);
+console.log("columns:", [...long.columns.values]);
+console.log("\n_index | variable | value");
+for (const [, row] of long.iterrows()) {
+  const [idx, varr, val] = row.values;
+  console.log(`${String(idx).padEnd(7)}| ${String(varr).padEnd(9)}| ${val}`);
+}
+</textarea>
+    <button onclick="runCode('code-stack', 'out-stack')">▶ Run</button>
+    <div class="output" id="out-stack"></div>
+
+    <hr />
+    <h2>5. unstack — wide again</h2>
+    <p>
+      <code>unstack(df, options)</code> is the inverse of <code>stack</code>.
+      It reads the <code>"_index"</code>, <code>"variable"</code>, and
+      <code>"value"</code> columns and reconstructs the original wide DataFrame.
+    </p>
+    <textarea id="code-unstack" rows="24">
+const { DataFrame, Index, stack, unstack } = tsb;
+
+const original = DataFrame.fromColumns(
+  { A: [10, 20], B: [30, 40] },
+  { index: new Index(["row0", "row1"]) },
+);
+
+console.log("Original:");
+console.log("     A  | B");
+for (const [label, row] of original.iterrows()) {
+  console.log(`${String(label)}: ${row.values[0]} | ${row.values[1]}`);
+}
+
+const long = stack(original);
+console.log("\nAfter stack():");
+for (const [, row] of long.iterrows()) {
+  console.log(" ", row.values.join(" | "));
+}
+
+const recovered = unstack(long);
+console.log("\nAfter unstack() — recovered:");
+console.log("index:", [...recovered.index.values]);
+console.log("A:", [...recovered.col("A").values]);
+console.log("B:", [...recovered.col("B").values]);
+console.log("\nRound-trip successful:", JSON.stringify(original.toDict()) === JSON.stringify(recovered.toDict()));
+</textarea>
+    <button onclick="runCode('code-unstack', 'out-unstack')">▶ Run</button>
+    <div class="output" id="out-unstack"></div>
+
+    <hr />
+    <h2>API Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th>Description</th>
+          <th>pandas equivalent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>pivot(df, {index, columns, values})</code></td>
+          <td>Reshape long → wide; raises on duplicates</td>
+          <td><code>DataFrame.pivot()</code></td>
+        </tr>
+        <tr>
+          <td><code>pivotTable(df, {values, index, columns, aggfunc?, fillValue?})</code></td>
+          <td>Reshape long → wide with aggregation</td>
+          <td><code>pandas.pivot_table()</code></td>
+        </tr>
+        <tr>
+          <td><code>melt(df, {id_vars?, value_vars?, var_name?, value_name?})</code></td>
+          <td>Unpivot wide → long format</td>
+          <td><code>DataFrame.melt()</code></td>
+        </tr>
+        <tr>
+          <td><code>stack(df, {value_vars?, var_name?, value_name?, index_name?})</code></td>
+          <td>Collapse column axis into rows</td>
+          <td><code>DataFrame.stack()</code></td>
+        </tr>
+        <tr>
+          <td><code>unstack(df, {index_col?, var_col?, value_col?, fill_value?})</code></td>
+          <td>Expand row column back into columns</td>
+          <td><code>DataFrame.unstack()</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><a href="index.html">← Back to tsb playground index</a></p>
+  </body>
+</html>
