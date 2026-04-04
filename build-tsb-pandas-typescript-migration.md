@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T06:24:42Z |
-| Iteration Count | 8 |
-| Best Metric | 9 |
+| Last Run | 2026-04-04T06:49:43Z |
+| Iteration Count | 9 |
+| Best Metric | 10 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -38,10 +38,10 @@
 
 ## 🎯 Current Priorities
 
-Arithmetic operations done (metric=9). Next priorities in order:
-1. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers; MultiIndex groundwork
-2. **merge/join** (`src/merge/merge.ts`) — database-style inner/left/right/outer joins on DataFrames
-3. **Missing data** (`src/core/missing.ts`) — isna, fillna, dropna, interpolate
+String accessor done (metric=10). Next priorities in order:
+1. **merge/join** (`src/merge/merge.ts`) — database-style inner/left/right/outer joins on DataFrames
+2. **Missing data** (`src/core/missing.ts`) — isna, fillna, dropna, interpolate standalone utilities
+3. **DateTime accessor** (`src/core/datetime.ts`) — Series.dt accessor: year/month/day/hour/minute/dayofweek etc.
 
 ---
 
@@ -53,7 +53,7 @@ Arithmetic operations done (metric=9). Next priorities in order:
 - The `autoloop/build-tsb-pandas-typescript-migration` branch should be created from main (which has merged PRs), not from the stale autoloop branch that tracked old commit SHAs.
 - Iteration 8 (aligned arithmetic): `ops.ts` provides `alignSeries`, `alignedBinaryOp`, `alignDataFrames`, `alignedDataFrameBinaryOp` as standalone utilities. No circular deps: `ops.ts` imports Series/DataFrame but they don't import back. For `_scalarOp` in `series.ts`, inline the `buildIndexMap` helper instead of importing from `ops.ts`. `Index.has()` doesn't exist — use `Index.contains()` instead. `biome check --write` auto-fixes import ordering and formatting. Use `default:` case in switch instead of last `case "right":` to satisfy `useDefaultSwitchClause`. TypeScript with `noUncheckedIndexedAccess` requires explicit guards: `map.get(key) as T | undefined`. `as unknown as number | null` cast is needed when converting Scalar values to numbers in arithmetic helpers.
 - Iteration 5 (DataFrame): Column-oriented storage using `ReadonlyMap<string, Series<Scalar>>` is the right model. Biome's `useLiteralKeys` vs TypeScript's `noPropertyAccessFromIndexSignature` for `Record<string, T>` types — resolve by testing with `toEqual({...})` patterns instead of property access. Extract helper functions to satisfy `noExcessiveCognitiveComplexity` (max 15). `compareScalarPair` and `computeColumnStats` are good examples of extracted helpers. Use `biome check --write` to auto-fix formatting issues. PR creation has failed in previous iterations due to protected-file restrictions — the current branch setup from `main` should work better.
-- Iteration 4 (previous): DataFrame was implemented but PR creation failed silently. The state file was updated in repo-memory but no code reached the repository. Always verify commits actually reach the repo.
+- Iteration 9 (Series.str): `StringAccessor` in `strings.ts` — import it in `series.ts` as a circular ESM dep that works fine (only used in method bodies). Move regex literals to module top level to satisfy `useTopLevelRegex`. Extract helpers (`replaceBounded`, `replaceAll`) to avoid `noExcessiveCognitiveComplexity`. Bug: `_selectRows` in `frame.ts` was using sliced original index labels for column Series — fix by using `new RangeIndex(positions.length)` for column Series (DataFrame.index preserves original labels, column Series get fresh 0-based index). Bug: `DataFrameGroupBy.sum/mean/std` was including non-numeric columns — fix by adding `numericOnly` param to `_valueCols()`.
 
 ---
 
@@ -75,7 +75,7 @@ Arithmetic operations done (metric=9). Next priorities in order:
 ### Phase 2 — Operations (iterations 6-15)
 6. ~~**Arithmetic operations** (Series + Series, DataFrame + DataFrame, broadcasting)~~ ✅ Done (Iteration 8)
 7. Comparison and boolean operations
-8. String accessor (Series.str)
+8. ~~**String accessor** (Series.str)~~ ✅ Done (Iteration 9)
 9. DateTime accessor (Series.dt)
 10. Missing data handling (isna, fillna, dropna, interpolate)
 11. Sorting (sort_values, sort_index)
@@ -102,45 +102,35 @@ Arithmetic operations done (metric=9). Next priorities in order:
 
 ## 📊 Iteration History
 
+### Iteration 9 — 2026-04-04 06:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973555676)
+
+- **Status**: ✅ Accepted
+- **Change**: Implemented `StringAccessor` (`src/core/strings.ts`) — 20+ vectorized string methods on `Series.str`. Fixed `_selectRows` bug (column Series now use fresh RangeIndex). Fixed `GroupBy.sum/mean/std` to aggregate numeric-only columns.
+- **Metric**: 10 (previous best: 9, delta: +1)
+- **Commit**: 6bd3f36
+- **Notes**: Circular ESM imports (strings.ts↔series.ts) work fine when symbols are only used in method bodies. Bug fixes resolved 10 failing tests. `useTopLevelRegex` lint rule requires regex constants at module top level.
+
 ### Iteration 8 — 2026-04-04 06:24 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973131426)
 
 - **Status**: ✅ Accepted
 - **Change**: Implemented index-aligned arithmetic — `src/core/ops.ts` with `alignSeries`, `alignedBinaryOp`, `alignDataFrames`, `alignedDataFrameBinaryOp`. Updated `Series._scalarOp` to align on index (pandas semantics). Added `DataFrame.add/sub/mul/div/floordiv/mod/pow`. 30+ unit tests + 3 property-based tests. Playground page.
 - **Metric**: 9 (previous best: 8, delta: +1)
 - **Commit**: 6fb9189
-- **Notes**: No circular deps — ops.ts imports Series/DataFrame but they inline their own alignment helpers. Use `Index.contains()` not `.has()`. `biome check --write` auto-fixes import ordering. Switch default clause required.
+- **Notes**: No circular deps — ops.ts imports Series/DataFrame but they inline their own alignment helpers. Use `Index.contains()` not `.has()`. Switch default clause required.
 
 ### Iteration 7 — 2026-04-04 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972580333)
 
-- **Status**: ✅ Accepted
-- **Change**: Implemented `concat()` — combine Series/DataFrames along axis=0 (row stack) or axis=1 (column stack), with outer/inner join and ignoreIndex. 25+ unit tests + 4 property-based tests.
-- **Metric**: 8 (previous best: 7, delta: +1)
-- **Commit**: ee507e5
-- **Notes**: Named imports required for fast-check. Helper extraction key for cognitive complexity. axis=0 Series concat doesn't need join param (no alignment axis). `!(a || b)` preferred over `!a && !b` by Biome.
+- **Status**: ✅ Accepted | **Metric**: 8 (+1) | **Commit**: ee507e5
+- **Change**: `concat()` — axis=0/1, outer/inner join, ignoreIndex.
 
 ### Iteration 6 — 2026-04-04 05:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972003902)
 
-- **Status**: ✅ Accepted
-- **Change**: Implemented `GroupBy` — DataFrameGroupBy and SeriesGroupBy with full split-apply-combine: sum/mean/min/max/count/std/first/last/size, agg() with named/fn/per-column specs, transform(), apply(), filter(), getGroup(), ngroups, groupKeys, groups. Multi-key groupby. Added groupby() to DataFrame and Series. 40+ unit tests + property-based tests. Playground page.
-- **Metric**: 7 (previous best: 6, delta: +1)
-- **Commit**: 57d00f3
-- **Notes**: ESM circular deps work fine. `noNonNullAssertion` forbids `!` — use explicit undefined guard.
+- **Status**: ✅ Accepted | **Metric**: 7 (+1) | **Commit**: 57d00f3
+- **Change**: `GroupBy` — DataFrameGroupBy and SeriesGroupBy: sum/mean/min/max/count/std/first/last/size, agg, transform, apply, filter.
 
-### Iteration 5 — 2026-04-04 04:58 UTC
-- **Status**: ✅ Accepted | **Metric**: 6 (delta: +1) | **Commit**: afe1066
-- **Change**: Implemented `DataFrame` — full 2-D column-oriented table. 35+ tests. Playground page.
-
-### Iteration 4 — 2026-04-04 03:55 UTC
-- **Status**: ⚠️ Error (PR creation failed — code never committed)
-
-### Iteration 3 — 2026-04-04 01:25 UTC
-- **Status**: ✅ Accepted | **Metric**: 5 (delta: +1) | **Commit**: 36e76a5
-- **Change**: Dtype system (16 immutable singletons) + full `Series<T>`.
-
-### Iteration 2 — 2026-04-03 19:10 UTC
-- **Status**: ✅ Accepted | **Metric**: 4 (delta: +3) | **Commit**: a45d5c1
-- **Change**: Dtype system + Index fixes.
-
-### Iteration 1 — 2026-04-03 16:54 UTC
-- **Status**: ✅ Accepted | **Metric**: 1 (baseline)
-- **Change**: Project foundation — package.json, tsconfig, biome, bun, CI, playground, AGENTS.md.
+### Iterations 1–5 (summary)
+- **Iteration 5** ✅: DataFrame (metric=6, commit afe1066)
+- **Iteration 4** ⚠️: Error (PR creation failed)
+- **Iteration 3** ✅: Dtype + Series (metric=5, commit 36e76a5)
+- **Iteration 2** ✅: Dtype + Index fixes (metric=4, commit a45d5c1)
+- **Iteration 1** ✅: Project foundation (metric=1, baseline)
