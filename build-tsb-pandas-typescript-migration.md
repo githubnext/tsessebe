@@ -10,11 +10,11 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T09:22:00Z |
-| Iteration Count | 14 |
-| Best Metric | 15 |
+| Last Run | 2026-04-04T09:52:00Z |
+| Iteration Count | 15 |
+| Best Metric | 16 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-indexing-14-e855a3b-1775294315` |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-compare-15` |
 | PR | — |
 | Steering Issue | — |
 | Paused | false |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -38,11 +38,11 @@
 
 ## 🎯 Current Priorities
 
-Missing data done (metric=12). DateTime accessor done (metric=13). Sorting utilities done (metric=14). Indexing done (metric=15). Next priorities in order:
+Comparison/boolean ops done (metric=16). Next priorities in order:
 1. ~~**DateTime accessor** (`src/core/datetime.ts`)~~ — ✅ Done (Iteration 12)
 2. ~~**Sorting utilities** (`src/core/sort.ts`)~~ — ✅ Done (Iteration 13)
 3. ~~**Indexing/selection** (`src/core/indexing.ts`)~~ — ✅ Done (Iteration 14)
-4. **Comparison/boolean ops** (`src/core/compare.ts`) — eq/ne/lt/gt/le/ge returning boolean Series/DataFrame
+4. ~~**Comparison/boolean ops** (`src/core/compare.ts`)~~ — ✅ Done (Iteration 15)
 5. **Reshaping** (`src/reshape/`) — pivot, melt, stack, unstack
 
 ---
@@ -61,6 +61,8 @@ Missing data done (metric=12). DateTime accessor done (metric=13). Sorting utili
 - Iter 13 (sort): Use `import type { Index }` when only used as type annotation. Aggressive helper extraction needed for rank's 5-method algorithm. `biome check --write` auto-formats long signatures.
 - Iter 14 (indexing): Biome v2.4.x via npx is incompatible with project's biome.json (1.9.4 schema). Install `@biomejs/biome@1.9.4` in node_modules for correct linting. `resolveILocPositions`/`resolveLocPositions` hit complexity 15 limit — extract `boolMaskToPositions`, `normaliseSinglePos`, `labelToPositions`, `labelArrayToPositions`. `exactOptionalPropertyTypes`: use `?? null` not just undefined for `name` field in SeriesOptions. Use `import fc from "fast-check"` (default import), not `import * as fc`.
 
+- Iter 15 (compare): No circular deps — compare.ts imports Series/DataFrame. Null comparisons: all ops return false for null operands except `ne` which returns true. `logicalNotSeries` passes nulls through unchanged. DataFrame axis="columns" broadcasts Series by col name; axis="index" broadcasts by row label. Use `import type { Index }` for type-only usage.
+
 ---
 
 ## 🚧 Foreclosed Avenues
@@ -77,7 +79,7 @@ Index, Dtype, Series, DataFrame all implemented.
 ### Phase 2 — Operations (active)
 - ~~Arithmetic~~ ✅ (Iter 8) · ~~String accessor~~ ✅ (Iter 9) · ~~DateTime accessor~~ ✅ (Iter 12)
 - ~~Missing data~~ ✅ (Iter 11) · ~~Groupby~~ ✅ (Iter 6) · ~~concat~~ ✅ (Iter 7) · ~~merge~~ ✅ (Iter 10)
-- ~~Sorting utilities~~ ✅ (Iter 13) · ~~Indexing/selection~~ ✅ (Iter 14) · **Next**: Comparison/boolean ops
+- ~~Sorting utilities~~ ✅ (Iter 13) · ~~Indexing/selection~~ ✅ (Iter 14) · ~~Comparison/boolean ops~~ ✅ (Iter 15) · **Next**: Reshaping (pivot/melt/stack/unstack)
 - **Later**: Reshaping (pivot/melt/stack/unstack) · Window functions (rolling/expanding/ewm)
 
 ### Phase 3+ — I/O, Stats, Advanced
@@ -86,6 +88,16 @@ read_csv/json/parquet · to_csv/json · describe/corr/cov · Categorical · Mult
 ---
 
 ## 📊 Iteration History
+
+All iterations in reverse chronological order (newest first).
+
+### Iteration 15 — 2026-04-04 09:52 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23976407516)
+
+- **Status**: ✅ Accepted
+- **Change**: `src/core/compare.ts` — element-wise eq/ne/lt/gt/le/ge for Series & DataFrame with index alignment, logical and/or/xor/not, anySeries/allSeries/anyDataFrame/allDataFrame. Axis="columns"/"index" for DataFrame-vs-Series broadcast.
+- **Metric**: 16 (previous best: 15, delta: +1)
+- **Commit**: d49f29e
+- **Notes**: 45 unit tests + 4 property-based tests, 100% function & line coverage on compare.ts. Null operands: all comparisons return false except `ne` (returns true). `logicalNotSeries` passes null through unchanged.
 
 ### Iteration 14 — 2026-04-04 09:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23975921449)
 
