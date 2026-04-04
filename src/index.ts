@@ -35,3 +35,86 @@ export { Series } from "./core/index.ts";
 export type { SeriesOptions } from "./core/index.ts";
 export { DataFrame } from "./core/index.ts";
 export type { DataFrameOptions } from "./core/index.ts";
+export { concat } from "./merge/index.ts";
+export type { ConcatOptions } from "./merge/index.ts";
+export { merge } from "./merge/index.ts";
+export type { MergeOptions } from "./merge/index.ts";
+export { DataFrameGroupBy, SeriesGroupBy } from "./groupby/index.ts";
+export type { AggFn, AggName, AggSpec } from "./groupby/index.ts";
+export {
+  alignSeries,
+  alignedBinaryOp,
+  alignDataFrames,
+  alignedDataFrameBinaryOp,
+} from "./core/index.ts";
+export type { AlignJoin, SeriesAlignResult, DataFrameAlignResult } from "./core/index.ts";
+export { StringAccessor } from "./core/index.ts";
+export { DateTimeAccessor } from "./core/index.ts";
+export {
+  isna,
+  isnull,
+  notna,
+  notnull,
+  ffill,
+  ffillDataFrame,
+  bfill,
+  bfillDataFrame,
+  fillnaSeries,
+  fillnaDataFrame,
+  dropnaSeries,
+  dropnaDataFrame,
+  interpolate,
+  interpolateDataFrame,
+} from "./core/index.ts";
+export type {
+  FillPropagateOptions,
+  FillnaMethod,
+  FillnaOptions,
+  DropnaOptions,
+  InterpolateMethod,
+  InterpolateOptions,
+} from "./core/index.ts";
+export {
+  nlargest,
+  nsmallest,
+  dataFrameNlargest,
+  dataFrameNsmallest,
+  rank,
+  rankDataFrame,
+} from "./core/index.ts";
+export type { RankMethod, RankOptions, NSelectOptions } from "./core/index.ts";
+export {
+  Slice,
+  locSeries,
+  ilocSeries,
+  locDataFrame,
+  ilocDataFrame,
+  atDataFrame,
+  iatDataFrame,
+} from "./core/index.ts";
+export type { BooleanMask, LocKey, ILocKey, ColLocKey, ColILocKey } from "./core/index.ts";
+export {
+  compareSeries,
+  eqSeries,
+  neSeries,
+  ltSeries,
+  gtSeries,
+  leSeries,
+  geSeries,
+  anySeries,
+  allSeries,
+  logicalAndSeries,
+  logicalOrSeries,
+  logicalXorSeries,
+  logicalNotSeries,
+  compareDataFrame,
+  eqDataFrame,
+  neDataFrame,
+  ltDataFrame,
+  gtDataFrame,
+  leDataFrame,
+  geDataFrame,
+  anyDataFrame,
+  allDataFrame,
+} from "./core/index.ts";
+export type { CompareOp, SeriesCompareOptions, DataFrameCompareOptions } from "./core/index.ts";
