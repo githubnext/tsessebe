@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Series.str — String Accessor</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #0d1117;
+        color: #e6edf3;
+      }
+      h1 { color: #58a6ff; }
+      h2 { color: #79c0ff; margin-top: 2em; }
+      a { color: #58a6ff; }
+      .desc { color: #8b949e; margin-bottom: 1em; }
+      .cell {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        margin: 16px 0;
+        overflow: hidden;
+      }
+      .cell-header {
+        padding: 8px 16px;
+        background: #21262d;
+        font-size: 12px;
+        color: #8b949e;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      textarea {
+        width: 100%;
+        min-height: 120px;
+        background: #0d1117;
+        color: #e6edf3;
+        border: none;
+        padding: 16px;
+        font-family: "Fira Code", "Cascadia Code", monospace;
+        font-size: 14px;
+        resize: vertical;
+        box-sizing: border-box;
+        outline: none;
+      }
+      .output {
+        padding: 12px 16px;
+        background: #0d1117;
+        border-top: 1px solid #30363d;
+        font-family: monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        color: #3fb950;
+        min-height: 40px;
+      }
+      .output.error { color: #f85149; }
+      button {
+        background: #238636;
+        color: #fff;
+        border: none;
+        padding: 4px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      button:hover { background: #2ea043; }
+      code { background: #161b22; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">← back to tsb playground</a></p>
+    <h1>Series.str — String Accessor</h1>
+    <p class="desc">
+      Vectorized string operations for a <code>Series</code>. Mirrors pandas'
+      <code>Series.str</code> accessor: all methods operate element-wise and propagate
+      <code>null</code> for missing values.
+    </p>
+
+    <h2>Case conversion</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>upper / lower / capitalize / title / swapcase</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const s = new tsb.Series({ data: ["hello", "WORLD", "foo bar", null] });
+
+console.log("upper:", [...s.str.upper().values]);
+console.log("lower:", [...s.str.lower().values]);
+console.log("capitalize:", [...s.str.capitalize().values]);
+console.log("title:", [...s.str.title().values]);
+console.log("swapcase:", [...s.str.swapcase().values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Trimming &amp; padding</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>strip / lstrip / rstrip / pad / center / zfill</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const s = new tsb.Series({ data: ["  hello  ", "world  ", "  foo"] });
+
+console.log("strip:", [...s.str.strip().values]);
+console.log("lstrip:", [...s.str.lstrip().values]);
+console.log("rstrip:", [...s.str.rstrip().values]);
+
+const nums = new tsb.Series({ data: ["7", "42", "100"] });
+console.log("zfill(5):", [...nums.str.zfill(5).values]);
+console.log("rjust(8):", [...nums.str.rjust(8).values]);
+console.log("center(7, '-'):", [...nums.str.center(7, "-").values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Search predicates</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>contains / startswith / endswith / count / find</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const s = new tsb.Series({ data: ["apple", "banana", "cherry", null] });
+
+console.log("contains('an'):", [...s.str.contains("an").values]);
+console.log("startswith('a'):", [...s.str.startswith("a").values]);
+console.log("endswith('y'):", [...s.str.endswith("y").values]);
+console.log("count('a'):", [...s.str.count("a").values]);
+console.log("find('rr'):", [...s.str.find("rr").values]);
+
+// regex support
+console.log("contains(/^[ab]/, regex):", [...s.str.contains(/^[ab]/).values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Replace &amp; split</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>replace / split</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const s = new tsb.Series({ data: ["banana", "mississippi"] });
+
+console.log("replace('a','o'):", [...s.str.replace("a", "o").values]);
+console.log("replace('s','S', n=2):", [...s.str.replace("s", "S", 2).values]);
+
+const csv = new tsb.Series({ data: ["a,b,c", "x,y,z"] });
+console.log("split(','):", [...csv.str.split(",").values]);
+console.log("split(',', n=1):", [...csv.str.split(",", 1).values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Slicing &amp; length</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>get / slice / len</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const s = new tsb.Series({ data: ["hello", "world", "Python", null] });
+
+console.log("get(0):", [...s.str.get(0).values]);
+console.log("get(-1):", [...s.str.get(-1).values]);
+console.log("slice(0,3):", [...s.str.slice(0, 3).values]);
+console.log("slice(0,6,2):", [...s.str.slice(0, 6, 2).values]);
+console.log("len():", [...s.str.len().values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <h2>Chaining operations</h2>
+    <div class="cell">
+      <div class="cell-header">
+        <span>Filter rows that contain a substring, then transform</span>
+        <button onclick="run(this)">▶ Run</button>
+      </div>
+      <textarea>
+const names = new tsb.Series({ data: ["Alice Smith", "Bob Jones", "Alice Brown", "Carol Davis"] });
+
+// Find names starting with "Alice" and upper-case them
+const mask = names.str.startswith("Alice");
+console.log("mask:", [...mask.values]);
+
+const alices = names.filter(mask);
+console.log("filtered:", [...alices.values]);
+console.log("upper-cased:", [...alices.str.upper().values]);
+      </textarea>
+      <div class="output">Press ▶ Run to execute</div>
+    </div>
+
+    <script src="playground-runtime.js"></script>
+    <script>
+      async function run(btn) {
+        const cell = btn.closest(".cell");
+        const code = cell.querySelector("textarea").value;
+        const out = cell.querySelector(".output");
+        out.textContent = "Running…";
+        out.className = "output";
+        try {
+          const result = await window.__tsbPlayground(code);
+          out.textContent = result || "(no output)";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "output error";
+        }
+      }
+    </script>
+  </body>
+</html>
