@@ -105,6 +105,10 @@ export class Dtype {
         return new Dtype("timedelta", "timedelta", 8);
       case "category":
         return new Dtype("category", "category", 0);
+      default: {
+        const _exhaustive: never = name;
+        throw new Error(`Unknown dtype: ${_exhaustive}`);
+      }
     }
   }
 

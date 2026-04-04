@@ -19,6 +19,36 @@ function defaultIndex(n: number): Index<Label> {
   return new RangeIndex(n) as unknown as Index<Label>;
 }
 
+/** True when the value should be treated as missing (null, undefined, or NaN). */
+function isMissing(v: Scalar): boolean {
+  return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+}
+
+/** Compare two scalar values with null/NaN handling for sorting. */
+function compareScalars(
+  a: Scalar,
+  b: Scalar,
+  ascending: boolean,
+  naPosition: "first" | "last",
+): number {
+  const aNull = isMissing(a);
+  const bNull = isMissing(b);
+  if (aNull && bNull) {
+    return 0;
+  }
+  if (aNull) {
+    return naPosition === "first" ? -1 : 1;
+  }
+  if (bNull) {
+    return naPosition === "first" ? 1 : -1;
+  }
+  if (a === b) {
+    return 0;
+  }
+  const cmp = (a as number | string | boolean) < (b as number | string | boolean) ? -1 : 1;
+  return ascending ? cmp : -cmp;
+}
+
 // ─── SeriesOptions ────────────────────────────────────────────────────────────
 
 /** Constructor options accepted by `Series`. */
@@ -546,28 +576,7 @@ export class Series<T extends Scalar = Scalar> {
   /** Return a new Series sorted by values. */
   sortValues(ascending = true, naPosition: "first" | "last" = "last"): Series<T> {
     const pairs = this._values.map((v, i) => ({ v, i }));
-    pairs.sort((a, b) => {
-      const aNull =
-        a.v === null || a.v === undefined || (typeof a.v === "number" && Number.isNaN(a.v));
-      const bNull =
-        b.v === null || b.v === undefined || (typeof b.v === "number" && Number.isNaN(b.v));
-      if (aNull && bNull) {
-        return 0;
-      }
-      if (aNull) {
-        return naPosition === "first" ? -1 : 1;
-      }
-      if (bNull) {
-        return naPosition === "first" ? 1 : -1;
-      }
-      const av = a.v as number | string | boolean;
-      const bv = b.v as number | string | boolean;
-      if (av === bv) {
-        return 0;
-      }
-      const cmp = av < bv ? -1 : 1;
-      return ascending ? cmp : -cmp;
-    });
+    pairs.sort((a, b) => compareScalars(a.v, b.v, ascending, naPosition));
     return new Series<T>({
       data: pairs.map(({ v }) => v),
       index: this.index.take(pairs.map(({ i }) => i)),

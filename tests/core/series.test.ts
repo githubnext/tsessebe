@@ -2,7 +2,7 @@
  * Tests for Series.
  */
 import { describe, expect, it } from "bun:test";
-import { Dtype, Index, Series } from "../../src/core/index.ts";
+import { Dtype, Index, Series } from "../../src/index.ts";
 describe("Series", () => {
   describe("construction", () => {
     it("creates from numeric array with default RangeIndex", () => {
