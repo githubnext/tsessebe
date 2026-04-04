@@ -7,6 +7,7 @@
  * missing-value handling.
  */
 
+import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
 import { Dtype } from "./dtype.ts";
@@ -700,5 +701,21 @@ export class Series<T extends Scalar = Scalar> {
     const rows = this._values.map((v, i) => `${String(this.index.at(i))}\t${String(v)}`).join("\n");
     const footer = `Name: ${this.name ?? "(unnamed)"}, dtype: ${this.dtype.name}, Length: ${this.size}`;
     return `${rows}\n${footer}`;
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the Series by an array of key values (or another Series).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.groupby(["A", "A", "B", "B"]).sum();
+   * // Series { A: 3, B: 7 }
+   * ```
+   */
+  groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
+    return new SeriesGroupBy(this as Series<Scalar>, by);
   }
 }
