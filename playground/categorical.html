@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Categorical Data</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+    h1 { color: #1a1a2e; }
+    h2 { color: #16213e; border-bottom: 2px solid #eee; padding-bottom: .25rem; margin-top: 2rem; }
+    pre { background: #f4f4f8; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .output { background: #e8f5e9; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 4px; margin-top: .5rem; }
+    .note { background: #fff3e0; border-left: 4px solid #ff9800; padding: .75rem 1rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; font-size: .9em; }
+    th { background: #f4f4f8; }
+    a { color: #1976d2; }
+    nav { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+
+<nav><a href="index.html">← Back to tsb playground</a></nav>
+
+<h1>🏷️ Categorical Data</h1>
+<p>
+  tsb implements pandas' <strong>Categorical</strong> data type: a finite-vocabulary
+  array that stores values as integer codes into an ordered list of categories.
+  Categories save memory when the same strings repeat many times and enable
+  ordered comparisons like "low &lt; medium &lt; high".
+</p>
+
+<h2>Creating a Categorical</h2>
+<p>
+  Pass any array of values to <code>new Categorical(values)</code>.
+  Categories are inferred in order of first appearance.  Missing values
+  (<code>null</code> / <code>undefined</code>) are assigned code <code>-1</code>.
+</p>
+
+<pre><code>import { Categorical } from "tsb";
+
+const c = new Categorical(["a", "b", "a", "c", null]);
+c.categories;  // ["a", "b", "c"]
+c.codes;       // [0, 1, 0, 2, -1]
+c.length;      // 5
+c.nCategories; // 3
+c.at(0);       // "a"
+c.at(4);       // null  (missing)
+c.toArray();   // ["a", "b", "a", "c", null]</code></pre>
+
+<h2>Explicit Categories &amp; Ordering</h2>
+<p>
+  Provide a <code>categories</code> option to fix the category list (any value
+  not in the list becomes <code>-1</code>).  Set <code>ordered: true</code> to
+  enable <code>min()</code> / <code>max()</code> operations.
+</p>
+
+<pre><code>const priority = new Categorical(
+  ["medium", "high", "low", "high"],
+  { categories: ["low", "medium", "high"], ordered: true }
+);
+priority.ordered; // true
+priority.min();   // "low"
+priority.max();   // "high"
+
+// Values outside the explicit categories become missing:
+const c = new Categorical(["a", "b", "z"], { categories: ["a", "b"] });
+c.codes;    // [0, 1, -1]
+c.toArray(); // ["a", "b", null]</code></pre>
+
+<h2>Mutating the Category Set</h2>
+<p>
+  All mutation methods return a <em>new</em> <code>Categorical</code> — the
+  original is never changed.
+</p>
+
+<pre><code>const c = new Categorical(["a", "b", "a"], { categories: ["a", "b"] });
+
+// Add new categories (data codes unchanged)
+c.addCategories(["c", "d"]).categories;  // ["a", "b", "c", "d"]
+
+// Remove a category (matching values → -1 / null)
+c.removeCategories(["b"]).toArray();  // ["a", null, "a"]
+
+// Remove categories with zero occurrences
+const sparse = new Categorical(["a"], { categories: ["a", "b", "c"] });
+sparse.removeUnusedCategories().categories;  // ["a"]
+
+// Rename categories (one-to-one, must keep same length)
+c.renameCategories(["x", "y"]).toArray();  // ["x", "y", "x"]
+
+// Reorder (must be a permutation of current categories)
+c.reorderCategories(["b", "a"]).codes;  // [1, 0, 1]
+
+// Replace the entire category set
+c.setCategories(["a"]).toArray();  // ["a", null, "a"]</code></pre>
+
+<h2>Statistics</h2>
+
+<pre><code>const c = new Categorical(["a", "a", "b", "b", "b", null]);
+
+// Count per category (includes zero-count categories)
+c.valueCounts();
+// Series { a: 2, b: 3 }
+
+// Summary stats (like pandas describe for categorical)
+c.describe();
+// Series { count: 5, unique: 2, top: "b", freq: 3 }</code></pre>
+
+<h2>Series.cat Accessor</h2>
+<p>
+  The <code>.cat</code> accessor on any <code>Series</code> exposes categorical
+  operations — mirroring <code>pandas.Series.cat</code>.
+</p>
+
+<pre><code>import { Series } from "tsb";
+
+const s = new Series({ data: ["a", "b", "a", "c"], name: "grade" });
+
+s.cat.categories;       // ["a", "b", "c"]
+s.cat.ordered;          // false
+s.cat.codes.values;     // [0, 1, 0, 2]
+
+s.cat.valueCounts();    // Series { a: 2, b: 1, c: 1 }
+
+// Operations return new Series:
+const renamed = s.cat.renameCategories(["x", "y", "z"]);
+renamed.values;  // ["x", "y", "x", "z"]
+
+const ordered = s.cat.asOrdered();
+ordered.cat.ordered;  // true</code></pre>
+
+<h2>factorize</h2>
+<p>
+  <code>factorize(values)</code> encodes any array (or Series) into integer codes
+  plus a list of unique labels — the building block for many label-encoding
+  workflows.
+</p>
+
+<pre><code>import { factorize } from "tsb";
+
+const { codes, uniques } = factorize(["cat", "dog", "cat", null, "bird"]);
+codes;   // [0, 1, 0, -1, 2]
+uniques; // ["cat", "dog", "bird"]
+
+// Works with Series too:
+const s = new Series({ data: [10, 20, 10, 30] });
+const { codes: c2, uniques: u2 } = factorize(s);
+c2;  // [0, 1, 0, 2]
+u2;  // [10, 20, 30]</code></pre>
+
+<h2>CategoricalDtype</h2>
+<p>
+  <code>CategoricalDtype</code> is a metadata descriptor that can accompany a
+  Series or DataFrame column to record what categories and ordering it expects.
+</p>
+
+<pre><code>import { CategoricalDtype, Dtype } from "tsb";
+
+const dt = new CategoricalDtype(["low", "medium", "high"], true);
+dt.categories; // ["low", "medium", "high"]
+dt.ordered;    // true
+dt.dtype;      // Dtype.category
+dt.toString(); // 'CategoricalDtype(categories=["low","medium","high"], ordered=True)'
+
+// Compare two CategoricalDtype instances:
+const dt2 = new CategoricalDtype(["low", "medium", "high"], true);
+dt.equals(dt2); // true</code></pre>
+
+<h2>API Reference</h2>
+<table>
+  <thead>
+    <tr><th>Symbol</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>new Categorical(values, options?)</code></td><td>Create categorical array from values</td></tr>
+    <tr><td><code>cat.codes</code></td><td>Integer codes (readonly number[])</td></tr>
+    <tr><td><code>cat.categories</code></td><td>Unique label list (readonly Label[])</td></tr>
+    <tr><td><code>cat.ordered</code></td><td>Whether categories are ordered</td></tr>
+    <tr><td><code>cat.at(i)</code></td><td>Decoded value at position i</td></tr>
+    <tr><td><code>cat.toArray()</code></td><td>Decode all values to Label[]</td></tr>
+    <tr><td><code>cat.toSeries(name?)</code></td><td>Convert to Series with Dtype.category</td></tr>
+    <tr><td><code>cat.addCategories(cats)</code></td><td>Append new categories (returns new Categorical)</td></tr>
+    <tr><td><code>cat.removeCategories(cats)</code></td><td>Remove categories, matching values → null</td></tr>
+    <tr><td><code>cat.removeUnusedCategories()</code></td><td>Drop zero-count categories</td></tr>
+    <tr><td><code>cat.renameCategories(names)</code></td><td>One-to-one rename</td></tr>
+    <tr><td><code>cat.reorderCategories(order)</code></td><td>Permute category list</td></tr>
+    <tr><td><code>cat.setCategories(cats)</code></td><td>Replace entire category set</td></tr>
+    <tr><td><code>cat.asOrdered()</code></td><td>Return ordered copy</td></tr>
+    <tr><td><code>cat.asUnordered()</code></td><td>Return unordered copy</td></tr>
+    <tr><td><code>cat.min()</code> / <code>cat.max()</code></td><td>Min/max (ordered only)</td></tr>
+    <tr><td><code>cat.valueCounts()</code></td><td>Count per category as Series</td></tr>
+    <tr><td><code>cat.describe()</code></td><td>Summary stats as Series</td></tr>
+    <tr><td><code>series.cat</code></td><td>CategoricalAccessor on a Series</td></tr>
+    <tr><td><code>factorize(values)</code></td><td>Encode to {codes, uniques}</td></tr>
+    <tr><td><code>new CategoricalDtype(cats?, ordered?)</code></td><td>Dtype descriptor with category metadata</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Note:</strong> This playground page shows static examples.
+  Run <code>bun test tests/core/categorical.test.ts</code> to execute the
+  full test suite including property-based tests with fast-check.
+</div>
+
+</body>
+</html>

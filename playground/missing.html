@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Missing Data Handling</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+    <style>
+      body {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .output {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        min-height: 80px;
+        white-space: pre-wrap;
+      }
+      .output.error {
+        color: #f87171;
+      }
+      textarea {
+        font-family: monospace;
+        font-size: 0.9rem;
+      }
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        background: #0ea5e9;
+        color: white;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="nav-links">
+      <a href="index.html">← Back to tsb playground</a>
+    </div>
+
+    <h1>🔍 Missing Data Handling <span class="badge">New in v0.0.1</span></h1>
+    <p>
+      tsb provides a full suite of missing-value utilities mirroring
+      <code>pandas</code> — detection, filling, dropping, and interpolation.
+    </p>
+
+    <script src="playground-runtime.js"></script>
+
+    <!-- ─── Section 1: Detection ─────────────────────────────────────── -->
+    <h2>1. Detection — <code>isna</code> / <code>notna</code></h2>
+    <p>
+      <code>isna(x)</code> returns <code>true</code> for <code>null</code>,
+      <code>undefined</code>, and <code>NaN</code>. Works on scalars, Series, and DataFrames.
+    </p>
+    <textarea id="code-isna" rows="16">
+const { Series, DataFrame, isna, notna } = tsb;
+
+// Scalar detection
+console.log("isna(null):", isna(null));           // true
+console.log("isna(NaN):", isna(NaN));             // true
+console.log("isna(0):", isna(0));                 // false
+console.log("isna(''):", isna(""));               // false
+
+// Series detection
+const s = new Series({ data: [1, null, NaN, 4], name: "x" });
+console.log("\nisna(series):", isna(s).values);   // [false, true, true, false]
+console.log("notna(series):", notna(s).values);  // [true, false, false, true]
+
+// DataFrame detection
+const df = DataFrame.fromColumns({ a: [1, null, 3], b: [null, 2, null] });
+console.log("\nisna(df) — column a:", isna(df).col("a").values);
+console.log("isna(df) — column b:", isna(df).col("b").values);
+    </textarea>
+    <button onclick="runCode('code-isna', 'out-isna')">▶ Run</button>
+    <div class="output" id="out-isna"></div>
+
+    <!-- ─── Section 2: ffill / bfill ────────────────────────────────── -->
+    <h2>2. Propagation Fill — <code>ffill</code> / <code>bfill</code></h2>
+    <p>
+      Forward-fill (<code>ffill</code>) propagates the most recent non-null value forward.
+      Backward-fill (<code>bfill</code>) fills from the next known value.
+      Both accept an optional <code>limit</code> to restrict consecutive fills.
+    </p>
+    <textarea id="code-fill" rows="20">
+const { Series, DataFrame, ffill, bfill, ffillDataFrame, bfillDataFrame } = tsb;
+
+const s = new Series({ data: [1, null, null, null, 5], name: "v" });
+
+console.log("original:         ", s.values);
+console.log("ffill():          ", ffill(s).values);          // [1, 1, 1, 1, 5]
+console.log("ffill(limit=1):   ", ffill(s, { limit: 1 }).values);  // [1, 1, null, null, 5]
+console.log("bfill():          ", bfill(s).values);          // [1, 5, 5, 5, 5]
+console.log("bfill(limit=2):   ", bfill(s, { limit: 2 }).values);  // [1, null, 5, 5, 5]
+
+// DataFrame fill — each column independently
+const df = DataFrame.fromColumns({
+  a: [1, null, null, 4],
+  b: [null, 2, null, null],
+});
+console.log("\nDataFrame ffill — a:", ffillDataFrame(df).col("a").values);
+console.log("DataFrame ffill — b:", ffillDataFrame(df).col("b").values);
+console.log("DataFrame bfill — a:", bfillDataFrame(df).col("a").values);
+    </textarea>
+    <button onclick="runCode('code-fill', 'out-fill')">▶ Run</button>
+    <div class="output" id="out-fill"></div>
+
+    <!-- ─── Section 3: fillna with method ───────────────────────────── -->
+    <h2>3. Fill with Value or Method — <code>fillnaSeries</code></h2>
+    <p>
+      <code>fillnaSeries</code> extends the built-in <code>Series.fillna(scalar)</code>
+      by adding <code>ffill</code> / <code>bfill</code> method support.
+    </p>
+    <textarea id="code-fillna" rows="14">
+const { Series, fillnaSeries, fillnaDataFrame, DataFrame } = tsb;
+
+const s = new Series({ data: [1, null, null, 4] });
+
+console.log("fill with 0:      ", fillnaSeries(s, { value: 0 }).values);
+console.log("fill ffill:       ", fillnaSeries(s, { method: "ffill" }).values);
+console.log("fill bfill:       ", fillnaSeries(s, { method: "bfill" }).values);
+console.log("ffill limit=1:    ", fillnaSeries(s, { method: "ffill", limit: 1 }).values);
+
+// DataFrame variant
+const df = DataFrame.fromColumns({ x: [null, 2, null, 4] });
+console.log("\nDF fillna ffill: ", fillnaDataFrame(df, { method: "ffill" }).col("x").values);
+    </textarea>
+    <button onclick="runCode('code-fillna', 'out-fillna')">▶ Run</button>
+    <div class="output" id="out-fillna"></div>
+
+    <!-- ─── Section 4: dropna ───────────────────────────────────────── -->
+    <h2>4. Drop Missing Values — <code>dropnaSeries</code> / <code>dropnaDataFrame</code></h2>
+    <p>
+      <code>dropnaDataFrame</code> supports <code>how</code>, <code>thresh</code>,
+      <code>subset</code>, and <code>axis</code> options — matching pandas' full API.
+    </p>
+    <textarea id="code-dropna" rows="24">
+const { Series, DataFrame, dropnaSeries, dropnaDataFrame } = tsb;
+
+// Series drop
+const s = new Series({ data: [1, null, 3, NaN, 5] });
+console.log("dropna series:", dropnaSeries(s).values);   // [1, 3, 5]
+
+// DataFrame — axis=0 (rows)
+const df = DataFrame.fromColumns({
+  a: [1,    null, 3,    null],
+  b: [4,    5,    null, null],
+});
+console.log("\noriginal shape:", df.shape);                // [4, 2]
+console.log("dropna (any):  ", dropnaDataFrame(df).shape);          // [1, 2]
+console.log("dropna (all):  ", dropnaDataFrame(df, { how: "all" }).shape);  // [3, 2]
+console.log("dropna thresh=2:", dropnaDataFrame(df, { thresh: 2 }).shape); // [2, 2]
+console.log("dropna subset a:", dropnaDataFrame(df, { subset: ["a"] }).shape); // [2, 2]
+
+// DataFrame — axis=1 (columns)
+const df2 = DataFrame.fromColumns({
+  clean: [1, 2, 3],
+  dirty: [4, null, 6],
+});
+console.log("\ndropna axis=1 cols:", dropnaDataFrame(df2, { axis: 1 }).columns.values);
+    </textarea>
+    <button onclick="runCode('code-dropna', 'out-dropna')">▶ Run</button>
+    <div class="output" id="out-dropna"></div>
+
+    <!-- ─── Section 5: interpolate ──────────────────────────────────── -->
+    <h2>5. Interpolation — <code>interpolate</code></h2>
+    <p>
+      Linear interpolation fills interior gaps using the two bounding non-null values.
+      Leading and trailing nulls are left as-is (no extrapolation).
+    </p>
+    <textarea id="code-interp" rows="20">
+const { Series, DataFrame, interpolate, interpolateDataFrame } = tsb;
+
+// Basic linear interpolation
+const s = new Series({ data: [0, null, null, null, 8] });
+console.log("original:  ", s.values);
+console.log("interp:    ", interpolate(s).values);       // [0, 2, 4, 6, 8]
+
+// Leading/trailing nulls not extrapolated
+const s2 = new Series({ data: [null, 2, null, 6, null] });
+console.log("\ns2 original:", s2.values);
+console.log("s2 interp:  ", interpolate(s2).values);    // [null, 2, 4, 6, null]
+
+// Limit the number of consecutive fills
+const s3 = new Series({ data: [0, null, null, null, 8] });
+console.log("\nlimit=1:   ", interpolate(s3, { limit: 1 }).values);  // [0, 2, null, null, 8]
+
+// DataFrame — each column independently
+const df = DataFrame.fromColumns({
+  a: [0, null, 10],
+  b: [100, null, 200],
+});
+const result = interpolateDataFrame(df);
+console.log("\nDF interp a:", result.col("a").values);
+console.log("DF interp b:", result.col("b").values);
+    </textarea>
+    <button onclick="runCode('code-interp', 'out-interp')">▶ Run</button>
+    <div class="output" id="out-interp"></div>
+
+    <!-- ─── Section 6: Real-world example ──────────────────────────── -->
+    <h2>6. Real-world Example — Time Series Cleaning</h2>
+    <p>
+      Combining detection, filling, and interpolation to clean a sensor time series
+      with sporadic missing readings.
+    </p>
+    <textarea id="code-realworld" rows="30">
+const { Series, DataFrame, isna, ffill, interpolate, dropnaSeries } = tsb;
+
+// Simulated sensor data: temperature readings with some missing values
+const temps = new Series({
+  data: [null, 18.5, null, null, 19.2, null, 20.1, null, 21.0, 21.3],
+  index: ["08:00","08:10","08:20","08:30","08:40","08:50","09:00","09:10","09:20","09:30"],
+  name: "temperature",
+});
+
+console.log("=== Raw sensor data ===");
+console.log("Values:", temps.values);
+console.log("Missing count:", isna(temps).values.filter(Boolean).length);
+
+console.log("\n=== After forward fill (carries last known value) ===");
+const filled = ffill(temps);
+console.log("Values:", filled.values);
+
+console.log("\n=== After interpolation (estimates between known values) ===");
+// Interpolation gives smoother transitions
+const interped = interpolate(temps);
+console.log("Values:", interped.values.map(v => v !== null ? (v as number).toFixed(1) : "null"));
+
+console.log("\n=== Cleaned: interpolated + leading null dropped ===");
+const clean = dropnaSeries(interped);
+console.log("Values:", clean.values.map(v => (v as number).toFixed(1)));
+console.log("Index:", clean.index.values);
+    </textarea>
+    <button onclick="runCode('code-realworld', 'out-realworld')">▶ Run</button>
+    <div class="output" id="out-realworld"></div>
+
+    <hr />
+    <h2>API Reference</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th>Description</th>
+          <th>pandas equivalent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>isna(x)</code> / <code>isnull(x)</code></td>
+          <td>Detect missing values (scalar, Series, DataFrame)</td>
+          <td><code>pd.isna()</code></td>
+        </tr>
+        <tr>
+          <td><code>notna(x)</code> / <code>notnull(x)</code></td>
+          <td>Detect non-missing values</td>
+          <td><code>pd.notna()</code></td>
+        </tr>
+        <tr>
+          <td><code>ffill(s, {limit?})</code></td>
+          <td>Forward-fill a Series</td>
+          <td><code>Series.ffill()</code></td>
+        </tr>
+        <tr>
+          <td><code>bfill(s, {limit?})</code></td>
+          <td>Backward-fill a Series</td>
+          <td><code>Series.bfill()</code></td>
+        </tr>
+        <tr>
+          <td><code>ffillDataFrame(df, {limit?})</code></td>
+          <td>Forward-fill all columns</td>
+          <td><code>DataFrame.ffill()</code></td>
+        </tr>
+        <tr>
+          <td><code>bfillDataFrame(df, {limit?})</code></td>
+          <td>Backward-fill all columns</td>
+          <td><code>DataFrame.bfill()</code></td>
+        </tr>
+        <tr>
+          <td><code>fillnaSeries(s, {value?, method?, limit?})</code></td>
+          <td>Fill with scalar or propagation method</td>
+          <td><code>Series.fillna()</code></td>
+        </tr>
+        <tr>
+          <td><code>fillnaDataFrame(df, {value?, method?, limit?})</code></td>
+          <td>Fill DataFrame missing values</td>
+          <td><code>DataFrame.fillna()</code></td>
+        </tr>
+        <tr>
+          <td><code>dropnaSeries(s)</code></td>
+          <td>Remove missing values from Series</td>
+          <td><code>Series.dropna()</code></td>
+        </tr>
+        <tr>
+          <td><code>dropnaDataFrame(df, {axis?, how?, thresh?, subset?})</code></td>
+          <td>Drop rows/columns with missing values</td>
+          <td><code>DataFrame.dropna()</code></td>
+        </tr>
+        <tr>
+          <td><code>interpolate(s, {method?, limit?})</code></td>
+          <td>Linear interpolation</td>
+          <td><code>Series.interpolate()</code></td>
+        </tr>
+        <tr>
+          <td><code>interpolateDataFrame(df, opts)</code></td>
+          <td>Column-wise interpolation</td>
+          <td><code>DataFrame.interpolate()</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><a href="index.html">← Back to tsb playground index</a></p>
+  </body>
+</html>
