@@ -82,9 +82,9 @@ export class Index<T extends Label = Label> {
   /** True when values are weakly ascending. */
   get isMonotonicIncreasing(): boolean {
     for (let i = 1; i < this._values.length; i++) {
-      const prev = this._values[i - 1] as T | undefined;
-      const curr = this._values[i] as T | undefined;
-      if (prev === undefined || prev === null || curr === undefined || curr === null) {
+      const prev = this._values[i - 1];
+      const curr = this._values[i];
+      if (prev === undefined || curr === undefined || prev === null || curr === null) {
         return false;
       }
       if (prev > curr) {
@@ -97,9 +97,9 @@ export class Index<T extends Label = Label> {
   /** True when values are weakly descending. */
   get isMonotonicDecreasing(): boolean {
     for (let i = 1; i < this._values.length; i++) {
-      const prev = this._values[i - 1] as T | undefined;
-      const curr = this._values[i] as T | undefined;
-      if (prev === undefined || prev === null || curr === undefined || curr === null) {
+      const prev = this._values[i - 1];
+      const curr = this._values[i];
+      if (prev === undefined || curr === undefined || prev === null || curr === null) {
         return false;
       }
       if (prev < curr) {
@@ -146,7 +146,7 @@ export class Index<T extends Label = Label> {
    * - If `key` appears more than once, returns an array of positions.
    * - If `key` is absent, throws.
    */
-  getLoc(key: T): number | readonly number[] {
+  getLoc(key: Label): number | readonly number[] {
     const positions: number[] = [];
     for (let i = 0; i < this._values.length; i++) {
       if (this._values[i] === key) {
@@ -168,8 +168,8 @@ export class Index<T extends Label = Label> {
    *   - its position in `this`, or
    *   - `-1` if not found.
    */
-  getIndexer(target: Index<T>): readonly number[] {
-    const map = new Map<T, number>();
+  getIndexer(target: Index<Label>): readonly number[] {
+    const map = new Map<Label, number>();
     for (let i = 0; i < this._values.length; i++) {
       const v = this._values[i] as T;
       if (!map.has(v)) {
@@ -180,8 +180,8 @@ export class Index<T extends Label = Label> {
   }
 
   /** True when `item` exists in this index. */
-  contains(item: T): boolean {
-    return this._values.includes(item);
+  contains(item: Label): boolean {
+    return this._values.some((v) => v === item);
   }
 
   /**
@@ -195,9 +195,9 @@ export class Index<T extends Label = Label> {
   // ─── set operations ─────────────────────────────────────────────
 
   /** Return the union of this and `other`. */
-  union(other: Index<T>): Index<T> {
-    const seen = new Set<T>();
-    const out: T[] = [];
+  union<U extends Label>(other: Index<U>): Index<T | U> {
+    const seen = new Set<T | U>();
+    const out: (T | U)[] = [];
     for (const v of this._values) {
       if (!seen.has(v)) {
         seen.add(v);
@@ -210,26 +210,26 @@ export class Index<T extends Label = Label> {
         out.push(v);
       }
     }
-    return new Index<T>(out, this.name);
+    return new Index<T | U>(out, this.name);
   }
 
   /** Return elements common to both indices. */
-  intersection(other: Index<T>): Index<T> {
-    const otherSet = new Set<T>(other._values);
-    const seen = new Set<T>();
-    const out: T[] = [];
+  intersection<U extends Label>(other: Index<U>): Index<T | U> {
+    const otherSet = new Set<T | U>(other._values);
+    const seen = new Set<T | U>();
+    const out: (T | U)[] = [];
     for (const v of this._values) {
       if (otherSet.has(v) && !seen.has(v)) {
         seen.add(v);
         out.push(v);
       }
     }
-    return new Index<T>(out, this.name);
+    return new Index<T | U>(out, this.name);
   }
 
   /** Return elements in `this` but not in `other`. */
-  difference(other: Index<T>): Index<T> {
-    const otherSet = new Set<T>(other._values);
+  difference<U extends Label>(other: Index<U>): Index<T> {
+    const otherSet = new Set<T | U>(other._values);
     const seen = new Set<T>();
     const out: T[] = [];
     for (const v of this._values) {
@@ -242,11 +242,11 @@ export class Index<T extends Label = Label> {
   }
 
   /** Return elements in either index but not in both. */
-  symmetricDifference(other: Index<T>): Index<T> {
-    const thisSet = new Set<T>(this._values);
-    const otherSet = new Set<T>(other._values);
-    const seen = new Set<T>();
-    const out: T[] = [];
+  symmetricDifference<U extends Label>(other: Index<U>): Index<T | U> {
+    const thisSet = new Set<T | U>(this._values);
+    const otherSet = new Set<T | U>(other._values);
+    const seen = new Set<T | U>();
+    const out: (T | U)[] = [];
     for (const v of this._values) {
       if (!(otherSet.has(v) || seen.has(v))) {
         seen.add(v);
@@ -259,7 +259,7 @@ export class Index<T extends Label = Label> {
         out.push(v);
       }
     }
-    return new Index<T>(out, this.name);
+    return new Index<T | U>(out, this.name);
   }
 
   // ─── duplicate handling ─────────────────────────────────────────
@@ -334,20 +334,20 @@ export class Index<T extends Label = Label> {
   // ─── manipulation ───────────────────────────────────────────────
 
   /** Concatenate one or more indices. */
-  append(other: Index<T> | readonly Index<T>[]): Index<T> {
+  append<U extends Label>(other: Index<U> | readonly Index<U>[]): Index<T | U> {
     const others = Array.isArray(other) ? other : [other];
-    let combined: T[] = [...this._values];
+    let combined: (T | U)[] = [...this._values];
     for (const o of others) {
       combined = combined.concat([...o._values]);
     }
-    return new Index<T>(combined, this.name);
+    return new Index<T | U>(combined, this.name);
   }
 
   /** Return a new Index with `item` inserted at position `loc`. */
-  insert(loc: number, item: T): Index<T> {
-    const out = [...this._values];
+  insert<U extends Label>(loc: number, item: U): Index<T | U> {
+    const out: (T | U)[] = [...this._values];
     out.splice(loc, 0, item);
-    return new Index<T>(out, this.name);
+    return new Index<T | U>(out, this.name);
   }
 
   /** Return a new Index with position(s) removed. */
@@ -384,7 +384,7 @@ export class Index<T extends Label = Label> {
   // ─── comparison ─────────────────────────────────────────────────
 
   /** True when the *values* of two indices match element-wise (ignores name). */
-  equals(other: Index<T>): boolean {
+  equals(other: Index<Label>): boolean {
     if (this._values.length !== other._values.length) {
       return false;
     }
@@ -397,7 +397,7 @@ export class Index<T extends Label = Label> {
   }
 
   /** True when both *values* and *name* are identical. */
-  identical(other: Index<T>): boolean {
+  identical(other: Index<Label>): boolean {
     return this.name === other.name && this.equals(other);
   }
 
@@ -483,8 +483,8 @@ export class Index<T extends Label = Label> {
   argsort(): readonly number[] {
     const indices = Array.from({ length: this._values.length }, (_, i) => i);
     indices.sort((a, b) => {
-      const va = this._values[a] as T | undefined;
-      const vb = this._values[b] as T | undefined;
+      const va = this._values[a];
+      const vb = this._values[b];
       if (va === vb) {
         return 0;
       }
@@ -538,8 +538,8 @@ export class Index<T extends Label = Label> {
   }
 
   /** Replace `null` labels with `value`. */
-  fillna(value: T): Index<T> {
-    return new Index<T>(
+  fillna<U extends Label>(value: U): Index<T | U> {
+    return new Index<T | U>(
       this._values.map((v) => (v === null ? value : v)),
       this.name,
     );

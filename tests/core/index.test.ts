@@ -175,34 +175,34 @@ describe("Index.getLoc()", () => {
   });
 
   it("throws for missing key", () => {
-    const idx = new Index<number>([1, 2, 3]);
+    const idx = new Index([1, 2, 3]);
     expect(() => idx.getLoc(99)).toThrow("KeyError");
   });
 });
 
 describe("Index.getIndexer()", () => {
   it("maps target labels to positions", () => {
-    const idx = new Index<string>(["a", "b", "c"]);
-    const target = new Index<string>(["c", "a", "z"]);
+    const idx = new Index(["a", "b", "c"]);
+    const target = new Index(["c", "a", "z"]);
     expect(idx.getIndexer(target)).toEqual([2, 0, -1]);
   });
 });
 
 describe("Index.contains()", () => {
   it("returns true for present labels", () => {
-    const idx = new Index<number>([1, 2, 3]);
+    const idx = new Index([1, 2, 3]);
     expect(idx.contains(2)).toBe(true);
   });
 
   it("returns false for absent labels", () => {
-    const idx = new Index<number>([1, 2, 3]);
+    const idx = new Index([1, 2, 3]);
     expect(idx.contains(99)).toBe(false);
   });
 });
 
 describe("Index.isin()", () => {
   it("returns boolean mask", () => {
-    const idx = new Index<number>([1, 2, 3, 4]);
+    const idx = new Index([1, 2, 3, 4]);
     expect(idx.isin([2, 4])).toEqual([false, true, false, true]);
   });
 });
@@ -211,32 +211,32 @@ describe("Index.isin()", () => {
 
 describe("Index set operations", () => {
   it("union combines unique labels", () => {
-    const a = new Index<number>([1, 2, 3]);
-    const b = new Index<number>([3, 4, 5]);
+    const a = new Index([1, 2, 3]);
+    const b = new Index([3, 4, 5]);
     expect(a.union(b).toArray()).toEqual([1, 2, 3, 4, 5]);
   });
 
   it("intersection returns common labels", () => {
-    const a = new Index<number>([1, 2, 3]);
-    const b = new Index<number>([2, 3, 4]);
+    const a = new Index([1, 2, 3]);
+    const b = new Index([2, 3, 4]);
     expect(a.intersection(b).toArray()).toEqual([2, 3]);
   });
 
   it("difference removes other's labels", () => {
-    const a = new Index<number>([1, 2, 3]);
-    const b = new Index<number>([2, 4]);
+    const a = new Index([1, 2, 3]);
+    const b = new Index([2, 4]);
     expect(a.difference(b).toArray()).toEqual([1, 3]);
   });
 
   it("symmetricDifference returns exclusive labels", () => {
-    const a = new Index<number>([1, 2, 3]);
-    const b = new Index<number>([2, 3, 4]);
+    const a = new Index([1, 2, 3]);
+    const b = new Index([2, 3, 4]);
     expect(a.symmetricDifference(b).toArray()).toEqual([1, 4]);
   });
 
   it("set operations preserve name from self", () => {
-    const a = new Index<number>([1, 2], "x");
-    const b = new Index<number>([2, 3], "y");
+    const a = new Index([1, 2], "x");
+    const b = new Index([2, 3], "y");
     expect(a.union(b).name).toBe("x");
   });
 });
@@ -281,20 +281,20 @@ describe("Index.nunique()", () => {
 
 describe("Index.append()", () => {
   it("concatenates two indices", () => {
-    const a = new Index<number>([1, 2]);
-    const b = new Index<number>([3, 4]);
+    const a = new Index([1, 2]);
+    const b = new Index([3, 4]);
     expect(a.append(b).toArray()).toEqual([1, 2, 3, 4]);
   });
 
   it("concatenates multiple indices", () => {
-    const a = new Index<number>([1]);
-    expect(a.append([new Index<number>([2]), new Index<number>([3])]).toArray()).toEqual([1, 2, 3]);
+    const a = new Index([1]);
+    expect(a.append([new Index([2]), new Index([3])]).toArray()).toEqual([1, 2, 3]);
   });
 });
 
 describe("Index.insert()", () => {
   it("inserts at position", () => {
-    const idx = new Index<string>(["a", "c"]);
+    const idx = new Index(["a", "c"]);
     expect(idx.insert(1, "b").toArray()).toEqual(["a", "b", "c"]);
   });
 });
@@ -345,19 +345,19 @@ describe("Index.rename()", () => {
 
 describe("Index.equals()", () => {
   it("is true for identical values", () => {
-    expect(new Index<number>([1, 2]).equals(new Index<number>([1, 2]))).toBe(true);
+    expect(new Index([1, 2]).equals(new Index([1, 2]))).toBe(true);
   });
 
   it("is false for different values", () => {
-    expect(new Index<number>([1, 2]).equals(new Index<number>([1, 3]))).toBe(false);
+    expect(new Index([1, 2]).equals(new Index([1, 3]))).toBe(false);
   });
 
   it("is false for different lengths", () => {
-    expect(new Index<number>([1, 2]).equals(new Index<number>([1, 2, 3]))).toBe(false);
+    expect(new Index([1, 2]).equals(new Index([1, 2, 3]))).toBe(false);
   });
 
   it("ignores name", () => {
-    expect(new Index<number>([1, 2], "a").equals(new Index<number>([1, 2], "b"))).toBe(true);
+    expect(new Index([1, 2], "a").equals(new Index([1, 2], "b"))).toBe(true);
   });
 });
 
@@ -442,7 +442,7 @@ describe("Index missing-value helpers", () => {
   });
 
   it("fillna() replaces nulls", () => {
-    expect(new Index<number | null>([1, null, 3]).fillna(0).toArray()).toEqual([1, 0, 3]);
+    expect(new Index([1, null, 3]).fillna(0).toArray()).toEqual([1, 0, 3]);
   });
 });
 
