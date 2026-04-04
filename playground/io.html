@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — I/O (read_csv, read_json, to_csv, to_json)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    header a { color: #8b949e; font-size: 0.9rem; text-decoration: none; }
+    header a:hover { color: var(--accent); }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin: 2rem 0 0.5rem;
+      color: var(--accent);
+    }
+    p { margin: 0.5rem 0 1rem; color: #8b949e; }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .example-header {
+      background: #0d1117;
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      color: #8b949e;
+    }
+    pre {
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      padding: 1.2rem;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+    .cmt { color: #8b949e; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: #388bfd26;
+      color: var(--accent);
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>tsb <span style="color:#8b949e; font-weight:400">/ I/O</span></h1>
+  <a href="index.html">← Back to Playground</a>
+</header>
+
+<main>
+
+  <p>
+    <code>tsb</code> provides CSV and JSON I/O utilities that mirror
+    <code>pandas.read_csv</code>, <code>pandas.read_json</code>,
+    <code>DataFrame.to_csv</code>, and <code>DataFrame.to_json</code>.
+  </p>
+
+  <!-- ── read_csv ──────────────────────────────────────────────────────── -->
+  <h2>readCsv <span class="badge">read_csv</span></h2>
+
+  <p>Parse a CSV string into a DataFrame. Handles quoted fields, custom separators,
+  missing-value markers, and integer/float/boolean type inference.</p>
+
+  <div class="example">
+    <div class="example-header"><span>Basic CSV parsing</span></div>
+    <pre><code><span class="kw">import</span> { readCsv } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> csv = <span class="str">`name,age,score
+Alice,30,95.5
+Bob,25,88.0
+Carol,35,91.2`</span>;
+
+<span class="kw">const</span> df = <span class="fn">readCsv</span>(csv);
+df.shape;          <span class="cmt">// [3, 3]</span>
+df.<span class="fn">col</span>(<span class="str">"name"</span>).values;  <span class="cmt">// ["Alice", "Bob", "Carol"]</span>
+df.<span class="fn">col</span>(<span class="str">"age"</span>).values;   <span class="cmt">// [30, 25, 35]   ← inferred as integers</span>
+df.<span class="fn">col</span>(<span class="str">"score"</span>).values; <span class="cmt">// [95.5, 88.0, 91.2] ← inferred as floats</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>Missing values & custom separator</span></div>
+    <pre><code><span class="kw">const</span> tsv = <span class="str">`a\tb\tc
+1\t\t3
+\t5\t6`</span>;
+
+<span class="kw">const</span> df = <span class="fn">readCsv</span>(tsv, { sep: <span class="str">"\t"</span> });
+df.<span class="fn">col</span>(<span class="str">"b"</span>).values;   <span class="cmt">// [null, 5] — empty cell → null</span>
+
+<span class="cmt">// Custom NA values</span>
+<span class="kw">const</span> df2 = <span class="fn">readCsv</span>(<span class="str">"a,b\nMISSING,1\n2,3"</span>, { naValues: [<span class="str">"MISSING"</span>] });
+df2.<span class="fn">col</span>(<span class="str">"a"</span>).values;  <span class="cmt">// [null, 2]</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>Index column & row limit</span></div>
+    <pre><code><span class="kw">const</span> csv = <span class="str">`id,name,value
+r1,Alice,10
+r2,Bob,20
+r3,Carol,30`</span>;
+
+<span class="kw">const</span> df = <span class="fn">readCsv</span>(csv, {
+  indexCol: <span class="str">"id"</span>,   <span class="cmt">// use "id" column as row index</span>
+  nrows: <span class="num">2</span>,         <span class="cmt">// only read 2 data rows</span>
+});
+df.index.values;   <span class="cmt">// ["r1", "r2"]</span>
+df.columns.values; <span class="cmt">// ["name", "value"]</span>
+df.shape;          <span class="cmt">// [2, 2]</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>Quoted fields</span></div>
+    <pre><code><span class="kw">const</span> csv = <span class="str">`name,bio
+Alice,"She said ""hello, world!"""
+Bob,"Multi-word, description"`</span>;
+
+<span class="kw">const</span> df = <span class="fn">readCsv</span>(csv);
+df.<span class="fn">col</span>(<span class="str">"bio"</span>).at(<span class="num">0</span>);
+<span class="cmt">// 'She said "hello, world!"'</span></code></pre>
+  </div>
+
+  <!-- ── to_csv ──────────────────────────────────────────────────────── -->
+  <h2>toCsv <span class="badge">to_csv</span></h2>
+
+  <p>Serialize a DataFrame (or Series) to a CSV string.</p>
+
+  <div class="example">
+    <div class="example-header"><span>Basic serialization</span></div>
+    <pre><code><span class="kw">import</span> { DataFrame, toCsv } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>],
+  score: [<span class="num">95</span>, <span class="num">88</span>],
+});
+
+<span class="fn">toCsv</span>(df);
+<span class="cmt">// ",name,score\n0,Alice,95\n1,Bob,88\n"</span>
+
+<span class="fn">toCsv</span>(df, { index: <span class="kw">false</span> });
+<span class="cmt">// "name,score\nAlice,95\nBob,88\n"</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>Options: naRep, columns, sep</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="kw">null</span>, <span class="num">3</span>], b: [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>] });
+
+<span class="fn">toCsv</span>(df, { naRep: <span class="str">"NaN"</span>, index: <span class="kw">false</span> });
+<span class="cmt">// "a,b\n1,4\nNaN,5\n3,6\n"</span>
+
+<span class="fn">toCsv</span>(df, { sep: <span class="str">";"</span>, columns: [<span class="str">"a"</span>], index: <span class="kw">false</span> });
+<span class="cmt">// "a\n1\nNaN\n3\n"   (only column "a", semicolon sep)</span></code></pre>
+  </div>
+
+  <!-- ── read_json ──────────────────────────────────────────────────────── -->
+  <h2>readJson <span class="badge">read_json</span></h2>
+
+  <p>Parse JSON into a DataFrame. Supports five orientations matching pandas.</p>
+
+  <div class="example">
+    <div class="example-header"><span>orient="records" (default)</span></div>
+    <pre><code><span class="kw">import</span> { readJson } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> json = <span class="str">`[
+  {"name": "Alice", "score": 95},
+  {"name": "Bob",   "score": 88}
+]`</span>;
+
+<span class="kw">const</span> df = <span class="fn">readJson</span>(json);
+df.shape;                   <span class="cmt">// [2, 2]</span>
+df.<span class="fn">col</span>(<span class="str">"name"</span>).values;  <span class="cmt">// ["Alice", "Bob"]</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>orient="split"</span></div>
+    <pre><code><span class="kw">const</span> json = JSON.<span class="fn">stringify</span>({
+  index:   [<span class="str">"r1"</span>, <span class="str">"r2"</span>],
+  columns: [<span class="str">"a"</span>, <span class="str">"b"</span>],
+  data:    [[<span class="num">1</span>, <span class="num">2</span>], [<span class="num">3</span>, <span class="num">4</span>]],
+});
+
+<span class="kw">const</span> df = <span class="fn">readJson</span>(json, { orient: <span class="str">"split"</span> });
+df.index.values;    <span class="cmt">// ["r1", "r2"]</span>
+df.<span class="fn">col</span>(<span class="str">"a"</span>).values; <span class="cmt">// [1, 3]</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>All orientations</span></div>
+    <pre><code><span class="cmt">// orient="records"  → [{col: val, ...}, ...]</span>
+<span class="cmt">// orient="columns"  → {col: {idx: val, ...}, ...}</span>
+<span class="cmt">// orient="values"   → [[v, ...], ...]  (2-D array)</span>
+<span class="cmt">// orient="index"    → {idx: {col: val, ...}, ...}</span>
+<span class="cmt">// orient="split"    → {index, columns, data}</span>
+
+<span class="cmt">// values orientation needs column names provided:</span>
+<span class="fn">readJson</span>(<span class="str">"[[1,2],[3,4]]"</span>, {
+  orient: <span class="str">"values"</span>,
+  columns: [<span class="str">"x"</span>, <span class="str">"y"</span>],
+});</code></pre>
+  </div>
+
+  <!-- ── to_json ──────────────────────────────────────────────────────── -->
+  <h2>toJson <span class="badge">to_json</span></h2>
+
+  <p>Serialize a DataFrame to JSON. Supports six orientations.</p>
+
+  <div class="example">
+    <div class="example-header"><span>Basic serialization</span></div>
+    <pre><code><span class="kw">import</span> { DataFrame, toJson } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>], b: [<span class="num">3</span>, <span class="num">4</span>] });
+
+<span class="fn">toJson</span>(df, { orient: <span class="str">"records"</span> });
+<span class="cmt">// '[{"a":1,"b":3},{"a":2,"b":4}]'</span>
+
+<span class="fn">toJson</span>(df, { orient: <span class="str">"split"</span> });
+<span class="cmt">// '{"index":[0,1],"columns":["a","b"],"data":[[1,3],[2,4]]}'</span>
+
+<span class="fn">toJson</span>(df, { orient: <span class="str">"values"</span> });
+<span class="cmt">// '[[1,3],[2,4]]'</span></code></pre>
+  </div>
+
+  <div class="example">
+    <div class="example-header"><span>Round-trip: toCsv → readCsv</span></div>
+    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
+  x: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+  y: [<span class="num">4.5</span>, <span class="kw">null</span>, <span class="num">6.7</span>],
+  z: [<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>],
+});
+
+<span class="kw">const</span> csv  = <span class="fn">toCsv</span>(df, { index: <span class="kw">false</span> });
+<span class="kw">const</span> df2  = <span class="fn">readCsv</span>(csv);
+df2.<span class="fn">col</span>(<span class="str">"x"</span>).values; <span class="cmt">// [1, 2, 3]  ← integers preserved</span>
+df2.<span class="fn">col</span>(<span class="str">"y"</span>).values; <span class="cmt">// [4.5, null, 6.7]  ← nulls preserved</span>
+df2.<span class="fn">col</span>(<span class="str">"z"</span>).values; <span class="cmt">// ["a", "b", "c"]</span>
+
+<span class="cmt">// JSON round-trip</span>
+<span class="kw">const</span> json = <span class="fn">toJson</span>(df, { orient: <span class="str">"records"</span> });
+<span class="kw">const</span> df3  = <span class="fn">readJson</span>(json);
+df3.shape; <span class="cmt">// [3, 3]</span></code></pre>
+  </div>
+
+  <p style="margin-top: 2rem; font-size: 0.85rem; color: #484f58;">
+    tsb is a TypeScript port of pandas, built from first principles.
+    &mdash; <a href="index.html" style="color: var(--accent);">← Back to Playground</a>
+  </p>
+
+</main>
+</body>
+</html>
