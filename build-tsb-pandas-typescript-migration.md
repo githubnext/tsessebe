@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-04T08:25:00Z |
-| Iteration Count | 12 |
-| Best Metric | 13 |
+| Last Run | 2026-04-04T08:47:00Z |
+| Iteration Count | 13 |
+| Best Metric | 14 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | #aw_pr12 |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration-sort-13` |
+| PR | #aw_pr13 |
 | Steering Issue | — |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -30,34 +30,34 @@
 
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
-**Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: #aw_pr12
+**Branch**: [`autoloop/build-tsb-pandas-typescript-migration-sort-13`](../../tree/autoloop/build-tsb-pandas-typescript-migration-sort-13)
+**Pull Request**: #aw_pr13
 **Steering Issue**: —
 
 ---
 
 ## 🎯 Current Priorities
 
-Missing data done (metric=12). DateTime accessor done (metric=13). Next priorities in order:
+Missing data done (metric=12). DateTime accessor done (metric=13). Sorting utilities done (metric=14). Next priorities in order:
 1. ~~**DateTime accessor** (`src/core/datetime.ts`)~~ — ✅ Done (Iteration 12)
-2. **Sorting** (`src/core/sort.ts`) — sort_values, sort_index standalone functions
+2. ~~**Sorting utilities** (`src/core/sort.ts`)~~ — ✅ Done (Iteration 13)
 3. **Indexing/selection** (`src/core/indexing.ts`) — standalone .loc, .iloc, .at, .iat helpers
+4. **Comparison/boolean ops** (`src/core/compare.ts`) — eq/ne/lt/gt/le/ge returning boolean Series/DataFrame
 
 ---
 
 ## 📚 Lessons Learned
 
-- Iteration 1: Project structure established cleanly with Bun + Biome + strict TypeScript. The `types.ts` shared type file is the right home for `Scalar`, `Label`, `Axis`, `DtypeName`, etc.
-- Iteration 3: Series<T> is best implemented as a thin wrapper around a readonly array + Index<Label> + Dtype. The `exactOptionalPropertyTypes: true` setting means you can't pass `{ name: undefined }` where `name?: string | null` is expected — use conditional spreads. For test type safety with literal-inferred Index<1|2|3>, add explicit `<number>` type parameter to avoid literal type unions that break cross-index operations. The `noUncheckedIndexedAccess` flag requires explicit `as T | undefined` casts on array accesses in sorted iterators.
-- Iteration 2: Index<T> was already implemented by Copilot agent on `copilot/autoloop-build-tsb-pandas-migration`. Built on top of that work. Dtype system implemented as immutable singletons (cached with Map). `noUncheckedIndexedAccess: true` requires `as T | undefined` guards for array element access. Index<T> method signatures should accept `Label` (not T) for query/set ops to avoid TypeScript literal type inference issues.
-- The `autoloop/build-tsb-pandas-typescript-migration` branch should be created from main (which has merged PRs), not from the stale autoloop branch that tracked old commit SHAs.
-- Iteration 8 (aligned arithmetic): `ops.ts` provides `alignSeries`, `alignedBinaryOp`, `alignDataFrames`, `alignedDataFrameBinaryOp` as standalone utilities. No circular deps: `ops.ts` imports Series/DataFrame but they don't import back. For `_scalarOp` in `series.ts`, inline the `buildIndexMap` helper instead of importing from `ops.ts`. `Index.has()` doesn't exist — use `Index.contains()` instead. `biome check --write` auto-fixes import ordering and formatting. Use `default:` case in switch instead of last `case "right":` to satisfy `useDefaultSwitchClause`. TypeScript with `noUncheckedIndexedAccess` requires explicit guards: `map.get(key) as T | undefined`. `as unknown as number | null` cast is needed when converting Scalar values to numbers in arithmetic helpers.
-- Iteration 5 (DataFrame): Column-oriented storage using `ReadonlyMap<string, Series<Scalar>>` is the right model. Biome's `useLiteralKeys` vs TypeScript's `noPropertyAccessFromIndexSignature` for `Record<string, T>` types — resolve by testing with `toEqual({...})` patterns instead of property access. Extract helper functions to satisfy `noExcessiveCognitiveComplexity` (max 15). `compareScalarPair` and `computeColumnStats` are good examples of extracted helpers. Use `biome check --write` to auto-fix formatting issues. PR creation has failed in previous iterations due to protected-file restrictions — the current branch setup from `main` should work better.
-- Iteration 10 (merge): `merge()` in `src/merge/merge.ts` — build right-side key index as `Map<compositeKey, number[]>` then scan left rows. The sentinel value `-1` on leftRows signals a right-only row (for right/outer joins). Composite keys use `\x00` delimiter + `__NULL__` for nulls to avoid false collisions. `left_on`/`right_on` pairs allow different key names per side; `left_index`/`right_index` wraps the index values in a synthetic Series. Suffix disambiguation applies only to non-key columns that appear in both tables.
-
-- Iteration 9 (Series.str): `StringAccessor` in `strings.ts`. Circular ESM dep works fine. Move regex to top level (`useTopLevelRegex`). Extract helpers to avoid `noExcessiveCognitiveComplexity`. Fix: `_selectRows` column Series use fresh RangeIndex. Fix: GroupBy aggregation numeric-only.
-- Iteration 11 (missing data): Test files MUST import from `src/index.ts` (`useImportRestrictions` nursery rule). `df.columns` → `Index<string>`, iterate via `.values`. Use `df.get(name)` (returns `undefined`) not `df.col(name)` (throws). `Index.getLoc(key)` returns `number | readonly number[]`. Extract helpers for complexity (max 15). `!(a && b)` preferred over `!a || !b`.
-- Iteration 12 (datetime): `DateTimeAccessor` in `datetime.ts` — accept Date, ISO string, or ms number. Extract all helper functions outside the class (`getIsoWeek`, `daysInMonth`, etc.) to satisfy `noExcessiveCognitiveComplexity`. Use `Date.getDay()` (0=Sun) and shift to pandas Mon=0 convention with `(getDay() + 6) % 7`. `strftime` uses a `replace(/%[A-Za-z%]/g, ...)` approach — keep regex at top level won't work for inline switch, so inline it in the method body. ISO week algorithm: set to nearest Thursday, find year start, calc weeks. Property-based tests with `fc.date()` can validate all numeric outputs are in-range.
+- Iter 3: Series<T> thin wrapper: readonly array + Index<Label> + Dtype. `exactOptionalPropertyTypes`: use conditional spreads. `noUncheckedIndexedAccess`: explicit `as T | undefined` on array accesses.
+- Iter 2: Index<T> method signatures accept `Label` (not T) for query/set ops. Dtype singletons cached with Map.
+- The autoloop branch should be created from main (merged PRs), not stale old branches.
+- Iter 8 (ops): No circular deps — `ops.ts` imports Series/DataFrame, they don't import back. `Index.contains()` not `has()`. `biome check --write` auto-fixes imports. Use `default:` in switch for `useDefaultSwitchClause`.
+- Iter 5 (DataFrame): Column-oriented with `ReadonlyMap<string, Series<Scalar>>`. Extract helpers for `noExcessiveCognitiveComplexity` (max 15).
+- Iter 10 (merge): Composite keys use `\x00` + `__NULL__` for nulls. Sentinel `-1` on leftRows = right-only row.
+- Iter 9 (strings): `StringAccessor` circular ESM dep fine. Move regex to top level (`useTopLevelRegex`).
+- Iter 11 (missing): Test files import from `src/index.ts` (`useImportRestrictions`). `df.get(name)` (→ undefined) not `df.col(name)` (throws).
+- Iter 12 (datetime): Extract helpers outside class for complexity. `(getDay() + 6) % 7` for Mon=0 dayofweek. Property tests with `fc.date()`.
+- Iter 13 (sort): Use `import type { Index }` when only used as type annotation. Aggressive helper extraction needed for rank's 5-method algorithm. `biome check --write` auto-formats long signatures.
 
 ---
 
@@ -75,7 +75,7 @@ Index, Dtype, Series, DataFrame all implemented.
 ### Phase 2 — Operations (active)
 - ~~Arithmetic~~ ✅ (Iter 8) · ~~String accessor~~ ✅ (Iter 9) · ~~DateTime accessor~~ ✅ (Iter 12)
 - ~~Missing data~~ ✅ (Iter 11) · ~~Groupby~~ ✅ (Iter 6) · ~~concat~~ ✅ (Iter 7) · ~~merge~~ ✅ (Iter 10)
-- **Next**: Sorting (sort_values/sort_index) · Comparison/boolean ops · Indexing (.loc/.iloc)
+- ~~Sorting utilities~~ ✅ (Iter 13) · **Next**: Comparison/boolean ops · Indexing (.loc/.iloc)
 - **Later**: Reshaping (pivot/melt/stack/unstack) · Window functions (rolling/expanding/ewm)
 
 ### Phase 3+ — I/O, Stats, Advanced
@@ -85,45 +85,30 @@ read_csv/json/parquet · to_csv/json · describe/corr/cov · Categorical · Mult
 
 ## 📊 Iteration History
 
-### Iteration 12 — 2026-04-04 08:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974951477)
+### Iteration 13 — 2026-04-04 08:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23975470093)
 
 - **Status**: ✅ Accepted
-- **Change**: `src/core/datetime.ts` — `Series.dt` DateTime accessor: calendar components, quarter, dayofyear, ISO week, dayofweek (Mon=0), boundary flags, strftime with 17 directives, date()/time() helpers, normalize(), total_seconds(), timestamp_ms(). Accepts Date, ISO string, or ms number.
-- **Metric**: 13 (previous best: 12, delta: +1)
-- **Commit**: 6ce8c17
-- **Notes**: 78 unit tests + 6 property-based tests. 100% line coverage. `getIsoWeek` and other helpers extracted as module-level functions. Use `(getDay() + 6) % 7` for pandas Mon=0 dayofweek convention.
+- **Change**: `src/core/sort.ts` — sorting utilities: `nlargest`/`nsmallest` for Series and DataFrame (keep='first'/'last'/'all'), `rank()` with 5 methods (average/min/max/first/dense), `naOption`, `pct`, `rankDataFrame`.
+- **Metric**: 14 (previous best: 13, delta: +1)
+- **Commit**: 688f640
+- **Notes**: 40+ unit tests + 5 property-based tests. Biome lint + TypeScript typecheck clean. `computeRanks` split into `assignInitialRanks`, `applyDensePass`, `normaliseToPct` to satisfy `noExcessiveCognitiveComplexity` (max 15).
+
+### Iteration 12 — 2026-04-04 08:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974951477)
+- **Status**: ✅ Accepted | **Metric**: 13 (+1) | **Commit**: 6ce8c17
+- **Change**: `src/core/datetime.ts` — Series.dt: calendar components, ISO week, dayofweek (Mon=0), strftime (17 directives). 78 unit + 6 property tests.
 
 ### Iteration 11 — 2026-04-04 07:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974522158)
-
-- **Status**: ✅ Accepted
-- **Change**: Implemented `src/core/missing.ts` — full missing-data utility suite: `isna`/`notna`/`isnull`/`notnull`, `ffill`/`bfill` (with limit), `fillnaSeries`/`fillnaDataFrame` (value or method), `dropnaSeries`, `dropnaDataFrame` (axis/how/thresh/subset), `interpolate`/`interpolateDataFrame`.
-- **Metric**: 12 (previous best: 11, delta: +1)
-- **Commit**: 4c2a1ea
-- **Notes**: 50+ unit tests + 4 property-based tests. All lint/typecheck clean.
+- **Status**: ✅ Accepted | **Metric**: 12 (+1) | **Commit**: 4c2a1ea
+- **Change**: `src/core/missing.ts` — isna/notna/ffill/bfill/fillna/dropna/interpolate for Series & DataFrame. 50+ unit + 4 property tests.
 
 ### Iteration 10 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23974130597)
 - **Status**: ✅ Accepted | **Metric**: 11 (+1) | **Commit**: 40058db
-- **Change**: `merge()` — database-style joins inner/left/right/outer, on/left_on/right_on, many-to-many.
+- **Change**: `merge()` — inner/left/right/outer joins, on/left_on/right_on, many-to-many.
 
 ### Iteration 9 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973555676)
 - **Status**: ✅ Accepted | **Metric**: 10 (+1) | **Commit**: 6bd3f36
-- **Change**: StringAccessor `strings.ts` — 20+ vectorized string methods on Series.str.
+- **Change**: `strings.ts` StringAccessor — 20+ vectorized string methods on Series.str.
 
-### Iteration 8 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23973131426)
-- **Status**: ✅ Accepted | **Metric**: 9 (+1) | **Commit**: 6fb9189
-- **Change**: Aligned arithmetic `ops.ts` — alignSeries/alignedBinaryOp/alignDataFrames. DataFrame.add/sub/mul/div.
-
-### Iteration 7 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972580333)
-- **Status**: ✅ Accepted | **Metric**: 8 (+1) | **Commit**: ee507e5
-- **Change**: `concat()` — axis=0/1, outer/inner join, ignoreIndex.
-
-### Iteration 6 — [Run](https://github.com/githubnext/tsessebe/actions/runs/23972003902)
-- **Status**: ✅ Accepted | **Metric**: 7 (+1) | **Commit**: 57d00f3
-- **Change**: `GroupBy` — DataFrameGroupBy and SeriesGroupBy: sum/mean/min/max/count/std/first/last/size, agg, transform, apply, filter.
-
-### Iterations 1–5 (summary)
-- **Iteration 5** ✅: DataFrame (metric=6, commit afe1066)
-- **Iteration 4** ⚠️: Error (PR creation failed)
-- **Iteration 3** ✅: Dtype + Series (metric=5, commit 36e76a5)
-- **Iteration 2** ✅: Dtype + Index fixes (metric=4, commit a45d5c1)
-- **Iteration 1** ✅: Project foundation (metric=1, baseline)
+### Iterations 1–8 (summary)
+- Iter 8 ✅ ops.ts aligned arithmetic (9) · Iter 7 ✅ concat (8) · Iter 6 ✅ GroupBy (7)
+- Iter 5 ✅ DataFrame (6) · Iter 4 ⚠️ Error · Iter 3 ✅ Dtype+Series (5) · Iter 2 ✅ Index+Dtype (4) · Iter 1 ✅ Foundation (1)
