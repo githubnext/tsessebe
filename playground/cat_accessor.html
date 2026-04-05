@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Categorical Accessor</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>Categorical Accessor</h1>
+<p class="subtitle">Manage categorical data — mirrors <code>pandas.Categorical</code> and <code>Series.cat</code>.</p>
+
+<section>
+  <h2>1 — Categories and codes</h2>
+  <p>Access <code>series.cat.categories</code> for the sorted unique labels and <code>series.cat.codes</code> for the integer encoding.</p>
+  <pre><code id="ex1-code">import { Series } from "tsb";
+
+const size = new Series({
+  data: ["M", "S", "L", "S", "M", "XL"],
+  name: "size",
+});
+
+// Sorted unique categories
+console.log("categories:", [...size.cat.categories.values]);
+// → ["L", "M", "S", "XL"]
+
+// Integer codes (position in categories array; -1 for null)
+console.log("codes:", size.cat.codes.toArray());
+// → [1, 2, 0, 2, 1, 3]
+
+console.log("nCategories:", size.cat.nCategories); // 4
+console.log("ordered:", size.cat.ordered);         // false
+</code></pre>
+  <div class="output" id="ex1-out">▶ run</div>
+</section>
+
+<section>
+  <h2>2 — Nulls are encoded as -1</h2>
+  <p>Missing values (<code>null</code>) are not counted as categories and get a code of <code>-1</code>.</p>
+  <pre><code id="ex2-code">import { Series } from "tsb";
+
+const s = new Series({ data: ["a", null, "b", null, "a"] });
+
+console.log("categories:", [...s.cat.categories.values]); // ["a", "b"]
+console.log("codes:", s.cat.codes.toArray());              // [0, -1, 1, -1, 0]
+console.log("nCategories:", s.cat.nCategories);            // 2
+</code></pre>
+  <div class="output" id="ex2-out">▶ run</div>
+</section>
+
+<section>
+  <h2>3 — Add and remove categories</h2>
+  <p>Use <code>addCategories()</code> to register new labels (without needing them in the data yet)
+  and <code>removeCategories()</code> to drop labels (values become null).</p>
+  <pre><code id="ex3-code">import { Series } from "tsb";
+
+const s = new Series({ data: ["red", "blue", "red"] });
+
+// Add a new category (not yet in data)
+const s2 = s.cat.addCategories(["green"]);
+console.log("after add:", [...s2.cat.categories.values]);
+// → ["blue", "green", "red"]
+
+// Remove a category — matching values become null
+const s3 = s.cat.removeCategories(["red"]);
+console.log("after remove values:", s3.toArray());
+// → [null, "blue", null]
+console.log("after remove cats:", [...s3.cat.categories.values]);
+// → ["blue"]
+</code></pre>
+  <div class="output" id="ex3-out">▶ run</div>
+</section>
+
+<section>
+  <h2>4 — Remove unused categories</h2>
+  <p><code>removeUnusedCategories()</code> drops any categories not present in the data.</p>
+  <pre><code id="ex4-code">import { Series } from "tsb";
+
+const s = new Series({ data: ["a", "b"] });
+// manually add extra categories
+const s2 = s.cat.addCategories(["c", "d", "e"]);
+console.log("before:", s2.cat.nCategories); // 5
+
+const s3 = s2.cat.removeUnusedCategories();
+console.log("after:", s3.cat.nCategories);  // 2
+console.log("cats:", [...s3.cat.categories.values]); // ["a", "b"]
+</code></pre>
+  <div class="output" id="ex4-out">▶ run</div>
+</section>
+
+<section>
+  <h2>5 — Rename categories</h2>
+  <p>Pass an object mapping old names → new names, or an array of replacement names.</p>
+  <pre><code id="ex5-code">import { Series } from "tsb";
+
+const s = new Series({ data: ["low", "mid", "high", "mid"] });
+
+// Object mapping
+const s2 = s.cat.renameCategories({ low: "L", mid: "M", high: "H" });
+console.log("renamed values:", s2.toArray());
+// → ["L", "M", "H", "M"]
+console.log("renamed cats:", [...s2.cat.categories.values]);
+// → ["H", "L", "M"]
+
+// Array replacement (same order as categories)
+const s3 = s.cat.renameCategories(["H", "L", "M"]); // cats are [high, low, mid]
+console.log("array rename:", s3.toArray());
+</code></pre>
+  <div class="output" id="ex5-out">▶ run</div>
+</section>
+
+<section>
+  <h2>6 — Set and reorder categories</h2>
+  <p><code>setCategories()</code> replaces the entire category list (values not in the new list become null).
+  <code>reorderCategories()</code> changes the order without adding or removing.</p>
+  <pre><code id="ex6-code">import { Series } from "tsb";
+
+const s = new Series({ data: ["XS", "S", "M", "L", "XL"] });
+
+// setCategories: restrict to a subset
+const s2 = s.cat.setCategories(["S", "M", "L"]);
+console.log("set cats:", s2.toArray());
+// → [null, "S", "M", "L", null]
+
+// reorderCategories: custom ordering (e.g., by size not alphabetically)
+const s3 = s.cat.reorderCategories(["XS", "S", "M", "L", "XL"], true);
+console.log("ordered:", s3.cat.ordered); // true
+console.log("custom order:", [...s3.cat.categories.values]);
+</code></pre>
+  <div class="output" id="ex6-out">▶ run</div>
+</section>
+
+<section>
+  <h2>7 — Value counts per category</h2>
+  <p><code>valueCounts()</code> returns a Series with count of each category (zero for unused ones).</p>
+  <pre><code id="ex7-code">import { Series } from "tsb";
+
+const grades = new Series({ data: ["A", "B", "A", "C", "B", "A"] });
+const gradesFull = grades.cat.addCategories(["D", "F"]);
+
+const counts = gradesFull.cat.valueCounts();
+console.log("categories:", [...gradesFull.cat.categories.values]);
+// → ["A", "B", "C", "D", "F"]
+console.log("counts:", counts.toArray());
+// → [3, 2, 1, 0, 0]
+</code></pre>
+  <div class="output" id="ex7-out">▶ run</div>
+</section>
+
+<section>
+  <h2>8 — Ordered categories</h2>
+  <p><code>asOrdered()</code> marks a categorical as ordered (enabling comparisons).
+  The order is determined by the categories array index.</p>
+  <pre><code id="ex8-code">import { Series } from "tsb";
+
+const rating = new Series({ data: ["good", "bad", "excellent", "good"] });
+
+// Establish a meaningful order
+const ordered = rating.cat
+  .reorderCategories(["bad", "good", "excellent"], true);
+
+console.log("ordered:", ordered.cat.ordered); // true
+console.log("categories:", [...ordered.cat.categories.values]);
+// → ["bad", "good", "excellent"]
+
+// bad=0, good=1, excellent=2
+console.log("codes:", ordered.cat.codes.toArray());
+// → [1, 0, 2, 1]
+</code></pre>
+  <div class="output" id="ex8-out">▶ run</div>
+</section>
+</body>
+</html>
