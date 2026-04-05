@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — MultiIndex</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>MultiIndex</h1>
+<p class="subtitle">Hierarchical multi-level index — mirrors <code>pandas.MultiIndex</code>.</p>
+
+<section>
+  <h2>1 — Create from tuples</h2>
+  <p>The most common way: pass an array of label-tuples.</p>
+  <pre><code id="ex1-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromTuples([
+  ["bar", "one"],
+  ["bar", "two"],
+  ["baz", "one"],
+  ["baz", "two"],
+], { names: ["first", "second"] });
+
+console.log(mi.nlevels);   // 2
+console.log(mi.size);      // 4
+console.log(mi.names);     // ["first", "second"]
+console.log(mi.at(0));     // ["bar", "one"]
+console.log(mi.at(-1));    // ["baz", "two"]
+</code></pre>
+  <div class="output" id="ex1-out">▶ run</div>
+</section>
+
+<section>
+  <h2>2 — Create from arrays</h2>
+  <p>Supply one array per level — a column-oriented alternative to fromTuples.</p>
+  <pre><code id="ex2-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromArrays(
+  [
+    ["a", "a", "b", "b"],
+    [1, 2, 1, 2],
+  ],
+  { names: ["letter", "number"] },
+);
+
+console.log(mi.toArray());
+// [["a",1], ["a",2], ["b",1], ["b",2]]
+</code></pre>
+  <div class="output" id="ex2-out">▶ run</div>
+</section>
+
+<section>
+  <h2>3 — Create from Cartesian product</h2>
+  <p><code>fromProduct</code> generates every combination from a list of iterables — very handy for experiment grids.</p>
+  <pre><code id="ex3-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromProduct(
+  [["control", "treatment"], ["pre", "post"]],
+  { names: ["group", "period"] },
+);
+
+console.log(mi.size);      // 4
+for (const t of mi) {
+  console.log(t.join(" / "));
+}
+</code></pre>
+  <div class="output" id="ex3-out">▶ run</div>
+</section>
+
+<section>
+  <h2>4 — Look-up by label</h2>
+  <p>Use <code>getLoc</code> to find the position of a tuple.  <code>contains</code> for a quick existence check.</p>
+  <pre><code id="ex4-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromTuples([
+  ["a", 1], ["a", 2], ["b", 1], ["b", 2],
+]);
+
+console.log(mi.getLoc(["a", 2]));   // 1
+console.log(mi.contains(["b", 3])); // false
+
+// Duplicate tuples return an array of positions
+const dup = MultiIndex.fromTuples([["a", 1], ["b", 2], ["a", 1]]);
+console.log(dup.getLoc(["a", 1]));  // [0, 2]
+</code></pre>
+  <div class="output" id="ex4-out">▶ run</div>
+</section>
+
+<section>
+  <h2>5 — Level operations: droplevel and swaplevel</h2>
+  <p>Restructure the level hierarchy without touching the data.</p>
+  <pre><code id="ex5-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromTuples([
+  ["a", 1, "x"],
+  ["b", 2, "y"],
+], { names: ["letter", "num", "code"] });
+
+// Drop the first level — returns a 2-level MultiIndex
+const two = mi.droplevel(0) as MultiIndex;
+console.log(two.nlevels);    // 2
+console.log(two.at(0));      // [1, "x"]
+
+// Swap levels 0 and 1
+const swapped = mi.swaplevel(0, 1);
+console.log(swapped.at(0));  // [1, "a", "x"]
+
+// Drop to a single level → plain Index
+const idx = mi.droplevel([0, 1]);
+console.log(idx.constructor.name); // Index
+</code></pre>
+  <div class="output" id="ex5-out">▶ run</div>
+</section>
+
+<section>
+  <h2>6 — Set operations</h2>
+  <p><code>union</code>, <code>intersection</code>, <code>difference</code> — same semantics as <code>pandas.MultiIndex</code>.</p>
+  <pre><code id="ex6-code">import { MultiIndex } from "tsb";
+
+const mi1 = MultiIndex.fromTuples([["a", 1], ["b", 2], ["c", 3]]);
+const mi2 = MultiIndex.fromTuples([["b", 2], ["d", 4]]);
+
+console.log(mi1.union(mi2).toArray());
+// [["a",1],["b",2],["c",3],["d",4]]
+
+console.log(mi1.intersection(mi2).toArray());
+// [["b",2]]
+
+console.log(mi1.difference(mi2).toArray());
+// [["a",1],["c",3]]
+</code></pre>
+  <div class="output" id="ex6-out">▶ run</div>
+</section>
+
+<section>
+  <h2>7 — Sorting and deduplication</h2>
+  <pre><code id="ex7-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromTuples([
+  ["b", 2], ["a", 1], ["b", 1], ["a", 2], ["a", 1],
+]);
+
+console.log(mi.sortValues().toArray());
+// [["a",1],["a",1],["a",2],["b",1],["b",2]]
+
+console.log(mi.dropDuplicates().toArray());
+// [["b",2],["a",1],["b",1],["a",2]]
+
+console.log(mi.duplicated("first"));
+// [false, false, false, false, true]
+</code></pre>
+  <div class="output" id="ex7-out">▶ run</div>
+</section>
+
+<section>
+  <h2>8 — Missing values</h2>
+  <pre><code id="ex8-code">import { MultiIndex } from "tsb";
+
+const mi = MultiIndex.fromTuples([
+  [null, 1],
+  ["a",  2],
+  ["b",  null],
+  ["c",  3],
+]);
+
+console.log(mi.isna());   // [true, false, true, false]
+const clean = mi.dropna();
+console.log(clean.size);  // 2
+console.log(clean.toArray()); // [["a",2], ["c",3]]
+</code></pre>
+  <div class="output" id="ex8-out">▶ run</div>
+</section>
+
+</body>
+</html>
