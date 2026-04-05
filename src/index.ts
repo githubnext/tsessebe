@@ -61,3 +61,7 @@ export type { ExpandingOptions, ExpandingSeriesLike } from "./window/index.ts";
 export { DataFrameExpanding } from "./core/index.ts";
 export { CategoricalAccessor } from "./core/index.ts";
 export type { CatSeriesLike } from "./core/index.ts";
+export { melt } from "./reshape/index.ts";
+export type { MeltOptions } from "./reshape/index.ts";
+export { pivot, pivotTable } from "./reshape/index.ts";
+export type { PivotOptions, PivotTableOptions, AggFuncName as PivotAggFuncName } from "./reshape/index.ts";
