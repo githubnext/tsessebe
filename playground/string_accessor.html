@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Series.str Accessor</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="breadcrumb">
+      <a href="index.html">tsb playground</a> › Series.str accessor
+    </nav>
+
+    <h1>Series.str — Vectorised String Operations</h1>
+    <p class="intro">
+      <code>Series.str</code> gives you element-wise string operations on a
+      <code>Series</code>, mirroring
+      <a href="https://pandas.pydata.org/docs/reference/series.html#string-handling"
+        >pandas <code>StringMethods</code></a
+      >.  Every method propagates <code>null</code> / <code>NaN</code> unchanged.
+    </p>
+
+    <section class="tutorial">
+      <h2>1 — Case operations</h2>
+      <p>
+        Convert strings to lower, upper, title, or capitalized form.  Also
+        available: <code>swapcase()</code>.
+      </p>
+      <div class="editor" id="case-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["hello", "WORLD", "foo BAR", null] });
+
+console.log("lower :", s.str.lower().toArray());
+console.log("upper :", s.str.upper().toArray());
+console.log("title :", s.str.title().toArray());
+console.log("capitalize:", s.str.capitalize().toArray());
+console.log("swapcase  :", s.str.swapcase().toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="case-editor">▶ Run</button>
+      <pre class="output" id="case-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>2 — Length &amp; slicing</h2>
+      <p>
+        Get string length, extract substrings with <code>slice()</code>, or
+        access individual characters with <code>get()</code>.
+      </p>
+      <div class="editor" id="slice-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["hello", "world", "pandas"] });
+
+console.log("len        :", s.str.len().toArray());
+console.log("slice(1,4) :", s.str.slice(1, 4).toArray());
+console.log("get(0)     :", s.str.get(0).toArray());   // first char
+console.log("get(-1)    :", s.str.get(-1).toArray());  // last char
+console.log("slice step :", s.str.slice(0, undefined, 2).toArray()); // every 2nd char
+</pre>
+      </div>
+      <button class="run-btn" data-editor="slice-editor">▶ Run</button>
+      <pre class="output" id="slice-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>3 — Strip &amp; pad</h2>
+      <p>
+        Remove whitespace (or specific characters) with <code>strip()</code>,
+        <code>lstrip()</code>, <code>rstrip()</code>.  Pad strings with
+        <code>pad()</code>, <code>ljust()</code>, <code>rjust()</code>,
+        <code>center()</code>, or <code>zfill()</code>.
+      </p>
+      <div class="editor" id="pad-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["  hello  ", "***world***", "42"] });
+
+console.log("strip()        :", s.str.strip().toArray());
+console.log("strip('*')     :", s.str.strip("*").toArray());
+console.log("ljust(10)      :", s.str.ljust(10).toArray());
+console.log("rjust(10)      :", s.str.rjust(10).toArray());
+console.log("center(10)     :", s.str.center(10).toArray());
+console.log("zfill(5)       :",
+  new tsb.Series({ data: ["42", "-7", "3"] }).str.zfill(5).toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="pad-editor">▶ Run</button>
+      <pre class="output" id="pad-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>4 — Search &amp; match</h2>
+      <p>
+        Test membership with <code>contains()</code>, <code>startswith()</code>,
+        <code>endswith()</code>.  Use <code>match()</code> for anchored-start
+        matching or <code>fullmatch()</code> for whole-string matching.
+      </p>
+      <div class="editor" id="search-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["foo123", "bar456", "foo_bar", null] });
+
+console.log("contains('foo')   :", s.str.contains("foo").toArray());
+console.log("contains('foo', false):", // literal, not regex
+  s.str.contains("foo", false).toArray());
+console.log("startswith('foo') :", s.str.startswith("foo").toArray());
+console.log("endswith('3')     :", s.str.endswith("3").toArray());
+console.log("match('\\\\d+')    :", s.str.match("\\d+").toArray());
+console.log("fullmatch('\\\\w+') :", s.str.fullmatch("\\w+").toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="search-editor">▶ Run</button>
+      <pre class="output" id="search-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>5 — Count, find &amp; replace</h2>
+      <p>
+        Count pattern occurrences with <code>count()</code>, find positions with
+        <code>find()</code> / <code>rfind()</code>, and replace with
+        <code>replace()</code>.
+      </p>
+      <div class="editor" id="replace-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["banana", "apple", "abracadabra"] });
+
+console.log("count('a')     :", s.str.count("a").toArray());
+console.log("find('a')      :", s.str.find("a").toArray()); // first index
+console.log("rfind('a')     :", s.str.rfind("a").toArray()); // last index
+console.log("replace('a','X'):", s.str.replace("a", "X").toArray()); // all
+console.log("replace n=1   :", s.str.replace("a", "X", 1).toArray()); // first only
+</pre>
+      </div>
+      <button class="run-btn" data-editor="replace-editor">▶ Run</button>
+      <pre class="output" id="replace-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>6 — Extract</h2>
+      <p>
+        Extract the first regex capture group with <code>extract()</code>.
+        Returns <code>null</code> when there is no match.
+      </p>
+      <div class="editor" id="extract-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["price: 42", "cost: 99.5", "free"] });
+
+// Extract numeric part after ": "
+const prices = s.str.extract(":\\s*([\\d.]+)");
+console.log("extracted:", prices.toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="extract-editor">▶ Run</button>
+      <pre class="output" id="extract-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>7 — Split &amp; join</h2>
+      <p>
+        Split strings with <code>split()</code> (returns JSON array or the nth
+        segment), and reassemble with <code>join()</code>.  Use
+        <code>cat()</code> to concatenate element-wise.
+      </p>
+      <div class="editor" id="split-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["a,b,c", "x,y,z"] });
+
+// Get the nth segment (0-based)
+console.log("split n=0:", s.str.split(",", 0).toArray());
+console.log("split n=1:", s.str.split(",", 1).toArray());
+
+// Full split → JSON array → rejoin
+const joined = s.str.split(",").str.join(" | ");
+console.log("rejoin   :", joined.toArray());
+
+// Concatenate two series element-wise
+const a = new tsb.Series({ data: ["foo", "bar"] });
+const b = new tsb.Series({ data: ["1", "2"] });
+console.log("cat      :", a.str.cat([b.toArray()], "-").toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="split-editor">▶ Run</button>
+      <pre class="output" id="split-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>8 — Predicates</h2>
+      <p>
+        Test character classes with <code>isalpha()</code>,
+        <code>isdigit()</code>, <code>isalnum()</code>, <code>islower()</code>,
+        <code>isupper()</code>, <code>istitle()</code>, <code>isspace()</code>.
+      </p>
+      <div class="editor" id="pred-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["abc", "123", "abc123", "ABC", "Hello World", "   "] });
+
+console.log("isalpha :", s.str.isalpha().toArray());
+console.log("isdigit :", s.str.isdigit().toArray());
+console.log("isalnum :", s.str.isalnum().toArray());
+console.log("isupper :", s.str.isupper().toArray());
+console.log("istitle :", s.str.istitle().toArray());
+console.log("isspace :", s.str.isspace().toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="pred-editor">▶ Run</button>
+      <pre class="output" id="pred-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>9 — Null propagation</h2>
+      <p>
+        All methods pass <code>null</code> / <code>NaN</code> through unchanged,
+        just like pandas.
+      </p>
+      <div class="editor" id="null-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["hello", null, "world"] });
+
+console.log("upper:", s.str.upper().toArray());
+console.log("len  :", s.str.len().toArray());
+console.log("contains:", s.str.contains("o").toArray());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="null-editor">▶ Run</button>
+      <pre class="output" id="null-output"></pre>
+    </section>
+
+    <script src="runtime.js"></script>
+    <script>
+      document.querySelectorAll(".run-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const editorId = btn.getAttribute("data-editor");
+          const outputId = editorId.replace("-editor", "-output");
+          const code = document.querySelector(`#${editorId} .code`).textContent;
+          const output = document.getElementById(outputId);
+          output.textContent = "Running…";
+          try {
+            const result = await runCode(code);
+            output.textContent = result || "(no output)";
+            output.classList.remove("error");
+          } catch (err) {
+            output.textContent = String(err);
+            output.classList.add("error");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
