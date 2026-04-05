@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T21:50:00Z |
-| Iteration Count | 73 |
-| Best Metric | 29 |
+| Last Run | 2026-04-05T22:09:00Z |
+| Iteration Count | 74 |
+| Best Metric | 30 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #54 |
@@ -39,15 +39,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 29 files (iter 73). Next candidates:
+Now at 30 files (iter 74). Next candidates:
 - `src/core/interval.ts` — Interval / IntervalIndex
 - `src/core/categorical_index.ts` — CategoricalIndex
-- `src/stats/compare.ts` — `eq()`, `ne()`, `lt()`, `gt()`, `le()`, `ge()` element-wise comparison ops
+- `src/stats/shift_diff.ts` — `shift()` / `diff()` for Series and DataFrame
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 74 (compare, 29→30)**: `seriesEq`/`seriesNe`/`seriesLt`/`seriesGt`/`seriesLe`/`seriesGe` and DataFrame counterparts. `compareScalars` dispatch fn with `isComparable` guard. Returns `Scalar[]` (not `boolean[]`) so constructor types align. Property tests: lt+ge and gt+le partition every finite-numeric element (exactly one true, no overlap, no gap). Missing values (null/NaN) always yield false, matching pandas NaN convention.
 - **Iter 73 (where/mask, 28→29)**: `whereSeries`/`maskSeries`/`whereDataFrame`/`maskDataFrame`. Three condition types: element-wise predicate, boolean `Series`/array, boolean `DataFrame`. `applyCondition` shared helper with `keepWhenTrue` flag. `resolveSeriesCond` + `resolveDataFrameCond` dispatch functions. Missing column in cond-DataFrame defaults all-false. Property test: `where` + `mask` partition every element (exactly one keeps original).
 - **Iter 72 (value_counts, 27→28)**: `valueCounts`/`dataFrameValueCounts` as standalone stat functions. `scalarKey` mapper for stable Map keys. `buildCountMap` uses `Map<key,{label,count}>`. `df.get(name)` not `df.tryCol()`. `import type` for type-only imports. Biome: `as number` not `!` for non-null assertions. Wire barrel exports in same commit.
 - **Iter 71 (elem_ops, 26→27)**: `mapNumeric` helper + `makeClipFn`/`makeRoundFn` closures. `Number.NEGATIVE_INFINITY`/`Number.POSITIVE_INFINITY` not bare `Infinity`. Named exports `seriesAbs`/`seriesRound` avoid collision with built-ins. `colWiseElem` for DataFrame column-wise transforms.
@@ -67,15 +68,23 @@ Now at 29 files (iter 73). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 73)**: 29 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask.
+**Current state (iter 74)**: 30 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare.
 
-**Next**: Interval/IntervalIndex · CategoricalIndex · element-wise comparison ops (eq/ne/lt/gt/le/ge)
+**Next**: Interval/IntervalIndex · CategoricalIndex · shift/diff
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 74 — 2026-04-05 22:09 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24011536762)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/compare.ts` — `seriesEq/Ne/Lt/Gt/Le/Ge` and `dataFrameEq/Ne/Lt/Gt/Le/Ge`. Element-wise comparison ops for Series and DataFrame with scalar or Series/DataFrame operand.
+- **Metric**: 30 (previous: 29, delta: +1)
+- **Commit**: e2a3cad
+- **Notes**: `compareScalars` dispatch with `isComparable` guard. Returns `Scalar[]` (not `boolean[]`) for constructor compatibility. Missing values always yield false. Property tests verify lt+ge and gt+le partition.
 
 ### Iteration 73 — 2026-04-05 21:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24011120613)
 
