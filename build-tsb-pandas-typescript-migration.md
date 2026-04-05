@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T13:49:00Z |
-| Iteration Count | 57 |
-| Best Metric | 12 |
+| Last Run | 2026-04-05T14:14:00Z |
+| Iteration Count | 58 |
+| Best Metric | 13 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #49 |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -39,16 +39,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 12 files (iter 57). Next candidates:
+Now at 13 files (iter 58). Next candidates:
 - `src/io/json.ts` — read_json / to_json
 - `src/core/cat_accessor.ts` — Series.cat categorical accessor
-- `src/io/csv.ts` — standalone readCsv (separate from groupby file)
 - `src/stats/corr.ts` — DataFrame.corr(), DataFrame.cov(), Series.corr()
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 58 (readCsv/toCsv, 12→13)**: All regex at top level. `Number.parseInt`/`Number.parseFloat`. Extract helpers to keep CC≤15 (`parseForcedBool`, `parseForcedInt`, `parseForcedFloat`). `noUncheckedIndexedAccess`: `lines[n] as string` for index access after bounds check. `Array.from({ length }, (): string[] => [])` — explicit return type for factory fn. Tests: `toBeNull()` for null values; avoid `as` casts in test assertions when possible.
 - **Iter 57 (describe+quantile, 11→12)**: `noNonNullAssertion` — replace `arr[i]!` with `arr[i] as T`. `useBlockStatements` requires `{ }` around single-line `if` returns. Biome auto-fix handles most formatting, `--unsafe` handles `useBlockStatements`. `Series<unknown>` not valid (unknown doesn't extend Scalar) — use `Series<Scalar>` in test casts. All-null Series has `object` dtype, not `float` — use explicit `dtype: Dtype.float64` to test empty numeric path.
 - **Iter 56 (datetime_accessor, 10→11)**: `DatetimeSeriesLike` same pattern as `StringSeriesLike` — include `dt` and `toArray()`. Split `expandDirective` → `expandDatePart + expandTimePart` for CC≤15. `unitMs` needs `default` clause. Format helpers need single-line signatures. Tests import from `src/index.ts` not `src/core/index.ts`. Prefix unused param with `_`.
 - **Iter 55 (string_accessor, 9→10)**: `StringSeriesLike` must include `str` and `toArray()`. Top-level regex (Biome). Extract sub-functions for CC≤15. Use `charAt(0)` not `s[0]!`.
@@ -65,7 +65,7 @@ Now at 12 files (iter 57). Next candidates:
 
 ## 🔭 Future Directions
 
-**New branch (iter 53–57)**: 12 files — Series, DataFrame, GroupBy, concat, merge, str accessor, dt accessor, stats/describe.
+**New branch (iter 53–58)**: 13 files — Series, DataFrame, GroupBy, concat, merge, str accessor, dt accessor, stats/describe, io/csv.
 
 **Next**: json I/O · cat accessor · stats/corr · resample
 
@@ -74,6 +74,14 @@ Now at 12 files (iter 57). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 58 — 2026-04-05 14:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24003267099)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/io/csv.ts` — `readCsv()` + `toCsv()` CSV I/O. Auto dtype inference (bool/int64/float64/string/object), NA handling (12 built-in sentinel strings + custom), RFC 4180 quoted fields, custom sep, indexCol, skipRows, nRows. `toCsv` supports header/index/sep/lineterminator/naRep. 35+ unit + property-based tests. Playground: `playground/csv.html`.
+- **Metric**: 13 (previous: 12, delta: +1)
+- **Commit**: 422db12
+- **Notes**: Extract `parseForcedBool/Int/Float` helpers for CC≤15. `Array.from(..., (): string[] => [])` needs explicit return type. `lines[n] as string` safe after bounds check. Tests: use `toBeNull()` for null values.
 
 ### Iteration 57 — 2026-04-05 13:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24002845454)
 
