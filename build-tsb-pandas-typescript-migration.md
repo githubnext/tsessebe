@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T13:26:00Z |
-| Iteration Count | 56 |
-| Best Metric | 11 |
+| Last Run | 2026-04-05T13:49:00Z |
+| Iteration Count | 57 |
+| Best Metric | 12 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | #48 |
+| PR | #49 |
 | Steering Issue | — |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,7 +31,7 @@
 **Goal**: Build `tsb`, a complete TypeScript port of pandas, one feature at a time.
 **Metric**: `pandas_features_ported` (higher is better)
 **Branch**: `autoloop/build-tsb-pandas-typescript-migration`
-**Pull Request**: #48
+**Pull Request**: #49
 
 ---
 
@@ -39,16 +39,17 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Next candidates (continue building from the current 11-file baseline):
-- `src/stats/describe.ts` — describe() with percentiles
+Now at 12 files (iter 57). Next candidates:
 - `src/io/json.ts` — read_json / to_json
-- `src/io/csv.ts` — add readCsv/toCsv
 - `src/core/cat_accessor.ts` — Series.cat categorical accessor
+- `src/io/csv.ts` — standalone readCsv (separate from groupby file)
+- `src/stats/corr.ts` — DataFrame.corr(), DataFrame.cov(), Series.corr()
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 57 (describe+quantile, 11→12)**: `noNonNullAssertion` — replace `arr[i]!` with `arr[i] as T`. `useBlockStatements` requires `{ }` around single-line `if` returns. Biome auto-fix handles most formatting, `--unsafe` handles `useBlockStatements`. `Series<unknown>` not valid (unknown doesn't extend Scalar) — use `Series<Scalar>` in test casts. All-null Series has `object` dtype, not `float` — use explicit `dtype: Dtype.float64` to test empty numeric path.
 - **Iter 56 (datetime_accessor, 10→11)**: `DatetimeSeriesLike` same pattern as `StringSeriesLike` — include `dt` and `toArray()`. Split `expandDirective` → `expandDatePart + expandTimePart` for CC≤15. `unitMs` needs `default` clause. Format helpers need single-line signatures. Tests import from `src/index.ts` not `src/core/index.ts`. Prefix unused param with `_`.
 - **Iter 55 (string_accessor, 9→10)**: `StringSeriesLike` must include `str` and `toArray()`. Top-level regex (Biome). Extract sub-functions for CC≤15. Use `charAt(0)` not `s[0]!`.
 - **Iter 54 (GroupBy+CSV, 6→8)**: Biome `useImportRestrictions` requires barrel files. `splitLine` → `stepInsideQuote`. `readCsv` → extract 3 helpers.
@@ -64,15 +65,23 @@ Next candidates (continue building from the current 11-file baseline):
 
 ## 🔭 Future Directions
 
-**New branch (iter 53–56)**: 11 files — Series, DataFrame, GroupBy, concat, merge, str accessor, dt accessor.
+**New branch (iter 53–57)**: 12 files — Series, DataFrame, GroupBy, concat, merge, str accessor, dt accessor, stats/describe.
 
-**Next**: stats/describe · json I/O · cat accessor · resample · io/csv
+**Next**: json I/O · cat accessor · stats/corr · resample
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 57 — 2026-04-05 13:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24002845454)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/describe.ts` — `describe()` + standalone `quantile()` + `Series.quantile(q)`. Numeric: count/mean/std/min/percentiles/max. Categorical: count/unique/top/freq. DataFrame support with `include: "number"|"object"|"all"`. 32 unit + property-based tests.
+- **Metric**: 12 (previous: 11, delta: +1)
+- **Commit**: f6b1f09
+- **Notes**: `noNonNullAssertion`: use `as number` not `!`. `useBlockStatements`: wrap single-line `if` returns. Test casts: `Series<Scalar>` not `Series<unknown>`. All-null array creates object dtype — use `dtype: Dtype.float64` override to test empty numeric path.
 
 ### Iteration 56 — 2026-04-05 13:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24002454105)
 
