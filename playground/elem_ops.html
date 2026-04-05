@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — element-wise operations</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>element-wise operations</h1>
+<p class="subtitle">
+  Scalar transforms applied independently to each element —
+  mirrors <code>pandas.Series.clip()</code>, <code>.abs()</code>, and <code>.round()</code>.
+</p>
+
+<section>
+  <h2>1 — clip: bound values to a range</h2>
+  <p>
+    <code>clip(series, { lower, upper })</code> replaces any value below <code>lower</code>
+    with <code>lower</code>, and any value above <code>upper</code> with <code>upper</code>.
+    Pass only one bound to clip from one side only.
+    Mirrors <code>pandas.Series.clip()</code>.
+  </p>
+  <pre><code id="ex1-code">import { Series, clip } from "tsb";
+
+const s = new Series({ data: [-3, 0, 1, 5, 10] });
+const clipped = clip(s, { lower: 0, upper: 6 });
+console.log([...clipped.values]); // [0, 0, 1, 5, 6]
+
+// One-sided: only lower bound
+const pos = clip(s, { lower: 0 });
+console.log([...pos.values]); // [0, 0, 1, 5, 10]
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — clip on a DataFrame</h2>
+  <p>
+    <code>dataFrameClip(df, { lower, upper })</code> applies the same clipping to every
+    numeric column.  Mirrors <code>pandas.DataFrame.clip()</code>.
+  </p>
+  <pre><code id="ex2-code">import { DataFrame, dataFrameClip } from "tsb";
+
+const df = DataFrame.fromColumns({
+  temperature: [-10, 5, 20, 45],
+  humidity:    [  0, 30, 80, 110],
+});
+const safe = dataFrameClip(df, { lower: 0, upper: 100 });
+console.log([...safe.col("temperature").values]); // [0, 5, 20, 45]
+console.log([...safe.col("humidity").values]);     // [0, 30, 80, 100]
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — seriesAbs: absolute value</h2>
+  <p>
+    <code>seriesAbs(series)</code> returns a new Series where every element is replaced
+    by its absolute value.  Mirrors <code>pandas.Series.abs()</code>.
+  </p>
+  <pre><code id="ex3-code">import { Series, seriesAbs } from "tsb";
+
+const returns = new Series({ data: [-0.05, 0.12, -0.08, 0.03] });
+const magnitude = seriesAbs(returns);
+console.log([...magnitude.values]); // [0.05, 0.12, 0.08, 0.03]
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — dataFrameAbs: absolute values for all columns</h2>
+  <p>
+    <code>dataFrameAbs(df)</code> applies <code>abs()</code> column-by-column.
+    Mirrors <code>pandas.DataFrame.abs()</code>.
+  </p>
+  <pre><code id="ex4-code">import { DataFrame, dataFrameAbs } from "tsb";
+
+const df = DataFrame.fromColumns({
+  x: [-1, 2, -3],
+  y: [ 4, -5, 6],
+});
+const abs = dataFrameAbs(df);
+console.log([...abs.col("x").values]); // [1, 2, 3]
+console.log([...abs.col("y").values]); // [4, 5, 6]
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — seriesRound: round to N decimal places</h2>
+  <p>
+    <code>seriesRound(series, { decimals })</code> rounds each value to the given number
+    of decimal places (default 0).  Negative <code>decimals</code> rounds to the left of
+    the decimal point (e.g. <code>-1</code> rounds to the nearest 10).
+    Mirrors <code>pandas.Series.round()</code>.
+  </p>
+  <pre><code id="ex5-code">import { Series, seriesRound } from "tsb";
+
+const prices = new Series({ data: [1.2349, 9.9999, 3.14159] });
+const r2 = seriesRound(prices, { decimals: 2 });
+console.log([...r2.values]); // [1.23, 10.0, 3.14]
+
+// Round to nearest 10
+const big = new Series({ data: [14, 25, 36] });
+console.log([...seriesRound(big, { decimals: -1 }).values]); // [10, 30, 40]
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — dataFrameRound: round all columns</h2>
+  <p>
+    <code>dataFrameRound(df, { decimals })</code> rounds every numeric column of a DataFrame.
+    Mirrors <code>pandas.DataFrame.round()</code>.
+  </p>
+  <pre><code id="ex6-code">import { DataFrame, dataFrameRound } from "tsb";
+
+const df = DataFrame.fromColumns({
+  lat: [51.5074,  48.8566, 40.7128],
+  lon: [-0.1278,   2.3522, -74.006],
+});
+const r2 = dataFrameRound(df, { decimals: 2 });
+console.log([...r2.col("lat").values]); // [51.51, 48.86, 40.71]
+console.log([...r2.col("lon").values]); // [-0.13, 2.35, -74.01]
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — missing values pass through</h2>
+  <p>
+    All three operations propagate <code>null</code> and <code>NaN</code> unchanged —
+    consistent with pandas' behaviour.
+  </p>
+  <pre><code id="ex7-code">import { Series, clip, seriesAbs, seriesRound } from "tsb";
+
+const s = new Series({ data: [null, -5, NaN, 7] });
+
+console.log([...clip(s, { lower: 0, upper: 5 }).values]);
+// [null, 0, NaN, 5]
+
+console.log([...seriesAbs(s).values]);
+// [null, 5, NaN, 7]
+
+console.log([...seriesRound(s, { decimals: 0 }).values]);
+// [null, -5, NaN, 7]
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<script>
+const examples = [
+  { id: "ex1", imports: ["Series", "clip"] },
+  { id: "ex2", imports: ["DataFrame", "dataFrameClip"] },
+  { id: "ex3", imports: ["Series", "seriesAbs"] },
+  { id: "ex4", imports: ["DataFrame", "dataFrameAbs"] },
+  { id: "ex5", imports: ["Series", "seriesRound"] },
+  { id: "ex6", imports: ["DataFrame", "dataFrameRound"] },
+  { id: "ex7", imports: ["Series", "clip", "seriesAbs", "seriesRound"] },
+];
+for (const ex of examples) {
+  runExample(ex.id + "-code", ex.id + "-output", ex.imports);
+}
+</script>
+</body>
+</html>
