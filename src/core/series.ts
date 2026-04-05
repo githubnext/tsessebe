@@ -7,10 +7,15 @@
  * missing-value handling.
  */
 
+import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
+import { DatetimeAccessor } from "./datetime_accessor.ts";
+import type { DatetimeSeriesLike } from "./datetime_accessor.ts";
 import { Dtype } from "./dtype.ts";
 import { RangeIndex } from "./range-index.ts";
+import { StringAccessor } from "./string_accessor.ts";
+import type { StringSeriesLike } from "./string_accessor.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -539,6 +544,34 @@ export class Series<T extends Scalar = Scalar> {
     return ((nums[mid - 1] as number) + (nums[mid] as number)) / 2;
   }
 
+  /**
+   * Compute a single quantile via linear interpolation.
+   *
+   * @param q - Quantile level in [0, 1] (0.5 = median, 0.25 = Q1, etc.)
+   * @returns   Interpolated value, or `NaN` if the Series has no numeric data.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.quantile(0.5); // 2.5
+   * s.quantile(0.25); // 1.75
+   * ```
+   */
+  quantile(q: number): number {
+    const sorted = this._numericValues().sort((a, b) => a - b);
+    const n = sorted.length;
+    if (n === 0) {
+      return Number.NaN;
+    }
+    const pos = q * (n - 1);
+    const lo = Math.floor(pos);
+    const hi = Math.ceil(pos);
+    if (lo === hi) {
+      return sorted[lo] as number;
+    }
+    return (sorted[lo] as number) * (1 - (pos - lo)) + (sorted[hi] as number) * (pos - lo);
+  }
+
   /** Number of unique non-null values. */
   nunique(): number {
     const nonNull = this._values.filter(
@@ -618,6 +651,52 @@ export class Series<T extends Scalar = Scalar> {
   /** Return a new Series with a different name. */
   rename(name: string | null): Series<T> {
     return this.copy(name);
+  }
+
+  /**
+   * Return a new Series replacing the underlying values (preserving index and name).
+   * Used internally by StringAccessor and other accessors.
+   * @internal
+   */
+  withValues(data: readonly Scalar[], name?: string | null): Series<Scalar> {
+    return new Series<Scalar>({
+      data: [...data],
+      index: this.index.copy(),
+      name: name === undefined ? this.name : name,
+    });
+  }
+
+  // ─── str accessor ─────────────────────────────────────────────────────────
+
+  /**
+   * Access vectorised string operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["hello", "WORLD"] });
+   * s.str.upper().toArray(); // ["HELLO", "WORLD"]
+   * s.str.len().toArray();   // [5, 5]
+   * ```
+   */
+  get str(): StringAccessor {
+    return new StringAccessor(this as unknown as StringSeriesLike);
+  }
+
+  // ─── dt accessor ──────────────────────────────────────────────────────────
+
+  /**
+   * Access vectorised datetime operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [new Date("2024-03-15")] });
+   * s.dt.year().toArray();  // [2024]
+   * s.dt.month().toArray(); // [3]
+   * s.dt.strftime("%Y-%m-%d").toArray(); // ["2024-03-15"]
+   * ```
+   */
+  get dt(): DatetimeAccessor {
+    return new DatetimeAccessor(this as unknown as DatetimeSeriesLike);
   }
 
   /** Return a new Series with a new Index. */
@@ -700,5 +779,21 @@ export class Series<T extends Scalar = Scalar> {
     const rows = this._values.map((v, i) => `${String(this.index.at(i))}\t${String(v)}`).join("\n");
     const footer = `Name: ${this.name ?? "(unnamed)"}, dtype: ${this.dtype.name}, Length: ${this.size}`;
     return `${rows}\n${footer}`;
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the Series by an array of key values (or another Series).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.groupby(["A", "A", "B", "B"]).sum();
+   * // Series { A: 3, B: 7 }
+   * ```
+   */
+  groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
+    return new SeriesGroupBy(this as Series<Scalar>, by);
   }
 }
