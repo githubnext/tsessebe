@@ -7,10 +7,23 @@
  * missing-value handling.
  */
 
+import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
+import { EWM } from "../window/ewm.ts";
+import type { EwmOptions } from "../window/ewm.ts";
+import { Expanding } from "../window/expanding.ts";
+import type { ExpandingOptions } from "../window/expanding.ts";
+import { Rolling } from "../window/rolling.ts";
+import type { RollingOptions } from "../window/rolling.ts";
 import { Index } from "./base-index.ts";
+import { CategoricalAccessor } from "./cat_accessor.ts";
+import type { CatSeriesLike } from "./cat_accessor.ts";
+import { DatetimeAccessor } from "./datetime_accessor.ts";
+import type { DatetimeSeriesLike } from "./datetime_accessor.ts";
 import { Dtype } from "./dtype.ts";
 import { RangeIndex } from "./range-index.ts";
+import { StringAccessor } from "./string_accessor.ts";
+import type { StringSeriesLike } from "./string_accessor.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,6 +60,74 @@ function compareScalars(
   }
   const cmp = (a as number | string | boolean) < (b as number | string | boolean) ? -1 : 1;
   return ascending ? cmp : -cmp;
+}
+
+/** True when a scalar is a finite number (not null/undefined/NaN). */
+function isFiniteNum(v: Scalar): v is number {
+  return typeof v === "number" && !Number.isNaN(v);
+}
+
+/**
+ * Align `a` and `b` on shared index labels, keep only paired finite numbers.
+ * Returns two equal-length numeric arrays.
+ */
+function collectCorrPairs(a: Series<Scalar>, b: Series<Scalar>): [number[], number[]] {
+  const bMap = new Map<string, number>();
+  for (let j = 0; j < b.index.size; j++) {
+    bMap.set(String(b.index.at(j)), j);
+  }
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i < a.index.size; i++) {
+    const label = String(a.index.at(i));
+    const j = bMap.get(label);
+    if (j === undefined) {
+      continue;
+    }
+    const av = a.values[i] as Scalar;
+    const bv = b.values[j] as Scalar;
+    if (!(isFiniteNum(av) && isFiniteNum(bv))) {
+      continue;
+    }
+    xs.push(av);
+    ys.push(bv);
+  }
+  return [xs, ys];
+}
+
+/**
+ * Pearson correlation from two pre-aligned equal-length numeric arrays.
+ * Returns `NaN` when `n < minPeriods` or either variance is zero.
+ */
+function pearsonCorrFromArrays(
+  xs: readonly number[],
+  ys: readonly number[],
+  minPeriods: number,
+): number {
+  const n = xs.length;
+  if (n < minPeriods) {
+    return Number.NaN;
+  }
+  let mx = 0;
+  let my = 0;
+  for (let i = 0; i < n; i++) {
+    mx += xs[i] as number;
+    my += ys[i] as number;
+  }
+  mx /= n;
+  my /= n;
+  let num = 0;
+  let varX = 0;
+  let varY = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = (xs[i] as number) - mx;
+    const dy = (ys[i] as number) - my;
+    num += dx * dy;
+    varX += dx * dx;
+    varY += dy * dy;
+  }
+  const denom = Math.sqrt(varX * varY);
+  return denom === 0 ? Number.NaN : num / denom;
 }
 
 // ─── SeriesOptions ────────────────────────────────────────────────────────────
@@ -539,6 +620,56 @@ export class Series<T extends Scalar = Scalar> {
     return ((nums[mid - 1] as number) + (nums[mid] as number)) / 2;
   }
 
+  /**
+   * Compute a single quantile via linear interpolation.
+   *
+   * @param q - Quantile level in [0, 1] (0.5 = median, 0.25 = Q1, etc.)
+   * @returns   Interpolated value, or `NaN` if the Series has no numeric data.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.quantile(0.5); // 2.5
+   * s.quantile(0.25); // 1.75
+   * ```
+   */
+  quantile(q: number): number {
+    const sorted = this._numericValues().sort((a, b) => a - b);
+    const n = sorted.length;
+    if (n === 0) {
+      return Number.NaN;
+    }
+    const pos = q * (n - 1);
+    const lo = Math.floor(pos);
+    const hi = Math.ceil(pos);
+    if (lo === hi) {
+      return sorted[lo] as number;
+    }
+    return (sorted[lo] as number) * (1 - (pos - lo)) + (sorted[hi] as number) * (pos - lo);
+  }
+
+  /**
+   * Pearson correlation coefficient between this Series and `other`.
+   *
+   * Aligns on shared index labels and drops pairs where either value is
+   * missing.  Returns `NaN` when fewer than `minPeriods` valid pairs exist or
+   * when either Series has zero variance.
+   *
+   * @param other      - The other Series to correlate with.
+   * @param minPeriods - Minimum valid observation pairs required (default 1).
+   *
+   * @example
+   * ```ts
+   * const a = new Series({ data: [1, 2, 3] });
+   * const b = new Series({ data: [4, 5, 6] });
+   * a.corr(b); // 1.0
+   * ```
+   */
+  corr(other: Series<Scalar>, minPeriods = 1): number {
+    const [xs, ys] = collectCorrPairs(this as Series<Scalar>, other);
+    return pearsonCorrFromArrays(xs, ys, minPeriods);
+  }
+
   /** Number of unique non-null values. */
   nunique(): number {
     const nonNull = this._values.filter(
@@ -618,6 +749,69 @@ export class Series<T extends Scalar = Scalar> {
   /** Return a new Series with a different name. */
   rename(name: string | null): Series<T> {
     return this.copy(name);
+  }
+
+  /**
+   * Return a new Series replacing the underlying values (preserving index and name).
+   * Used internally by StringAccessor and other accessors.
+   * @internal
+   */
+  withValues(data: readonly Scalar[], name?: string | null): Series<Scalar> {
+    return new Series<Scalar>({
+      data: [...data],
+      index: this.index.copy(),
+      name: name === undefined ? this.name : name,
+    });
+  }
+
+  // ─── str accessor ─────────────────────────────────────────────────────────
+
+  /**
+   * Access vectorised string operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["hello", "WORLD"] });
+   * s.str.upper().toArray(); // ["HELLO", "WORLD"]
+   * s.str.len().toArray();   // [5, 5]
+   * ```
+   */
+  get str(): StringAccessor {
+    return new StringAccessor(this as unknown as StringSeriesLike);
+  }
+
+  // ─── dt accessor ──────────────────────────────────────────────────────────
+
+  /**
+   * Access vectorised datetime operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [new Date("2024-03-15")] });
+   * s.dt.year().toArray();  // [2024]
+   * s.dt.month().toArray(); // [3]
+   * s.dt.strftime("%Y-%m-%d").toArray(); // ["2024-03-15"]
+   * ```
+   */
+  get dt(): DatetimeAccessor {
+    return new DatetimeAccessor(this as unknown as DatetimeSeriesLike);
+  }
+
+  // ─── cat accessor ─────────────────────────────────────────────────────────
+
+  /**
+   * Access categorical operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["b", "a", "c", "a"] });
+   * s.cat.categories.values;     // ["a", "b", "c"]
+   * s.cat.codes.toArray();        // [1, 0, 2, 0]
+   * s.cat.ordered;                // false
+   * ```
+   */
+  get cat(): CategoricalAccessor {
+    return new CategoricalAccessor(this as unknown as CatSeriesLike);
   }
 
   /** Return a new Series with a new Index. */
@@ -700,5 +894,76 @@ export class Series<T extends Scalar = Scalar> {
     const rows = this._values.map((v, i) => `${String(this.index.at(i))}\t${String(v)}`).join("\n");
     const footer = `Name: ${this.name ?? "(unnamed)"}, dtype: ${this.dtype.name}, Length: ${this.size}`;
     return `${rows}\n${footer}`;
+  }
+
+  // ─── rolling window ───────────────────────────────────────────────────────
+
+  /**
+   * Provide a rolling (sliding-window) view of the Series.
+   *
+   * @param window  - Size of the moving window (positive integer).
+   * @param options - Optional {@link RollingOptions} (`minPeriods`, `center`).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4, 5] });
+   * s.rolling(3).mean().toArray(); // [null, null, 2, 3, 4]
+   * s.rolling(2).sum().toArray();  // [null, 3, 5, 7, 9]
+   * ```
+   */
+  rolling(window: number, options?: RollingOptions): Rolling {
+    return new Rolling(this, window, options);
+  }
+
+  // ─── expanding window ─────────────────────────────────────────────────────
+
+  /**
+   * Provide an expanding (growing-window) view of the Series.
+   *
+   * @param options - Optional {@link ExpandingOptions} (`minPeriods`).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4, 5] });
+   * s.expanding().mean().toArray();  // [1, 1.5, 2, 2.5, 3]
+   * ```
+   */
+  expanding(options?: ExpandingOptions): Expanding {
+    return new Expanding(this, options);
+  }
+
+  // ─── ewm window ───────────────────────────────────────────────────────────
+
+  /**
+   * Provide an Exponentially Weighted Moving (EWM) view of the Series.
+   *
+   * @param options - {@link EwmOptions} specifying decay via `span`, `com`,
+   *                  `halflife`, or `alpha`.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4, 5] });
+   * s.ewm({ span: 3 }).mean().toArray();
+   * // [1, 1.666..., 2.428..., 3.266..., 4.161...]
+   * ```
+   */
+  ewm(options: EwmOptions): EWM {
+    return new EWM(this, options);
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the Series by an array of key values (or another Series).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.groupby(["A", "A", "B", "B"]).sum();
+   * // Series { A: 3, B: 7 }
+   * ```
+   */
+  groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
+    return new SeriesGroupBy(this as Series<Scalar>, by);
   }
 }

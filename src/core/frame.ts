@@ -17,7 +17,14 @@
  * ```
  */
 
+import { DataFrameGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
+import { EWM } from "../window/ewm.ts";
+import type { EwmOptions } from "../window/ewm.ts";
+import { Expanding } from "../window/expanding.ts";
+import type { ExpandingOptions } from "../window/expanding.ts";
+import { Rolling } from "../window/rolling.ts";
+import type { RollingOptions } from "../window/rolling.ts";
 import { Index } from "./base-index.ts";
 import { RangeIndex } from "./range-index.ts";
 import { Series } from "./series.ts";
@@ -443,6 +450,43 @@ export class DataFrame {
     return new DataFrame(transposedMap, statIndex);
   }
 
+  /**
+   * Pairwise Pearson correlation matrix for all numeric columns.
+   *
+   * Returns a symmetric DataFrame whose row-index and column labels are the
+   * numeric column names.  Diagonal entries are `1.0`.
+   *
+   * @param minPeriods - Minimum valid observation pairs (default 1).
+   *
+   * @example
+   * ```ts
+   * const df = new DataFrame({ a: [1, 2, 3], b: [4, 5, 6] });
+   * df.corr().col("a").at(0); // 1.0
+   * ```
+   */
+  corr(minPeriods = 1): DataFrame {
+    return buildPairwiseDf(this, (a, b) => a.corr(b, minPeriods));
+  }
+
+  /**
+   * Pairwise sample covariance matrix for all numeric columns.
+   *
+   * Returns a symmetric DataFrame whose row-index and column labels are the
+   * numeric column names.  Diagonal entries are the variance of each column.
+   *
+   * @param ddof       - Delta degrees of freedom (default 1).
+   * @param minPeriods - Minimum valid observation pairs (default 1).
+   *
+   * @example
+   * ```ts
+   * const df = new DataFrame({ a: [1, 2, 3], b: [2, 4, 6] });
+   * df.cov().col("a").at(0); // 1.0
+   * ```
+   */
+  cov(ddof = 1, minPeriods = 1): DataFrame {
+    return buildPairwiseDf(this, (a, b) => seriesCov(a, b, ddof, minPeriods));
+  }
+
   // ─── sorting ──────────────────────────────────────────────────────────────
 
   /**
@@ -598,6 +642,81 @@ export class DataFrame {
   /** Return a human-readable string representation of the DataFrame. */
   toString(): string {
     return formatDataFrame(this._columns, this.index, this.columns);
+  }
+
+  // ─── rolling window ───────────────────────────────────────────────────────
+
+  /**
+   * Provide a rolling (sliding-window) view of the DataFrame.
+   *
+   * Aggregations are applied independently to each column.
+   *
+   * @param window  - Size of the moving window (positive integer).
+   * @param options - Optional {@link RollingOptions} (`minPeriods`, `center`).
+   *
+   * @example
+   * ```ts
+   * const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 20, 30, 40] });
+   * df.rolling(2).mean();
+   * // DataFrame: { a: [null, 1.5, 2.5, 3.5], b: [null, 15, 25, 35] }
+   * ```
+   */
+  rolling(window: number, options?: RollingOptions): DataFrameRolling {
+    return new DataFrameRolling(this, window, options);
+  }
+
+  // ─── expanding window ─────────────────────────────────────────────────────
+
+  /**
+   * Provide an expanding (growing-window) view of the DataFrame.
+   *
+   * @param options - Optional {@link ExpandingOptions} (`minPeriods`).
+   *
+   * @example
+   * ```ts
+   * const df = DataFrame.fromColumns({ a: [1, 2, 3] });
+   * df.expanding().mean();
+   * ```
+   */
+  expanding(options?: ExpandingOptions): DataFrameExpanding {
+    return new DataFrameExpanding(this, options);
+  }
+
+  // ─── ewm window ───────────────────────────────────────────────────────────
+
+  /**
+   * Provide an Exponentially Weighted Moving (EWM) view of the DataFrame.
+   *
+   * @param options - {@link EwmOptions} specifying decay via `span`, `com`,
+   *                  `halflife`, or `alpha`.
+   *
+   * @example
+   * ```ts
+   * const df = DataFrame.fromColumns({ a: [1, 2, 3] });
+   * df.ewm({ span: 2 }).mean();
+   * ```
+   */
+  ewm(options: EwmOptions): DataFrameEwm {
+    return new DataFrameEwm(this, options);
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the DataFrame by one or more columns.
+   *
+   * Returns a `DataFrameGroupBy` object that can be used to apply
+   * aggregation, transformation, or filtering operations on each group.
+   *
+   * @example
+   * ```ts
+   * df.groupby("dept").sum();
+   * df.groupby(["dept", "region"]).mean();
+   * ```
+   */
+  groupby(by: string | readonly string[]): DataFrameGroupBy {
+    const cols = typeof by === "string" ? [by] : [...by];
+    return new DataFrameGroupBy(this, cols);
   }
 
   // ─── private helpers ──────────────────────────────────────────────────────
@@ -768,6 +887,98 @@ function compareRows(
   return 0;
 }
 
+// ─── pairwise corr/cov helpers ────────────────────────────────────────────────
+
+/**
+ * Align two Series on their shared index labels and return paired numeric
+ * values, dropping pairs where either value is missing.
+ */
+function alignedNumericPairs(a: Series<Scalar>, b: Series<Scalar>): [number[], number[]] {
+  const bMap = new Map<string, number>();
+  for (let j = 0; j < b.index.size; j++) {
+    bMap.set(String(b.index.at(j)), j);
+  }
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i < a.index.size; i++) {
+    const label = String(a.index.at(i));
+    const j = bMap.get(label);
+    if (j === undefined) {
+      continue;
+    }
+    const av = a.values[i];
+    const bv = b.values[j];
+    if (
+      av === null ||
+      av === undefined ||
+      (typeof av === "number" && Number.isNaN(av)) ||
+      bv === null ||
+      bv === undefined ||
+      (typeof bv === "number" && Number.isNaN(bv)) ||
+      typeof av !== "number" ||
+      typeof bv !== "number"
+    ) {
+      continue;
+    }
+    xs.push(av);
+    ys.push(bv);
+  }
+  return [xs, ys];
+}
+
+/** Sample covariance of two aligned numeric arrays. */
+function seriesCov(a: Series<Scalar>, b: Series<Scalar>, ddof: number, minPeriods: number): number {
+  const [xs, ys] = alignedNumericPairs(a, b);
+  const n = xs.length;
+  if (n < minPeriods || n - ddof <= 0) {
+    return Number.NaN;
+  }
+  let mx = 0;
+  let my = 0;
+  for (let i = 0; i < n; i++) {
+    mx += xs[i] as number;
+    my += ys[i] as number;
+  }
+  mx /= n;
+  my /= n;
+  let s = 0;
+  for (let i = 0; i < n; i++) {
+    s += ((xs[i] as number) - mx) * ((ys[i] as number) - my);
+  }
+  return s / (n - ddof);
+}
+
+/** True when a column's dtype is numeric. */
+function isNumericCol(s: Series<Scalar>): boolean {
+  const k = s.dtype.kind;
+  return k === "int" || k === "uint" || k === "float";
+}
+
+/**
+ * Build a symmetric N×N DataFrame from a pairwise-value function applied to
+ * all numeric columns of `df`.
+ */
+function buildPairwiseDf(
+  df: DataFrame,
+  pairFn: (a: Series<Scalar>, b: Series<Scalar>) => number,
+): DataFrame {
+  const cols = df.columns.values.filter((c) => isNumericCol(df.col(c)));
+  const n = cols.length;
+  const idx = new Index<Label>([...cols]);
+  const colMap = new Map<string, Series<Scalar>>();
+
+  for (let j = 0; j < n; j++) {
+    const cj = cols[j] as string;
+    const vals: Scalar[] = Array.from({ length: n }) as Scalar[];
+    for (let i = 0; i < n; i++) {
+      vals[i] = pairFn(df.col(cols[i] as string), df.col(cj));
+    }
+    colMap.set(cj, new Series<Scalar>({ data: vals, index: idx }));
+  }
+
+  return new DataFrame(colMap, idx);
+}
+
 /** Compute [count, mean, std, min, max] stats for a column. */
 function computeColumnStats(vals: readonly Scalar[]): Scalar[] {
   const nums = vals.filter((v): v is number => typeof v === "number" && !isMissing(v));
@@ -801,4 +1012,248 @@ function formatDataFrame(
   const sepLine = widths.map((w) => "-".repeat(w)).join("  ");
   const dataLines = rows.map((r) => r.map((c, j) => pad(c, widths[j] ?? c.length)).join("  "));
   return [headerLine, sepLine, ...dataLines].join("\n");
+}
+
+// ─── DataFrameRolling ─────────────────────────────────────────────────────────
+
+/**
+ * Sliding-window helper for a {@link DataFrame}.
+ *
+ * Obtain via {@link DataFrame.rolling}:
+ * ```ts
+ * const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+ * df.rolling(2).mean();
+ * // DataFrame with rolling mean applied column-by-column
+ * ```
+ */
+export class DataFrameRolling {
+  private readonly _df: DataFrame;
+  private readonly _window: number;
+  private readonly _options: RollingOptions | undefined;
+
+  constructor(df: DataFrame, window: number, options?: RollingOptions) {
+    if (!Number.isInteger(window) || window < 1) {
+      throw new RangeError(`Rolling window must be a positive integer, got ${window}`);
+    }
+    this._df = df;
+    this._window = window;
+    this._options = options;
+  }
+
+  /** Apply a per-column aggregation method to produce a new DataFrame. */
+  private _applyColAgg(
+    method: (r: Rolling) => { values: readonly Scalar[]; name: string | null },
+  ): DataFrame {
+    const colMap = new Map<string, Series<Scalar>>();
+    for (const colName of this._df.columns.values) {
+      const col = this._df.col(colName);
+      const result = method(new Rolling(col, this._window, this._options));
+      colMap.set(
+        colName,
+        new Series<Scalar>({ data: result.values, index: col.index, name: result.name }),
+      );
+    }
+    return new DataFrame(colMap, this._df.index);
+  }
+
+  /** Rolling mean for each column. */
+  mean(): DataFrame {
+    return this._applyColAgg((r) => r.mean());
+  }
+
+  /** Rolling sum for each column. */
+  sum(): DataFrame {
+    return this._applyColAgg((r) => r.sum());
+  }
+
+  /** Rolling standard deviation for each column. */
+  std(ddof = 1): DataFrame {
+    return this._applyColAgg((r) => r.std(ddof));
+  }
+
+  /** Rolling variance for each column. */
+  var(ddof = 1): DataFrame {
+    return this._applyColAgg((r) => r.var(ddof));
+  }
+
+  /** Rolling minimum for each column. */
+  min(): DataFrame {
+    return this._applyColAgg((r) => r.min());
+  }
+
+  /** Rolling maximum for each column. */
+  max(): DataFrame {
+    return this._applyColAgg((r) => r.max());
+  }
+
+  /** Rolling count of valid observations for each column. */
+  count(): DataFrame {
+    return this._applyColAgg((r) => r.count());
+  }
+
+  /** Rolling median for each column. */
+  median(): DataFrame {
+    return this._applyColAgg((r) => r.median());
+  }
+
+  /**
+   * Apply a custom aggregation function to each column's window.
+   *
+   * @param fn - Receives valid numeric values in each window and must return a number.
+   */
+  apply(fn: (values: readonly number[]) => number): DataFrame {
+    return this._applyColAgg((r) => r.apply(fn));
+  }
+}
+
+// ─── DataFrameExpanding ───────────────────────────────────────────────────────
+
+/**
+ * Expanding (growing-window) helper for a {@link DataFrame}.
+ *
+ * Aggregations are applied independently to each numeric column.
+ *
+ * Obtain via {@link DataFrame.expanding}:
+ * ```ts
+ * const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 20, 30, 40] });
+ * df.expanding().mean();
+ * // DataFrame: { a: [1, 1.5, 2, 2.5], b: [10, 15, 20, 25] }
+ * ```
+ */
+export class DataFrameExpanding {
+  private readonly _df: DataFrame;
+  private readonly _options: ExpandingOptions | undefined;
+
+  constructor(df: DataFrame, options?: ExpandingOptions) {
+    this._df = df;
+    this._options = options;
+  }
+
+  /** Apply a per-column aggregation method to produce a new DataFrame. */
+  private _applyColAgg(
+    method: (e: Expanding) => { values: readonly Scalar[]; name: string | null },
+  ): DataFrame {
+    const colMap = new Map<string, Series<Scalar>>();
+    for (const colName of this._df.columns.values) {
+      const col = this._df.col(colName);
+      const result = method(new Expanding(col, this._options));
+      colMap.set(
+        colName,
+        new Series<Scalar>({ data: result.values, index: col.index, name: result.name }),
+      );
+    }
+    return new DataFrame(colMap, this._df.index);
+  }
+
+  /** Expanding mean for each column. */
+  mean(): DataFrame {
+    return this._applyColAgg((e) => e.mean());
+  }
+
+  /** Expanding sum for each column. */
+  sum(): DataFrame {
+    return this._applyColAgg((e) => e.sum());
+  }
+
+  /** Expanding standard deviation for each column. */
+  std(ddof = 1): DataFrame {
+    return this._applyColAgg((e) => e.std(ddof));
+  }
+
+  /** Expanding variance for each column. */
+  var(ddof = 1): DataFrame {
+    return this._applyColAgg((e) => e.var(ddof));
+  }
+
+  /** Expanding minimum for each column. */
+  min(): DataFrame {
+    return this._applyColAgg((e) => e.min());
+  }
+
+  /** Expanding maximum for each column. */
+  max(): DataFrame {
+    return this._applyColAgg((e) => e.max());
+  }
+
+  /** Expanding count of valid observations for each column. */
+  count(): DataFrame {
+    return this._applyColAgg((e) => e.count());
+  }
+
+  /** Expanding median for each column. */
+  median(): DataFrame {
+    return this._applyColAgg((e) => e.median());
+  }
+
+  /**
+   * Apply a custom aggregation function to each column's expanding window.
+   *
+   * @param fn - Receives valid numeric values in each window and must return a number.
+   */
+  apply(fn: (values: readonly number[]) => number): DataFrame {
+    return this._applyColAgg((e) => e.apply(fn));
+  }
+}
+
+// ─── DataFrameEwm ─────────────────────────────────────────────────────────────
+
+/**
+ * Exponentially Weighted Moving helper for a {@link DataFrame}.
+ *
+ * Aggregations are applied independently to each numeric column.
+ *
+ * Obtain via {@link DataFrame.ewm}:
+ * ```ts
+ * const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 20, 30, 40] });
+ * df.ewm({ span: 3 }).mean();
+ * // DataFrame with EWM mean applied column-by-column
+ * ```
+ */
+export class DataFrameEwm {
+  private readonly _df: DataFrame;
+  private readonly _options: EwmOptions;
+
+  constructor(df: DataFrame, options: EwmOptions) {
+    this._df = df;
+    this._options = options;
+  }
+
+  /** Apply a per-column aggregation method to produce a new DataFrame. */
+  private _applyColAgg(
+    method: (e: EWM) => { values: readonly Scalar[]; name: string | null },
+  ): DataFrame {
+    const colMap = new Map<string, Series<Scalar>>();
+    for (const colName of this._df.columns.values) {
+      const col = this._df.col(colName);
+      const result = method(new EWM(col, this._options));
+      colMap.set(
+        colName,
+        new Series<Scalar>({ data: result.values, index: col.index, name: result.name }),
+      );
+    }
+    return new DataFrame(colMap, this._df.index);
+  }
+
+  /** EWM mean for each column. */
+  mean(): DataFrame {
+    return this._applyColAgg((e) => e.mean());
+  }
+
+  /**
+   * EWM standard deviation for each column.
+   *
+   * @param bias - Whether to use biased (population) std. Defaults to `false`.
+   */
+  std(bias = false): DataFrame {
+    return this._applyColAgg((e) => e.std(bias));
+  }
+
+  /**
+   * EWM variance for each column.
+   *
+   * @param bias - Whether to use biased (population) variance. Defaults to `false`.
+   */
+  var(bias = false): DataFrame {
+    return this._applyColAgg((e) => e.var(bias));
+  }
 }
