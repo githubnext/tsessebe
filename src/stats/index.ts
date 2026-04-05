@@ -24,3 +24,7 @@ export type { Vector, Matrix, LstsqResult } from "./linear-algebra.ts";
 // ─── hypothesis testing ───────────────────────────────────────────────────────
 export { ttest1samp, ttestInd, ttestRel, chi2test, kstest, ztest } from "./hypothesis.ts";
 export type { TestResult } from "./hypothesis.ts";
+
+// ─── pairwise statistics ──────────────────────────────────────────────────────
+export { pairwiseCorr, pairwiseCov, corrwith, rollingCorr, rollCov } from "./pairwise.ts";
+export type { RollingPairwiseOptions } from "./pairwise.ts";

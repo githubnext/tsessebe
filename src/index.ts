@@ -338,3 +338,26 @@ export type { TestResult } from "./stats/index.ts";
 // ─── I/O: to_excel ────────────────────────────────────────────────────────────
 export { toExcel, seriesToExcel } from "./io/index.ts";
 export type { ToExcelOptions } from "./io/index.ts";
+
+// ─── NA singleton ─────────────────────────────────────────────────────────────
+export { NAType, NA, isNA, naIf, naOr } from "./core/index.ts";
+
+// ─── Flags ────────────────────────────────────────────────────────────────────
+export { Flags, DuplicateLabelError, labelsAreUnique, getDuplicateLabels } from "./core/index.ts";
+export type { FlagsOptions } from "./core/index.ts";
+
+// ─── I/O: to_markdown ─────────────────────────────────────────────────────────
+export { toMarkdown, seriesToMarkdown } from "./io/index.ts";
+export type { ToMarkdownOptions, MarkdownAlign } from "./io/index.ts";
+
+// ─── I/O: to_html ─────────────────────────────────────────────────────────────
+export { toHtml, seriesToHtml } from "./io/index.ts";
+export type { ToHtmlOptions } from "./io/index.ts";
+
+// ─── I/O: to_latex ────────────────────────────────────────────────────────────
+export { toLatex, seriesToLatex } from "./io/index.ts";
+export type { ToLatexOptions, LatexColumnAlign } from "./io/index.ts";
+
+// ─── stats: pairwise ─────────────────────────────────────────────────────────
+export { pairwiseCorr, pairwiseCov, corrwith, rollingCorr, rollCov } from "./stats/index.ts";
+export type { RollingPairwiseOptions } from "./stats/index.ts";

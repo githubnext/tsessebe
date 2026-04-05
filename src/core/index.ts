@@ -229,3 +229,10 @@ export {
   AssertionError,
 } from "./testing.ts";
 export type { CheckOptions } from "./testing.ts";
+
+// ─── NA singleton ──────────────────────────────────────────────────────────────
+export { NAType, NA, isNA, naIf, naOr } from "./na-type.ts";
+
+// ─── Flags ────────────────────────────────────────────────────────────────────
+export { Flags, DuplicateLabelError, labelsAreUnique, getDuplicateLabels } from "./flags.ts";
+export type { FlagsOptions } from "./flags.ts";

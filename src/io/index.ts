@@ -27,3 +27,15 @@ export type { ToParquetOptions, ParquetColumnSchema, ParquetMetadata } from "./t
 // ─── to_excel ─────────────────────────────────────────────────────────────────
 export { toExcel, seriesToExcel } from "./to_excel.ts";
 export type { ToExcelOptions } from "./to_excel.ts";
+
+// ─── to_markdown ──────────────────────────────────────────────────────────────
+export { toMarkdown, seriesToMarkdown } from "./to_markdown.ts";
+export type { ToMarkdownOptions, MarkdownAlign } from "./to_markdown.ts";
+
+// ─── to_html ──────────────────────────────────────────────────────────────────
+export { toHtml, seriesToHtml } from "./to_html.ts";
+export type { ToHtmlOptions } from "./to_html.ts";
+
+// ─── to_latex ─────────────────────────────────────────────────────────────────
+export { toLatex, seriesToLatex } from "./to_latex.ts";
+export type { ToLatexOptions, LatexColumnAlign } from "./to_latex.ts";
