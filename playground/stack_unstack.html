@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — stack / unstack</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>stack / unstack</h1>
+<p class="subtitle">Pivot column labels into the row index and back — mirrors <code>pandas.DataFrame.stack()</code> / <code>pandas.Series.unstack()</code>.</p>
+
+<section>
+  <h2>1 — Basic stack</h2>
+  <p><code>stack(df)</code> rotates column labels into the row index, producing a flat <code>Series</code>.
+     Index labels take the form <code>"rowLabel|colName"</code>.</p>
+  <pre><code id="ex1-code">import { DataFrame, stack } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { A: [1, 2, 3], B: [4, 5, 6] },
+  { index: ["x", "y", "z"] },
+);
+
+const s = stack(df, { dropna: false });
+console.log([...s.index.values]); // ["x|A","x|B","y|A","y|B","z|A","z|B"]
+console.log([...s.values]);        // [1, 4, 2, 5, 3, 6]
+</code></pre>
+  <div class="output" id="ex1-out">▶ run</div>
+</section>
+
+<section>
+  <h2>2 — stack drops null by default</h2>
+  <p>Like pandas, <code>stack()</code> silently omits cells whose value is <code>null</code> or <code>NaN</code>.
+     Pass <code>{ dropna: false }</code> to keep them.</p>
+  <pre><code id="ex2-code">import { DataFrame, stack } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { score: [10, null, 30], bonus: [null, 2, 3] },
+  { index: ["a", "b", "c"] },
+);
+
+// default: dropna=true
+const s = stack(df);
+console.log([...s.index.values]); // ["a|score","b|bonus","c|score","c|bonus"]
+console.log([...s.values]);        // [10, 2, 30, 3]
+
+// keep nulls
+const sFull = stack(df, { dropna: false });
+console.log([...sFull.index.values]);
+// ["a|score","a|bonus","b|score","b|bonus","c|score","c|bonus"]
+console.log([...sFull.values]);
+// [10, null, null, 2, 30, 3]
+</code></pre>
+  <div class="output" id="ex2-out">▶ run</div>
+</section>
+
+<section>
+  <h2>3 — unstack: recover the original DataFrame</h2>
+  <p><code>unstack(s)</code> is the inverse of <code>stack(df, { dropna: false })</code>.
+     It parses the compound index labels and reconstructs the grid.</p>
+  <pre><code id="ex3-code">import { DataFrame, stack, unstack } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { A: [1, 2], B: [3, 4] },
+  { index: ["x", "y"] },
+);
+
+const s = stack(df, { dropna: false });
+const recovered = unstack(s);
+
+console.log([...recovered.index.values]);   // ["x", "y"]
+console.log([...recovered.columns.values]); // ["A", "B"]
+console.log(recovered.toRecords());
+// [{ A: 1, B: 3 }, { A: 2, B: 4 }]
+</code></pre>
+  <div class="output" id="ex3-out">▶ run</div>
+</section>
+
+<section>
+  <h2>4 — unstack fills missing cells</h2>
+  <p>When <code>stack</code> was called with <code>dropna=true</code> (the default), some
+     <code>(row, col)</code> combinations are absent.  <code>unstack</code> fills them with
+     <code>null</code> by default; pass <code>fill_value</code> to use a different filler.</p>
+  <pre><code id="ex4-code">import { DataFrame, stack, unstack } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { revenue: [100, null, 300], cost: [null, 50, 60] },
+  { index: ["jan", "feb", "mar"] },
+);
+
+// stack drops nulls by default
+const s = stack(df);
+
+// unstack with fill_value=0
+const recovered = unstack(s, { fill_value: 0 });
+console.log(recovered.toRecords());
+// [{ revenue:100, cost:0 }, { revenue:0, cost:50 }, { revenue:300, cost:60 }]
+</code></pre>
+  <div class="output" id="ex4-out">▶ run</div>
+</section>
+
+<section>
+  <h2>5 — Custom separator</h2>
+  <p>If your row-index labels or column names contain <code>"|"</code>, choose a different
+     separator for both <code>stack</code> and <code>unstack</code>.</p>
+  <pre><code id="ex5-code">import { DataFrame, stack, unstack } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { "col-A": [10, 20], "col-B": [30, 40] },
+  { index: ["row-1", "row-2"] },
+);
+
+const s = stack(df, { sep: "::", dropna: false });
+console.log([...s.index.values]);
+// ["row-1::col-A","row-1::col-B","row-2::col-A","row-2::col-B"]
+
+const recovered = unstack(s, { sep: "::" });
+console.log([...recovered.index.values]);   // ["row-1","row-2"]
+console.log([...recovered.columns.values]); // ["col-A","col-B"]
+</code></pre>
+  <div class="output" id="ex5-out">▶ run</div>
+</section>
+
+<section>
+  <h2>6 — Reshape workflow: stack → filter → unstack</h2>
+  <p>A common pattern: stack to long format, filter rows, then unstack back to wide.</p>
+  <pre><code id="ex6-code">import { DataFrame, stack, unstack } from "tsb";
+
+// Quarterly sales by product
+const df = DataFrame.fromColumns(
+  {
+    widgets:  [120, 80,  150, 200],
+    gadgets:  [60,  null, 90,  110],
+    gizmos:   [30,  45,  null, 70],
+  },
+  { index: ["Q1", "Q2", "Q3", "Q4"] },
+);
+
+// Stack (drops nulls), filter to values > 80, then unstack
+const s = stack(df);  // dropna=true by default
+const filtered = s.filter(s.values.map((v) => (v as number) > 80));
+const result = unstack(filtered, { fill_value: 0 });
+
+console.log([...result.index.values]);
+console.log(result.toRecords());
+</code></pre>
+  <div class="output" id="ex6-out">▶ run</div>
+</section>
+
+<script>
+  document.querySelectorAll("section").forEach((sec, i) => {
+    const id = `ex${i + 1}`;
+    const code = document.getElementById(`${id}-code`)?.textContent ?? "";
+    const out  = document.getElementById(`${id}-out`);
+    if (out) {
+      out.addEventListener("click", () => {
+        out.textContent = "⏳ running…";
+        runTsb(code).then((res) => { out.textContent = res; }).catch((e) => { out.textContent = `❌ ${e}`; });
+      });
+    }
+  });
+</script>
+</body>
+</html>
