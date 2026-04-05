@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Series.dt Datetime Accessor</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0d1117;
+        color: #e6edf3;
+      }
+      h1 { color: #58a6ff; }
+      h2 { color: #79c0ff; border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
+      h3 { color: #7ee787; }
+      pre {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 1rem;
+        overflow-x: auto;
+      }
+      code { color: #e6edf3; font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 0.9em; }
+      .output {
+        background: #0a0e14;
+        border: 1px solid #30363d;
+        border-left: 3px solid #7ee787;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        font-family: monospace;
+        font-size: 0.9em;
+        white-space: pre;
+      }
+      .error { border-left-color: #f85149; color: #f85149; }
+      button {
+        background: #238636;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.4rem 1rem;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin-top: 0.5rem;
+      }
+      button:hover { background: #2ea043; }
+      .nav { margin-bottom: 2rem; }
+      .nav a { color: #58a6ff; text-decoration: none; margin-right: 1rem; }
+      .nav a:hover { text-decoration: underline; }
+      .badge {
+        display: inline-block;
+        background: #1f6feb;
+        color: #fff;
+        border-radius: 12px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.75em;
+        margin-left: 0.5rem;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="nav">
+      <a href="index.html">← All features</a>
+    </div>
+
+    <h1>Series.dt <span class="badge">New</span></h1>
+    <p>
+      The <code>dt</code> accessor provides vectorised datetime operations on a
+      <code>Series&lt;Date&gt;</code>, mirroring
+      <a href="https://pandas.pydata.org/docs/reference/series.html#datetime-methods"
+         style="color:#58a6ff">pandas <code>Series.dt</code></a>.
+      All methods propagate <code>null</code> / <code>undefined</code> unchanged.
+    </p>
+
+    <h2>1 — Calendar Components</h2>
+    <p>Extract individual date/time fields from each element.</p>
+    <pre><code id="code1">import { Series } from "tsb";
+
+const dates = new Series({
+  data: [
+    new Date("2024-01-15T09:30:00"),
+    new Date("2024-07-04T18:00:00"),
+    new Date("2024-12-31T23:59:59"),
+  ],
+  name: "events",
+});
+
+console.log("year  :", dates.dt.year().toArray());
+console.log("month :", dates.dt.month().toArray());
+console.log("day   :", dates.dt.day().toArray());
+console.log("hour  :", dates.dt.hour().toArray());
+console.log("minute:", dates.dt.minute().toArray());
+console.log("second:", dates.dt.second().toArray());</code></pre>
+    <button onclick="run(1)">▶ Run</button>
+    <div class="output" id="out1">Click Run to execute</div>
+
+    <h2>2 — Day of Week &amp; Quarter</h2>
+    <p>
+      <code>dayofweek()</code> returns Monday=0, Sunday=6 (same as pandas).
+      <code>quarter()</code> returns 1–4.
+    </p>
+    <pre><code id="code2">import { Series } from "tsb";
+
+const dates = new Series({
+  data: [
+    new Date("2024-07-15"),  // Monday
+    new Date("2024-07-14"),  // Sunday
+    new Date("2024-04-01"),  // Q2 start
+    new Date("2024-10-15"),  // Q4
+  ],
+});
+
+console.log("dayofweek:", dates.dt.dayofweek().toArray());
+console.log("quarter  :", dates.dt.quarter().toArray());
+console.log("dayofyear:", dates.dt.dayofyear().toArray());</code></pre>
+    <button onclick="run(2)">▶ Run</button>
+    <div class="output" id="out2">Click Run to execute</div>
+
+    <h2>3 — Boolean Properties</h2>
+    <p>Check whether dates fall on month/quarter/year boundaries.</p>
+    <pre><code id="code3">import { Series } from "tsb";
+
+const dates = new Series({
+  data: [
+    new Date("2024-01-01"),  // year start
+    new Date("2024-03-31"),  // Q1 end, month end
+    new Date("2024-02-29"),  // month end (leap year)
+    new Date("2024-12-31"),  // year end
+    new Date("2024-07-15"),  // ordinary day
+  ],
+});
+
+console.log("is_year_start   :", dates.dt.is_year_start().toArray());
+console.log("is_quarter_end  :", dates.dt.is_quarter_end().toArray());
+console.log("is_month_end    :", dates.dt.is_month_end().toArray());
+console.log("is_year_end     :", dates.dt.is_year_end().toArray());
+console.log("is_leap_year    :", dates.dt.is_leap_year().toArray());
+console.log("days_in_month   :", dates.dt.days_in_month().toArray());</code></pre>
+    <button onclick="run(3)">▶ Run</button>
+    <div class="output" id="out3">Click Run to execute</div>
+
+    <h2>4 — strftime Formatting</h2>
+    <p>Format dates using strftime-style directives.</p>
+    <pre><code id="code4">import { Series } from "tsb";
+
+const dates = new Series({
+  data: [
+    new Date("2024-03-15T09:05:03"),
+    new Date("2024-12-31T23:59:59"),
+  ],
+});
+
+console.log("ISO date   :", dates.dt.strftime("%Y-%m-%d").toArray());
+console.log("US date    :", dates.dt.strftime("%m/%d/%Y").toArray());
+console.log("Datetime   :", dates.dt.strftime("%Y-%m-%d %H:%M:%S").toArray());
+console.log("Friendly   :", dates.dt.strftime("%A, %B %d %Y").toArray());
+console.log("Short month:", dates.dt.strftime("%b %d, %Y").toArray());</code></pre>
+    <button onclick="run(4)">▶ Run</button>
+    <div class="output" id="out4">Click Run to execute</div>
+
+    <h2>5 — Normalization &amp; Rounding</h2>
+    <p>
+      <code>normalize()</code> strips the time component (floor to midnight).
+      <code>floor()</code>, <code>ceil()</code>, and <code>round()</code> support
+      units: <code>"D"</code> (day), <code>"H"</code> (hour), <code>"T"</code>/<code>"min"</code> (minute),
+      <code>"S"</code> (second), <code>"L"</code>/<code>"ms"</code> (millisecond).
+    </p>
+    <pre><code id="code5">import { Series } from "tsb";
+
+const ts = new Series({
+  data: [new Date("2024-03-15T14:37:28.750")],
+});
+
+const fmt = (d: Date | null) => d?.toISOString() ?? "null";
+
+console.log("original   :", ts.dt.strftime("%H:%M:%S").toArray());
+console.log("normalize  :", (ts.dt.normalize().toArray() as Date[]).map(fmt));
+console.log("floor(H)   :", (ts.dt.floor("H").toArray() as Date[]).map(fmt));
+console.log("ceil(H)    :", (ts.dt.ceil("H").toArray() as Date[]).map(fmt));
+console.log("round(T)   :", (ts.dt.round("T").toArray() as Date[]).map(fmt));</code></pre>
+    <button onclick="run(5)">▶ Run</button>
+    <div class="output" id="out5">Click Run to execute</div>
+
+    <h2>6 — Null Propagation</h2>
+    <p>Like pandas, all <code>dt</code> methods propagate <code>null</code> unchanged.</p>
+    <pre><code id="code6">import { Series } from "tsb";
+
+const mixed = new Series({
+  data: [new Date("2024-01-15"), null, new Date("2024-07-04")],
+});
+
+console.log("year  :", mixed.dt.year().toArray());
+console.log("month :", mixed.dt.month().toArray());
+console.log("fmt   :", mixed.dt.strftime("%Y-%m-%d").toArray());</code></pre>
+    <button onclick="run(6)">▶ Run</button>
+    <div class="output" id="out6">Click Run to execute</div>
+
+    <h2>7 — total_seconds &amp; date()</h2>
+    <p>
+      <code>total_seconds()</code> returns the Unix timestamp in seconds.
+      <code>date()</code> returns the date portion (midnight-normalized).
+    </p>
+    <pre><code id="code7">import { Series } from "tsb";
+
+const dates = new Series({
+  data: [new Date("2024-01-01T12:30:00Z")],
+});
+
+console.log("total_seconds:", dates.dt.total_seconds().toArray());
+console.log("date         :", (dates.dt.date().toArray() as Date[]).map(d => d.toISOString()));</code></pre>
+    <button onclick="run(7)">▶ Run</button>
+    <div class="output" id="out7">Click Run to execute</div>
+
+    <h2>8 — Combining dt with Other Accessors</h2>
+    <p>Chain <code>dt</code> with <code>str</code> operations or use multiple accessors together.</p>
+    <pre><code id="code8">import { Series } from "tsb";
+
+const dates = new Series({
+  data: [
+    new Date("2024-01-15"),
+    new Date("2024-06-20"),
+    new Date("2024-11-07"),
+  ],
+});
+
+// Format as ISO and then process as strings
+const formatted = dates.dt.strftime("%Y-%m-%d");
+console.log("Formatted dates  :", formatted.toArray());
+console.log("Year part (str)  :", (formatted as any).str.slice(0, 4).toArray());
+
+// Group by quarter
+const quarters = dates.dt.quarter();
+console.log("Quarters         :", quarters.toArray());
+
+// Is weekend (Sat=5, Sun=6)
+const dow = dates.dt.dayofweek();
+console.log("Day of week      :", dow.toArray());</code></pre>
+    <button onclick="run(8)">▶ Run</button>
+    <div class="output" id="out8">Click Run to execute</div>
+
+    <script type="module">
+      // Runtime: load tsb from the local build
+      async function loadTsb() {
+        try {
+          return await import("/src/index.ts");
+        } catch {
+          // fallback: return a stub so the page at least loads
+          return null;
+        }
+      }
+
+      const tsb = await loadTsb();
+
+      window.run = function (n) {
+        const outEl = document.getElementById(`out${n}`);
+        const codeEl = document.getElementById(`code${n}`);
+        if (!outEl || !codeEl) return;
+
+        if (!tsb) {
+          outEl.textContent =
+            "⚠️  tsb module not available in this static preview.\n" +
+            "Run `bun run playground` to start the dev server.";
+          outEl.classList.add("error");
+          return;
+        }
+
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => {
+          logs.push(args.map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" "));
+        };
+
+        try {
+          const code = codeEl.textContent
+            .replace(/import \{ (.*?) \} from "tsb";/g, "const { $1 } = tsb;");
+          // eslint-disable-next-line no-new-func
+          new Function("tsb", code)(tsb);
+          outEl.textContent = logs.join("\n") || "(no output)";
+          outEl.classList.remove("error");
+        } catch (e) {
+          outEl.textContent = `Error: ${e.message}`;
+          outEl.classList.add("error");
+        } finally {
+          console.log = origLog;
+        }
+      };
+    </script>
+  </body>
+</html>
