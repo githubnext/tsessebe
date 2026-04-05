@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T18:47:00Z |
-| Iteration Count | 67 |
-| Best Metric | 23 |
+| Last Run | 2026-04-05T19:16:00Z |
+| Iteration Count | 68 |
+| Best Metric | 24 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #54 |
@@ -39,25 +39,26 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 23 files (iter 67). Next candidates:
+Now at 24 files (iter 68). Next candidates:
 - `src/core/interval.ts` — Interval / IntervalIndex
-- `src/stats/rank.ts` — rank() as standalone (already in frame.ts inline)
 - `src/core/categorical_index.ts` — CategoricalIndex
+- `src/core/nlargest.ts` — nlargest/nsmallest standalone utilities
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 68 (rank, 23→24)**: `rankSeries` + `rankDataFrame` as standalone stat functions (no circular deps). CC kept ≤15 by extracting `fillValidRanks` + `fillMissingRanks` helpers from `rankValues`. `noUncheckedIndexedAccess`: `Map.get(i)` returns `T|undefined` — check `!== undefined` before use. In `rankByRow`, array indexing `colData[j]` returns `number[]|undefined` — check before assign. `== null` (loose) catches both null and undefined for `r == null ? NaN : r`. `noExcessiveCognitiveComplexity`: ternary chains inside nested loops push CC over 15 even without `if` statements — extract helpers. `useBlockStatements`: all single-line `if` bodies must use `{}`. Remove unused imports (`Label` was imported but not needed once `Scalar` covers it).
 - **Iter 67 (MultiIndex, 22→23)**: Standalone class (no DataFrame method) avoids circular deps. Levels+codes internal representation (canonical pandas format). Factory methods: `fromTuples`, `fromArrays`, `fromProduct` (Cartesian). `cartesianProduct` helper: compute totals with a backward `for` loop (not `reduceRight` with spread — `noAccumulatingSpread`). `useSimplifiedLogicExpression`: replace `!a && !b` with `if (a || b) continue`. CC in comparison: split into `compareScalars` (non-null) + `comparePosition` (null-safe) + `compareTuples` (outer). `compareScalars` takes `number | string | boolean` not `Label` to avoid null comparison TS error. Tests import from `src/index.ts` barrel; `fc` as default import not namespace.
 - **Iter 65 (ewm, 20→21)**: `EwmSeriesLike` must include `toArray()` (same as Rolling/Expanding patterns). Online algorithm: track S (weighted sum), W (sum of weights), W2 (sum of squared weights) for O(n) mean+var. Extract `computeCov`/`computeCorr` top-level helpers to keep `_covImpl`/`corr` CC≤15. EWM import needs alphabetical sort: `ewm.ts` before `expanding.ts` (e-w < e-x). Shorthand assignments (`*=`) required by biome for `Sxy *= decay` etc. Use `**` not `Math.pow`. EWM corr state tracks Sx, Sy, Sx2, Sy2, Sxy, W, W2 — all decay on missing if `ignoreNa=false`.
-- **Iter 66 (stack/unstack, 21→22)**: Standalone functions (no DataFrame method) to avoid circular deps — same as melt/pivot pattern. Compound string labels `"rowLabel|colName"` with configurable sep. `uniqueOrdered()` helper preserves insertion order. `buildCellMap` + `buildOutputCols` keep CC≤15. `string[]` assignable to `Label[]` without `as` cast (string ⊆ Label). RangeIndex not needed for empty result — use `DataFrame.fromColumns({})`. No `as` casts needed.
-- **Iter 64 (melt+pivot, 18→20)**: Two reshape features in one iteration. `melt()` uses helper functions to keep CC≤15: `requireColumns`, `resolveValueVars`, `initIdColData`, `appendIdRow`. `pivot()` decomposes into `fillPivotCells` + `fillPivotCell`. `pivotTable` uses `buildGroups` + `assembleResult` + `fillOutRow` + `buildOutColNames`. Column order for multi-value pivot: outer=valuesCols, inner=colHeaders (matches pandas MultiIndex convention). `noMisplacedAssertion`: use pure helper that returns value (not asserts) to extract logic from property tests.
-- **Iter 63 (expanding+cat, 16→18)**: Two features in one iteration to beat previous best (17 on a branch with fewer files). `CatHolder` class wraps `CatSeriesLike` to preserve explicit category list through chained calls (addCategories→removeUnused etc.). `noNestedTernary` in sort comparator — use explicit if/else. Import order matters for `organizeImports` lint rule. `(mapping as unknown as Record<string, unknown>)[key]` works for safe indexing after non-array narrowing.
-- **Iter 62 (expanding, 16→17)**: `ExpandingSeriesLike` interface (mirrors `RollingSeriesLike`) avoids circular imports. `DataFrameExpanding` appended to `frame.ts`. Default `minPeriods=1` (not window size like Rolling). `count()` ignores minPeriods (matches pandas). `std(0)` returns 0 for single-element (population std). Property tests: count non-decreasing, max≥min, sum/mean manual verification.
-- **Iter 61 (rolling, 15→16)**: Use `RollingSeriesLike` interface (like `StringSeriesLike`) to avoid circular imports. `DataFrameRolling` lives in `frame.ts` not `window/rolling.ts`. `_applyColAgg` takes `{ values, name }` return type and creates `Series<Scalar>` inline. `Array.from({length:n}, ():Scalar => null)` for null-init arrays.
-- **Iter 60 (corr/cov, 14→15)**: `Series.at()` label-based; use `.values[i]` for positional. `Index.filter()` doesn't exist — use `.values.filter()`. Extract helper functions for CC≤15.
-- **Iter 59 (readJson/toJson, 13→14)**: `noPropertyAccessFromIndexSignature` + Biome `useLiteralKeys` conflict — use `getProp(obj,key)` helper. Always add `default` to exhaustive switches.
-- **Iter 58 (readCsv/toCsv, 12→13)**: Extract `parseForcedBool/Int/Float` for CC≤15. `Array.from(..., ():T=>[])` needs explicit return type. `lines[n] as string` safe after bounds check.
+- **Iter 66 (stack/unstack)**: Standalone functions to avoid circular deps. Compound labels `"rowLabel|colName"`. `buildCellMap` + `buildOutputCols` keep CC≤15. `string[]` assignable to `Label[]` without `as` cast.
+- **Iter 64 (melt+pivot)**: Two features in one iteration. Helper functions for CC≤15. Column order for multi-value pivot: outer=valuesCols, inner=colHeaders. `noMisplacedAssertion`: use pure helper returning value not asserting.
+- **Iter 63 (expanding+cat)**: `CatHolder` class preserves category metadata through chained calls. `noNestedTernary` — use explicit if/else. Import order matters for `organizeImports`.
+- **Iter 62 (expanding)**: `ExpandingSeriesLike` interface avoids circular imports. `DataFrameExpanding` in `frame.ts`. Default `minPeriods=1`. `count()` ignores minPeriods.
+- **Iter 61 (rolling)**: `RollingSeriesLike` interface avoids circular imports. `DataFrameRolling` in `frame.ts`. `Array.from({length:n}, ():Scalar => null)` for null-init arrays.
+- **Iter 60 (corr/cov)**: `Series.at()` label-based — use `.values[i]` positional. `Index.filter()` doesn't exist — use `.values.filter()`. Extract helpers for CC≤15.
+- **Iter 59 (readJson/toJson)**: `noPropertyAccessFromIndexSignature` + Biome `useLiteralKeys` → use `getProp(obj,key)` helper. Always add `default` to exhaustive switches.
+- **Iter 58 (readCsv/toCsv)**: Extract `parseForcedBool/Int/Float` for CC≤15. `Array.from(..., ():T=>[])` needs explicit return type. `lines[n] as string` safe after bounds check.
 - **Iter 57 (describe+quantile, 11→12)**: `noNonNullAssertion`: use `as number` not `!`. `useBlockStatements`: wrap single-line `if`. All-null array gets object dtype — use explicit `dtype: Dtype.float64`.
 - **Iters 53–56**: `StringSeriesLike`/`DatetimeSeriesLike` pattern for accessors. Top-level regex. Split large fns for CC≤15. Barrel files for `useImportRestrictions`. `import type` for type-only imports. `useForOf` where index not needed.
 
@@ -80,6 +81,14 @@ Now at 23 files (iter 67). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 68 — 2026-04-05 19:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24008535770)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/rank.ts` — `rankSeries()` + `rankDataFrame()` mirroring `pandas.Series.rank()` / `DataFrame.rank()`. Tie methods: average/min/max/first/dense. NaN: keep/top/bottom. pct rank. axis=0/1 for DataFrame. 40+ unit tests + 6 property tests. Playground: `rank.html`.
+- **Metric**: 24 (previous: 23, delta: +1)
+- **Commit**: 792e2db
+- **Notes**: Standalone stats function. CC reduced by splitting `rankValues` into `fillValidRanks`+`fillMissingRanks`. `noUncheckedIndexedAccess`: `Map.get()` returns `T|undefined` — check before use. `== null` for null+undefined in `r == null ? NaN : r`.
 
 ### Iteration 67 — 2026-04-05 18:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24008035023)
 
