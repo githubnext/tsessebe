@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — corr &amp; cov</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="breadcrumb">
+      <a href="index.html">tsb playground</a> › corr &amp; cov
+    </nav>
+
+    <h1>corr &amp; cov — Pearson Correlation &amp; Covariance</h1>
+    <p class="intro">
+      <code>DataFrame.corr()</code>, <code>DataFrame.cov()</code>, and
+      <code>Series.corr()</code> mirror
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html"
+        >pandas <code>DataFrame.corr()</code></a
+      >
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.cov.html"
+        >pandas <code>DataFrame.cov()</code></a
+      >.
+      The standalone <code>pearsonCorr(a, b)</code> and
+      <code>dataFrameCorr(df)</code> / <code>dataFrameCov(df)</code> functions
+      provide the same functionality.
+    </p>
+
+    <section class="tutorial">
+      <h2>1 — Series.corr() — Pearson correlation between two Series</h2>
+      <p>
+        <code>a.corr(b)</code> computes the Pearson correlation coefficient
+        between Series <em>a</em> and <em>b</em>, aligning on shared index
+        labels and ignoring missing values.  Returns a number in [−1, 1], or
+        <code>NaN</code> when a valid result cannot be computed.
+      </p>
+      <div class="editor" id="series-corr-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const temperature = new tsb.Series({ data: [22, 24, 28, 31, 35], name: "temp_C" });
+const ice_cream   = new tsb.Series({ data: [120, 145, 190, 230, 285], name: "sales" });
+
+const r = temperature.corr(ice_cream);
+console.log("Pearson r:", r.toFixed(4));   // strong positive correlation
+
+// Negative correlation
+const warm_clothes = new tsb.Series({ data: [310, 280, 210, 150, 90], name: "jackets" });
+console.log("r (temp vs jackets):", temperature.corr(warm_clothes).toFixed(4));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="series-corr-editor">▶ Run</button>
+      <pre class="output" id="series-corr-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>2 — DataFrame.corr() — pairwise correlation matrix</h2>
+      <p>
+        <code>df.corr()</code> returns a symmetric N×N DataFrame where entry
+        [i, j] is the Pearson correlation between columns <em>i</em> and
+        <em>j</em>.  Diagonal entries are always 1.  Only numeric columns are
+        included; string columns are silently skipped.
+      </p>
+      <div class="editor" id="df-corr-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  height: [160, 172, 185, 155, 168],
+  weight: [55,   72,  90,  48,  65],
+  age:    [22,   35,  28,  19,  31],
+  city:   ["A", "B", "C", "A", "B"],  // non-numeric — skipped
+});
+
+const r = df.corr();
+console.log("columns:", [...r.columns.values]);
+console.log("shape:", r.shape);
+
+// Read off-diagonal entries via iat() (positional access)
+const rHW = r.col("weight").iat(0);  // corr(height, weight)
+const rHA = r.col("age").iat(0);     // corr(height, age)
+console.log("height–weight r:", rHW.toFixed(4));
+console.log("height–age r:   ", rHA.toFixed(4));
+console.log("diagonal:", [r.col("height").iat(0), r.col("weight").iat(1), r.col("age").iat(2)]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="df-corr-editor">▶ Run</button>
+      <pre class="output" id="df-corr-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>3 — DataFrame.cov() — pairwise covariance matrix</h2>
+      <p>
+        <code>df.cov()</code> returns the sample covariance matrix (denominator
+        <em>n − 1</em>).  Pass <code>ddof=0</code> for population covariance.
+        Diagonal entries are the variance of each column.
+      </p>
+      <div class="editor" id="df-cov-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const returns = tsb.DataFrame.fromColumns({
+  AAPL: [ 0.02,  0.01, -0.03,  0.04,  0.01],
+  GOOG: [ 0.01,  0.02, -0.02,  0.03,  0.02],
+  TSLA: [-0.05,  0.08, -0.10,  0.12, -0.03],
+});
+
+const cov = returns.cov();
+console.log("Covariance matrix:");
+for (const col of cov.columns.values) {
+  const vals = [...cov.col(col).values].map(v => (v).toFixed(6));
+  console.log(col + ":", vals.join("  "));
+}
+
+// Compare sample (ddof=1) vs population (ddof=0) variance
+const varAAPL_sample = returns.cov(1).col("AAPL").iat(0);
+const varAAPL_pop    = returns.cov(0).col("AAPL").iat(0);
+console.log("\nAAPL sample variance:", varAAPL_sample.toFixed(6));
+console.log("AAPL population variance:", varAAPL_pop.toFixed(6));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="df-cov-editor">▶ Run</button>
+      <pre class="output" id="df-cov-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>4 — Handling missing values and index alignment</h2>
+      <p>
+        All functions align on shared index labels (inner join) and silently
+        drop pairs where either value is <code>null</code> or
+        <code>NaN</code>.  Use <code>minPeriods</code> to require a minimum
+        number of valid observation pairs.
+      </p>
+      <div class="editor" id="missing-editor">
+<pre class="code" contenteditable="true" spellcheck="false">// Different indices — only shared labels are used
+const a = new tsb.Series({ data: [1, 2, 3, 4], index: ["w", "x", "y", "z"] });
+const b = new tsb.Series({ data: [5, 6, 7, 8], index: ["x", "y", "z", "q"] });
+// shared: x(2,5), y(3,6), z(4,7)
+console.log("corr (inner join):", tsb.pearsonCorr(a, b).toFixed(4));  // 1.0
+
+// Missing values are dropped per-pair
+const c = new tsb.Series({ data: [1, null, 3, 4] });
+const d = new tsb.Series({ data: [2,    4, 6, 8] });
+// null at position 1 is dropped; pairs (1,2),(3,6),(4,8) remain
+console.log("corr (nulls dropped):", tsb.pearsonCorr(c, d).toFixed(4));  // 1.0
+
+// Require at least 5 valid pairs — returns NaN when fewer exist
+console.log("corr (minPeriods=5):", tsb.pearsonCorr(c, d, { minPeriods: 5 }));  // NaN
+</pre>
+      </div>
+      <button class="run-btn" data-editor="missing-editor">▶ Run</button>
+      <pre class="output" id="missing-output"></pre>
+    </section>
+
+    <script type="module">
+      import * as tsb from "./tsb.js";
+      window.tsb = tsb;
+
+      document.querySelectorAll(".run-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const editorId = btn.getAttribute("data-editor");
+          const outputId = editorId.replace("-editor", "-output");
+          const code = document.getElementById(editorId).querySelector(".code").innerText;
+          const output = document.getElementById(outputId);
+          const logs = [];
+          const origLog = console.log;
+          console.log = (...args) => logs.push(args.map(String).join(" "));
+          try {
+            new Function("tsb", code)(tsb);
+            output.textContent = logs.join("\n");
+            output.classList.remove("error");
+          } catch (e) {
+            output.textContent = "Error: " + e.message;
+            output.classList.add("error");
+          } finally {
+            console.log = origLog;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
