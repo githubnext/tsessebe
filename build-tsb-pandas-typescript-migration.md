@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T14:45:57Z |
-| Iteration Count | 59 |
-| Best Metric | 14 |
+| Last Run | 2026-04-05T15:11:55Z |
+| Iteration Count | 60 |
+| Best Metric | 15 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #49 |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -39,15 +39,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 14 files (iter 59). Next candidates:
+Now at 15 files (iter 60). Next candidates:
 - `src/core/cat_accessor.ts` — Series.cat categorical accessor
-- `src/stats/corr.ts` — DataFrame.corr(), DataFrame.cov(), Series.corr()
 - `src/reshape/pivot.ts` — DataFrame.pivot_table()
+- `src/window/rolling.ts` — Rolling window (mean, sum, std)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 60 (corr/cov, 14→15)**: `Series.at(label)` is label-based; use `series.values[i]` or `series.iat(i)` for positional access in alignment loops. `Index.filter()` does not exist — use `index.values.filter()`. Extract helper functions (`collectCorrPairs`, `pearsonCorrFromArrays`) to keep CC≤15. Test assertions on labeled DataFrames: use `.iat(i)` not `.at(i)` for positional access. Property test on cov: same fix.
 - **Iter 59 (readJson/toJson, 13→14)**: TypeScript's `noPropertyAccessFromIndexSignature` conflicts with Biome's `useLiteralKeys` for index-signature types. Solution: add a `getProp(obj, key)` helper that uses bracket notation internally — TypeScript is happy (bracket notation), Biome is happy (variable key, not string literal). `JsonValue` recursive type: use `interface JsonObject` with index signature + `type JsonValue = ... | JsonObject`. `useDefaultSwitchClause`: always add `default` clause to switches even when exhaustive. Test assertions: use specific interface types (not `Record<string,T>`) to avoid `noPropertyAccessFromIndexSignature` errors.
 - **Iter 58 (readCsv/toCsv, 12→13)**: All regex at top level. `Number.parseInt`/`Number.parseFloat`. Extract helpers to keep CC≤15 (`parseForcedBool`, `parseForcedInt`, `parseForcedFloat`). `noUncheckedIndexedAccess`: `lines[n] as string` for index access after bounds check. `Array.from({ length }, (): string[] => [])` — explicit return type for factory fn. Tests: `toBeNull()` for null values; avoid `as` casts in test assertions when possible.
 - **Iter 57 (describe+quantile, 11→12)**: `noNonNullAssertion` — replace `arr[i]!` with `arr[i] as T`. `useBlockStatements` requires `{ }` around single-line `if` returns. Biome auto-fix handles most formatting, `--unsafe` handles `useBlockStatements`. `Series<unknown>` not valid (unknown doesn't extend Scalar) — use `Series<Scalar>` in test casts. All-null Series has `object` dtype, not `float` — use explicit `dtype: Dtype.float64` to test empty numeric path.
@@ -66,15 +67,23 @@ Now at 14 files (iter 59). Next candidates:
 
 ## 🔭 Future Directions
 
-**New branch (iter 53–59)**: 14 files — Series, DataFrame, GroupBy, concat, merge, str accessor, dt accessor, stats/describe, io/csv, io/json.
+**New branch (iter 53–60)**: 15 files — Series, DataFrame, GroupBy, concat, merge, str accessor, dt accessor, stats/describe, io/csv, io/json, stats/corr.
 
-**Next**: cat accessor · stats/corr · pivot_table
+**Next**: cat accessor · pivot_table · rolling window
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 60 — 2026-04-05 15:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24004259683)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/corr.ts` — `pearsonCorr()`, `dataFrameCorr()`, `dataFrameCov()` standalone functions + `Series.corr()`, `DataFrame.corr()`, `DataFrame.cov()` methods. Index-aligned, null-propagating. 34 unit + property-based tests. Playground: `playground/corr.html`.
+- **Metric**: 15 (previous: 14, delta: +1)
+- **Commit**: a44aff5
+- **Notes**: `Series.at()` is label-based — always use `.values[i]` or `.iat(i)` for positional index access. Extract helpers to satisfy CC≤15 rule.
 
 ### Iteration 59 — 2026-04-05 14:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24003815679)
 
