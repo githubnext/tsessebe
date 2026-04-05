@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — readCsv &amp; toCsv</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="breadcrumb">
+      <a href="index.html">tsb playground</a> › readCsv &amp; toCsv
+    </nav>
+
+    <h1>readCsv &amp; toCsv — CSV I/O</h1>
+    <p class="intro">
+      <code>readCsv()</code> and <code>toCsv()</code> mirror
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html"
+        >pandas <code>read_csv()</code></a
+      >
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_csv.html"
+        >pandas <code>DataFrame.to_csv()</code></a
+      >.
+      Parse CSV text into a <code>DataFrame</code> with automatic dtype inference,
+      and serialize any <code>DataFrame</code> back to CSV with full formatting control.
+    </p>
+
+    <section class="tutorial">
+      <h2>1 — Parse a CSV string</h2>
+      <p>
+        The simplest call is <code>readCsv(text)</code>.  The first row is the header,
+        subsequent rows are data.  Column dtypes are inferred automatically.
+      </p>
+      <div class="editor" id="basic-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const csv = `name,age,score
+alice,30,88.5
+bob,25,92.0
+carol,35,75.3`;
+
+const df = tsb.readCsv(csv);
+console.log("shape:", df.shape);
+console.log("columns:", [...df.columns.values]);
+console.log("name dtype :", df.col("name").dtype.name);
+console.log("age dtype  :", df.col("age").dtype.name);
+console.log("score dtype:", df.col("score").dtype.name);
+console.log("names:", [...df.col("name").values]);
+console.log("ages :", [...df.col("age").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="basic-editor">▶ Run</button>
+      <pre class="output" id="basic-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>2 — Missing values (NA)</h2>
+      <p>
+        Empty fields, <code>NA</code>, <code>NaN</code>, <code>null</code>, <code>None</code>,
+        and several other sentinel strings are automatically converted to <code>null</code>.
+        Pass extra strings via <code>naValues</code>.
+      </p>
+      <div class="editor" id="na-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const csv = `x,y
+1,
+2,NA
+3,?
+4,5`;
+
+// "?" added as an extra NA value
+const df = tsb.readCsv(csv, { naValues: ["?"] });
+console.log("x:", [...df.col("x").values]);
+console.log("y:", [...df.col("y").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="na-editor">▶ Run</button>
+      <pre class="output" id="na-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>3 — Quoted fields &amp; custom separator</h2>
+      <p>
+        Fields containing the separator, quotes, or newlines can be wrapped in double-quotes.
+        Use <code>sep</code> to change the delimiter (tab, semicolon, pipe, etc.).
+      </p>
+      <div class="editor" id="quoted-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const csv = `name;note
+"Smith, Jr.";Senior developer
+"O'Brien";"Joined ""the team"" in 2020"
+Jones;Junior`;
+
+const df = tsb.readCsv(csv, { sep: ";" });
+console.log("name[0]:", df.col("name").values[0]);
+console.log("note[1]:", df.col("note").values[1]);
+console.log("name[2]:", df.col("name").values[2]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="quoted-editor">▶ Run</button>
+      <pre class="output" id="quoted-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>4 — Index column</h2>
+      <p>
+        Set <code>indexCol</code> to a column name or position to use that column
+        as the row index instead of the default <code>RangeIndex</code>.
+      </p>
+      <div class="editor" id="index-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const csv = `id,city,pop
+A,London,9000000
+B,Paris,2200000
+C,Berlin,3700000`;
+
+const df = tsb.readCsv(csv, { indexCol: "id" });
+console.log("index:", [...df.index.values]);
+console.log("columns:", [...df.columns.values]);
+console.log("city at A:", df.col("city").at("A"));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="index-editor">▶ Run</button>
+      <pre class="output" id="index-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>5 — Limiting rows</h2>
+      <p>
+        Use <code>nRows</code> to read only the first N data rows, and
+        <code>skipRows</code> to skip rows at the start.
+      </p>
+      <div class="editor" id="limit-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const csv = `val
+10
+20
+30
+40
+50`;
+
+const first3 = tsb.readCsv(csv, { nRows: 3 });
+console.log("nRows=3:", [...first3.col("val").values]);
+
+const skip2 = tsb.readCsv(csv, { skipRows: 2 });
+console.log("skipRows=2:", [...skip2.col("val").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="limit-editor">▶ Run</button>
+      <pre class="output" id="limit-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>6 — Serialize with toCsv</h2>
+      <p>
+        <code>toCsv(df)</code> converts a <code>DataFrame</code> back to a CSV string.
+        Control index inclusion, header, separator, and NA representation.
+      </p>
+      <div class="editor" id="tocsv-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  name: ["alice", "bob", "carol"],
+  score: [88, 92, 75],
+});
+
+// Default: includes index and header
+console.log("--- with index ---");
+console.log(tsb.toCsv(df));
+
+// Without index
+console.log("--- no index ---");
+console.log(tsb.toCsv(df, { index: false }));
+
+// Semicolon separator, custom NA rep
+const df2 = tsb.DataFrame.fromColumns({ x: [1, null, 3] });
+console.log("--- semicolons + NA rep ---");
+console.log(tsb.toCsv(df2, { sep: ";", index: false, naRep: "MISSING" }));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="tocsv-editor">▶ Run</button>
+      <pre class="output" id="tocsv-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>7 — Round-trip</h2>
+      <p>
+        A <code>DataFrame</code> serialized with <code>toCsv</code> can be
+        reconstructed with <code>readCsv</code> without data loss.
+      </p>
+      <div class="editor" id="roundtrip-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const original = tsb.DataFrame.fromColumns({
+  x: [1, 2, 3, 4, 5],
+  y: [10.1, 20.2, 30.3, 40.4, 50.5],
+  label: ["a", "b", "c", "d", "e"],
+});
+
+const csv = tsb.toCsv(original, { index: false });
+console.log("CSV:\n" + csv);
+
+const restored = tsb.readCsv(csv);
+console.log("restored x:", [...restored.col("x").values]);
+console.log("restored y:", [...restored.col("y").values]);
+console.log("restored label:", [...restored.col("label").values]);
+console.log("shapes match:", JSON.stringify(original.shape) === JSON.stringify(restored.shape));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="roundtrip-editor">▶ Run</button>
+      <pre class="output" id="roundtrip-output"></pre>
+    </section>
+
+    <script src="playground-runtime.js"></script>
+  </body>
+</html>

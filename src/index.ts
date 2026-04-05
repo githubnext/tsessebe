@@ -47,3 +47,5 @@ export { DataFrameGroupBy, SeriesGroupBy } from "./groupby/index.ts";
 export type { AggFn, AggName, AggSpec } from "./groupby/index.ts";
 export { describe, quantile } from "./stats/index.ts";
 export type { DescribeOptions } from "./stats/index.ts";
+export { readCsv, toCsv } from "./io/index.ts";
+export type { ReadCsvOptions, ToCsvOptions } from "./io/index.ts";
