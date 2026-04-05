@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — readJson &amp; toJson</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="breadcrumb">
+      <a href="index.html">tsb playground</a> › readJson &amp; toJson
+    </nav>
+
+    <h1>readJson &amp; toJson — JSON I/O</h1>
+    <p class="intro">
+      <code>readJson()</code> and <code>toJson()</code> mirror
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_json.html"
+        >pandas <code>read_json()</code></a
+      >
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_json.html"
+        >pandas <code>DataFrame.to_json()</code></a
+      >.
+      Parse JSON text into a <code>DataFrame</code> and serialize any
+      <code>DataFrame</code> back to JSON, supporting five orient formats.
+    </p>
+
+    <section class="tutorial">
+      <h2>1 — Parse records JSON (default)</h2>
+      <p>
+        The <code>"records"</code> orient is an array of row objects — the most
+        natural JSON format for tabular data.  It is also the auto-detected
+        default when the input is a JSON array.
+      </p>
+      <div class="editor" id="records-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const json = `[
+  {"name": "alice", "age": 30, "score": 88.5},
+  {"name": "bob",   "age": 25, "score": 92.0},
+  {"name": "carol", "age": 35, "score": 75.3}
+]`;
+
+const df = tsb.readJson(json);
+console.log("shape:", df.shape);
+console.log("columns:", [...df.columns.values]);
+console.log("names:", [...df.col("name").values]);
+console.log("ages :", [...df.col("age").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="records-editor">▶ Run</button>
+      <pre class="output" id="records-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>2 — Split orient</h2>
+      <p>
+        The <code>"split"</code> orient stores columns, index, and data
+        separately — compact and lossless.  It is auto-detected when the root
+        object contains <code>"columns"</code> and <code>"data"</code> keys.
+      </p>
+      <div class="editor" id="split-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const json = JSON.stringify({
+  columns: ["x", "y"],
+  index: [10, 20, 30],
+  data: [[1, 4], [2, 5], [3, 6]],
+});
+
+const df = tsb.readJson(json);
+console.log("orient auto-detected:", "split");
+console.log("shape:", df.shape);
+console.log("index:", [...df.index.values]);
+console.log("x:", [...df.col("x").values]);
+console.log("y:", [...df.col("y").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="split-editor">▶ Run</button>
+      <pre class="output" id="split-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>3 — Index orient</h2>
+      <p>
+        The <code>"index"</code> orient uses row-index labels as keys, each
+        mapping to a record of column values.
+      </p>
+      <div class="editor" id="index-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const json = JSON.stringify({
+  "r0": { a: 1, b: "foo" },
+  "r1": { a: 2, b: "bar" },
+  "r2": { a: 3, b: "baz" },
+});
+
+const df = tsb.readJson(json, { orient: "index" });
+console.log("shape:", df.shape);
+console.log("index:", [...df.index.values]);
+console.log("a:", [...df.col("a").values]);
+console.log("b:", [...df.col("b").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="index-editor">▶ Run</button>
+      <pre class="output" id="index-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>4 — Columns orient</h2>
+      <p>
+        The <code>"columns"</code> orient uses column names as keys, each
+        mapping to an object of index-label → value pairs.  Useful for
+        column-major storage.
+      </p>
+      <div class="editor" id="columns-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const json = JSON.stringify({
+  x: { "0": 10, "1": 20, "2": 30 },
+  y: { "0": 1.1, "1": 2.2, "2": 3.3 },
+});
+
+const df = tsb.readJson(json, { orient: "columns" });
+console.log("shape:", df.shape);
+console.log("index:", [...df.index.values]);
+console.log("x:", [...df.col("x").values]);
+console.log("y:", [...df.col("y").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="columns-editor">▶ Run</button>
+      <pre class="output" id="columns-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>5 — Values orient</h2>
+      <p>
+        The <code>"values"</code> orient is a plain 2-D array — no index or
+        column labels.  Columns are auto-named <code>"0"</code>,
+        <code>"1"</code>, etc.
+      </p>
+      <div class="editor" id="values-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const json = "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]";
+
+const df = tsb.readJson(json, { orient: "values" });
+console.log("shape:", df.shape);
+console.log("columns:", [...df.columns.values]);
+console.log("col 0:", [...df.col("0").values]);
+</pre>
+      </div>
+      <button class="run-btn" data-editor="values-editor">▶ Run</button>
+      <pre class="output" id="values-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>6 — Serialize with toJson()</h2>
+      <p>
+        <code>toJson(df, options)</code> serializes a <code>DataFrame</code>
+        to a JSON string.  Choose any orient and optionally pretty-print with
+        <code>indent</code>.
+      </p>
+      <div class="editor" id="tojson-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  city:  ["New York", "London", "Tokyo"],
+  pop:   [8_336_817, 8_982_000, 13_960_000],
+  gdp:   [1.6, 0.6, 1.0],
+});
+
+console.log("--- records (compact) ---");
+console.log(tsb.toJson(df));
+
+console.log("--- split (indented) ---");
+console.log(tsb.toJson(df, { orient: "split", indent: 2 }));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="tojson-editor">▶ Run</button>
+      <pre class="output" id="tojson-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>7 — Round-trip</h2>
+      <p>
+        A <code>DataFrame</code> serialized with <code>toJson</code> can be
+        reconstructed with <code>readJson</code> without data loss.
+      </p>
+      <div class="editor" id="roundtrip-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const original = tsb.DataFrame.fromColumns({
+  x: [1, 2, 3, 4, 5],
+  label: ["a", "b", "c", "d", "e"],
+});
+
+const json = tsb.toJson(original, { orient: "split" });
+const restored = tsb.readJson(json);
+
+console.log("JSON:", json);
+console.log("x restored:", [...restored.col("x").values]);
+console.log("label restored:", [...restored.col("label").values]);
+console.log("shapes match:", JSON.stringify(original.shape) === JSON.stringify(restored.shape));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="roundtrip-editor">▶ Run</button>
+      <pre class="output" id="roundtrip-output"></pre>
+    </section>
+
+    <script src="playground-runtime.js"></script>
+  </body>
+</html>
