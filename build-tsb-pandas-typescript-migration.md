@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T21:25:00Z |
-| Iteration Count | 72 |
-| Best Metric | 28 |
+| Last Run | 2026-04-05T21:50:00Z |
+| Iteration Count | 73 |
+| Best Metric | 29 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #54 |
@@ -39,15 +39,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 28 files (iter 72). Next candidates:
+Now at 29 files (iter 73). Next candidates:
 - `src/core/interval.ts` — Interval / IntervalIndex
 - `src/core/categorical_index.ts` — CategoricalIndex
-- `src/stats/where_mask.ts` — `where()` / `mask()` conditional selection/replacement
+- `src/stats/compare.ts` — `eq()`, `ne()`, `lt()`, `gt()`, `le()`, `ge()` element-wise comparison ops
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 73 (where/mask, 28→29)**: `whereSeries`/`maskSeries`/`whereDataFrame`/`maskDataFrame`. Three condition types: element-wise predicate, boolean `Series`/array, boolean `DataFrame`. `applyCondition` shared helper with `keepWhenTrue` flag. `resolveSeriesCond` + `resolveDataFrameCond` dispatch functions. Missing column in cond-DataFrame defaults all-false. Property test: `where` + `mask` partition every element (exactly one keeps original).
 - **Iter 72 (value_counts, 27→28)**: `valueCounts`/`dataFrameValueCounts` as standalone stat functions. `scalarKey` mapper for stable Map keys. `buildCountMap` uses `Map<key,{label,count}>`. `df.get(name)` not `df.tryCol()`. `import type` for type-only imports. Biome: `as number` not `!` for non-null assertions. Wire barrel exports in same commit.
 - **Iter 71 (elem_ops, 26→27)**: `mapNumeric` helper + `makeClipFn`/`makeRoundFn` closures. `Number.NEGATIVE_INFINITY`/`Number.POSITIVE_INFINITY` not bare `Infinity`. Named exports `seriesAbs`/`seriesRound` avoid collision with built-ins. `colWiseElem` for DataFrame column-wise transforms.
 - **Iter 70 (cum_ops, 25→26)**: `cumulateNum`/`cumulateSc` helpers. `poisoned` flag for skipna=false. `isFiniteNum`/`isNonNull` type guards. `Number.NaN`, `vals.at(-1)`.
@@ -66,15 +67,23 @@ Now at 28 files (iter 72). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 72)**: 28 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts.
+**Current state (iter 73)**: 29 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask.
 
-**Next**: Interval/IntervalIndex · CategoricalIndex · where()/mask() conditional ops
+**Next**: Interval/IntervalIndex · CategoricalIndex · element-wise comparison ops (eq/ne/lt/gt/le/ge)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 73 — 2026-04-05 21:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24011120613)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/where_mask.ts` — `whereSeries`, `maskSeries`, `whereDataFrame`, `maskDataFrame`. Conditional value selection/replacement with predicate, boolean Series/array, or boolean DataFrame conditions.
+- **Metric**: 29 (previous: 28, delta: +1)
+- **Commit**: e36528b
+- **Notes**: Three condition types unified by `resolveSeriesCond`/`resolveDataFrameCond` dispatch. `applyCondition` helper with `keepWhenTrue` flag shared by where/mask. Property test verifies where+mask partition every element.
 
 ### Iteration 72 — 2026-04-05 21:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24010521196)
 
