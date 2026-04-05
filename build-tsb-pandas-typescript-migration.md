@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T22:09:00Z |
-| Iteration Count | 74 |
-| Best Metric | 30 |
+| Last Run | 2026-04-05T22:50:00Z |
+| Iteration Count | 75 |
+| Best Metric | 31 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #54 |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -39,15 +39,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 30 files (iter 74). Next candidates:
+Now at 31 files (iter 75). Next candidates:
 - `src/core/interval.ts` — Interval / IntervalIndex
 - `src/core/categorical_index.ts` — CategoricalIndex
-- `src/stats/shift_diff.ts` — `shift()` / `diff()` for Series and DataFrame
+- `src/stats/interpolate.ts` — `interpolate()` for Series (linear/polynomial)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 75 (shift_diff, 30→31)**: `shiftSeries`/`diffSeries` and `dataFrameShift`/`dataFrameDiff`. `shiftVals` with separate positive/negative paths. `diffVals` supports positive/negative periods with `isFiniteNum` guard. Inline arrow functions need explicit return types (`(): Scalar[] =>`) for Biome `useExplicitType`. Property tests: length preserved; shift(n)+shift(-n) round-trips inner slice; shift fills nulls; diff equals current-previous for finite sequences.
 - **Iter 74 (compare, 29→30)**: `seriesEq`/`seriesNe`/`seriesLt`/`seriesGt`/`seriesLe`/`seriesGe` and DataFrame counterparts. `compareScalars` dispatch fn with `isComparable` guard. Returns `Scalar[]` (not `boolean[]`) so constructor types align. Property tests: lt+ge and gt+le partition every finite-numeric element (exactly one true, no overlap, no gap). Missing values (null/NaN) always yield false, matching pandas NaN convention.
 - **Iter 73 (where/mask, 28→29)**: `whereSeries`/`maskSeries`/`whereDataFrame`/`maskDataFrame`. Three condition types: element-wise predicate, boolean `Series`/array, boolean `DataFrame`. `applyCondition` shared helper with `keepWhenTrue` flag. `resolveSeriesCond` + `resolveDataFrameCond` dispatch functions. Missing column in cond-DataFrame defaults all-false. Property test: `where` + `mask` partition every element (exactly one keeps original).
 - **Iter 72 (value_counts, 27→28)**: `valueCounts`/`dataFrameValueCounts` as standalone stat functions. `scalarKey` mapper for stable Map keys. `buildCountMap` uses `Map<key,{label,count}>`. `df.get(name)` not `df.tryCol()`. `import type` for type-only imports. Biome: `as number` not `!` for non-null assertions. Wire barrel exports in same commit.
@@ -77,6 +78,14 @@ Now at 30 files (iter 74). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 75 — 2026-04-05 22:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24012145919)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/shift_diff.ts` — `shiftSeries`, `diffSeries`, `dataFrameShift`, `dataFrameDiff`. Position shifting (positive=lag, negative=lead) and discrete differences for Series and DataFrame.
+- **Metric**: 31 (previous: 30, delta: +1)
+- **Commit**: 3b646bd
+- **Notes**: `shiftVals` fills exposed positions with null; `diffVals` returns NaN when either operand is non-numeric. Explicit return types on inline arrow functions required by Biome `useExplicitType`. Full property test suite.
 
 ### Iteration 74 — 2026-04-05 22:09 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24011536762)
 
