@@ -138,3 +138,10 @@ export type {
   InterpolateOptions,
   DataFrameInterpolateOptions,
 } from "./stats/index.ts";
+export { fillnaSeries, fillnaDataFrame } from "./stats/index.ts";
+export type {
+  FillnaMethod,
+  FillnaSeriesOptions,
+  ColumnFillMap,
+  FillnaDataFrameOptions,
+} from "./stats/index.ts";

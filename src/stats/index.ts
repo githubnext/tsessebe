@@ -57,6 +57,13 @@ export type {
   InterpolateOptions,
   DataFrameInterpolateOptions,
 } from "./interpolate.ts";
+export { fillnaSeries, fillnaDataFrame } from "./fillna.ts";
+export type {
+  FillnaMethod,
+  FillnaSeriesOptions,
+  ColumnFillMap,
+  FillnaDataFrameOptions,
+} from "./fillna.ts";
 export { describe, quantile } from "./describe.ts";
 export type { DescribeOptions } from "./describe.ts";
 export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./corr.ts";
