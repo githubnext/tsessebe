@@ -308,3 +308,33 @@ export type { ToParquetOptions, ParquetColumnSchema, ParquetMetadata } from "./i
 // ─── stats: linear algebra ────────────────────────────────────────────────────
 export { dot, outer, vadd, vsub, vscale, norm, matmul, transpose, matvec, lstsq, det } from "./stats/index.ts";
 export type { Vector, Matrix, LstsqResult } from "./stats/index.ts";
+
+// ─── sparse arrays ────────────────────────────────────────────────────────────
+export { SparseArray, SparseDtype } from "./core/index.ts";
+export type { SparseFillValue } from "./core/index.ts";
+
+// ─── date offsets ─────────────────────────────────────────────────────────────
+export {
+  DateOffset,
+  BusinessDay,
+  MonthEnd,
+  MonthBegin,
+  YearEnd,
+  YearBegin,
+  BaseOffset,
+  addOffset,
+  dateRange,
+} from "./core/index.ts";
+export type { OffsetUnit } from "./core/index.ts";
+
+// ─── testing utilities ────────────────────────────────────────────────────────
+export { assertSeriesEqual, assertDataFrameEqual, assertIndexEqual, AssertionError } from "./core/index.ts";
+export type { CheckOptions } from "./core/index.ts";
+
+// ─── hypothesis testing ───────────────────────────────────────────────────────
+export { ttest1samp, ttestInd, ttestRel, chi2test, kstest, ztest } from "./stats/index.ts";
+export type { TestResult } from "./stats/index.ts";
+
+// ─── I/O: to_excel ────────────────────────────────────────────────────────────
+export { toExcel, seriesToExcel } from "./io/index.ts";
+export type { ToExcelOptions } from "./io/index.ts";

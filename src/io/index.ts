@@ -23,3 +23,7 @@ export type { ReadExcelOptions } from "./read_excel.ts";
 // ─── to_parquet ───────────────────────────────────────────────────────────────
 export { toParquet, parquetSchema } from "./to_parquet.ts";
 export type { ToParquetOptions, ParquetColumnSchema, ParquetMetadata } from "./to_parquet.ts";
+
+// ─── to_excel ─────────────────────────────────────────────────────────────────
+export { toExcel, seriesToExcel } from "./to_excel.ts";
+export type { ToExcelOptions } from "./to_excel.ts";

@@ -202,3 +202,30 @@ export type { NumericErrors, ToNumericOptions } from "./numeric.ts";
 // ─── Period / PeriodIndex ─────────────────────────────────────────────────────
 export { Period, PeriodIndex, periodRange } from "./period.ts";
 export type { PeriodFreq } from "./period.ts";
+
+// ─── sparse arrays ────────────────────────────────────────────────────────────
+export { SparseArray, SparseDtype } from "./sparse.ts";
+export type { SparseFillValue } from "./sparse.ts";
+
+// ─── date offsets ─────────────────────────────────────────────────────────────
+export {
+  DateOffset,
+  BusinessDay,
+  MonthEnd,
+  MonthBegin,
+  YearEnd,
+  YearBegin,
+  addOffset,
+  dateRange,
+} from "./offsets.ts";
+export type { OffsetUnit } from "./offsets.ts";
+export { BaseOffset } from "./offsets.ts";
+
+// ─── testing utilities ────────────────────────────────────────────────────────
+export {
+  assertSeriesEqual,
+  assertDataFrameEqual,
+  assertIndexEqual,
+  AssertionError,
+} from "./testing.ts";
+export type { CheckOptions } from "./testing.ts";

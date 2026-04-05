@@ -20,3 +20,7 @@ export {
 // ─── linear algebra ───────────────────────────────────────────────────────────
 export { dot, outer, vadd, vsub, vscale, norm, matmul, transpose, matvec, lstsq, det } from "./linear-algebra.ts";
 export type { Vector, Matrix, LstsqResult } from "./linear-algebra.ts";
+
+// ─── hypothesis testing ───────────────────────────────────────────────────────
+export { ttest1samp, ttestInd, ttestRel, chi2test, kstest, ztest } from "./hypothesis.ts";
+export type { TestResult } from "./hypothesis.ts";
