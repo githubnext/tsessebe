@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · ANOVA</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Analysis of Variance (ANOVA)</h1>
+    <p class="subtitle">
+      Test whether group means differ significantly.
+      <code>oneWayAnova</code> tests a single factor; <code>twoWayAnova</code> tests two factors
+      and optionally an interaction term.
+    </p>
+
+    <h2>1 · One-way ANOVA: clearly different groups</h2>
+    <div class="card">
+      <textarea id="ex1" rows="16">
+// Three groups with very different means
+const groupA = [2, 3, 4];        // mean ≈ 3
+const groupB = [10, 11, 12];     // mean ≈ 11
+const groupC = [20, 21, 22];     // mean ≈ 21
+
+const result = tsb.oneWayAnova([groupA, groupB, groupC]);
+
+console.log("F-statistic:", result.fStatistic.toFixed(2));
+// → very large F (groups are well separated)
+
+console.log("p-value:", result.pValue.toExponential(3));
+// → tiny p-value: reject H0 (means are different)
+
+console.log("df between:", result.dfBetween, "df within:", result.dfWithin);
+
+// Print the ANOVA summary table
+const tbl = result.table;
+const cols = tbl.columns.values;
+for (let i = 0; i < tbl.index.size; i++) {
+  const row = cols.map(c => String(tbl.col(c).values[i] ?? "").slice(0, 12).padEnd(14)).join("");
+  console.log(row);
+}
+      </textarea>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <pre id="out1"></pre>
+    </div>
+
+    <h2>2 · One-way ANOVA: groups with same mean (H₀ not rejected)</h2>
+    <div class="card">
+      <textarea id="ex2" rows="10">
+// All groups drawn from the same distribution
+const g1 = [5, 6, 5, 6];
+const g2 = [5, 6, 5, 6];
+const g3 = [5, 6, 5, 6];
+
+const result = tsb.oneWayAnova([g1, g2, g3]);
+
+console.log("F-statistic:", result.fStatistic.toFixed(4)); // ≈ 0
+console.log("p-value:", result.pValue.toFixed(4));          // close to 1.0
+      </textarea>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <pre id="out2"></pre>
+    </div>
+
+    <h2>3 · Two-way ANOVA (no interaction)</h2>
+    <div class="card">
+      <textarea id="ex3" rows="20">
+// Balanced 2x2 design: Factor A (fertilizer), Factor B (watering)
+// 3 plants per cell
+const yield_ = [5,6,7,  8,9,10,  3,4,5,  6,7,8];
+const fert   = ["low","low","low", "low","low","low",
+                "high","high","high", "high","high","high"];
+const water  = ["rain","rain","rain", "drip","drip","drip",
+                "rain","rain","rain", "drip","drip","drip"];
+
+const result = tsb.twoWayAnova(yield_, fert, water);
+
+for (const row of result.rows) {
+  const f = row.f !== null ? row.f.toFixed(3) : "—";
+  const p = row.pValue !== null ? row.pValue.toFixed(4) : "—";
+  console.log(row.source.padEnd(14), "SS:", row.ss.toFixed(2).padStart(8), " F:", f, " p:", p);
+}
+      </textarea>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <pre id="out3"></pre>
+    </div>
+
+    <h2>4 · Two-way ANOVA with interaction term</h2>
+    <div class="card">
+      <textarea id="ex4" rows="18">
+// Same data, now include A×B interaction
+const yield_ = [5,6,7,  8,9,10,  3,4,5,  6,7,8];
+const fert   = ["low","low","low","low","low","low",
+                "high","high","high","high","high","high"];
+const water  = ["rain","rain","rain","drip","drip","drip",
+                "rain","rain","rain","drip","drip","drip"];
+
+const result = tsb.twoWayAnova(yield_, fert, water, { interaction: true });
+
+console.log("ANOVA table (with interaction):");
+for (const row of result.rows) {
+  const f = row.f !== null ? row.f.toFixed(3) : "—";
+  const p = row.pValue !== null ? row.pValue.toFixed(4) : "—";
+  console.log(row.source.padEnd(14), "df:", String(row.df).padStart(3), " F:", f, " p:", p);
+}
+      </textarea>
+      <button onclick="run('ex4','out4')">▶ Run</button>
+      <pre id="out4"></pre>
+    </div>
+
+    <script type="module">
+      // Load tsb from the built source
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
+    </script>
+    <script>
+      function run(inputId, outputId) {
+        const code = document.getElementById(inputId).value;
+        const out = document.getElementById(outputId);
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(String).join(" "));
+        try {
+          // eslint-disable-next-line no-new-func
+          new Function("tsb", code)(window.tsb);
+          out.textContent = logs.join("\n");
+          out.className = "";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "error";
+        } finally {
+          console.log = origLog;
+        }
+      }
+      window.run = run;
+    </script>
+  </body>
+</html>

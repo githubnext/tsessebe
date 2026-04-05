@@ -36,3 +36,7 @@ export type { BootstrapOptions, BootstrapResult } from "./bootstrap.ts";
 // ─── contingency ──────────────────────────────────────────────────────────────
 export { contingencyTable, chi2Contingency, fisherExact } from "./contingency.ts";
 export type { Chi2Result, FisherResult } from "./contingency.ts";
+
+// ─── anova ────────────────────────────────────────────────────────────────────
+export { oneWayAnova, twoWayAnova } from "./anova.ts";
+export type { AnovaRow, OneWayAnovaResult, TwoWayAnovaResult, TwoWayAnovaOptions } from "./anova.ts";

@@ -260,3 +260,7 @@ export type { JsonNormalizeOptions, JsonRecord, JsonValue } from "./json.ts";
 
 // ─── eval / query ─────────────────────────────────────────────────────────────
 export { evalDataFrame, queryDataFrame } from "./eval.ts";
+
+// ─── resample ─────────────────────────────────────────────────────────────────
+export { resampleSeries, resampleDataFrame, asfreq, SeriesResampler, DataFrameResampler } from "./resample.ts";
+export type {} from "./resample.ts";

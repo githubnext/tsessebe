@@ -417,3 +417,18 @@ export type { Chi2Result, FisherResult } from "./stats/index.ts";
 // ─── core: memory_usage ───────────────────────────────────────────────────────
 export { memoryUsage, dataFrameMemoryUsage } from "./core/index.ts";
 export type { MemoryUsageOptions } from "./core/index.ts";
+
+// ─── stats: anova ─────────────────────────────────────────────────────────────
+export { oneWayAnova, twoWayAnova } from "./stats/index.ts";
+export type { AnovaRow, OneWayAnovaResult, TwoWayAnovaResult, TwoWayAnovaOptions } from "./stats/index.ts";
+
+// ─── core: resample ───────────────────────────────────────────────────────────
+export { resampleSeries, resampleDataFrame, asfreq, SeriesResampler, DataFrameResampler } from "./core/index.ts";
+
+// ─── I/O: read_orc ────────────────────────────────────────────────────────────
+export { readOrc } from "./io/index.ts";
+export type { OrcDecoder, ReadOrcOptions } from "./io/index.ts";
+
+// ─── I/O: read_feather ────────────────────────────────────────────────────────
+export { readFeather, toFeather } from "./io/index.ts";
+export type { ArrowDecoder, ArrowEncoder, ReadFeatherOptions, ToFeatherOptions } from "./io/index.ts";

@@ -59,3 +59,11 @@ export type { ReadXmlOptions } from "./read_xml.ts";
 // ─── sql ──────────────────────────────────────────────────────────────────────
 export { readSql, toSql } from "./sql.ts";
 export type { SqlConnection, ReadSqlOptions, ToSqlOptions } from "./sql.ts";
+
+// ─── read_orc ─────────────────────────────────────────────────────────────────
+export { readOrc } from "./read_orc.ts";
+export type { OrcDecoder, ReadOrcOptions } from "./read_orc.ts";
+
+// ─── read_feather ─────────────────────────────────────────────────────────────
+export { readFeather, toFeather } from "./read_feather.ts";
+export type { ArrowDecoder, ArrowEncoder, ReadFeatherOptions, ToFeatherOptions } from "./read_feather.ts";

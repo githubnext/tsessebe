@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Resample</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Time-based Resampling</h1>
+    <p class="subtitle">
+      Aggregate time-series data into regular time buckets.
+      <code>resampleSeries(s, "D")</code> mirrors <code>pandas.Series.resample("D")</code>.
+      Supported rules: <code>D</code>, <code>W</code>, <code>ME</code>, <code>QE</code>,
+      <code>YE</code>, <code>h</code>, <code>min</code>, <code>s</code>, <code>ms</code>
+      — with optional multiplier prefix like <code>"2D"</code>, <code>"15min"</code>.
+    </p>
+
+    <h2>1 · Daily sum</h2>
+    <div class="card">
+      <textarea id="ex1" rows="14">
+// Intra-day observations resampled to daily sums
+const s = new tsb.Series({
+  data:  [10, 20, 30, 40, 50, 60],
+  index: [
+    "2024-01-01", "2024-01-01",
+    "2024-01-02", "2024-01-02",
+    "2024-01-03", "2024-01-03",
+  ],
+  name: "sales",
+});
+
+const daily = tsb.resampleSeries(s, "D").sum();
+console.log("Daily sums:");
+for (let i = 0; i < daily.index.size; i++) {
+  console.log(`  ${daily.index.values[i]}: ${daily.values[i]}`);
+}
+      </textarea>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <pre id="out1"></pre>
+    </div>
+
+    <h2>2 · Monthly mean</h2>
+    <div class="card">
+      <textarea id="ex2" rows="18">
+// Daily observations collapsed to monthly mean
+const dates = [
+  "2024-01-05","2024-01-15","2024-01-25",
+  "2024-02-05","2024-02-15","2024-02-25",
+  "2024-03-10",
+];
+const values = [100, 120, 110, 200, 180, 210, 90];
+
+const s = new tsb.Series({ data: values, index: dates, name: "temp" });
+const monthly = tsb.resampleSeries(s, "ME").mean();
+
+console.log("Monthly averages:");
+for (let i = 0; i < monthly.index.size; i++) {
+  console.log(`  ${monthly.index.values[i]}: ${monthly.values[i].toFixed(1)}`);
+}
+      </textarea>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <pre id="out2"></pre>
+    </div>
+
+    <h2>3 · Yearly max</h2>
+    <div class="card">
+      <textarea id="ex3" rows="16">
+// Annual maximum temperature
+const s = new tsb.Series({
+  data:  [15, 32, 28, 5, 38, 12, 41],
+  index: [
+    "2022-01-01","2022-07-15","2022-12-01",
+    "2023-02-10","2023-08-20","2023-11-05",
+    "2024-06-01",
+  ],
+  name: "maxTemp",
+});
+
+const yearly = tsb.resampleSeries(s, "YE").max();
+console.log("Yearly maximums:");
+for (let i = 0; i < yearly.index.size; i++) {
+  console.log(`  ${yearly.index.values[i]}: ${yearly.values[i]}°C`);
+}
+      </textarea>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <pre id="out3"></pre>
+    </div>
+
+    <h2>4 · DataFrame resampling</h2>
+    <div class="card">
+      <textarea id="ex4" rows="20">
+// Multi-column DataFrame — resample all columns at once
+const df = tsb.DataFrame.fromColumns({
+  revenue: [100, 150, 200, 120, 80, 300],
+  cost:    [60,  90,  110, 70,  50, 180],
+}, {
+  index: [
+    "2024-01-10","2024-01-20",
+    "2024-02-05","2024-02-18",
+    "2024-03-01","2024-03-25",
+  ],
+});
+
+const monthly = tsb.resampleDataFrame(df, "ME").sum();
+console.log("Monthly revenue & cost sums:");
+for (let i = 0; i < monthly.index.size; i++) {
+  const rev = monthly.col("revenue").values[i];
+  const cost = monthly.col("cost").values[i];
+  console.log(`  ${monthly.index.values[i]}: revenue=${rev}  cost=${cost}  margin=${rev-cost}`);
+}
+      </textarea>
+      <button onclick="run('ex4','out4')">▶ Run</button>
+      <pre id="out4"></pre>
+    </div>
+
+    <h2>5 · asfreq with forward-fill</h2>
+    <div class="card">
+      <textarea id="ex5" rows="16">
+// Sparse observations forward-filled to daily grid
+const s = new tsb.Series({
+  data:  [10, 30, 50],
+  index: ["2024-01-01", "2024-01-03", "2024-01-06"],
+  name:  "price",
+});
+
+const filled = tsb.asfreq(s, "D", "ffill");
+console.log("Daily prices (ffill):");
+for (let i = 0; i < filled.index.size; i++) {
+  console.log(`  ${filled.index.values[i]}: ${filled.values[i]}`);
+}
+      </textarea>
+      <button onclick="run('ex5','out5')">▶ Run</button>
+      <pre id="out5"></pre>
+    </div>
+
+    <script type="module">
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
+    </script>
+    <script>
+      function run(inputId, outputId) {
+        const code = document.getElementById(inputId).value;
+        const out = document.getElementById(outputId);
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(String).join(" "));
+        try {
+          // eslint-disable-next-line no-new-func
+          new Function("tsb", code)(window.tsb);
+          out.textContent = logs.join("\n");
+          out.className = "";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "error";
+        } finally {
+          console.log = origLog;
+        }
+      }
+      window.run = run;
+    </script>
+  </body>
+</html>
