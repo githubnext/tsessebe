@@ -7,3 +7,7 @@ export { Series } from "./series.ts";
 export type { SeriesOptions } from "./series.ts";
 export { DataFrame } from "./frame.ts";
 export type { DataFrameOptions } from "./frame.ts";
+export { StringAccessor } from "./string_accessor.ts";
+export type { StringSeriesLike } from "./string_accessor.ts";
+export { DatetimeAccessor } from "./datetime_accessor.ts";
+export type { DatetimeSeriesLike } from "./datetime_accessor.ts";
