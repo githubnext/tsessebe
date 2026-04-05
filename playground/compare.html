@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Comparison &amp; Boolean Ops</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Comparison &amp; Boolean Operations</h1>
+    <p class="subtitle">
+      Element-wise comparisons (<code>eq</code>, <code>ne</code>, <code>lt</code>, <code>gt</code>, <code>le</code>, <code>ge</code>),
+      logical ops (<code>and</code>, <code>or</code>, <code>not</code>, <code>xor</code>),
+      and boolean aggregations (<code>any</code>, <code>all</code>) for Series and DataFrame.
+    </p>
+
+    <h2>1 · Compare a Series against a scalar</h2>
+    <div class="card">
+      <textarea id="ex1" rows="12">
+const s = new tsb.Series({ data: [1, 2, 3, 4, 5], name: "x" });
+
+// Which values are greater than 3?
+const gt3 = tsb.gtSeries(s, 3);
+console.log("gt 3:", gt3.values);        // [false, false, false, true, true]
+
+// Which values equal 2?
+const eq2 = tsb.eqSeries(s, 2);
+console.log("eq 2:", eq2.values);        // [false, true, false, false, false]
+
+// Combine: 2 <= x <= 4
+const between = tsb.logicalAndSeries(
+  tsb.geSeries(s, 2),
+  tsb.leSeries(s, 4)
+);
+console.log("2<=x<=4:", between.values); // [false, true, true, true, false]
+      </textarea>
+      <button onclick="run('ex1','out1')">Run</button>
+      <pre id="out1"></pre>
+    </div>
+
+    <h2>2 · Compare two Series with index alignment</h2>
+    <div class="card">
+      <textarea id="ex2" rows="14">
+const a = new tsb.Series({
+  data: [10, 20, 30],
+  index: ["alice", "bob", "charlie"],
+});
+const b = new tsb.Series({
+  data: [15, 20, 25],
+  index: ["alice", "bob", "charlie"],
+});
+
+console.log("a > b:", tsb.gtSeries(a, b).values);  // [false, false, true]
+console.log("a == b:", tsb.eqSeries(a, b).values); // [false, true, false]
+
+// Sparse alignment — outer join, missing slots become null
+const c = new tsb.Series({ data: [10], index: ["alice"] });
+const d = new tsb.Series({ data: [10], index: ["bob"] });
+const eq = tsb.eqSeries(c, d);
+console.log("sparse index:", eq.index.values); // ["alice", "bob"]
+console.log("sparse eq:",    eq.values);       // [false, false]  (null != null → false)
+      </textarea>
+      <button onclick="run('ex2','out2')">Run</button>
+      <pre id="out2"></pre>
+    </div>
+
+    <h2>3 · Boolean aggregation on Series</h2>
+    <div class="card">
+      <textarea id="ex3" rows="12">
+const flags = new tsb.Series({ data: [true, false, true, true] });
+
+console.log("any:", tsb.anySeries(flags));  // true
+console.log("all:", tsb.allSeries(flags));  // false
+
+const allTrue = new tsb.Series({ data: [true, true, true] });
+console.log("allTrue — all:", tsb.allSeries(allTrue)); // true
+
+// Typical use: count truthy values
+const values = new tsb.Series({ data: [1, 0, 3, 0, 5] });
+const positives = tsb.gtSeries(values, 0);
+const count = positives.values.filter(Boolean).length;
+console.log("positive count:", count); // 3
+      </textarea>
+      <button onclick="run('ex3','out3')">Run</button>
+      <pre id="out3"></pre>
+    </div>
+
+    <h2>4 · Logical NOT (invert)</h2>
+    <div class="card">
+      <textarea id="ex4" rows="8">
+const mask = new tsb.Series({ data: [true, false, null, true] });
+const inverted = tsb.logicalNotSeries(mask);
+console.log("inverted:", inverted.values); // [false, true, null, false]
+
+// Chain: filter rows where value is NOT > 3
+const nums = new tsb.Series({ data: [1, 5, 2, 6, 3] });
+const notBig = tsb.logicalNotSeries(tsb.gtSeries(nums, 3) as tsb.Series<tsb.Scalar>);
+console.log("not > 3:", notBig.values); // [true, false, true, false, true]
+      </textarea>
+      <button onclick="run('ex4','out4')">Run</button>
+      <pre id="out4"></pre>
+    </div>
+
+    <h2>5 · Compare a DataFrame against a scalar</h2>
+    <div class="card">
+      <textarea id="ex5" rows="12">
+const df = tsb.DataFrame.fromRecords([
+  { name: "Alice", score: 88 },
+  { name: "Bob",   score: 72 },
+  { name: "Carol", score: 95 },
+]);
+
+// Which scores pass (>= 80)?
+const passed = tsb.geDataFrame(df, 80);
+console.log("score >= 80:", passed.col("score").values); // [true, false, true]
+
+// How many pass?
+const passCount = passed.col("score").values.filter(Boolean).length;
+console.log("pass count:", passCount); // 2
+      </textarea>
+      <button onclick="run('ex5','out5')">Run</button>
+      <pre id="out5"></pre>
+    </div>
+
+    <h2>6 · Compare two DataFrames</h2>
+    <div class="card">
+      <textarea id="ex6" rows="12">
+const actual   = tsb.DataFrame.fromRecords([{ a: 1, b: 2 }, { a: 3, b: 4 }]);
+const expected = tsb.DataFrame.fromRecords([{ a: 1, b: 0 }, { a: 3, b: 4 }]);
+
+const matches = tsb.eqDataFrame(actual, expected);
+console.log("a matches:", matches.col("a").values); // [true, true]
+console.log("b matches:", matches.col("b").values); // [false, true]
+
+// Check entire DataFrame agrees
+const allMatch = tsb.allDataFrame(matches);
+console.log("all match:", allMatch.values); // [true, false]
+      </textarea>
+      <button onclick="run('ex6','out6')">Run</button>
+      <pre id="out6"></pre>
+    </div>
+
+    <h2>7 · Compare DataFrame vs Series (broadcast)</h2>
+    <div class="card">
+      <textarea id="ex7" rows="12">
+const df = tsb.DataFrame.fromRecords([
+  { math: 80, science: 70 },
+  { math: 60, science: 90 },
+  { math: 75, science: 85 },
+]);
+
+// Thresholds per subject (axis="columns" default)
+const thresholds = new tsb.Series({ data: [75, 80], index: ["math", "science"] });
+const aboveThreshold = tsb.geDataFrame(df, thresholds);
+console.log("math >=75:",    aboveThreshold.col("math").values);    // [true, false, true]
+console.log("science >=80:", aboveThreshold.col("science").values); // [false, true, true]
+
+// any/all aggregation
+console.log("any above:", tsb.anyDataFrame(aboveThreshold).values); // [true, true]
+console.log("all above:", tsb.allDataFrame(aboveThreshold).values); // [false, false]
+      </textarea>
+      <button onclick="run('ex7','out7')">Run</button>
+      <pre id="out7"></pre>
+    </div>
+
+    <script type="module">
+      // Load tsb from CDN-style local build via esm.sh fallback or bundled output.
+      // For local development: serve from dist/ or use vite.
+      // This playground runs the library inline via dynamic import + inline modules.
+
+      async function buildTsb() {
+        // Inline minimal tsb shim that re-exports from src for playground use
+        return window.tsb;
+      }
+
+      window.run = async function(inputId, outputId) {
+        const code = document.getElementById(inputId).value.trim();
+        const out  = document.getElementById(outputId);
+        out.textContent = "";
+        const lines = [];
+        const origLog = console.log;
+        console.log = (...args) => {
+          lines.push(args.map(a => JSON.stringify(a) ?? String(a)).join(" "));
+          origLog(...args);
+        };
+        try {
+          const fn = new Function("tsb", code);
+          fn(window.tsb);
+        } catch (e) {
+          out.innerHTML = `<span class="error">${e}</span>`;
+        } finally {
+          console.log = origLog;
+        }
+        out.textContent = lines.join("\n") || "(no output)";
+      };
+    </script>
+
+    <!-- Load the tsb bundle.  Replace with your actual bundle path / CDN URL. -->
+    <script>
+      // Stub for playground — replace with real bundle in production
+      window.tsb = null;
+      fetch("../dist/index.js")
+        .then(r => r.ok ? import("../dist/index.js") : null)
+        .then(mod => { if (mod) window.tsb = mod; })
+        .catch(() => {});
+    </script>
+
+    <p style="margin-top:2rem;font-size:0.8rem;color:#888">
+      Note: Run this page from a dev server with a built <code>dist/index.js</code> bundle for live execution.
+      See the <a href="https://github.com/githubnext/tsessebe">repository</a> for build instructions.
+    </p>
+  </body>
+</html>
