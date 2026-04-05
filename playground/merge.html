@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — merge (database-style joins)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --success: #3fb950;
+      --error: #f85149;
+      --warning: #d29922;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 2rem; }
+    h1 { color: var(--accent); font-size: 1.8rem; margin-bottom: 0.4rem; }
+    .subtitle { color: var(--muted); margin-bottom: 2rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 0.75rem; }
+    .description { color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
+    textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); font-family: "Fira Code", "Cascadia Code", monospace;
+      font-size: 0.85rem; padding: 0.75rem; resize: vertical; tab-size: 2; min-height: 220px;
+    }
+    button {
+      background: var(--accent); border: none; border-radius: 4px; color: #000;
+      cursor: pointer; font-size: 0.9rem; font-weight: 600; margin-top: 0.75rem; padding: 0.5rem 1.2rem;
+    }
+    button:hover { opacity: 0.85; }
+    .output {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.8rem;
+      margin-top: 0.75rem; min-height: 60px; padding: 0.75rem; white-space: pre; overflow-x: auto;
+    }
+    .output.ok  { border-color: var(--success); color: var(--success); }
+    .output.err { border-color: var(--error);   color: var(--error); }
+    table { border-collapse: collapse; font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.82rem; width: 100%; }
+    th { background: var(--border); color: var(--accent); padding: 6px 12px; text-align: left; }
+    td { border-top: 1px solid var(--border); color: var(--text); padding: 5px 12px; }
+    .null-val { color: var(--warning); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    nav a { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
+    nav a:hover { color: var(--accent); }
+    nav { margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <nav><a href="index.html">← Back to playground</a></nav>
+  <h1>merge</h1>
+  <p class="subtitle">Database-style joins between DataFrames — inner, left, right, outer.</p>
+
+  <!-- Concept overview -->
+  <div class="card">
+    <h2>How merge works</h2>
+    <div class="description">
+      <code>merge(left, right, options)</code> performs an SQL-style join of two DataFrames.
+      You specify which columns to join on (the <em>key</em>), and how to handle rows that
+      don't match via the <code>how</code> parameter:<br><br>
+      <strong>inner</strong> — only rows whose key appears in <em>both</em> tables<br>
+      <strong>left</strong> — all rows from the left table; <code>null</code> where no right match<br>
+      <strong>right</strong> — all rows from the right table; <code>null</code> where no left match<br>
+      <strong>outer</strong> — all rows from <em>both</em> tables; <code>null</code> where no match<br>
+    </div>
+
+    <div class="grid">
+      <div>
+        <strong style="color:var(--muted);font-size:0.85rem">left</strong>
+        <table>
+          <thead><tr><th>id</th><th>name</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Alice</td></tr>
+            <tr><td>2</td><td>Bob</td></tr>
+            <tr><td>3</td><td>Carol</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <strong style="color:var(--muted);font-size:0.85rem">right</strong>
+        <table>
+          <thead><tr><th>id</th><th>dept</th></tr></thead>
+          <tbody>
+            <tr><td>2</td><td>Eng</td></tr>
+            <tr><td>3</td><td>HR</td></tr>
+            <tr><td>4</td><td>Sales</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive examples -->
+  <div class="card">
+    <h2>Interactive example — try different join types</h2>
+    <div class="description">
+      Change <code>how</code> to <code>"inner"</code>, <code>"left"</code>, <code>"right"</code>,
+      or <code>"outer"</code> and click Run.
+    </div>
+    <textarea id="code1">import { DataFrame, merge } from "tsb";
+
+const left = DataFrame.fromColumns({
+  id:   [1, 2, 3],
+  name: ["Alice", "Bob", "Carol"],
+});
+
+const right = DataFrame.fromColumns({
+  id:   [2, 3, 4],
+  dept: ["Eng", "HR", "Sales"],
+});
+
+// Try: "inner" | "left" | "right" | "outer"
+const how = "inner";
+
+const result = merge(left, right, { on: "id", how });
+
+console.log(`join=${how}  shape=${result.shape}`);
+console.log(JSON.stringify(result.toRecords(), null, 2));</textarea>
+    <button onclick="run('code1','out1')">▶ Run</button>
+    <div class="output" id="out1"></div>
+  </div>
+
+  <div class="card">
+    <h2>left_on / right_on — different key names per side</h2>
+    <div class="description">
+      When the key column has a different name in each table, use
+      <code>left_on</code> and <code>right_on</code>.
+    </div>
+    <textarea id="code2">import { DataFrame, merge } from "tsb";
+
+const employees = DataFrame.fromColumns({
+  emp_id:  [1, 2, 3],
+  name:    ["Alice", "Bob", "Carol"],
+  dept_id: [10, 20, 10],
+});
+
+const departments = DataFrame.fromColumns({
+  id:   [10, 20, 30],
+  name: ["Engineering", "Marketing", "HR"],
+});
+
+const result = merge(employees, departments, {
+  left_on:  "dept_id",
+  right_on: "id",
+  how: "left",
+});
+
+console.log(JSON.stringify(result.toRecords(), null, 2));</textarea>
+    <button onclick="run('code2','out2')">▶ Run</button>
+    <div class="output" id="out2"></div>
+  </div>
+
+  <div class="card">
+    <h2>Suffixes — resolving column name conflicts</h2>
+    <div class="description">
+      When both tables have a non-key column with the same name, tsb appends
+      configurable suffixes (default <code>"_x"</code> / <code>"_y"</code>).
+    </div>
+    <textarea id="code3">import { DataFrame, merge } from "tsb";
+
+const q1 = DataFrame.fromColumns({
+  product: ["apple", "banana"],
+  sales:   [100, 200],
+});
+
+const q2 = DataFrame.fromColumns({
+  product: ["apple", "cherry"],
+  sales:   [150, 80],
+});
+
+const result = merge(q1, q2, {
+  on: "product",
+  how: "outer",
+  suffixes: ["_q1", "_q2"],
+});
+
+console.log(result.columns.values);
+console.log(JSON.stringify(result.toRecords(), null, 2));</textarea>
+    <button onclick="run('code3','out3')">▶ Run</button>
+    <div class="output" id="out3"></div>
+  </div>
+
+  <div class="card">
+    <h2>Many-to-many joins</h2>
+    <div class="description">
+      When a key value appears multiple times on both sides, merge produces the
+      Cartesian product of matching rows (just like SQL).
+    </div>
+    <textarea id="code4">import { DataFrame, merge } from "tsb";
+
+const left = DataFrame.fromColumns({
+  tag:  ["python", "python", "ts"],
+  repo: ["pandas", "numpy", "deno"],
+});
+
+const right = DataFrame.fromColumns({
+  tag:   ["python", "python"],
+  owner: ["NumFocus", "PSF"],
+});
+
+const result = merge(left, right, { on: "tag" });
+// 2 left "python" rows × 2 right "python" rows = 4 output rows
+console.log("shape:", result.shape);
+console.log(JSON.stringify(result.toRecords(), null, 2));</textarea>
+    <button onclick="run('code4','out4')">▶ Run</button>
+    <div class="output" id="out4"></div>
+  </div>
+
+  <!-- Runtime shim -->
+  <script type="module">
+    const registry = {};
+
+    // Minimal tsb shim for the playground
+    class RangeIndex {
+      constructor(n) { this._size = n; this.values = Array.from({ length: n }, (_, i) => i); }
+      get size() { return this._size; }
+    }
+
+    class Index {
+      constructor(vals) { this.values = [...vals]; }
+      get size() { return this.values.length; }
+      contains(v) { return this.values.includes(v); }
+    }
+
+    class Series {
+      constructor({ data, index, name }) {
+        this._values = [...data];
+        this.index = index ?? new RangeIndex(data.length);
+        this.name = name ?? null;
+      }
+      get values() { return this._values; }
+      get size() { return this._values.length; }
+    }
+
+    class DataFrame {
+      constructor(columns, index) {
+        this._columns = columns; // Map<string, Series>
+        this.index = index;
+        this.columns = new Index([...columns.keys()]);
+      }
+      get shape() { return [this.index.size, this._columns.size]; }
+      col(name) {
+        const s = this._columns.get(name);
+        if (!s) throw new Error(`Column '${name}' not found`);
+        return s;
+      }
+      hasColumn(name) { return this._columns.has(name); }
+      toRecords() {
+        const n = this.index.size;
+        const keys = [...this._columns.keys()];
+        return Array.from({ length: n }, (_, i) => {
+          const rec = {};
+          for (const k of keys) rec[k] = this._columns.get(k)._values[i] ?? null;
+          return rec;
+        });
+      }
+      static fromColumns(data, options) {
+        const keys = Object.keys(data);
+        const n = keys.length === 0 ? 0 : (data[keys[0]]?.length ?? 0);
+        const idx = options?.index ? new Index(options.index) : new RangeIndex(n);
+        const colMap = new Map();
+        for (const k of keys) {
+          colMap.set(k, new Series({ data: data[k], index: idx, name: k }));
+        }
+        return new DataFrame(colMap, idx);
+      }
+      static fromRecords(rows, options) {
+        if (rows.length === 0) return new DataFrame(new Map(), new RangeIndex(0));
+        const keys = Object.keys(rows[0]);
+        const data = {};
+        for (const k of keys) data[k] = rows.map(r => r[k] ?? null);
+        return DataFrame.fromColumns(data, options);
+      }
+    }
+
+    const KEY_DELIM = "\x00";
+    function compositeKey(row) { return row.map(v => v == null ? "__NULL__" : String(v)).join(KEY_DELIM); }
+    function rowKey(seriesArr, pos) { return compositeKey(seriesArr.map(s => s.values[pos] ?? null)); }
+    function buildKeyIndex(seriesArr, len) {
+      const map = new Map();
+      for (let i = 0; i < len; i++) {
+        const k = rowKey(seriesArr, i);
+        const ex = map.get(k); if (ex) ex.push(i); else map.set(k, [i]);
+      }
+      return map;
+    }
+    function toKeyArr(k) { return typeof k === "string" ? [k] : k; }
+
+    function merge(left, right, opts = {}) {
+      const how = opts.how ?? "inner";
+      const suffixes = opts.suffixes ?? ["_x", "_y"];
+      const leftIndex = opts.left_index ?? false;
+      const rightIndex = opts.right_index ?? false;
+
+      let leftKeyNames = [], rightKeyNames = [], leftKeySeries = [], rightKeySeries = [];
+      if (opts.on !== undefined) {
+        leftKeyNames = rightKeyNames = toKeyArr(opts.on);
+        leftKeySeries = leftKeyNames.map(k => left.col(k));
+        rightKeySeries = rightKeyNames.map(k => right.col(k));
+      } else if (opts.left_on !== undefined || opts.right_on !== undefined) {
+        leftKeyNames = toKeyArr(opts.left_on); rightKeyNames = toKeyArr(opts.right_on);
+        leftKeySeries = leftKeyNames.map(k => left.col(k));
+        rightKeySeries = rightKeyNames.map(k => right.col(k));
+      } else if (leftIndex && rightIndex) {
+        leftKeySeries = [new Series({ data: left.index.values })];
+        rightKeySeries = [new Series({ data: right.index.values })];
+      } else {
+        const lSet = new Set(left.columns.values);
+        const common = right.columns.values.filter(c => lSet.has(c));
+        if (!common.length) throw new Error("merge: no common columns found");
+        leftKeyNames = rightKeyNames = common;
+        leftKeySeries = leftKeyNames.map(k => left.col(k));
+        rightKeySeries = rightKeyNames.map(k => right.col(k));
+      }
+
+      const nLeft = left.shape[0], nRight = right.shape[0];
+      const rightIdx = buildKeyIndex(rightKeySeries, nRight);
+      const leftRows = [], rightRows = [];
+
+      for (let li = 0; li < nLeft; li++) {
+        const k = rowKey(leftKeySeries, li);
+        const ms = rightIdx.get(k);
+        if (ms && ms.length) {
+          for (const ri of ms) { leftRows.push(li); rightRows.push(ri); }
+        } else if (how === "left" || how === "outer") {
+          leftRows.push(li); rightRows.push(null);
+        }
+      }
+      if (how === "right" || how === "outer") {
+        const leftIdx = buildKeyIndex(leftKeySeries, nLeft);
+        for (let ri = 0; ri < nRight; ri++) {
+          if (!leftIdx.has(rowKey(rightKeySeries, ri))) { leftRows.push(-1); rightRows.push(ri); }
+        }
+      }
+
+      const lKeySet = new Set(leftKeyNames), rKeySet = new Set(rightKeyNames);
+      const lNonKeys = left.columns.values.filter(c => !lKeySet.has(c));
+      const rNonKeys = right.columns.values.filter(c => !rKeySet.has(c));
+      const rNonKeySet = new Set(rNonKeys);
+      const overlap = new Set(lNonKeys.filter(c => rNonKeySet.has(c)));
+      const lOutCols = lNonKeys.map(c => overlap.has(c) ? c + suffixes[0] : c);
+      const rOutCols = rNonKeys.map(c => overlap.has(c) ? c + suffixes[1] : c);
+
+      const nRows = leftRows.length;
+      const resultCols = new Map();
+      const resultIdx = new RangeIndex(nRows);
+
+      // key cols
+      const keyCols = leftIndex && rightIndex ? [] : [...new Set(leftKeyNames)];
+      for (let ki = 0; ki < keyCols.length; ki++) {
+        const name = keyCols[ki];
+        const lk = leftKeySeries[ki], rk = rightKeySeries[ki];
+        const data = Array.from({ length: nRows }, (_, r) => {
+          const li = leftRows[r]; const ri = rightRows[r];
+          return li !== -1 ? (lk.values[li] ?? null) : ri !== null ? (rk.values[ri] ?? null) : null;
+        });
+        resultCols.set(name, new Series({ data, index: resultIdx, name }));
+      }
+      // left non-keys
+      for (let ci = 0; ci < lNonKeys.length; ci++) {
+        const src = left.col(lNonKeys[ci]), out = lOutCols[ci];
+        const data = Array.from({ length: nRows }, (_, r) => {
+          const li = leftRows[r]; return li !== -1 ? (src.values[li] ?? null) : null;
+        });
+        resultCols.set(out, new Series({ data, index: resultIdx, name: out }));
+      }
+      // right non-keys
+      for (let ci = 0; ci < rNonKeys.length; ci++) {
+        const src = right.col(rNonKeys[ci]), out = rOutCols[ci];
+        const data = Array.from({ length: nRows }, (_, r) => {
+          const ri = rightRows[r]; return ri !== null ? (src.values[ri] ?? null) : null;
+        });
+        resultCols.set(out, new Series({ data, index: resultIdx, name: out }));
+      }
+
+      return new DataFrame(resultCols, resultIdx);
+    }
+
+    const tsb = { DataFrame, Series, Index, RangeIndex, merge };
+
+    window.run = async function(codeId, outId) {
+      const code = document.getElementById(codeId).value;
+      const out = document.getElementById(outId);
+      out.className = "output";
+      out.textContent = "Running…";
+      try {
+        const lines = [];
+        const realConsole = { log: console.log, error: console.error };
+        const mock = { log: (...a) => lines.push(a.map(v => typeof v === "string" ? v : JSON.stringify(v, null, 2)).join(" ")) };
+        const fn = new Function("DataFrame","Series","Index","RangeIndex","merge","console",
+          code.replace(/import\s+\{[^}]+\}\s+from\s+["']tsb["'];?/g, "")
+        );
+        fn(tsb.DataFrame, tsb.Series, tsb.Index, tsb.RangeIndex, tsb.merge, mock);
+        out.className = "output ok";
+        out.textContent = lines.join("\n") || "(no output)";
+      } catch (e) {
+        out.className = "output err";
+        out.textContent = e.message;
+      }
+    };
+  </script>
+</body>
+</html>
