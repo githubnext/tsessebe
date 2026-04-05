@@ -79,3 +79,76 @@ export {
   allDataFrame,
 } from "./compare.ts";
 export type { CompareOp, SeriesCompareOptions, DataFrameCompareOptions } from "./compare.ts";
+export { Categorical, CategoricalDtype, CategoricalAccessor, factorize } from "./categorical.ts";
+export type { CategoricalOptions, FactorizeResult } from "./categorical.ts";
+export { MultiIndex } from "./multi-index.ts";
+export type { MultiIndexTuple, MultiIndexOptions } from "./multi-index.ts";
+export { Timedelta, TimedeltaAccessor } from "./timedelta.ts";
+export type { TimedeltaUnit } from "./timedelta.ts";
+export { Interval, IntervalIndex, intervalRange } from "./interval-index.ts";
+export type { IntervalClosed, IntervalRangeOptions } from "./interval-index.ts";
+export { CategoricalIndex } from "./categorical-index.ts";
+export type { CategoricalIndexOptions } from "./categorical-index.ts";
+export { DatetimeTZDtype, DatetimeIndex, date_range } from "./datetime-index.ts";
+export type { DateLike, DatetimeIndexOptions, DateRangeOptions } from "./datetime-index.ts";
+
+// ─── shift / diff / pctChange ─────────────────────────────────────────────────
+export { shiftSeries, diffSeries, pctChangeSeries, shiftDataFrame, diffDataFrame } from "./shift.ts";
+export type { ShiftOptions } from "./shift.ts";
+
+// ─── str-advanced ─────────────────────────────────────────────────────────────
+export {
+  strZfill, strLjust, strRjust, strCenter, strWrap,
+  strExtract, strFindall, strNormalize, strTitle, strRepeat,
+  strCountPattern, strRemovePrefix, strRemoveSuffix,
+} from "./str-advanced.ts";
+export type { NormalizeForm } from "./str-advanced.ts";
+
+// ─── apply / map / pipe ───────────────────────────────────────────────────────
+export { applySeries, mapSeries, applyMap, applyDataFrame, pipeSeries, pipeDataFrame } from "./apply.ts";
+
+// ─── datetime-convert ─────────────────────────────────────────────────────────
+export { toDatetime, toTimedelta } from "./datetime-convert.ts";
+export type { ToDatetimeOptions, ToTimedeltaOptions } from "./datetime-convert.ts";
+
+// ─── rank2 (element-wise rank) ────────────────────────────────────────────────
+export { rankSeries2 } from "./rank.ts";
+export type { RankMethod2, RankNa, RankSeriesOptions } from "./rank.ts";
+
+// ─── frequency / crosstab ─────────────────────────────────────────────────────
+export { valueCounts, crosstab } from "./frequency.ts";
+export type { ValueCountsOptions, CrosstabNormalize, CrosstabOptions } from "./frequency.ts";
+
+// ─── cut / qcut ───────────────────────────────────────────────────────────────
+export { cut, qcut } from "./cut.ts";
+export type { CutOptions, CutResult, QCutOptions, QCutResult } from "./cut.ts";
+
+// ─── get_dummies / from_dummies ───────────────────────────────────────────────
+export { getDummies, fromDummies } from "./get-dummies.ts";
+export type { GetDummiesOptions, FromDummiesOptions } from "./get-dummies.ts";
+
+// ─── assign / filter ──────────────────────────────────────────────────────────
+export { assignDataFrame, filterDataFrame } from "./assign.ts";
+export type { AssignSpec, AssignSpecs, FilterOptions } from "./assign.ts";
+
+// ─── explode ──────────────────────────────────────────────────────────────────
+export { explodeSeries, explodeDataFrame } from "./explode.ts";
+
+// ─── clip ─────────────────────────────────────────────────────────────────────
+export { clipSeries, clipDataFrame } from "./clip.ts";
+export type { ClipOptions } from "./clip.ts";
+
+// ─── where / mask ─────────────────────────────────────────────────────────────
+export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./where.ts";
+export type { DataFrameCond } from "./where.ts";
+
+// ─── sample ───────────────────────────────────────────────────────────────────
+export { sampleSeries, sampleDataFrame } from "./sample.ts";
+export type { SampleOptions } from "./sample.ts";
+
+// ─── cumulative ───────────────────────────────────────────────────────────────
+export {
+  cumsumSeries, cumprodSeries, cummaxSeries, cumminSeries,
+  cumsumDataFrame, cumprodDataFrame, cummaxDataFrame, cumminDataFrame,
+} from "./cumulative.ts";
+export type { CumulativeOptions } from "./cumulative.ts";

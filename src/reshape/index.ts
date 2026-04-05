@@ -14,3 +14,6 @@ export type { MeltOptions } from "./melt.ts";
 
 export { stack, unstack } from "./stack.ts";
 export type { StackOptions, UnstackOptions } from "./stack.ts";
+
+export { wideToLong } from "./wide-to-long.ts";
+export type { WideToLongOptions } from "./wide-to-long.ts";

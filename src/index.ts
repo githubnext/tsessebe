@@ -133,3 +133,116 @@ export type { RollingOptions } from "./window/index.ts";
 export { expanding, SeriesExpanding, DataFrameExpanding } from "./window/index.ts";
 export { ewm, SeriesEWM, DataFrameEWM } from "./window/index.ts";
 export type { EWMOptions } from "./window/index.ts";
+
+// ─── I/O ──────────────────────────────────────────────────────────────────────
+export { readCsv } from "./io/index.ts";
+export type { ReadCsvOptions } from "./io/index.ts";
+export { readJson } from "./io/index.ts";
+export type { ReadJsonOptions, JsonOrient } from "./io/index.ts";
+export { toCsv, seriesToCsv } from "./io/index.ts";
+export type { ToCsvOptions } from "./io/index.ts";
+export { toJson, seriesToJson } from "./io/index.ts";
+export type { ToJsonOptions, ToJsonOrient } from "./io/index.ts";
+
+// ─── stats ────────────────────────────────────────────────────────────────────
+export { describe, describeDataFrame } from "./stats/index.ts";
+export { corrSeries, corrDataFrame } from "./stats/index.ts";
+export type { CorrMethod } from "./stats/index.ts";
+export { covSeries, covDataFrame } from "./stats/index.ts";
+export {
+  skewSeries,
+  skewDataFrame,
+  kurtosisSeries,
+  kurtSeries,
+  kurtosisDataFrame,
+  kurtDataFrame,
+} from "./stats/index.ts";
+
+// ─── categorical ──────────────────────────────────────────────────────────────
+export { Categorical, CategoricalDtype, CategoricalAccessor, factorize } from "./core/index.ts";
+export type { CategoricalOptions, FactorizeResult } from "./core/index.ts";
+
+// ─── multi-index ──────────────────────────────────────────────────────────────
+export { MultiIndex } from "./core/index.ts";
+export type { MultiIndexTuple, MultiIndexOptions } from "./core/index.ts";
+
+// ─── timedelta ────────────────────────────────────────────────────────────────
+export { Timedelta, TimedeltaAccessor } from "./core/index.ts";
+export type { TimedeltaUnit } from "./core/index.ts";
+
+// ─── interval-index ───────────────────────────────────────────────────────────
+export { Interval, IntervalIndex, intervalRange } from "./core/index.ts";
+export type { IntervalClosed, IntervalRangeOptions } from "./core/index.ts";
+
+// ─── categorical-index ────────────────────────────────────────────────────────
+export { CategoricalIndex } from "./core/index.ts";
+export type { CategoricalIndexOptions } from "./core/index.ts";
+
+// ─── datetime-index ───────────────────────────────────────────────────────────
+export { DatetimeTZDtype, DatetimeIndex, date_range } from "./core/index.ts";
+export type { DateLike, DatetimeIndexOptions, DateRangeOptions } from "./core/index.ts";
+
+// ─── shift / diff / pctChange ─────────────────────────────────────────────────
+export { shiftSeries, diffSeries, pctChangeSeries, shiftDataFrame, diffDataFrame } from "./core/index.ts";
+export type { ShiftOptions } from "./core/index.ts";
+
+// ─── str-advanced ─────────────────────────────────────────────────────────────
+export {
+  strZfill, strLjust, strRjust, strCenter, strWrap,
+  strExtract, strFindall, strNormalize, strTitle, strRepeat,
+  strCountPattern, strRemovePrefix, strRemoveSuffix,
+} from "./core/index.ts";
+export type { NormalizeForm } from "./core/index.ts";
+
+// ─── apply / map / pipe ───────────────────────────────────────────────────────
+export { applySeries, mapSeries, applyMap, applyDataFrame, pipeSeries, pipeDataFrame } from "./core/index.ts";
+
+// ─── datetime-convert ─────────────────────────────────────────────────────────
+export { toDatetime, toTimedelta } from "./core/index.ts";
+export type { ToDatetimeOptions, ToTimedeltaOptions } from "./core/index.ts";
+
+// ─── rank2 (element-wise rank) ────────────────────────────────────────────────
+export { rankSeries2 } from "./core/index.ts";
+export type { RankMethod2, RankNa, RankSeriesOptions } from "./core/index.ts";
+
+// ─── frequency / crosstab ─────────────────────────────────────────────────────
+export { valueCounts, crosstab } from "./core/index.ts";
+export type { ValueCountsOptions, CrosstabNormalize, CrosstabOptions } from "./core/index.ts";
+
+// ─── cut / qcut ───────────────────────────────────────────────────────────────
+export { cut, qcut } from "./core/index.ts";
+export type { CutOptions, CutResult, QCutOptions, QCutResult } from "./core/index.ts";
+
+// ─── get_dummies / from_dummies ───────────────────────────────────────────────
+export { getDummies, fromDummies } from "./core/index.ts";
+export type { GetDummiesOptions, FromDummiesOptions } from "./core/index.ts";
+
+// ─── assign / filter ──────────────────────────────────────────────────────────
+export { assignDataFrame, filterDataFrame } from "./core/index.ts";
+export type { AssignSpec, AssignSpecs, FilterOptions } from "./core/index.ts";
+
+// ─── explode ──────────────────────────────────────────────────────────────────
+export { explodeSeries, explodeDataFrame } from "./core/index.ts";
+
+// ─── clip ─────────────────────────────────────────────────────────────────────
+export { clipSeries, clipDataFrame } from "./core/index.ts";
+export type { ClipOptions } from "./core/index.ts";
+
+// ─── where / mask ─────────────────────────────────────────────────────────────
+export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./core/index.ts";
+export type { DataFrameCond } from "./core/index.ts";
+
+// ─── sample ───────────────────────────────────────────────────────────────────
+export { sampleSeries, sampleDataFrame } from "./core/index.ts";
+export type { SampleOptions } from "./core/index.ts";
+
+// ─── cumulative ───────────────────────────────────────────────────────────────
+export {
+  cumsumSeries, cumprodSeries, cummaxSeries, cumminSeries,
+  cumsumDataFrame, cumprodDataFrame, cummaxDataFrame, cumminDataFrame,
+} from "./core/index.ts";
+export type { CumulativeOptions } from "./core/index.ts";
+
+// ─── reshape: wide_to_long ────────────────────────────────────────────────────
+export { wideToLong } from "./reshape/index.ts";
+export type { WideToLongOptions } from "./reshape/index.ts";
