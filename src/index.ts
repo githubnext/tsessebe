@@ -70,3 +70,5 @@ export { pivot, pivotTable } from "./reshape/index.ts";
 export type { PivotOptions, PivotTableOptions, AggFuncName as PivotAggFuncName } from "./reshape/index.ts";
 export { stack, unstack, STACK_DEFAULT_SEP } from "./reshape/index.ts";
 export type { StackOptions, UnstackOptions } from "./reshape/index.ts";
+export { MultiIndex } from "./core/index.ts";
+export type { MultiIndexOptions } from "./core/index.ts";

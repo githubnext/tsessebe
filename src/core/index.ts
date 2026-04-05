@@ -13,3 +13,5 @@ export { DatetimeAccessor } from "./datetime_accessor.ts";
 export type { DatetimeSeriesLike } from "./datetime_accessor.ts";
 export { CategoricalAccessor } from "./cat_accessor.ts";
 export type { CatSeriesLike } from "./cat_accessor.ts";
+export { MultiIndex } from "./multi_index.ts";
+export type { MultiIndexOptions } from "./multi_index.ts";
