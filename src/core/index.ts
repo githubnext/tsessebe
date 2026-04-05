@@ -264,3 +264,44 @@ export { evalDataFrame, queryDataFrame } from "./eval.ts";
 // ─── resample ─────────────────────────────────────────────────────────────────
 export { resampleSeries, resampleDataFrame, asfreq, SeriesResampler, DataFrameResampler } from "./resample.ts";
 export type {} from "./resample.ts";
+
+// ─── plotting ─────────────────────────────────────────────────────────────────
+export {
+  setPlotRenderer,
+  linePlot,
+  barPlot,
+  barhPlot,
+  areaPlot,
+  histPlot,
+  kdePlot,
+  boxPlot,
+  piePlot,
+  dfLinePlot,
+  dfBarPlot,
+  dfAreaPlot,
+  dfBoxPlot,
+  dfScatterPlot,
+  dfHistPlot,
+} from "./plotting.ts";
+export type {
+  PlotKind,
+  PlotOptions,
+  HistOptions,
+  ScatterOptions,
+  PlotSeriesEntry,
+  PlotSpec,
+  PlotRenderer,
+} from "./plotting.ts";
+
+// ─── arrow interop ────────────────────────────────────────────────────────────
+export { fromArrow, toArrow } from "./arrow.ts";
+export type {
+  ArrowTableDecoder,
+  ArrowTableEncoder,
+  FromArrowOptions,
+  ToArrowOptions,
+} from "./arrow.ts";
+
+// ─── window_apply ─────────────────────────────────────────────────────────────
+export { rollingApply, expandingApply, dataFrameRollingApply, dataFrameExpandingApply } from "./window_apply.ts";
+export type { RollingApplyOptions, ExpandingApplyOptions } from "./window_apply.ts";

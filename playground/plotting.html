@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Plotting API</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Plotting API</h1>
+    <p class="subtitle">
+      Declarative plot specification: <code>linePlot</code>, <code>barPlot</code>, <code>histPlot</code>,
+      <code>dfLinePlot</code>, <code>dfScatterPlot</code>, and more.
+      Register a renderer with <code>setPlotRenderer</code> to connect any charting library.
+    </p>
+
+    <h2>Series line plot</h2>
+    <p>
+      <code>linePlot</code> returns a <code>PlotSpec</code> describing the chart.
+      Use <code>setPlotRenderer</code> to receive specs and render them with your charting library.
+    </p>
+    <div class="card">
+      <textarea id="line-code" rows="18">
+import { Series, linePlot, setPlotRenderer } from "tsb";
+
+// Capture emitted specs
+const captured = [];
+setPlotRenderer((spec) => captured.push(spec));
+
+const s = new Series({
+  data: [12, 15, 11, 18, 22, 19, 25],
+  index: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  name: "sales",
+});
+
+const spec = linePlot(s, { title: "Weekly Sales", xlabel: "Day", ylabel: "Units" });
+
+console.log("kind     :", spec.kind);
+console.log("title    :", spec.options.title);
+console.log("x labels :", spec.xData.join(", "));
+console.log("values   :", spec.series[0].values.join(", "));
+console.log("emitted  :", captured.length, "spec(s)");
+
+// Clear renderer
+setPlotRenderer(null);
+      </textarea>
+      <button onclick="run('line-code', 'line-out')">▶ Run</button>
+      <pre id="line-out"></pre>
+    </div>
+
+    <h2>Bar and histogram plots</h2>
+    <div class="card">
+      <textarea id="bar-code" rows="18">
+import { Series, barPlot, histPlot } from "tsb";
+
+const sales = new Series({
+  data: [450, 320, 510, 280, 390],
+  index: ["A", "B", "C", "D", "E"],
+  name: "revenue",
+});
+
+const barSpec = barPlot(sales, { title: "Revenue by Category", color: "#0969da" });
+console.log("Bar chart:");
+console.log("  kind   :", barSpec.kind);
+console.log("  series :", barSpec.series[0].name, "→", barSpec.series[0].values.join(", "));
+
+const scores = new Series({ data: [72, 85, 91, 68, 77, 83, 95, 61, 88, 74], name: "scores" });
+const histSpec = histPlot(scores, { bins: 5, title: "Score Distribution" });
+console.log("\nHistogram:");
+console.log("  kind :", histSpec.kind);
+console.log("  bins :", histSpec.options.bins);
+console.log("  data :", histSpec.series[0].values.join(", "));
+      </textarea>
+      <button onclick="run('bar-code', 'bar-out')">▶ Run</button>
+      <pre id="bar-out"></pre>
+    </div>
+
+    <h2>DataFrame multi-series plot</h2>
+    <div class="card">
+      <textarea id="df-code" rows="22">
+import { DataFrame, dfLinePlot, dfBarPlot } from "tsb";
+
+const df = DataFrame.fromColumns({
+  apples:  [30, 40, 35, 50, 45],
+  bananas: [20, 25, 30, 22, 28],
+  oranges: [15, 18, 20, 17, 22],
+});
+
+const spec = dfLinePlot(df, { title: "Fruit Sales", legend: true });
+console.log("kind    :", spec.kind);
+console.log("series  :", spec.series.map(s => s.name).join(", "));
+console.log("# rows  :", spec.xData.length);
+spec.series.forEach(s => {
+  console.log(`  ${s.name}: [${s.values.join(", ")}]`);
+});
+
+const bar = dfBarPlot(df, { title: "Comparison" });
+console.log("\nBar - same series:", bar.series.map(s => s.name).join(", "));
+      </textarea>
+      <button onclick="run('df-code', 'df-out')">▶ Run</button>
+      <pre id="df-out"></pre>
+    </div>
+
+    <h2>All plot kinds</h2>
+    <div class="card">
+      <textarea id="kinds-code" rows="18">
+import { Series, linePlot, barPlot, barhPlot, areaPlot, histPlot, kdePlot, boxPlot, piePlot } from "tsb";
+
+const s = new Series({ data: [3, 7, 2, 9, 5, 8, 1, 6, 4], name: "data" });
+const fns = [linePlot, barPlot, barhPlot, areaPlot, histPlot, kdePlot, boxPlot, piePlot];
+
+console.log("Available plot kinds:");
+for (const fn of fns) {
+  const spec = fn(s);
+  console.log(`  ${spec.kind.padEnd(8)} → series: ${spec.series[0].name}, len: ${spec.series[0].values.length}`);
+}
+      </textarea>
+      <button onclick="run('kinds-code', 'kinds-out')">▶ Run</button>
+      <pre id="kinds-out"></pre>
+    </div>
+
+    <script src="playground-runtime.js"></script>
+  </body>
+</html>

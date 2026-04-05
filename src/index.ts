@@ -448,3 +448,39 @@ export type { RegressionResult } from "./stats/index.ts";
 // ─── I/O: clipboard ──────────────────────────────────────────────────────────
 export { readClipboard, toClipboard } from "./io/index.ts";
 export type { ReadClipboardOptions, ToClipboardOptions } from "./io/index.ts";
+
+// ─── core: plotting ───────────────────────────────────────────────────────────
+export {
+  setPlotRenderer,
+  linePlot,
+  barPlot,
+  barhPlot,
+  areaPlot,
+  histPlot,
+  kdePlot,
+  boxPlot,
+  piePlot,
+  dfLinePlot,
+  dfBarPlot,
+  dfAreaPlot,
+  dfBoxPlot,
+  dfScatterPlot,
+  dfHistPlot,
+} from "./core/index.ts";
+export type { PlotKind, PlotOptions, HistOptions, ScatterOptions, PlotSeriesEntry, PlotSpec, PlotRenderer } from "./core/index.ts";
+
+// ─── core: arrow interop ──────────────────────────────────────────────────────
+export { fromArrow, toArrow } from "./core/index.ts";
+export type { ArrowTableDecoder, ArrowTableEncoder, FromArrowOptions, ToArrowOptions } from "./core/index.ts";
+
+// ─── core: window_apply ───────────────────────────────────────────────────────
+export { rollingApply, expandingApply, dataFrameRollingApply, dataFrameExpandingApply } from "./core/index.ts";
+export type { RollingApplyOptions, ExpandingApplyOptions } from "./core/index.ts";
+
+// ─── I/O: read_sas ────────────────────────────────────────────────────────────
+export { readSas } from "./io/index.ts";
+export type { SasDecoder, SasColumn, SasResult, ReadSasOptions } from "./io/index.ts";
+
+// ─── I/O: read_spss ───────────────────────────────────────────────────────────
+export { readSpss } from "./io/index.ts";
+export type { SpssDecoder, SpssVariable, SpssResult, SpssValueLabels, ReadSpssOptions } from "./io/index.ts";

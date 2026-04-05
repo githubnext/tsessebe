@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Window Apply</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Window Apply</h1>
+    <p class="subtitle">
+      Apply custom functions over rolling and expanding windows:
+      <code>rollingApply</code>, <code>expandingApply</code>,
+      <code>dataFrameRollingApply</code>, <code>dataFrameExpandingApply</code>.
+    </p>
+
+    <h2>Rolling apply — custom aggregation</h2>
+    <p>
+      <code>rollingApply(series, window, fn)</code> applies <code>fn</code> to each
+      trailing window of non-null values. Positions with fewer than <code>minPeriods</code>
+      valid values produce <code>null</code>.
+    </p>
+    <div class="card">
+      <textarea id="roll-code" rows="20">
+import { Series, rollingApply } from "tsb";
+
+const prices = new Series({
+  data: [100, 102, 98, 105, 110, 108, 115, 112, 118, 120],
+  name: "price",
+});
+
+// Rolling geometric mean over 3 periods
+const geoMean = rollingApply(prices, 3, (w) =>
+  Math.exp(w.reduce((sum, x) => sum + Math.log(x), 0) / w.length)
+);
+
+// Rolling range (max - min)
+const range = rollingApply(prices, 3, (w) =>
+  Math.max(...w) - Math.min(...w)
+);
+
+console.log("Geometric mean (window=3):");
+console.log(geoMean.values.map(v => v === null ? "null" : v.toFixed(2)).join(", "));
+
+console.log("\nRange (window=3):");
+console.log(range.values.join(", "));
+      </textarea>
+      <button onclick="run('roll-code', 'roll-out')">▶ Run</button>
+      <pre id="roll-out"></pre>
+    </div>
+
+    <h2>Rolling apply — minPeriods and centre</h2>
+    <div class="card">
+      <textarea id="opts-code" rows="18">
+import { Series, rollingApply } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7] });
+
+// Start computing from first valid observation (minPeriods=1)
+const earlyStart = rollingApply(s, 3, (w) => w.reduce((a, x) => a + x, 0), { minPeriods: 1 });
+console.log("Early start (minPeriods=1):", earlyStart.values.join(", "));
+
+// Centred window
+const centred = rollingApply(s, 3, (w) => w.reduce((a, x) => a + x, 0), { center: true, minPeriods: 1 });
+console.log("Centred sum (window=3)    :", centred.values.join(", "));
+
+// Standard trailing window
+const trailing = rollingApply(s, 3, (w) => w.reduce((a, x) => a + x, 0));
+console.log("Trailing sum (window=3)   :", trailing.values.join(", "));
+      </textarea>
+      <button onclick="run('opts-code', 'opts-out')">▶ Run</button>
+      <pre id="opts-out"></pre>
+    </div>
+
+    <h2>Expanding apply — cumulative statistics</h2>
+    <div class="card">
+      <textarea id="exp-code" rows="22">
+import { Series, expandingApply } from "tsb";
+
+const returns = new Series({
+  data: [0.02, -0.01, 0.03, 0.015, -0.005, 0.025, 0.01],
+  name: "returns",
+});
+
+// Cumulative max
+const cumMax = expandingApply(returns, (w) => Math.max(...w));
+console.log("Cumulative max:", cumMax.values.map(v => v?.toFixed(4)).join(", "));
+
+// Running Sharpe-like ratio (mean / std)
+const sharpe = expandingApply(returns, (w) => {
+  if (w.length < 2) return w[0] ?? 0;
+  const mean = w.reduce((a, x) => a + x, 0) / w.length;
+  const variance = w.reduce((a, x) => a + (x - mean) ** 2, 0) / (w.length - 1);
+  return mean / Math.sqrt(variance);
+}, { minPeriods: 2 });
+
+console.log("Running Sharpe:", sharpe.values.map(v => v === null ? "null" : v.toFixed(4)).join(", "));
+      </textarea>
+      <button onclick="run('exp-code', 'exp-out')">▶ Run</button>
+      <pre id="exp-out"></pre>
+    </div>
+
+    <h2>DataFrame rolling and expanding apply</h2>
+    <div class="card">
+      <textarea id="df-code" rows="20">
+import { DataFrame, dataFrameRollingApply, dataFrameExpandingApply } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3, 4, 5],
+  b: [5, 4, 3, 2, 1],
+});
+
+// Rolling product per column
+const rollProd = dataFrameRollingApply(df, 2, (w) => w.reduce((x, y) => x * y, 1));
+console.log("Rolling product (window=2):");
+console.log("  a:", rollProd.col("a").values.join(", "));
+console.log("  b:", rollProd.col("b").values.join(", "));
+
+// Cumulative sum per column
+const cumSum = dataFrameExpandingApply(df, (w) => w.reduce((x, y) => x + y, 0));
+console.log("\nCumulative sum:");
+console.log("  a:", cumSum.col("a").values.join(", "));
+console.log("  b:", cumSum.col("b").values.join(", "));
+      </textarea>
+      <button onclick="run('df-code', 'df-out')">▶ Run</button>
+      <pre id="df-out"></pre>
+    </div>
+
+    <script src="playground-runtime.js"></script>
+  </body>
+</html>

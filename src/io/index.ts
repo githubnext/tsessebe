@@ -71,3 +71,17 @@ export type { ArrowDecoder, ArrowEncoder, ReadFeatherOptions, ToFeatherOptions }
 // ─── clipboard ────────────────────────────────────────────────────────────────
 export { readClipboard, toClipboard } from "./read_clipboard.ts";
 export type { ReadClipboardOptions, ToClipboardOptions } from "./read_clipboard.ts";
+
+// ─── read_sas ─────────────────────────────────────────────────────────────────
+export { readSas } from "./read_sas.ts";
+export type { SasDecoder, SasColumn, SasResult, ReadSasOptions } from "./read_sas.ts";
+
+// ─── read_spss ────────────────────────────────────────────────────────────────
+export { readSpss } from "./read_spss.ts";
+export type {
+  SpssDecoder,
+  SpssVariable,
+  SpssResult,
+  SpssValueLabels,
+  ReadSpssOptions,
+} from "./read_spss.ts";

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · SAS / SPSS / Arrow I/O</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+      .note { background: #fff8e1; border-left: 4px solid #f9a825; padding: 0.6rem 1rem; font-size: 0.9rem; border-radius: 0 4px 4px 0; margin-bottom: 1rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>SAS · SPSS · Apache Arrow I/O</h1>
+    <p class="subtitle">
+      Injectable decoders for proprietary formats:
+      <code>readSas</code> (SAS7BDAT/XPORT),
+      <code>readSpss</code> (SAV/ZSAV),
+      <code>fromArrow</code> / <code>toArrow</code> (Apache Arrow IPC).
+    </p>
+
+    <div class="note">
+      💡 These stubs require an injectable decoder/encoder. The playground uses
+      mock decoders to demonstrate the API without a WASM library.
+    </div>
+
+    <h2>readSas — SAS7BDAT file</h2>
+    <div class="card">
+      <textarea id="sas-code" rows="30">
+import { readSas } from "tsb";
+
+// Inject a mock SAS decoder
+globalThis.__sasDecoder = {
+  decode: (buf, format) => ({
+    columns: [
+      { name: "subject_id", type: "numeric", label: "Subject ID" },
+      { name: "age",        type: "numeric", label: "Age (years)" },
+      { name: "treatment",  type: "character", format: "$8." },
+      { name: "score",      type: "numeric", label: "Outcome Score" },
+    ],
+    rows: [
+      [1, 34, "A", 85.2],
+      [2, 28, "B", 72.1],
+      [3, 41, "A", 91.0],
+      [4, 25, "B", 68.5],
+      [5, 37, "A", 88.7],
+    ],
+    meta: { creation_date: "2024-01-15", sas_version: "9.4" },
+  }),
+};
+
+const df = await readSas(new Uint8Array(8), { format: "sas7bdat" });
+console.log("Shape:", df.shape);
+console.log("Columns:", df.columns.values.join(", "));
+console.log("\nTreatment A subjects:");
+const dfA = df.filter(row => row.treatment === "A");
+console.log("  count:", dfA.shape[0]);
+console.log("  avg score:", (dfA.col("score").values.reduce((a, v) => a + v, 0) / dfA.shape[0]).toFixed(2));
+      </textarea>
+      <button onclick="run('sas-code', 'sas-out')">▶ Run</button>
+      <pre id="sas-out"></pre>
+    </div>
+
+    <h2>readSpss — SPSS SAV with value labels</h2>
+    <div class="card">
+      <textarea id="spss-code" rows="35">
+import { readSpss } from "tsb";
+
+globalThis.__spssDecoder = {
+  decode: () => ({
+    variables: [
+      { name: "id",     label: "Respondent ID", measureLevel: "scale" },
+      { name: "gender", label: "Gender",         measureLevel: "nominal",
+        valueLabels: { "1": "Male", "2": "Female", "9": "Prefer not to say" } },
+      { name: "rating", label: "Satisfaction",   measureLevel: "ordinal",
+        valueLabels: { "1": "Very dissatisfied", "2": "Dissatisfied",
+                       "3": "Neutral", "4": "Satisfied", "5": "Very satisfied" } },
+    ],
+    rows: [
+      [101, 1, 5],
+      [102, 2, 4],
+      [103, 1, 3],
+      [104, 2, 5],
+      [105, 9, 4],
+    ],
+  }),
+};
+
+// Without labels
+const raw = await readSpss(new Uint8Array(8));
+console.log("Raw codes:", raw.col("gender").values.join(", "));
+
+// With labels applied
+const labelled = await readSpss(new Uint8Array(8), { applyValueLabels: true });
+console.log("With labels:", labelled.col("gender").values.join(", "));
+console.log("Ratings:", labelled.col("rating").values.join(", "));
+      </textarea>
+      <button onclick="run('spss-code', 'spss-out')">▶ Run</button>
+      <pre id="spss-out"></pre>
+    </div>
+
+    <h2>fromArrow / toArrow — Apache Arrow IPC</h2>
+    <div class="card">
+      <textarea id="arrow-code" rows="30">
+import { fromArrow, toArrow, DataFrame } from "tsb";
+
+// Mock Arrow decoder
+globalThis.__arrowTableDecoder = {
+  decode: () => [
+    { name: "Alice",   dept: "Engineering", salary: 95000 },
+    { name: "Bob",     dept: "Marketing",   salary: 75000 },
+    { name: "Charlie", dept: "Engineering", salary: 110000 },
+    { name: "Diana",   dept: "HR",          salary: 68000 },
+  ],
+};
+
+// Mock Arrow encoder
+globalThis.__arrowTableEncoder = {
+  encode: (records) => {
+    console.log("Encoding", records.length, "records →", Object.keys(records[0]).join(", "));
+    return new Uint8Array(records.length * 64); // mock bytes
+  },
+};
+
+// Decode Arrow IPC → DataFrame
+const df = await fromArrow(new Uint8Array(8));
+console.log("Loaded:", df.shape, "columns:", df.columns.values.join(", "));
+
+// Encode DataFrame → Arrow IPC
+const df2 = DataFrame.fromColumns({
+  x: [1.0, 2.0, 3.0],
+  y: ["alpha", "beta", "gamma"],
+});
+const buf = toArrow(df2);
+console.log("Arrow buffer:", buf.length, "bytes");
+      </textarea>
+      <button onclick="run('arrow-code', 'arrow-out')">▶ Run</button>
+      <pre id="arrow-out"></pre>
+    </div>
+
+    <script src="playground-runtime.js"></script>
+  </body>
+</html>
