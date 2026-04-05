@@ -48,6 +48,8 @@ export {
   dataFrameGe,
 } from "./compare.ts";
 export type { CompareOp, SeriesOther, DataFrameOther } from "./compare.ts";
+export { shiftSeries, diffSeries, dataFrameShift, dataFrameDiff } from "./shift_diff.ts";
+export type { ShiftDiffDataFrameOptions } from "./shift_diff.ts";
 export { describe, quantile } from "./describe.ts";
 export type { DescribeOptions } from "./describe.ts";
 export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./corr.ts";

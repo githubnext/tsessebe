@@ -129,3 +129,5 @@ export {
   dataFrameGe,
 } from "./stats/index.ts";
 export type { CompareOp, SeriesOther, DataFrameOther } from "./stats/index.ts";
+export { shiftSeries, diffSeries, dataFrameShift, dataFrameDiff } from "./stats/index.ts";
+export type { ShiftDiffDataFrameOptions } from "./stats/index.ts";
