@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — cumulative operations</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>cumulative operations</h1>
+<p class="subtitle">
+  Compute running totals, products, maxima, and minima —
+  mirrors <code>pandas.Series.cumsum()</code> / <code>cumprod()</code> / <code>cummax()</code> / <code>cummin()</code>.
+</p>
+
+<section>
+  <h2>1 — cumsum: running total</h2>
+  <p>
+    <code>cumsum(series)</code> returns a new Series where each value is the sum of all preceding
+    values plus the current one. Mirrors <code>pandas.Series.cumsum()</code>.
+  </p>
+  <pre><code id="ex1-code">import { Series, cumsum } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+const cs = cumsum(s);
+console.log([...cs.values]); // [1, 3, 6, 10, 15]
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — cumprod: running product</h2>
+  <p>
+    <code>cumprod(series)</code> returns a new Series where each value is the product of all values
+    up to and including that position. Mirrors <code>pandas.Series.cumprod()</code>.
+  </p>
+  <pre><code id="ex2-code">import { Series, cumprod } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+const cp = cumprod(s);
+console.log([...cp.values]); // [1, 2, 6, 24, 120]
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — cummax and cummin</h2>
+  <p>
+    <code>cummax(series)</code> tracks the running maximum; <code>cummin(series)</code> tracks the
+    running minimum. Both work on numbers, strings, and booleans.
+  </p>
+  <pre><code id="ex3-code">import { Series, cummax, cummin } from "tsb";
+
+const s = new Series({ data: [3, 1, 4, 1, 5, 9, 2, 6] });
+console.log([...cummax(s).values]); // [3, 3, 4, 4, 5, 9, 9, 9]
+console.log([...cummin(s).values]); // [3, 1, 1, 1, 1, 1, 1, 1]
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — Handling missing values (skipna)</h2>
+  <p>
+    By default <code>skipna: true</code>: missing values return <code>NaN</code>/<code>null</code>
+    in the result but do <em>not</em> affect the running accumulator.
+    With <code>skipna: false</code>, any missing value poisons all subsequent results.
+  </p>
+  <pre><code id="ex4-code">import { Series, cumsum } from "tsb";
+
+const s = new Series({ data: [1, null, 3, 4] });
+
+// skipna: true (default) — NaN at position 1, accumulator continues
+const skipTrue = cumsum(s);
+console.log([...skipTrue.values]); // [1, NaN, 4, 8]
+
+// skipna: false — NaN at position 1 poisons everything after
+const skipFalse = cumsum(s, { skipna: false });
+console.log([...skipFalse.values]); // [1, NaN, NaN, NaN]
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — DataFrame: axis=0 (column-wise)</h2>
+  <p>
+    <code>dataFrameCumsum(df)</code> applies the operation independently to each column
+    (axis=0 is the default, same as pandas).
+  </p>
+  <pre><code id="ex5-code">import { DataFrame, dataFrameCumsum, dataFrameCummax } from "tsb";
+
+const df = DataFrame.fromColumns({
+  revenue: [100, 150, 200, 120],
+  cost:    [60,  80,  110, 70],
+});
+
+const csDf = dataFrameCumsum(df);
+console.log([...csDf.col("revenue").values]); // [100, 250, 450, 570]
+console.log([...csDf.col("cost").values]);    // [60, 140, 250, 320]
+
+const cmDf = dataFrameCummax(df);
+console.log([...cmDf.col("revenue").values]); // [100, 150, 200, 200]
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — DataFrame: axis=1 (row-wise)</h2>
+  <p>
+    With <code>axis: 1</code> (or <code>axis: "columns"</code>), the operation is applied
+    across columns for each row — each cell becomes the cumulative value of all columns
+    to its left plus itself.
+  </p>
+  <pre><code id="ex6-code">import { DataFrame, dataFrameCumsum } from "tsb";
+
+const df = DataFrame.fromColumns({
+  q1: [10, 20, 30],
+  q2: [15, 25, 35],
+  q3: [12, 22, 32],
+});
+
+// axis=1: running total across quarters for each year-row
+const ytd = dataFrameCumsum(df, { axis: 1 });
+console.log([...ytd.col("q1").values]); // [10, 20, 30]   (unchanged — first col)
+console.log([...ytd.col("q2").values]); // [25, 45, 65]   (q1+q2)
+console.log([...ytd.col("q3").values]); // [37, 67, 97]   (q1+q2+q3)
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — Real-world example: portfolio tracking</h2>
+  <p>
+    Track the running portfolio value and the running drawdown (how far we are from the
+    all-time high) using <code>cumsum</code> and <code>cummax</code>.
+  </p>
+  <pre><code id="ex7-code">import { Series, cumsum, cummax } from "tsb";
+
+// Daily P&L in dollars
+const pnl = new Series({ data: [200, -50, 300, -150, 400, -80, 600] });
+
+const equity = cumsum(pnl);
+const peak   = cummax(equity);
+
+// Drawdown: how far below the all-time high we currently are
+const drawdown = new Series({
+  data: equity.values.map((v, i) => {
+    const p = peak.values[i];
+    return (typeof v === "number" && typeof p === "number") ? v - p : null;
+  }),
+});
+
+console.log("Equity curve: ", [...equity.values]);
+// [200, 150, 450, 300, 700, 620, 1220]
+console.log("All-time high:", [...peak.values]);
+// [200, 200, 450, 450, 700, 700, 1220]
+console.log("Drawdown:     ", [...drawdown.values]);
+// [0, -50, 0, -150, 0, -80, 0]
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<section>
+  <h2>8 — String series: lexicographic cummax / cummin</h2>
+  <p>
+    <code>cummax</code> and <code>cummin</code> work on any comparable type, including
+    strings (lexicographic ordering).
+  </p>
+  <pre><code id="ex8-code">import { Series, cummax, cummin } from "tsb";
+
+const words = new Series({ data: ["banana", "apple", "cherry", "apricot", "date"] });
+console.log([...cummax(words).values]);
+// ["banana", "banana", "cherry", "cherry", "cherry"]
+console.log([...cummin(words).values]);
+// ["banana", "apple",  "apple",  "apple",  "apple"]
+</code></pre>
+  <div class="output" id="ex8-output">Loading…</div>
+</section>
+
+</body>
+</html>
