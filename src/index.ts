@@ -76,3 +76,5 @@ export { rankSeries, rankDataFrame } from "./stats/index.ts";
 export type { RankMethod, NaOption, RankOptions } from "./stats/index.ts";
 export { nlargestSeries, nsmallestSeries, nlargestDataFrame, nsmallestDataFrame } from "./stats/index.ts";
 export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./stats/index.ts";
+export { cumsum, cumprod, cummax, cummin, dataFrameCumsum, dataFrameCumprod, dataFrameCummax, dataFrameCummin } from "./stats/index.ts";
+export type { CumOpsOptions, DataFrameCumOpsOptions } from "./stats/index.ts";

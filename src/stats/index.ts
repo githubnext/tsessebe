@@ -4,6 +4,8 @@
  * @module
  */
 
+export { cummax, cummin, cumprod, cumsum, dataFrameCummax, dataFrameCummin, dataFrameCumprod, dataFrameCumsum } from "./cum_ops.ts";
+export type { CumOpsOptions, DataFrameCumOpsOptions } from "./cum_ops.ts";
 export { describe, quantile } from "./describe.ts";
 export type { DescribeOptions } from "./describe.ts";
 export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./corr.ts";
