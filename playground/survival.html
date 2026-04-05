@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Survival Analysis</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Survival Analysis</h1>
+    <p class="subtitle">
+      Non-parametric survival curve estimation and group comparison.
+      <code>kaplanMeier(events)</code> mirrors <code>lifelines.KaplanMeierFitter</code>.
+      <code>logRankTest(g1, g2)</code> tests whether two survival curves differ significantly.
+    </p>
+
+    <h2>1 · Kaplan-Meier estimator</h2>
+    <div class="card">
+      <textarea id="ex1" rows="22">
+// Classic Kaplan-Meier example
+// Each event: { time: observed follow-up, event: true = event occurred, false = censored }
+const events = [
+  { time: 2,  event: true  },
+  { time: 3,  event: false },  // censored
+  { time: 5,  event: true  },
+  { time: 6,  event: true  },
+  { time: 8,  event: false },  // censored
+  { time: 10, event: true  },
+  { time: 12, event: false },  // censored
+  { time: 15, event: true  },
+];
+
+const km = tsb.kaplanMeier(events);
+
+console.log("Time  | S(t)   | n at risk | events");
+console.log("------+--------+-----------+-------");
+for (let i = 0; i < km.times.length; i++) {
+  console.log(
+    `  ${String(km.times[i]).padStart(3)} | ${km.survivalProb[i].toFixed(3)} | ${String(km.nAtRisk[i]).padStart(9)} | ${km.nEvents[i]}`
+  );
+}
+console.log(`\nMedian survival time: ${km.medianSurvival ?? "not reached"}`);
+      </textarea>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <pre id="out1"></pre>
+    </div>
+
+    <h2>2 · Log-rank test</h2>
+    <div class="card">
+      <textarea id="ex2" rows="28">
+// Compare two treatment groups using the log-rank test
+// Group A: short-lived (control)
+const groupA = [
+  { time: 1,  event: true  },
+  { time: 2,  event: true  },
+  { time: 3,  event: true  },
+  { time: 4,  event: false },
+  { time: 5,  event: true  },
+];
+
+// Group B: longer-lived (treatment)
+const groupB = [
+  { time: 8,  event: true  },
+  { time: 10, event: false },
+  { time: 12, event: true  },
+  { time: 15, event: true  },
+  { time: 20, event: false },
+];
+
+const kmA = tsb.kaplanMeier(groupA);
+const kmB = tsb.kaplanMeier(groupB);
+
+console.log(`Group A median survival: ${kmA.medianSurvival}`);
+console.log(`Group B median survival: ${kmB.medianSurvival ?? "not reached"}`);
+
+const result = tsb.logRankTest(groupA, groupB);
+console.log(`\nLog-rank test:`);
+console.log(`  χ² statistic: ${result.statistic.toFixed(3)}`);
+console.log(`  p-value:      ${result.pValue.toFixed(4)}`);
+console.log(`  df:           ${result.df}`);
+console.log(`\n${result.pValue < 0.05 ? "✓ Significant difference (p < 0.05)" : "✗ No significant difference"}`);
+      </textarea>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <pre id="out2"></pre>
+    </div>
+
+    <h2>3 · Censoring effects</h2>
+    <div class="card">
+      <textarea id="ex3" rows="20">
+// Demonstrate the effect of censoring on the survival estimate
+const withCensoring = [
+  { time: 1, event: true  },
+  { time: 2, event: false },  // censored
+  { time: 3, event: false },  // censored
+  { time: 4, event: true  },
+  { time: 6, event: false },  // censored
+  { time: 8, event: true  },
+];
+
+const km = tsb.kaplanMeier(withCensoring);
+console.log("Kaplan-Meier with censoring:");
+for (let i = 0; i < km.times.length; i++) {
+  const bar = "█".repeat(Math.round(km.survivalProb[i] * 20));
+  console.log(`t=${km.times[i]}: S=${km.survivalProb[i].toFixed(3)} ${bar}`);
+}
+      </textarea>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <pre id="out3"></pre>
+    </div>
+
+    <script type="module">
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
+    </script>
+    <script>
+      function run(inputId, outputId) {
+        const code = document.getElementById(inputId).value;
+        const out = document.getElementById(outputId);
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(String).join(" "));
+        try {
+          new Function("tsb", code)(window.tsb);
+          out.textContent = logs.join("\n");
+          out.className = "";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "error";
+        } finally {
+          console.log = origLog;
+        }
+      }
+      window.run = run;
+    </script>
+  </body>
+</html>

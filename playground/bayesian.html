@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Bayesian Inference</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Bayesian Inference</h1>
+    <p class="subtitle">
+      Conjugate prior–posterior updates for the most common Bayesian models.
+      Supports Beta-Binomial, Normal-Normal (known variance), Gamma-Poisson,
+      and Dirichlet-Categorical.
+    </p>
+
+    <h2>1 · Beta-Binomial (conversion rate)</h2>
+    <div class="card">
+      <textarea id="ex1" rows="22">
+// Estimate click-through rate with a Beta prior
+// Start with a weak uniform prior: Beta(1, 1)
+let prior = { alpha: 1, beta: 1 };
+console.log("Prior: Beta(1, 1)");
+console.log(`  Mean: ${tsb.betaMean(prior).toFixed(3)}`);
+
+// Observe 70 clicks out of 200 impressions
+const posterior = tsb.betaBinomialUpdate(prior, 70, 200);
+console.log("\nAfter 70/200 observations: Beta(" + posterior.alpha + ", " + posterior.beta + ")");
+console.log(`  Posterior mean:     ${tsb.betaMean(posterior).toFixed(3)}`);
+console.log(`  Posterior variance: ${tsb.betaVariance(posterior).toFixed(5)}`);
+console.log(`  Mode:               ${tsb.betaMode(posterior)?.toFixed(3) ?? "N/A"}`);
+
+const ci = tsb.betaCredibleInterval(posterior, 0.95);
+console.log(`  95% credible interval: [${ci.lower.toFixed(3)}, ${ci.upper.toFixed(3)}]`);
+
+// Sequential updating: another 30 clicks out of 100
+const posterior2 = tsb.betaBinomialUpdate(posterior, 30, 100);
+console.log("\nAfter another 30/100: Beta(" + posterior2.alpha + ", " + posterior2.beta + ")");
+console.log(`  Posterior mean: ${tsb.betaMean(posterior2).toFixed(3)}`);
+      </textarea>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <pre id="out1"></pre>
+    </div>
+
+    <h2>2 · Normal-Normal (known variance)</h2>
+    <div class="card">
+      <textarea id="ex2" rows="22">
+// Estimate true average height with a Normal prior
+// Prior: N(170 cm, σ₀²=100) — mean 170, std 10
+const prior = { mean: 170, variance: 100 };
+console.log("Prior: N(mean=170, var=100)");
+console.log(`  Prior 95% CI: [${(170 - 1.96*10).toFixed(1)}, ${(170 + 1.96*10).toFixed(1)}]`);
+
+// Observe 25 people with sample mean 175, known σ²=64
+const posterior = tsb.normalNormalUpdate(prior, 175, 25, 64);
+console.log("\nAfter 25 obs (sample mean=175, σ²=64):");
+console.log(`  Posterior mean:     ${posterior.mean.toFixed(2)}`);
+console.log(`  Posterior variance: ${posterior.variance.toFixed(3)}`);
+
+const ci = tsb.normalCredibleInterval(posterior, 0.95);
+console.log(`  95% credible interval: [${ci.lower.toFixed(2)}, ${ci.upper.toFixed(2)}]`);
+
+// More data: 100 more observations
+const posterior2 = tsb.normalNormalUpdate(posterior, 174, 100, 64);
+console.log("\nAfter 100 more obs (sample mean=174):");
+console.log(`  Posterior mean:     ${posterior2.mean.toFixed(3)}`);
+console.log(`  Posterior std:      ${Math.sqrt(posterior2.variance).toFixed(3)}`);
+      </textarea>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <pre id="out2"></pre>
+    </div>
+
+    <h2>3 · Gamma-Poisson (event rate)</h2>
+    <div class="card">
+      <textarea id="ex3" rows="18">
+// Model daily email arrivals with a Gamma-Poisson model
+// Prior: Gamma(2, 0.5) — mean rate = 4 per day
+const prior = { alpha: 2, beta: 0.5 };
+console.log("Prior: Gamma(2, 0.5)");
+console.log(`  Prior mean rate: ${tsb.gammaMean(prior).toFixed(1)} events/day`);
+console.log(`  Prior std:       ${Math.sqrt(tsb.gammaVariance(prior)).toFixed(2)}`);
+
+// Observe 35 emails over 7 days
+const posterior = tsb.gammaPoissonUpdate(prior, 35, 7);
+console.log("\nAfter 35 emails over 7 days:");
+console.log(`  Posterior mean rate: ${tsb.gammaMean(posterior).toFixed(2)} events/day`);
+console.log(`  Posterior std:       ${Math.sqrt(tsb.gammaVariance(posterior)).toFixed(3)}`);
+console.log(`  Alpha: ${posterior.alpha}, Beta: ${posterior.beta}`);
+      </textarea>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <pre id="out3"></pre>
+    </div>
+
+    <h2>4 · Dirichlet-Categorical (topic proportions)</h2>
+    <div class="card">
+      <textarea id="ex4" rows="20">
+// Estimate proportions of 4 news categories with a Dirichlet prior
+// Uniform prior across 4 categories
+const prior = { alpha: [1, 1, 1, 1] };
+const categories = ["Politics", "Sports", "Tech", "Science"];
+console.log("Prior: Dirichlet(1, 1, 1, 1) — uniform");
+console.log("Prior means:", tsb.dirichletMean(prior).map(v => v.toFixed(3)).join(", "));
+
+// Observe counts from 100 articles
+const counts = [40, 25, 20, 15];
+const posterior = tsb.dirichletCategoricalUpdate(prior, counts);
+
+console.log("\nAfter observing [40, 25, 20, 15] articles:");
+const means = tsb.dirichletMean(posterior);
+for (let i = 0; i < categories.length; i++) {
+  const bar = "█".repeat(Math.round(means[i] * 40));
+  console.log(`  ${categories[i].padEnd(9)}: ${(means[i]*100).toFixed(1)}% ${bar}`);
+}
+      </textarea>
+      <button onclick="run('ex4','out4')">▶ Run</button>
+      <pre id="out4"></pre>
+    </div>
+
+    <script type="module">
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
+    </script>
+    <script>
+      function run(inputId, outputId) {
+        const code = document.getElementById(inputId).value;
+        const out = document.getElementById(outputId);
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(String).join(" "));
+        try {
+          new Function("tsb", code)(window.tsb);
+          out.textContent = logs.join("\n");
+          out.className = "";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "error";
+        } finally {
+          console.log = origLog;
+        }
+      }
+      window.run = run;
+    </script>
+  </body>
+</html>

@@ -85,9 +85,9 @@ function interpolateColor(low: string, high: string, t: number): string {
  * All methods return `this` for chaining.
  */
 export class Styler {
-  private readonly _df: DataFrame;
+  /** @protected */ protected readonly _df: DataFrame;
   /** Sparse map: "row,col" → array of CSS declarations. */
-  private readonly _styles: Map<string, CssDecl[]>;
+  /** @protected */ protected readonly _styles: Map<string, CssDecl[]>;
   private _caption: string | null;
   private _tableStyles: CssDecl[];
 
@@ -341,7 +341,7 @@ export class Styler {
 
   // ─── private helpers ──────────────────────────────────────────────────────────
 
-  private _addStyle(cell: CellKey, decl: CssDecl): void {
+  /** @protected */ protected _addStyle(cell: CellKey, decl: CssDecl): void {
     const key = `${cell.row},${cell.col}`;
     const existing = this._styles.get(key);
     if (existing !== undefined) {

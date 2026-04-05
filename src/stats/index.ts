@@ -52,3 +52,38 @@ export type { MannWhitneyResult, WilcoxonResult } from "./mann_whitney.ts";
 // ─── regression ───────────────────────────────────────────────────────────────
 export { olsRegress, wlsRegress } from "./regression.ts";
 export type { RegressionResult } from "./regression.ts";
+
+// ─── survival analysis ────────────────────────────────────────────────────────
+export { kaplanMeier, logRankTest } from "./survival.ts";
+export type { SurvivalEvent, KaplanMeierResult, LogRankResult } from "./survival.ts";
+
+// ─── time series ─────────────────────────────────────────────────────────────
+export { acf, pacf, fitArma, ljungBox } from "./timeseries.ts";
+export type { AutocorrResult, ArmaParams, LjungBoxResult } from "./timeseries.ts";
+
+// ─── PCA / factor analysis ────────────────────────────────────────────────────
+export { pca, factorAnalysis } from "./factor.ts";
+export type { PcaResult, PcaOptions, FactorResult } from "./factor.ts";
+
+// ─── Bayesian inference ───────────────────────────────────────────────────────
+export {
+  betaBinomialUpdate,
+  betaMean,
+  betaVariance,
+  betaMode,
+  betaCredibleInterval,
+  normalNormalUpdate,
+  normalCredibleInterval,
+  gammaPoissonUpdate,
+  gammaMean,
+  gammaVariance,
+  dirichletCategoricalUpdate,
+  dirichletMean,
+} from "./bayesian.ts";
+export type {
+  BetaParams,
+  NormalParams,
+  GammaParams,
+  DirichletParams,
+  CredibleInterval,
+} from "./bayesian.ts";

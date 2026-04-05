@@ -305,3 +305,7 @@ export type {
 // ─── window_apply ─────────────────────────────────────────────────────────────
 export { rollingApply, expandingApply, dataFrameRollingApply, dataFrameExpandingApply } from "./window_apply.ts";
 export type { RollingApplyOptions, ExpandingApplyOptions } from "./window_apply.ts";
+
+// ─── advanced styler ─────────────────────────────────────────────────────────
+export { AdvancedStyler, advancedStyler } from "./style_advanced.ts";
+export type { BarOptions, HeatmapOptions, TextGradientOptions, ThresholdOptions } from "./style_advanced.ts";

@@ -484,3 +484,42 @@ export type { SasDecoder, SasColumn, SasResult, ReadSasOptions } from "./io/inde
 // ─── I/O: read_spss ───────────────────────────────────────────────────────────
 export { readSpss } from "./io/index.ts";
 export type { SpssDecoder, SpssVariable, SpssResult, SpssValueLabels, ReadSpssOptions } from "./io/index.ts";
+
+// ─── stats: survival analysis ─────────────────────────────────────────────────
+export { kaplanMeier, logRankTest } from "./stats/index.ts";
+export type { SurvivalEvent, KaplanMeierResult, LogRankResult } from "./stats/index.ts";
+
+// ─── stats: time series ───────────────────────────────────────────────────────
+export { acf, pacf, fitArma, ljungBox } from "./stats/index.ts";
+export type { AutocorrResult, ArmaParams, LjungBoxResult } from "./stats/index.ts";
+
+// ─── stats: PCA / factor analysis ─────────────────────────────────────────────
+export { pca, factorAnalysis } from "./stats/index.ts";
+export type { PcaResult, PcaOptions, FactorResult } from "./stats/index.ts";
+
+// ─── stats: Bayesian inference ────────────────────────────────────────────────
+export {
+  betaBinomialUpdate,
+  betaMean,
+  betaVariance,
+  betaMode,
+  betaCredibleInterval,
+  normalNormalUpdate,
+  normalCredibleInterval,
+  gammaPoissonUpdate,
+  gammaMean,
+  gammaVariance,
+  dirichletCategoricalUpdate,
+  dirichletMean,
+} from "./stats/index.ts";
+export type {
+  BetaParams,
+  NormalParams,
+  GammaParams,
+  DirichletParams,
+  CredibleInterval,
+} from "./stats/index.ts";
+
+// ─── core: advanced styler ─────────────────────────────────────────────────────
+export { AdvancedStyler, advancedStyler } from "./core/index.ts";
+export type { BarOptions, HeatmapOptions, TextGradientOptions, ThresholdOptions } from "./core/index.ts";

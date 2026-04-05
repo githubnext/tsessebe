@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · Time Series Analysis</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      .subtitle { color: #555; margin-bottom: 2rem; }
+      .card { background: #f8f8f8; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.88rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem; resize: vertical; background: #fff; }
+      button { background: #0969da; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 1.1rem; cursor: pointer; font-size: 0.9rem; margin-top: 0.5rem; }
+      button:hover { background: #0752a3; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 0.8rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; margin-top: 0.5rem; white-space: pre-wrap; }
+      .error { color: #c00; }
+      a { color: #0969da; }
+      nav { margin-bottom: 1.5rem; font-size: 0.9rem; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="index.html">← All features</a></nav>
+    <h1>Time Series Analysis</h1>
+    <p class="subtitle">
+      Autocorrelation (ACF), partial autocorrelation (PACF), AR parameter estimation,
+      and the Ljung-Box portmanteau test — mirroring <code>statsmodels.tsa</code> and
+      <code>pandas.Series.autocorr()</code>.
+    </p>
+
+    <h2>1 · Autocorrelation Function (ACF)</h2>
+    <div class="card">
+      <textarea id="ex1" rows="24">
+// Generate a simple AR(1) process: x_t = 0.8 * x_{t-1} + noise
+function makeAR1(n, phi, seed = 0) {
+  const xs = [seed];
+  for (let i = 1; i < n; i++) {
+    xs.push(phi * xs[i-1] + Math.sin(i * 7.3) * 0.5);
+  }
+  return xs;
+}
+
+const xs = makeAR1(100, 0.8);
+
+// Compute ACF up to lag 8
+const result = tsb.acf(xs, 8);
+
+console.log("Lag | ACF     | 95% Bound");
+console.log("----+---------+----------");
+for (let i = 0; i < result.lags.length; i++) {
+  const sig = Math.abs(result.values[i]) > result.confInt[i] ? " *" : "  ";
+  const bar = result.values[i] >= 0
+    ? "+" + "█".repeat(Math.round(result.values[i] * 20))
+    : "-" + "█".repeat(Math.round(-result.values[i] * 20));
+  console.log(`  ${String(result.lags[i]).padStart(2)} | ${result.values[i].toFixed(4).padStart(7)} |${sig} ${bar}`);
+}
+console.log("\n* = significant at 95% level");
+      </textarea>
+      <button onclick="run('ex1','out1')">▶ Run</button>
+      <pre id="out1"></pre>
+    </div>
+
+    <h2>2 · Partial Autocorrelation Function (PACF)</h2>
+    <div class="card">
+      <textarea id="ex2" rows="24">
+// For AR(2): x_t = 0.6*x_{t-1} - 0.3*x_{t-2} + noise
+// PACF should cut off after lag 2
+function makeAR2(n) {
+  const xs = [0, 1];
+  for (let i = 2; i < n; i++) {
+    xs.push(0.6*xs[i-1] - 0.3*xs[i-2] + Math.sin(i*2.71)*0.3);
+  }
+  return xs;
+}
+
+const xs = makeAR2(200);
+const acfRes = tsb.acf(xs, 6);
+const pacfRes = tsb.pacf(xs, 6);
+
+console.log("Lag |   ACF     |   PACF");
+console.log("----+-----------+----------");
+for (let i = 1; i < acfRes.lags.length; i++) {
+  const acfBar = acfRes.values[i] >= 0
+    ? "+" + "█".repeat(Math.round(Math.abs(acfRes.values[i]) * 15))
+    : "-" + "█".repeat(Math.round(Math.abs(acfRes.values[i]) * 15));
+  const pacfBar = pacfRes.values[i] >= 0
+    ? "+" + "█".repeat(Math.round(Math.abs(pacfRes.values[i]) * 15))
+    : "-" + "█".repeat(Math.round(Math.abs(pacfRes.values[i]) * 15));
+  console.log(`  ${i}  | ${acfRes.values[i].toFixed(4).padStart(7)} ${acfBar.padEnd(20)} | ${pacfRes.values[i].toFixed(4).padStart(7)} ${pacfBar}`);
+}
+      </textarea>
+      <button onclick="run('ex2','out2')">▶ Run</button>
+      <pre id="out2"></pre>
+    </div>
+
+    <h2>3 · AR parameter estimation</h2>
+    <div class="card">
+      <textarea id="ex3" rows="20">
+// Fit AR(1) and AR(2) to an AR(1) process
+function makeAR1(n, phi) {
+  const xs = [0];
+  for (let i = 1; i < n; i++) {
+    xs.push(phi * xs[i-1] + Math.sin(i * 4.67) * 0.4);
+  }
+  return xs;
+}
+
+const xs = makeAR1(300, 0.75);
+
+const ar1 = tsb.fitArma(xs, 1, 0);
+const ar2 = tsb.fitArma(xs, 2, 0);
+
+console.log("True AR coefficient: φ₁ = 0.75");
+console.log("\nFitted AR(1):");
+console.log(`  φ₁ = ${ar1.arCoefs[0].toFixed(4)}`);
+console.log(`  Noise var: ${ar1.noiseVar.toFixed(4)}`);
+
+console.log("\nFitted AR(2):");
+console.log(`  φ₁ = ${ar2.arCoefs[0].toFixed(4)}`);
+console.log(`  φ₂ = ${ar2.arCoefs[1].toFixed(4)}`);
+console.log(`  Noise var: ${ar2.noiseVar.toFixed(4)}`);
+      </textarea>
+      <button onclick="run('ex3','out3')">▶ Run</button>
+      <pre id="out3"></pre>
+    </div>
+
+    <h2>4 · Ljung-Box test for residual autocorrelation</h2>
+    <div class="card">
+      <textarea id="ex4" rows="22">
+// Test whether residuals of a fitted AR model are white noise
+function makeAR1(n, phi) {
+  const xs = [0];
+  for (let i = 1; i < n; i++) {
+    xs.push(phi * xs[i-1] + Math.sin(i * 5.19) * 0.3);
+  }
+  return xs;
+}
+
+const xs = makeAR1(100, 0.6);
+
+// Test the raw series (should be autocorrelated)
+const rawTest = tsb.ljungBox(xs, 5);
+console.log("Ljung-Box on raw AR(1) series:");
+console.log(`  Q(5) = ${rawTest.statistic.toFixed(3)}, p = ${rawTest.pValue.toFixed(4)}`);
+console.log(`  → ${rawTest.pValue < 0.05 ? "Reject H₀: significant autocorrelation" : "Fail to reject H₀"}`);
+
+// Test approximate residuals (should be closer to white noise)
+const ar1 = tsb.fitArma(xs, 1, 0);
+const phi = ar1.arCoefs[0];
+const residuals = xs.slice(1).map((x, i) => x - phi * xs[i]);
+const residTest = tsb.ljungBox(residuals, 5);
+console.log("\nLjung-Box on AR(1) residuals:");
+console.log(`  Q(5) = ${residTest.statistic.toFixed(3)}, p = ${residTest.pValue.toFixed(4)}`);
+console.log(`  → ${residTest.pValue >= 0.05 ? "Fail to reject H₀: residuals look like white noise ✓" : "Reject H₀: some autocorrelation remains"}`);
+      </textarea>
+      <button onclick="run('ex4','out4')">▶ Run</button>
+      <pre id="out4"></pre>
+    </div>
+
+    <script type="module">
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
+    </script>
+    <script>
+      function run(inputId, outputId) {
+        const code = document.getElementById(inputId).value;
+        const out = document.getElementById(outputId);
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(String).join(" "));
+        try {
+          new Function("tsb", code)(window.tsb);
+          out.textContent = logs.join("\n");
+          out.className = "";
+        } catch (e) {
+          out.textContent = String(e);
+          out.className = "error";
+        } finally {
+          console.log = origLog;
+        }
+      }
+      window.run = run;
+    </script>
+  </body>
+</html>
