@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T17:44:42Z |
-| Iteration Count | 65 |
-| Best Metric | 21 |
+| Last Run | 2026-04-05T18:12:00Z |
+| Iteration Count | 66 |
+| Best Metric | 22 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #54 |
@@ -39,16 +39,17 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 21 files (iter 65). Next candidates:
+Now at 22 files (iter 66). Next candidates:
 - `src/core/multi_index.ts` — MultiIndex support
-- `src/reshape/stack_unstack.ts` — stack() / unstack()
-- `src/window/ewm.ts` — ✅ Done (iter 65)
+- `src/core/interval.ts` — Interval / IntervalIndex
+- `src/stats/rank.ts` — rank() as standalone (already in frame.ts inline)
 
 ---
 
 ## 📚 Lessons Learned
 
 - **Iter 65 (ewm, 20→21)**: `EwmSeriesLike` must include `toArray()` (same as Rolling/Expanding patterns). Online algorithm: track S (weighted sum), W (sum of weights), W2 (sum of squared weights) for O(n) mean+var. Extract `computeCov`/`computeCorr` top-level helpers to keep `_covImpl`/`corr` CC≤15. EWM import needs alphabetical sort: `ewm.ts` before `expanding.ts` (e-w < e-x). Shorthand assignments (`*=`) required by biome for `Sxy *= decay` etc. Use `**` not `Math.pow`. EWM corr state tracks Sx, Sy, Sx2, Sy2, Sxy, W, W2 — all decay on missing if `ignoreNa=false`.
+- **Iter 66 (stack/unstack, 21→22)**: Standalone functions (no DataFrame method) to avoid circular deps — same as melt/pivot pattern. Compound string labels `"rowLabel|colName"` with configurable sep. `uniqueOrdered()` helper preserves insertion order. `buildCellMap` + `buildOutputCols` keep CC≤15. `string[]` assignable to `Label[]` without `as` cast (string ⊆ Label). RangeIndex not needed for empty result — use `DataFrame.fromColumns({})`. No `as` casts needed.
 - **Iter 64 (melt+pivot, 18→20)**: Two reshape features in one iteration. `melt()` uses helper functions to keep CC≤15: `requireColumns`, `resolveValueVars`, `initIdColData`, `appendIdRow`. `pivot()` decomposes into `fillPivotCells` + `fillPivotCell`. `pivotTable` uses `buildGroups` + `assembleResult` + `fillOutRow` + `buildOutColNames`. Column order for multi-value pivot: outer=valuesCols, inner=colHeaders (matches pandas MultiIndex convention). `noMisplacedAssertion`: use pure helper that returns value (not asserts) to extract logic from property tests.
 - **Iter 63 (expanding+cat, 16→18)**: Two features in one iteration to beat previous best (17 on a branch with fewer files). `CatHolder` class wraps `CatSeriesLike` to preserve explicit category list through chained calls (addCategories→removeUnused etc.). `noNestedTernary` in sort comparator — use explicit if/else. Import order matters for `organizeImports` lint rule. `(mapping as unknown as Record<string, unknown>)[key]` works for safe indexing after non-array narrowing.
 - **Iter 62 (expanding, 16→17)**: `ExpandingSeriesLike` interface (mirrors `RollingSeriesLike`) avoids circular imports. `DataFrameExpanding` appended to `frame.ts`. Default `minPeriods=1` (not window size like Rolling). `count()` ignores minPeriods (matches pandas). `std(0)` returns 0 for single-element (population std). Property tests: count non-decreasing, max≥min, sum/mean manual verification.
@@ -78,6 +79,14 @@ Now at 21 files (iter 65). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 66 — 2026-04-05 18:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24007420044)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/reshape/stack_unstack.ts` — `stack()` + `unstack()`. 25+ unit tests + 4 property tests. Playground: `stack_unstack.html`.
+- **Metric**: 22 (previous: 21, delta: +1)
+- **Commit**: 83efe93
+- **Notes**: Standalone functions (not DataFrame methods) to avoid circular deps. Compound string labels `"rowLabel|colName"`. Round-trips: `unstack(stack(df,{dropna:false})) ≈ df` verified by property tests.
 
 ### Iteration 65 — 2026-04-05 17:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24006942040)
 
@@ -124,20 +133,7 @@ All iterations in reverse chronological order (newest first).
 - **Metric**: 15 (previous: 14, delta: +1)
 - **Commit**: a44aff5
 
-### Iteration 59 — 2026-04-05 14:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24003815679)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/io/json.ts` — `readJson()` + `toJson()`, 5 orient formats. 31 tests. Playground: `playground/json.html`.
-- **Metric**: 14 (previous: 13, delta: +1)
-- **Commit**: 3a94b08
-
-### Iteration 58 — 2026-04-05 14:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24003267099)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/io/csv.ts` — `readCsv()` + `toCsv()`. 35+ tests. Playground: `playground/csv.html`.
-- **Metric**: 13 (previous: 12, delta: +1)
-- **Commit**: 422db12
-
+### Iterations 58–65 — ✅ CSV I/O, JSON I/O, corr/cov, rolling, expanding, cat accessor, melt+pivot, EWM (iters 58–65)
 ### Iterations 53–57 — ✅ describe/quantile, dt accessor, str accessor, merge, GroupBy+setup (iters 53–57)
 ### Iterations 1–52 — ✅ Foundation + earlier pandas features (old branches)
 
