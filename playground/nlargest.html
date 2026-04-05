@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — nlargest / nsmallest</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>nlargest / nsmallest</h1>
+<p class="subtitle">Return the <em>n</em> largest or smallest values — mirrors <code>pandas.Series.nlargest()</code>, <code>Series.nsmallest()</code>, <code>DataFrame.nlargest()</code>, <code>DataFrame.nsmallest()</code>.</p>
+
+<section>
+  <h2>1 — Series.nlargest basics</h2>
+  <p><code>nlargestSeries(s, n)</code> returns a new Series containing the <em>n</em> largest values, sorted in descending order. NaN / null values are always excluded.</p>
+  <pre><code id="ex1-code">import { Series, nlargestSeries } from "tsb";
+
+const s = new Series({ data: [3, 1, 4, 1, 5, 9, 2, 6] });
+
+// 3 largest values, sorted descending
+const top3 = nlargestSeries(s, 3);
+console.log([...top3.values]);    // [9, 6, 5]
+console.log([...top3.index.values]); // original positions: [5, 7, 4]
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — Series.nsmallest basics</h2>
+  <p><code>nsmallestSeries(s, n)</code> returns the <em>n</em> smallest values sorted in ascending order.</p>
+  <pre><code id="ex2-code">import { Series, nsmallestSeries } from "tsb";
+
+const s = new Series({ data: [3, 1, 4, 1, 5, 9, 2, 6] });
+
+const bottom3 = nsmallestSeries(s, 3);
+console.log([...bottom3.values]);    // [1, 1, 2]
+console.log([...bottom3.index.values]); // [1, 3, 6]
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — The <code>keep</code> parameter</h2>
+  <p>When there are ties at the selection boundary, <code>keep</code> controls which ones survive:</p>
+  <ul>
+    <li><strong>first</strong> (default): keep the first occurrence in the original index order.</li>
+    <li><strong>last</strong>: keep the last occurrence.</li>
+    <li><strong>all</strong>: include every tie (may return more than <em>n</em> rows).</li>
+  </ul>
+  <pre><code id="ex3-code">import { Series, nlargestSeries } from "tsb";
+
+const s = new Series({
+  data:  [1, 3, 3, 5],
+  index: ["a", "b", "c", "d"],
+});
+
+// n=2: top two are 5 (d) and one of the 3s
+nlargestSeries(s, 2, { keep: "first" }).values; // [5, 3] — keeps "b" (first 3)
+nlargestSeries(s, 2, { keep: "last"  }).values; // [5, 3] — keeps "c" (last 3)
+
+// keep="all" includes both 3s even though n=2
+const all = nlargestSeries(s, 2, { keep: "all" });
+console.log([...all.values]);       // [5, 3, 3]
+console.log([...all.index.values]); // ["d", "b", "c"]
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — Labeled index preservation</h2>
+  <p>The result preserves the original labels, not a reset 0-based index.</p>
+  <pre><code id="ex4-code">import { Series, nlargestSeries, nsmallestSeries } from "tsb";
+
+const prices = new Series({
+  data:  [42.5, 18.0, 93.1, 67.8, 55.4],
+  index: ["AAPL", "META", "NVDA", "MSFT", "AMZN"],
+});
+
+const topStocks = nlargestSeries(prices, 3);
+console.log([...topStocks.values]);       // [93.1, 67.8, 55.4]
+console.log([...topStocks.index.values]); // ["NVDA", "MSFT", "AMZN"]
+
+const cheapest = nsmallestSeries(prices, 2);
+console.log([...cheapest.values]);        // [18.0, 42.5]
+console.log([...cheapest.index.values]);  // ["META", "AAPL"]
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — NaN / null handling</h2>
+  <p>Missing values are silently excluded from both the selection and the result.</p>
+  <pre><code id="ex5-code">import { Series, nlargestSeries } from "tsb";
+
+const s = new Series({ data: [3, NaN, 9, null, 1, NaN, 5] });
+const top3 = nlargestSeries(s, 3);
+console.log([...top3.values]); // [9, 5, 3]  — NaN/null are gone
+console.log(top3.size);        // 3
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — DataFrame.nlargest</h2>
+  <p><code>nlargestDataFrame(df, n, { columns })</code> returns the <em>n</em> rows with the largest values in the given column(s), sorted descending. Multiple columns provide a lexicographic tie-breaker.</p>
+  <pre><code id="ex6-code">import { DataFrame, nlargestDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol", "Dave", "Eve"],
+  score: [88, 95, 72, 95, 80],
+  age:   [30, 25, 35, 28, 22],
+});
+
+// Top 3 scorers
+const top3 = nlargestDataFrame(df, 3, { columns: "score" });
+console.log([...top3.col("name").values]);  // ["Bob", "Dave", "Carol" or "Eve"]
+console.log([...top3.col("score").values]); // [95, 95, 88]
+
+// Break ties on "score" using "age" (secondary sort descending)
+const top2ByAge = nlargestDataFrame(df, 2, { columns: ["score", "age"] });
+console.log([...top2ByAge.col("name").values]);  // ["Bob", "Dave"]  (both 95; Bob is 25 < Dave 28)
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — DataFrame.nsmallest</h2>
+  <p><code>nsmallestDataFrame(df, n, { columns })</code> returns the rows with the smallest values, sorted ascending.</p>
+  <pre><code id="ex7-code">import { DataFrame, nsmallestDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  product: ["A", "B", "C", "D", "E"],
+  price:   [12.5, 9.9, 12.5, 7.0, 20.0],
+  rating:  [4.2, 3.8, 4.5, 4.1, 3.2],
+});
+
+// 2 cheapest products
+const cheapest2 = nsmallestDataFrame(df, 2, { columns: "price" });
+console.log([...cheapest2.col("product").values]); // ["D", "B"]
+console.log([...cheapest2.col("price").values]);   // [7.0, 9.9]
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<section>
+  <h2>8 — Edge cases</h2>
+  <pre><code id="ex8-code">import { Series, nlargestSeries, nsmallestSeries } from "tsb";
+
+// n > series length → return all (sorted)
+const s = new Series({ data: [2, 1, 3] });
+console.log([...nlargestSeries(s, 100).values]);  // [3, 2, 1]
+console.log([...nsmallestSeries(s, 100).values]); // [1, 2, 3]
+
+// n = 0 → empty
+console.log(nlargestSeries(s, 0).size); // 0
+
+// all-NaN → empty
+const allNaN = new Series({ data: [NaN, NaN] });
+console.log(nlargestSeries(allNaN, 2).size); // 0
+
+// string values — lexicographic order
+const words = new Series({ data: ["banana", "apple", "cherry"] });
+console.log([...nlargestSeries(words, 2).values]);  // ["cherry", "banana"]
+console.log([...nsmallestSeries(words, 2).values]); // ["apple", "banana"]
+</code></pre>
+  <div class="output" id="ex8-output">Loading…</div>
+</section>
+
+<script>
+window.__tsb_examples__ = [
+  { id: "ex1", code: document.getElementById("ex1-code").textContent },
+  { id: "ex2", code: document.getElementById("ex2-code").textContent },
+  { id: "ex3", code: document.getElementById("ex3-code").textContent },
+  { id: "ex4", code: document.getElementById("ex4-code").textContent },
+  { id: "ex5", code: document.getElementById("ex5-code").textContent },
+  { id: "ex6", code: document.getElementById("ex6-code").textContent },
+  { id: "ex7", code: document.getElementById("ex7-code").textContent },
+  { id: "ex8", code: document.getElementById("ex8-code").textContent },
+];
+</script>
+</body>
+</html>
