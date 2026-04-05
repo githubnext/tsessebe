@@ -33,6 +33,21 @@ export type {
   DataFrameCond,
   WhereMaskOptions,
 } from "./where_mask.ts";
+export {
+  seriesEq,
+  seriesNe,
+  seriesLt,
+  seriesGt,
+  seriesLe,
+  seriesGe,
+  dataFrameEq,
+  dataFrameNe,
+  dataFrameLt,
+  dataFrameGt,
+  dataFrameLe,
+  dataFrameGe,
+} from "./compare.ts";
+export type { CompareOp, SeriesOther, DataFrameOther } from "./compare.ts";
 export { describe, quantile } from "./describe.ts";
 export type { DescribeOptions } from "./describe.ts";
 export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./corr.ts";

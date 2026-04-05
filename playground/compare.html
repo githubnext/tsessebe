@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Comparison Ops | Interactive Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.5rem; color: var(--accent); }
+    header p { color: #8b949e; font-size: 0.95rem; }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+    h3 {
+      font-size: 1.15rem;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--green);
+    }
+    p { margin-bottom: 0.75rem; color: #c9d1d9; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .code-block {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      white-space: pre;
+    }
+    .keyword { color: #ff7b72; }
+    .func    { color: #d2a8ff; }
+    .string  { color: #a5d6ff; }
+    .num     { color: #79c0ff; }
+    .comment { color: #8b949e; }
+    .output  { color: var(--green); }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    th { background: #1f2937; color: var(--accent); }
+    td:first-child { font-family: var(--font-mono); color: var(--green); }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-blue { background: #1f3a5f; color: var(--accent); }
+    .badge-green { background: #1a3a2a; color: var(--green); }
+    a { color: var(--accent); }
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>tsb <span style="color:#8b949e;font-weight:400">playground</span></h1>
+    <p>Interactive tutorial — <strong>Element-wise Comparison Operations</strong> &nbsp;·&nbsp; <a href="index.html">← back to index</a></p>
+  </div>
+</header>
+
+<main>
+
+  <div class="section">
+    <h2>🔍 Comparison Operations</h2>
+    <p>
+      <strong>tsb</strong> implements all six pandas comparison methods:
+      <code>eq</code>, <code>ne</code>, <code>lt</code>, <code>gt</code>, <code>le</code>, <code>ge</code>.
+      They work on both <strong>Series</strong> and <strong>DataFrame</strong>, and accept either a scalar
+      or another Series/DataFrame as the <code>other</code> argument.
+    </p>
+    <p>All functions return a <strong>boolean</strong> Series/DataFrame. Missing values (<code>null</code> / <code>NaN</code>) always yield <code>false</code>.</p>
+
+    <table>
+      <thead>
+        <tr><th>Function</th><th>pandas equivalent</th><th>Operator</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>seriesEq(s, other)</td><td>s.eq(other)</td><td>==</td><td>Element-wise equality</td></tr>
+        <tr><td>seriesNe(s, other)</td><td>s.ne(other)</td><td>!=</td><td>Element-wise inequality</td></tr>
+        <tr><td>seriesLt(s, other)</td><td>s.lt(other)</td><td>&lt;</td><td>Less than</td></tr>
+        <tr><td>seriesGt(s, other)</td><td>s.gt(other)</td><td>&gt;</td><td>Greater than</td></tr>
+        <tr><td>seriesLe(s, other)</td><td>s.le(other)</td><td>&lt;=</td><td>Less than or equal</td></tr>
+        <tr><td>seriesGe(s, other)</td><td>s.ge(other)</td><td>&gt;=</td><td>Greater than or equal</td></tr>
+      </tbody>
+    </table>
+    <p>DataFrame variants follow the same pattern: <code>dataFrameEq</code>, <code>dataFrameNe</code>, etc.</p>
+  </div>
+
+  <!-- Section 1: seriesEq scalar -->
+  <div class="section">
+    <h3>1 — seriesEq with a scalar</h3>
+    <p>Compare every element of a Series against a single scalar value:</p>
+    <div class="code-block"><span class="keyword">import</span> { Series, seriesEq } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> s = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">2</span>, <span class="num">1</span>] });
+
+<span class="keyword">const</span> result = <span class="func">seriesEq</span>(s, <span class="num">2</span>);
+<span class="comment">// → [false, true, false, true, false]</span>
+
+<span class="comment">// Use this as a boolean mask for filtering:</span>
+<span class="comment">// s.values.filter((_, i) => result.values[i]) → [2, 2]</span></div>
+  </div>
+
+  <!-- Section 2: seriesNe scalar -->
+  <div class="section">
+    <h3>2 — seriesNe: inequality</h3>
+    <p><code>seriesNe</code> is the complement of <code>seriesEq</code> for non-null values:</p>
+    <div class="code-block"><span class="keyword">import</span> { Series, seriesNe } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> s = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="string">"apple"</span>, <span class="string">"banana"</span>, <span class="string">"apple"</span>, <span class="string">"cherry"</span>] });
+
+<span class="func">seriesNe</span>(s, <span class="string">"apple"</span>).values;
+<span class="comment">// → [false, true, false, true]</span></div>
+  </div>
+
+  <!-- Section 3: lt / gt / le / ge -->
+  <div class="section">
+    <h3>3 — Ordering comparisons: lt, gt, le, ge</h3>
+    <p>Order comparisons work for numbers, strings, or any comparable type:</p>
+    <div class="code-block"><span class="keyword">import</span> { Series, seriesLt, seriesGt, seriesLe, seriesGe } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> scores = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="num">45</span>, <span class="num">72</span>, <span class="num">88</span>, <span class="num">60</span>, <span class="num">95</span>] });
+
+<span class="func">seriesLt</span>(scores, <span class="num">60</span>).values;  <span class="comment">// [true, false, false, false, false]</span>
+<span class="func">seriesGe</span>(scores, <span class="num">60</span>).values;  <span class="comment">// [false, true, true, true, true]</span>
+
+<span class="comment">// lt and ge are always complementary for finite, non-null values:</span>
+<span class="comment">// lt[i] !== ge[i]  for every i</span></div>
+  </div>
+
+  <!-- Section 4: Series-to-Series comparison -->
+  <div class="section">
+    <h3>4 — Comparing two Series element-by-element</h3>
+    <p>Pass a Series as <code>other</code> to compare position-by-position:</p>
+    <div class="code-block"><span class="keyword">import</span> { Series, seriesEq, seriesLt } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> actual   = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>] });
+<span class="keyword">const</span> expected = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="num">1</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">2</span>] });
+
+<span class="func">seriesEq</span>(actual, expected).values;  <span class="comment">// [true, false, true, false]</span>
+<span class="func">seriesLt</span>(actual, expected).values;  <span class="comment">// [false, true, false, false]</span>
+
+<span class="comment">// Throws RangeError if lengths differ</span></div>
+  </div>
+
+  <!-- Section 5: missing values -->
+  <div class="section">
+    <h3>5 — Missing value behaviour</h3>
+    <p>
+      Following pandas' NaN-propagation convention: comparing a missing value against
+      <em>anything</em> (including another missing value) always returns <code>false</code>.
+    </p>
+    <div class="code-block"><span class="keyword">import</span> { Series, seriesEq, seriesNe, seriesLt } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> s = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="num">1</span>, <span class="keyword">null</span>, <span class="num">NaN</span>, <span class="num">3</span>] });
+
+<span class="func">seriesEq</span>(s, <span class="num">1</span>).values;    <span class="comment">// [true,  false, false, false]</span>
+<span class="func">seriesNe</span>(s, <span class="num">1</span>).values;    <span class="comment">// [false, false, false, true ]</span>
+<span class="func">seriesLt</span>(s, <span class="num">2</span>).values;    <span class="comment">// [true,  false, false, false]</span>
+
+<span class="comment">// null eq null → false (NaN != NaN convention)</span>
+<span class="func">seriesEq</span>(s, <span class="keyword">null</span>).values;  <span class="comment">// [false, false, false, false]</span></div>
+  </div>
+
+  <!-- Section 6: DataFrame comparison -->
+  <div class="section">
+    <h3>6 — DataFrame comparison with a scalar</h3>
+    <p>Broadcast a scalar to every cell in a DataFrame:</p>
+    <div class="code-block"><span class="keyword">import</span> { DataFrame, dataFrameGt, dataFrameLe } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> df = DataFrame.<span class="func">fromColumns</span>({
+  math:    [<span class="num">55</span>, <span class="num">72</span>, <span class="num">88</span>],
+  science: [<span class="num">60</span>, <span class="num">45</span>, <span class="num">91</span>],
+});
+
+<span class="func">dataFrameGt</span>(df, <span class="num">60</span>).col(<span class="string">"math"</span>).values;
+<span class="comment">// → [false, true, true]</span>
+
+<span class="func">dataFrameLe</span>(df, <span class="num">60</span>).col(<span class="string">"science"</span>).values;
+<span class="comment">// → [true, true, false]</span></div>
+  </div>
+
+  <!-- Section 7: DataFrame-to-DataFrame comparison -->
+  <div class="section">
+    <h3>7 — DataFrame compared against another DataFrame</h3>
+    <p>Column names are used to align the two DataFrames. Missing columns in <code>other</code> yield <code>false</code>:</p>
+    <div class="code-block"><span class="keyword">import</span> { DataFrame, dataFrameEq } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> df1 = DataFrame.<span class="func">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>], b: [<span class="num">3</span>, <span class="num">4</span>] });
+<span class="keyword">const</span> df2 = DataFrame.<span class="func">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">0</span>], b: [<span class="num">3</span>, <span class="num">5</span>] });
+
+<span class="func">dataFrameEq</span>(df1, df2).col(<span class="string">"a"</span>).values;  <span class="comment">// [true, false]</span>
+<span class="func">dataFrameEq</span>(df1, df2).col(<span class="string">"b"</span>).values;  <span class="comment">// [true, false]</span></div>
+  </div>
+
+  <!-- Section 8: combining with whereSeries -->
+  <div class="section">
+    <h3>8 — Combining with whereSeries for conditional selection</h3>
+    <p>Comparison ops pair naturally with <code>whereSeries</code> / <code>maskSeries</code>:</p>
+    <div class="code-block"><span class="keyword">import</span> { Series, seriesGe, whereSeries } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> temps = <span class="keyword">new</span> <span class="func">Series</span>({ data: [<span class="num">18</span>, <span class="num">22</span>, <span class="num">30</span>, <span class="num">15</span>, <span class="num">27</span>] });
+
+<span class="comment">// Mark values below 20 as null using the boolean mask:</span>
+<span class="keyword">const</span> isWarm = <span class="func">seriesGe</span>(temps, <span class="num">20</span>);  <span class="comment">// [false, true, true, false, true]</span>
+<span class="keyword">const</span> warmOnly = <span class="func">whereSeries</span>(temps, isWarm);
+
+warmOnly.values;  <span class="comment">// [null, 22, 30, null, 27]</span></div>
+  </div>
+
+</main>
+
+<footer>
+  <p>Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a> — an automated research and experimentation platform.</p>
+</footer>
+</body>
+</html>

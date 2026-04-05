@@ -114,3 +114,18 @@ export type {
   DataFrameCond,
   WhereMaskOptions,
 } from "./stats/index.ts";
+export {
+  seriesEq,
+  seriesNe,
+  seriesLt,
+  seriesGt,
+  seriesLe,
+  seriesGe,
+  dataFrameEq,
+  dataFrameNe,
+  dataFrameLt,
+  dataFrameGt,
+  dataFrameLe,
+  dataFrameGe,
+} from "./stats/index.ts";
+export type { CompareOp, SeriesOther, DataFrameOther } from "./stats/index.ts";
