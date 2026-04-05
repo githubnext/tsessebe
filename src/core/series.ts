@@ -7,10 +7,13 @@
  * missing-value handling.
  */
 
+import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
 import { Dtype } from "./dtype.ts";
 import { RangeIndex } from "./range-index.ts";
+import { StringAccessor } from "./string_accessor.ts";
+import type { StringSeriesLike } from "./string_accessor.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -620,6 +623,35 @@ export class Series<T extends Scalar = Scalar> {
     return this.copy(name);
   }
 
+  /**
+   * Return a new Series replacing the underlying values (preserving index and name).
+   * Used internally by StringAccessor and other accessors.
+   * @internal
+   */
+  withValues(data: readonly Scalar[], name?: string | null): Series<Scalar> {
+    return new Series<Scalar>({
+      data: [...data],
+      index: this.index.copy(),
+      name: name === undefined ? this.name : name,
+    });
+  }
+
+  // ─── str accessor ─────────────────────────────────────────────────────────
+
+  /**
+   * Access vectorised string operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: ["hello", "WORLD"] });
+   * s.str.upper().toArray(); // ["HELLO", "WORLD"]
+   * s.str.len().toArray();   // [5, 5]
+   * ```
+   */
+  get str(): StringAccessor {
+    return new StringAccessor(this as unknown as StringSeriesLike);
+  }
+
   /** Return a new Series with a new Index. */
   setIndex(index: Index<Label> | readonly Label[]): Series<T> {
     return new Series<T>({
@@ -700,5 +732,21 @@ export class Series<T extends Scalar = Scalar> {
     const rows = this._values.map((v, i) => `${String(this.index.at(i))}\t${String(v)}`).join("\n");
     const footer = `Name: ${this.name ?? "(unnamed)"}, dtype: ${this.dtype.name}, Length: ${this.size}`;
     return `${rows}\n${footer}`;
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the Series by an array of key values (or another Series).
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [1, 2, 3, 4] });
+   * s.groupby(["A", "A", "B", "B"]).sum();
+   * // Series { A: 3, B: 7 }
+   * ```
+   */
+  groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
+    return new SeriesGroupBy(this as Series<Scalar>, by);
   }
 }

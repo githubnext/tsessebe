@@ -17,6 +17,7 @@
  * ```
  */
 
+import { DataFrameGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
 import { RangeIndex } from "./range-index.ts";
@@ -598,6 +599,25 @@ export class DataFrame {
   /** Return a human-readable string representation of the DataFrame. */
   toString(): string {
     return formatDataFrame(this._columns, this.index, this.columns);
+  }
+
+  // ─── groupby ──────────────────────────────────────────────────────────────
+
+  /**
+   * Group the DataFrame by one or more columns.
+   *
+   * Returns a `DataFrameGroupBy` object that can be used to apply
+   * aggregation, transformation, or filtering operations on each group.
+   *
+   * @example
+   * ```ts
+   * df.groupby("dept").sum();
+   * df.groupby(["dept", "region"]).mean();
+   * ```
+   */
+  groupby(by: string | readonly string[]): DataFrameGroupBy {
+    const cols = typeof by === "string" ? [by] : [...by];
+    return new DataFrameGroupBy(this, cols);
   }
 
   // ─── private helpers ──────────────────────────────────────────────────────
