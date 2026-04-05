@@ -10,6 +10,8 @@
 import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
+import { DatetimeAccessor } from "./datetime_accessor.ts";
+import type { DatetimeSeriesLike } from "./datetime_accessor.ts";
 import { Dtype } from "./dtype.ts";
 import { RangeIndex } from "./range-index.ts";
 import { StringAccessor } from "./string_accessor.ts";
@@ -650,6 +652,23 @@ export class Series<T extends Scalar = Scalar> {
    */
   get str(): StringAccessor {
     return new StringAccessor(this as unknown as StringSeriesLike);
+  }
+
+  // ─── dt accessor ──────────────────────────────────────────────────────────
+
+  /**
+   * Access vectorised datetime operations for each element.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [new Date("2024-03-15")] });
+   * s.dt.year().toArray();  // [2024]
+   * s.dt.month().toArray(); // [3]
+   * s.dt.strftime("%Y-%m-%d").toArray(); // ["2024-03-15"]
+   * ```
+   */
+  get dt(): DatetimeAccessor {
+    return new DatetimeAccessor(this as unknown as DatetimeSeriesLike);
   }
 
   /** Return a new Series with a new Index. */

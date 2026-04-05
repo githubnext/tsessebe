@@ -41,5 +41,7 @@ export { merge } from "./merge/index.ts";
 export type { MergeOptions } from "./merge/index.ts";
 export { StringAccessor } from "./core/index.ts";
 export type { StringSeriesLike } from "./core/index.ts";
+export { DatetimeAccessor } from "./core/index.ts";
+export type { DatetimeSeriesLike } from "./core/index.ts";
 export { DataFrameGroupBy, SeriesGroupBy } from "./groupby/index.ts";
 export type { AggFn, AggName, AggSpec } from "./groupby/index.ts";
