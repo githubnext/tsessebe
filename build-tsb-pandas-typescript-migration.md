@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-05T11:00:00Z |
-| Iteration Count | 51 |
-| Best Metric | 96 |
+| Last Run | 2026-04-05T11:11:00Z |
+| Iteration Count | 52 |
+| Best Metric | 101 |
 | Target Metric | — |
 | Branch | `work-branch-41-a62d454c5d6737a7` |
 | PR | #45 |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -37,21 +37,21 @@
 
 ## 🎯 Current Priorities
 
-Iter 51 complete (96 files). Added: core/plotting.ts, core/arrow.ts, core/window_apply.ts, io/read_sas.ts, io/read_spss.ts.
+Iter 52 complete (101 files). Added: stats/survival.ts, stats/timeseries.ts, stats/factor.ts, stats/bayesian.ts, core/style_advanced.ts.
 
 Next candidates:
-- `src/stats/survival.ts` — Kaplan-Meier survival analysis
-- `src/stats/factor.ts` — PCA / factor analysis stubs
-- `src/stats/bayesian.ts` — simple Bayesian inference
-- `src/core/sparse_frame.ts` — SparseSparseFrame extensions
-- `src/io/read_excel_advanced.ts` — multi-sheet / openpyxl features
-- `src/stats/timeseries.ts` — ACF/PACF/ARMA stubs
-- `src/core/style_advanced.ts` — advanced Styler (bar, heatmap, gradient)
+- `src/io/read_excel_advanced.ts` — multi-sheet / openpyxl-like features
+- `src/core/sparse_frame.ts` — sparse DataFrame extensions
+- `src/stats/timeseries.ts` extension — ARIMA forecast stubs
+- `src/core/extension_types.ts` — ExtensionArray / custom dtypes
+- `src/io/read_parquet_advanced.ts` — predicate pushdown / column selection
+- `src/stats/outlier.ts` — IQR, z-score, DBSCAN-based outlier detection
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 52 (5 modules, 96→101)**: survival.ts: `sortedEvents` helper reduces CC; all-zero numerator gives hazard=0 cleanly. timeseries.ts: `normAcv()` extracted to avoid nested ternary; `ldStep()` extracted from `levinsonDurbin` to satisfy CC≤15; ACF/PACF require symmetric Toeplitz construction. factor.ts: `leadingSingular` + `deflate` pattern for incremental SVD; `noUncheckedIndexedAccess` requires every `arr[i]` to have `?? 0` guard. bayesian.ts: all conjugate update functions are ~4 LOC; returning structured `BetaParams/NormalParams/etc` avoids `as` casts. style_advanced.ts: needed `Styler._df` + `_styles` + `_addStyle` to be `protected` (not private); `_applyByCol` / `_applyByRow` pattern satisfies CC≤15 for nested loops.
 - **Iter 51 (5 modules, 91→96)**: core/plotting.ts (`import type {Series/DataFrame}` avoids circular; `setPlotRenderer(null)` clears). core/arrow.ts (`readonly T[]` not ReadonlyArray; block statements; import sorting). core/window_apply.ts (`name: s.name ?? null` for exactOptionalPropertyTypes). io/read_sas.ts + io/read_spss.ts (injectable decoder stubs). Test mock: `decode: (): SasResult => result` for `useExplicitType`.
 - **Iter 50 (6 modules, 87→93)**: State stale (claimed 91, branch had 87). io/clipboard.ts (`CARRIAGE_RETURN_RE` top-level; `biome-ignore noSecrets`). `DataFrame.fromColumns({})` not `new DataFrame({data:{}})`. `meta["key"]` bracket notation.
 - **Iter 48 (4 modules, 83→87)**: anova.ts CC>15 → extract helpers. resample.ts: RULE_REGEX top-level, `.at(-1)`, block statements.
@@ -73,13 +73,21 @@ Next candidates:
 
 ✅ Done through Iter 50: Foundation, Index/Dtype/Series/DataFrame, GroupBy, concat, merge, ops, strings, missing, datetime, sort, indexing, compare, reshape, window, I/O (csv/json/parquet/excel-stub/to_parquet/to_excel/to_markdown/to_html/to_latex/to_string/read_fwf/read_html/read_xml/sql/read_orc/read_feather/clipboard/read_sas/read_spss), stats (corr/cov/describe/moments/linear-algebra/hypothesis/pairwise/bootstrap/contingency/anova/kruskal/regression), categorical, MultiIndex, Timedelta, IntervalIndex, CategoricalIndex, DatetimeIndex, valueCounts/crosstab, cut/qcut, applyMap/pipe, getDummies/fromDummies, to_datetime/to_timedelta, rankSeries, assignDataFrame/filterDataFrame, explodeSeries/explodeDataFrame, strAdvanced, shift/diff, wide_to_long, clip/clipDataFrame, where/mask, sample, cumulative, infer_objects/convertDtypes, accessor API, Styler, to_numeric, Period/PeriodIndex, linear algebra, SparseArray, DateOffsets, testing utils, NAType/NA, Flags, option registry, json_normalize, eval/query DSL, expanding corr/cov, memory_usage, resample/asfreq, plotting API.
 
-**Next**: survival analysis · factor/PCA stubs · bayesian inference · sparse_frame · read_excel_advanced · timeseries ACF/PACF
+**Next**: read_excel_advanced · sparse_frame · ARIMA stubs · extension_types · outlier detection
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 52 — 2026-04-05 11:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24000271487)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 5 modules: stats/survival.ts (Kaplan-Meier estimator + log-rank test), stats/timeseries.ts (ACF/PACF/ARMA via Levinson-Durbin/Ljung-Box), stats/factor.ts (PCA via power-iteration SVD + factor analysis stub), stats/bayesian.ts (Beta-Binomial, Normal-Normal, Gamma-Poisson, Dirichlet-Categorical conjugate updates), core/style_advanced.ts (AdvancedStyler with bar/heatmap/textGradient/threshold). Also made Styler._df/_styles/_addStyle `protected` to enable subclassing.
+- **Metric**: 101 (previous best: 96, delta: +5)
+- **Commit**: c0c81d9
+- **Notes**: `ldStep()` helper needed to reduce Levinson-Durbin CC. `_applyByCol`/`_applyByRow` in AdvancedStyler reduce nested-loop CC. Every `arr[i]` guarded with `?? 0` for noUncheckedIndexedAccess.
 
 ### Iteration 51 — 2026-04-05 11:00 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/23999891697)
 
