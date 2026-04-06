@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T08:35:00Z |
-| Iteration Count | 86 |
-| Best Metric | 41 |
+| Last Run | 2026-04-06T09:42:00Z |
+| Iteration Count | 87 |
+| Best Metric | 42 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,14 +35,15 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 41 files (iter 86). Next candidates:
-- `src/stats/clip_series_more.ts` — additional numeric ops (clip with lower/upper bounds already exists; add abs/floor/ceil/round)
-- `src/core/date_offset.ts` — DateOffset for calendar-aware date arithmetic
+Now at 42 files (iter 87). Next candidates:
+- `src/core/date_range.ts` — `date_range()` / `bdate_range()` generating DatetimeIndex sequences using DateOffset
+- `src/stats/numeric_ops.ts` — additional numeric ops: floor(), ceil() for Series/DataFrame (abs/round already in elem_ops)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 87 (DateOffset, 41→42)**: `DateOffset` interface + 11 offset classes. Fixed-time offsets (Day/Hour/Minute/Second/Milli/Week) use simple ms arithmetic. Anchored offsets (MonthEnd/MonthBegin/YearEnd/YearBegin) use `Date.UTC(y, m+n+1, 0)` trick (day 0 = last day of prev month) for O(1) exact arithmetic — no loops needed. BusinessDay uses step-and-roll helpers. Week with weekday alignment converts pandas convention (0=Mon) to JS UTC day (0=Sun) via `pdToJsDow`. All operations in UTC to avoid DST. No private fields needed — compute jsDow inline.
 - **Iter 86 (Timedelta/TimedeltaIndex, 40→41)**: Internal ms representation; `floorDiv` helper returns `[quotient, remainder]` tuple for clean component extraction. Use `first = arr[0]; if (first === undefined) throw` instead of `as` cast for safe first-element access with `noUncheckedIndexedAccess`. `biome-ignore lint/style/noNonNullAssertion:` comment works for bounds-checked array access.
 - **Iter 85 (Period/PeriodIndex, 39→40)**: Ordinal-based internal representation (ms → periods since epoch) cleanly handles all 8 frequencies. `normFreq()` with for-of over const tuple handles aliases (Y→A, min→T). Biome auto-fix can corrupt JSDoc comment delimiters; fix manually after auto-write. Top-level regex constants required by `useTopLevelRegex`. Switch exhaustiveness via explicit `default: throw` satisfies `useDefaultSwitchClause`.
 - **Iter 84 (pipe, 38→39)**: Variadic-generic pattern `<A extends unknown[], R>(fn: (x, ...args: A) => R, ...args: A)` gives full type inference. `pipeChain`/`dataFramePipeChain` use for-of loop. `pipeTo`/`dataFramePipeTo` splice value at positional index.
@@ -63,15 +64,23 @@ Now at 41 files (iter 86). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 85)**: 40 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period.
+**Current state (iter 87)**: 42 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset.
 
-**Next**: DateOffset · additional numeric ops (abs/floor/ceil/round)
+**Next**: `date_range()` / `bdate_range()` generating DatetimeIndex sequences using DateOffset · additional numeric ops (floor/ceil)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 87 — 2026-04-06 09:42 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24026629763)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/date_offset.ts` — `DateOffset` interface plus `Day`, `Hour`, `Minute`, `Second`, `Milli`, `Week` (weekday alignment), `MonthEnd`, `MonthBegin`, `YearEnd`, `YearBegin`, `BusinessDay`.
+- **Metric**: 42 (previous: 41, delta: +1)
+- **Commit**: 3f80806
+- **Notes**: Anchored offsets use `Date.UTC(y, m+n+1, 0)` (day 0 trick) for O(1) arithmetic. UTC throughout. 100+ unit + property tests.
 
 ### Iteration 86 — 2026-04-06 08:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24024993715)
 
