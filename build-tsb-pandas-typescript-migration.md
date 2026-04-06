@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T12:20:00Z |
-| Iteration Count | 92 |
-| Best Metric | 47 |
+| Last Run | 2026-04-06T13:33:40Z |
+| Iteration Count | 93 |
+| Best Metric | 48 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,15 +35,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 47 files (iter 92). Next candidates:
+Now at 48 files (iter 93). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/stats/string_methods.ts` — string dtype operations (StringDtype Series operations)
-- `src/core/sparse.ts` — SparseArray / SparseDtype
+- `src/stats/factorize.ts` — encode labels as integers + unique array
+- `src/stats/crosstab.ts` — cross-tabulation of two categorical Series
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 93 (get_dummies, 47→48)**: `getDummies` collects unique non-missing values in first-seen order (matches pandas for object dtypes). Missing values (null/undefined/NaN) are encoded as 0 by default. `dummyNa` adds an explicit "NaN" column. `dropFirst` removes the first category (prevents dummy variable trap for linear models). For `dataFrameGetDummies`, the default prefix is the column name (not null), enabling `color_red` instead of just `red`. Property tests: row-sum==1 for all-categorical input, column count == unique values, all values ∈ {0,1}, dropFirst reduces count by exactly 1.
 - **Iter 92 (datetime_tz, 46→47)**: `utcOffsetMs(utcMs, tz)` uses `Intl.DateTimeFormat("en-CA", {hour12:false}).formatToParts()` to extract local time components, then computes `localMs - utcMs`. Two-step refinement (`off1=utcOffsetMs(wallMs)`, `est=wallMs-off1`, `off2=utcOffsetMs(est)`, result=`wallMs-off2`) correctly handles both spring-forward (shifts forward) and fall-back (uses pre-transition EDT). `% 24` on hour handles the rare "24:00" midnight representation. Test NYC EST (+5h), EDT (+4h), IST (+5:30h), UTC (identity). Property tests: UTC round-trip, tz_convert preserves ms, filter complement partition.
 - **Iter 91 (add_sub_mul_div, 45→46)**: For commutative ops (add/mul), radd/rmul simply delegate to the forward form. For rsub/rdiv, reverse the operand order with a separate lambda. Property tests for `add+sub` inverse and `mul+div` inverse are clean with `fc.integer` to avoid float precision issues. Distributive law tests (mul over add) are valid for integers too.
 - **Iter 90 (pow_mod, 44→45)**: `_mod` must use `a - Math.floor(a/b)*b` (not `((a%b)+b)%b`) to avoid addition overflow for large floats near `Number.MAX_VALUE`. `Math.floor(0/negative) = -0`; normalize with `r === 0 ? 0 : r`. Property tests for floating-point mod/floordiv identities must use integer inputs (`fc.integer`) to avoid subnormal precision failures.
@@ -76,6 +77,14 @@ Now at 47 files (iter 92). Next candidates:
 
 All iterations in reverse chronological order (newest first).
 
+### Iteration 93 — 2026-04-06 13:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24033784622)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/get_dummies.ts` — `getDummies(series)` and `dataFrameGetDummies(df)` for one-hot encoding of categorical variables.
+- **Metric**: 48 (previous: 47, delta: +1)
+- **Commit**: f5174a0
+- **Notes**: Unique values collected in first-seen order (pandas object dtype behaviour). Missing values encoded as 0 by default; `dummyNa: true` adds explicit NaN column. `dropFirst` removes first category to avoid dummy variable trap. DataFrame version uses column name as default prefix. 40+ unit + property tests covering row-sums, column counts, value range, prefix invariants.
+
 ### Iteration 92 — 2026-04-06 12:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24031504495)
 
 - **Status**: ✅ Accepted
@@ -84,37 +93,7 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: 7877c82
 - **Notes**: `utcOffsetMs` uses `formatToParts` to get local time, computes `localMs - utcMs`. Two-step refinement handles spring-forward (shifts forward) and fall-back (uses EDT pre-transition). 55+ tests including NYC DST cases and property tests. `TZDatetimeIndex` has full API: sort, unique, filter, slice, concat (same-tz), contains, min, max, toLocalStrings, tz_convert, tz_localize_none.
 
-### Iteration 91 — 2026-04-06 11:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24030601247)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/add_sub_mul_div.ts` — `seriesAdd`/`seriesSub`/`seriesMul`/`seriesDiv` and reversed counterparts (`seriesRadd`/`seriesRsub`/`seriesRmul`/`seriesRdiv`) plus DataFrame equivalents.
-- **Metric**: 46 (previous: 45, delta: +1)
-- **Commit**: a919aed
-- **Notes**: Commutative ops (add/mul) delegate radd/rmul to the forward form. rsub/rdiv use a reversed lambda. 50+ property and unit tests, 100% coverage. IEEE-754 division-by-zero semantics preserved.
-
-### Iteration 90 — 2026-04-06 11:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24029842441)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/pow_mod.ts` — `seriesPow`/`dataFramePow`, `seriesMod`/`dataFrameMod`, `seriesFloorDiv`/`dataFrameFloorDiv`. Python/pandas sign semantics for mod; floor-toward-−∞ for floordiv.
-- **Metric**: 45 (previous: 44, delta: +1)
-- **Commit**: dbe17ed
-- **Notes**: `_mod` uses `a - floor(a/b)*b` to avoid addition overflow near MAX_VALUE. Normalize `-0 → 0`. Property tests for mod/floordiv must use `fc.integer` — float subnormals break the Euclidean identity. 36 tests, 100% coverage.
-
-### Iteration 89 — 2026-04-06 10:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24028449864)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/numeric_ops.ts` — `floor`, `ceil`, `trunc`, `sqrt`, `exp`, `log`, `log2`, `log10`, `sign` for Series and DataFrame.
-- **Metric**: 44 (previous: 43, delta: +1)
-- **Commit**: 34d33df
-- **Notes**: `fc.float` requires 32-bit float bounds; used `fc.double` for property tests. `sign(n)*abs(n)≈n` property fails for ±Infinity due to `Inf-Inf=NaN`; fixed with `noDefaultInfinity:true`. 82 tests, 100% coverage on new file.
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/date_range.ts` — `DatetimeIndex`, `date_range()`, `bdate_range()`, `resolveFreq()` with 16 frequency aliases.
-- **Metric**: 43 (previous: 42, delta: +1)
-- **Commit**: 9795038
-- **Notes**: `freqToOffset(freq, n)` takes multiplier directly (enables QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name` for clean backward generation. 104 unit + property tests, 100% coverage.
-
-### Iters 87–91 — ✅ DateOffset (41→42), date_range/DatetimeIndex (42→43), numeric_ops (43→44), pow_mod (44→45), add_sub_mul_div (45→46)
+### Iters 87–92 — ✅ DateOffset (41→42), date_range/DatetimeIndex (42→43), numeric_ops (43→44), pow_mod (44→45), add_sub_mul_div (45→46), datetime_tz (46→47)
 ### Iters 73–86 — ✅ where_mask, compare, shift_diff, interpolate, fillna, Interval, cut/qcut, sample, apply, CategoricalIndex, pipe, Period, Timedelta, DateOffset (28→41)
 ### Iters 67–72 — ✅ value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex (22→28)
 ### Iters 60–66 — ✅ corr/cov, rolling, expanding×2, cat_accessor, melt+pivot, ewm, stack/unstack (15→22)
