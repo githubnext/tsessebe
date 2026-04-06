@@ -155,3 +155,11 @@ export { applySeries, applymap, dataFrameApply } from "./stats/index.ts";
 export type { DataFrameApplyOptions } from "./stats/index.ts";
 export { CategoricalIndex } from "./core/index.ts";
 export type { CategoricalIndexOptions } from "./core/index.ts";
+export {
+  pipeSeries,
+  dataFramePipe,
+  pipeTo,
+  dataFramePipeTo,
+  pipeChain,
+  dataFramePipeChain,
+} from "./stats/index.ts";

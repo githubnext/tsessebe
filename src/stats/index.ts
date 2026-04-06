@@ -83,3 +83,12 @@ export {
   nsmallestDataFrame,
 } from "./nlargest.ts";
 export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
+
+export {
+  pipeSeries,
+  dataFramePipe,
+  pipeTo,
+  dataFramePipeTo,
+  pipeChain,
+  dataFramePipeChain,
+} from "./pipe.ts";

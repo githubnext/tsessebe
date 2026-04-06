@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — pipe</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>pipe</h1>
+<p class="subtitle">
+  Function-application helpers for left-to-right method chaining — mirrors
+  <code>pandas.Series.pipe()</code> and <code>pandas.DataFrame.pipe()</code>.
+</p>
+
+<section>
+  <h2>1 — pipeSeries: apply a function to a Series</h2>
+  <p>
+    <code>pipeSeries(series, fn, ...args)</code> calls <code>fn(series, ...args)</code>
+    and returns the result.  Use it to build readable transformation chains without
+    deep nesting.
+  </p>
+  <pre><code id="ex1-code">import { Series, pipeSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5], name: "nums" });
+
+// Simple transform — return the size
+const size = pipeSeries(s, (x) => x.size);
+console.log("size:", size);   // 5
+
+// Pass extra arguments to the function
+const offset = pipeSeries(s, (x, n) => x.size + n, 10);
+console.log("size+10:", offset);  // 15
+</code></pre>
+  <div class="output" id="ex1-out">▶ run</div>
+</section>
+
+<section>
+  <h2>2 — dataFramePipe: apply a function to a DataFrame</h2>
+  <p>
+    <code>dataFramePipe(df, fn, ...args)</code> works the same way for DataFrames.
+    This mirrors <code>pandas.DataFrame.pipe(fn, *args)</code>.
+  </p>
+  <pre><code id="ex2-code">import { DataFrame, dataFramePipe } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3, 4, 5],
+  b: [10, 20, 30, 40, 50],
+});
+
+// Get the shape without nesting
+const shape = dataFramePipe(df, (d) => d.shape);
+console.log("shape:", shape);   // [5, 2]
+
+// Chain: take head, then get row count
+const rowCount = dataFramePipe(dataFramePipe(df, (d) => d.head(3)), (d) => d.shape[0]);
+console.log("rows after head(3):", rowCount);  // 3
+</code></pre>
+  <div class="output" id="ex2-out">▶ run</div>
+</section>
+
+<section>
+  <h2>3 — pipeChain: chain multiple Series transforms</h2>
+  <p>
+    <code>pipeChain(series, f1, f2, f3, ...)</code> applies a sequence of
+    <code>Series → Series</code> transforms in left-to-right order.
+    This is the cleanest API when building multi-step pipelines.
+  </p>
+  <pre><code id="ex3-code">import { Series, pipeChain } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4] });
+
+// Helper transforms
+const addOne  = (x) => new Series({ data: [...x.values].map((v) => v + 1) });
+const double  = (x) => new Series({ data: [...x.values].map((v) => v * 2) });
+const square  = (x) => new Series({ data: [...x.values].map((v) => v * v) });
+
+// Without pipe: deeply nested and hard to read
+const nested = square(double(addOne(s)));
+console.log("nested:", [...nested.values]);  // [16, 36, 64, 100]
+
+// With pipeChain: clean left-to-right
+const piped = pipeChain(s, addOne, double, square);
+console.log("piped:", [...piped.values]);    // [16, 36, 64, 100]
+</code></pre>
+  <div class="output" id="ex3-out">▶ run</div>
+</section>
+
+<section>
+  <h2>4 — dataFramePipeChain: chain multiple DataFrame transforms</h2>
+  <p>
+    <code>dataFramePipeChain(df, f1, f2, ...)</code> applies a sequence of
+    <code>DataFrame → DataFrame</code> transforms, ideal for data-prep pipelines.
+  </p>
+  <pre><code id="ex4-code">import { DataFrame, dataFramePipeChain } from "tsb";
+
+const df = DataFrame.fromColumns({
+  score: [10, 5, 80, 95, 42, 3, 77],
+  label: ["a", "b", "c", "d", "e", "f", "g"],
+});
+
+// Build a pipeline of DataFrame → DataFrame steps
+const head4  = (d) => d.head(4);
+const tail3  = (d) => d.tail(3);
+
+const result = dataFramePipeChain(df, head4, tail3);
+
+console.log("shape:", result.shape);          // [3, 2]
+console.log("records:", result.toRecords());
+// [{ score: 5, label: "b" }, { score: 80, label: "c" }, { score: 95, label: "d" }]
+</code></pre>
+  <div class="output" id="ex4-out">▶ run</div>
+</section>
+
+<section>
+  <h2>5 — pipeTo / dataFramePipeTo: control the insertion point</h2>
+  <p>
+    pandas supports a tuple form <code>df.pipe((fn, "kwarg_name"))</code> where the
+    DataFrame goes to a specific keyword argument.  In tsb we provide
+    <code>pipeTo(series, pos, fn, ...otherArgs)</code> and
+    <code>dataFramePipeTo(df, pos, fn, ...otherArgs)</code> which splice the value
+    at a chosen zero-based argument position.
+  </p>
+  <pre><code id="ex5-code">import { Series, pipeTo } from "tsb";
+
+const seriesB = new Series({ data: [10, 20, 30] });
+
+// A function that expects (left, right) arguments
+const concatValues = (left, right) => {
+  return [...left.values, ...right.values];
+};
+
+// Insert seriesB as the SECOND argument (pos=1) alongside seriesA
+const seriesA = new Series({ data: [1, 2, 3] });
+const result = pipeTo(seriesB, 1, concatValues, seriesA);
+
+console.log("result:", result);  // [1, 2, 3, 10, 20, 30]
+</code></pre>
+  <div class="output" id="ex5-out">▶ run</div>
+</section>
+
+<section>
+  <h2>6 — Practical data pipeline example</h2>
+  <p>
+    Combining multiple pipe utilities to build a complete data transformation
+    pipeline, similar to the <code>.pipe()</code> method chains common in pandas.
+  </p>
+  <pre><code id="ex6-code">import { DataFrame, dataFramePipeChain } from "tsb";
+
+// Raw sales data with some issues
+const df = DataFrame.fromColumns({
+  revenue: [100, null, 250, 75, null, 400],
+  region:  ["north", "south", "east", "west", "north", "east"],
+});
+
+// Step functions: each DataFrame → DataFrame
+const dropNulls = (d) => {
+  // Keep only rows where revenue is not null
+  const mask = [...d.col("revenue").values].map((v) => v !== null);
+  const revVals = [...d.col("revenue").values].filter((_, i) => mask[i]);
+  const regVals = [...d.col("region").values].filter((_, i) => mask[i]);
+  return DataFrame.fromColumns({ revenue: revVals, region: regVals });
+};
+
+const top3 = (d) => d.head(3);
+
+// Build the pipeline
+const result = dataFramePipeChain(df, dropNulls, top3);
+console.log("shape:", result.shape);          // [3, 2]
+console.log("records:", result.toRecords());
+</code></pre>
+  <div class="output" id="ex6-out">▶ run</div>
+</section>
+
+</body>
+</html>
