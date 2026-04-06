@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T01:06:56Z |
-| Iteration Count | 79 |
-| Best Metric | 35 |
+| Last Run | 2026-04-06T02:19:29Z |
+| Iteration Count | 80 |
+| Best Metric | 36 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #54 |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -39,14 +39,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch `autoloop/build-tsb-pandas-typescript-migration` from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 35 files (iter 79). Next candidates:
+Now at 36 files (iter 80). Next candidates:
 - `src/core/categorical_index.ts` — CategoricalIndex
-- `apply()`/`applymap()` — element-wise function application on Series/DataFrame
+- `src/stats/pipe.ts` — pipe/pipe-through for chained operations
+- `src/stats/sample.ts` — random sampling (Series.sample / DataFrame.sample)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 80 (apply/applymap, 35→36)**: `allSeries([])` must return `false` (vacuously-true empty case returns wrong type). Use `new Array(n).fill(v)` not `Array(n).fill(v)`. Extract small helpers (broadcastAxis0/1, expandAxis0/1, fillColBuffers) to keep CC≤15. `Series.values` is `readonly` — use separate mutable `Scalar[]` buffers for assembly.
 - **Iter 79 (cut/qcut, 34→35)**: Import from `"../core/index.ts"` barrel (not sub-files) for `useImportRestrictions`. `extractName()` must return `string | null` not `string | undefined` (exactOptionalPropertyTypes). Top-level regex vars required (`useTopLevelRegex`). Shared `cutCore()` + `assignBins()` + `resolveLabels()` keep CC≤15. `cutIntervalIndex()`/`qcutIntervalIndex()` expose bins for downstream use.
 - **Iter 78 (interval, 33→34)**: `IntervalIndex` standalone class (not extending `Index<Label>`). `noUncheckedIndexedAccess`: `this.left[i] as number` after bounds check. Overlap: check `right===other.left` and test both closures.
 - **Iters 73–77**: fillna (3 strategies: scalar/ColumnFillMap/Series), interpolate (linear=interior only), shift/diff, compare (NaN→false), where/mask (partition property).
@@ -67,15 +69,23 @@ Now at 35 files (iter 79). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 79)**: 35 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut.
+**Current state (iter 80)**: 36 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/apply.
 
-**Next**: CategoricalIndex · apply()/applymap()
+**Next**: CategoricalIndex · pipe · sample()
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 80 — 2026-04-06 02:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24016060414)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/apply.ts` — `seriesApply`, `dataFrameApplyMap`, `dataFrameApplyExpand` mirroring `pandas.Series.apply()`, `pandas.DataFrame.applymap()`, and `pandas.DataFrame.apply()`.
+- **Metric**: 36 (previous: 35, delta: +1)
+- **Commit**: 9bb8730
+- **Notes**: Element-wise function application with naAction="ignore" support; dataFrameApplyExpand supports axis=0/1 and resultType=expand/reduce/broadcast. 35 tests plus property-based tests.
 
 ### Iteration 79 — 2026-04-06 01:06 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24014588932)
 
