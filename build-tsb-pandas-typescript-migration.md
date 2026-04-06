@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T14:23:06Z |
-| Iteration Count | 94 |
-| Best Metric | 49 |
+| Last Run | 2026-04-06T14:48:19Z |
+| Iteration Count | 95 |
+| Best Metric | 50 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,28 +35,28 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 49 files (iter 94). Next candidates:
+Now at 50 files (iter 95). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/stats/crosstab.ts` — cross-tabulation of two categorical Series
 - `src/stats/pivot_table.ts` — pivot_table with aggregation functions
+- `src/stats/melt_wide_to_long.ts` — melt wide-format DataFrame to long format (wide_to_long)
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 94 (factorize, 48→49)**: `factorize` uses a stable string key (`typeof v:String(v)`) to handle null/undefined/NaN separately without Map key collision. `useNaSentinel=true` (default) assigns -1 to missing values and excludes them from uniques. `sort=true` collects first-seen order then remaps via sorted array using the same key scheme. For `seriesFactorize`, Series constructor takes `{ data, index, name }` as a single options object (not positional args). Property tests: codes are valid uniques indices or -1, no duplicate uniques, round-trip reconstruction, sorted uniques in non-decreasing order.
-- **Iter 93 (get_dummies, 47→48)**: `getDummies` collects unique non-missing values in first-seen order (matches pandas for object dtypes). Missing values (null/undefined/NaN) are encoded as 0 by default. `dummyNa` adds an explicit "NaN" column. `dropFirst` removes the first category (prevents dummy variable trap for linear models). For `dataFrameGetDummies`, the default prefix is the column name (not null), enabling `color_red` instead of just `red`. Property tests: row-sum==1 for all-categorical input, column count == unique values, all values ∈ {0,1}, dropFirst reduces count by exactly 1.
-- **Iter 92 (datetime_tz, 46→47)**: `utcOffsetMs(utcMs, tz)` uses `Intl.DateTimeFormat("en-CA", {hour12:false}).formatToParts()` to extract local time components, then computes `localMs - utcMs`. Two-step refinement (`off1=utcOffsetMs(wallMs)`, `est=wallMs-off1`, `off2=utcOffsetMs(est)`, result=`wallMs-off2`) correctly handles both spring-forward (shifts forward) and fall-back (uses pre-transition EDT). `% 24` on hour handles the rare "24:00" midnight representation. Test NYC EST (+5h), EDT (+4h), IST (+5:30h), UTC (identity). Property tests: UTC round-trip, tz_convert preserves ms, filter complement partition.
-- **Iter 91 (add_sub_mul_div, 45→46)**: For commutative ops (add/mul), radd/rmul simply delegate to the forward form. For rsub/rdiv, reverse the operand order with a separate lambda. Property tests for `add+sub` inverse and `mul+div` inverse are clean with `fc.integer` to avoid float precision issues. Distributive law tests (mul over add) are valid for integers too.
-- **Iter 90 (pow_mod, 44→45)**: `_mod` must use `a - Math.floor(a/b)*b` (not `((a%b)+b)%b`) to avoid addition overflow for large floats near `Number.MAX_VALUE`. `Math.floor(0/negative) = -0`; normalize with `r === 0 ? 0 : r`. Property tests for floating-point mod/floordiv identities must use integer inputs (`fc.integer`) to avoid subnormal precision failures.
-- **Iter 89 (numeric_ops, 43→44)**: `fc.float` requires 32-bit float bounds (use `fc.double` for double constraints). Property `sign(n)*abs(n)≈n` fails for ±Infinity via `Inf-Inf=NaN`; exclude infinities with `noDefaultInfinity:true`. Grouped floor/ceil/trunc/sqrt/exp/log*/sign in one module — 82 tests, 100% coverage.
-- **Iter 88 (DatetimeIndex/date_range/bdate_range, 42→43)**: `freqToOffset(freq, n)` takes multiplier (QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name`. 104 tests, 100% coverage.
+- **Iter 95 (crosstab, 49→50)**: `crosstab` uses same `scalarKey()` pattern as `factorize` for stable Map keys. `collectUniques()` preserves first-seen order (matches pandas). `buckets` for values+aggfunc uses `Array.from<number[]|undefined>({length}, () => undefined)` for clean typing (avoids `fill(undefined)` `any[]` issue). Normalization applied before margins so margin totals reflect raw counts. Property tests: sum of all cells = n, normalize='all' grand sum ≈ 1, normalize='index' all row sums ≈ 1, normalize='columns' all col sums ≈ 1, margins All column = row sum.
+- **Iter 94 (factorize, 48→49)**: `factorize` uses stable string key (`typeof v:String(v)`) to handle null/undefined/NaN separately. `useNaSentinel=true` assigns -1 to missing values. `sort=true` remaps via sorted array. Property tests: valid indices, no duplicate uniques, round-trip, sorted order.
+- **Iter 93 (get_dummies, 47→48)**: `getDummies` collects unique non-missing values in first-seen order. Missing → 0 by default; `dummyNa: true` adds "NaN" column. `dropFirst` removes first category. `dataFrameGetDummies` uses column name as default prefix.
+- **Iter 92 (datetime_tz, 46→47)**: `utcOffsetMs` uses `Intl.DateTimeFormat formatToParts` + two-step refinement for DST. `% 24` handles rare "24:00" midnight. Property tests: UTC round-trip, tz_convert preserves ms.
+- **Iter 91 (add_sub_mul_div, 45→46)**: Commutative ops (add/mul) radd/rmul delegate to forward form. rsub/rdiv reverse operand order. Property tests use `fc.integer` to avoid float precision issues.
+- **Iter 90 (pow_mod, 44→45)**: `_mod` uses `a - Math.floor(a/b)*b` to avoid overflow. `Math.floor(0/negative) = -0`; normalize with `r===0 ? 0 : r`. Property tests use integer inputs.
+- **Iter 89 (numeric_ops, 43→44)**: Use `fc.double` (not `fc.float`). Exclude infinities from `sign(n)*abs(n)≈n` property test.
+- **Iter 88 (DatetimeIndex/date_range/bdate_range, 42→43)**: `freqToOffset(freq, n)` takes multiplier. `negateOffset()` dispatches on `offset.name`.
 - **Iter 87 (DateOffset, 41→42)**: 11 offset classes. Anchored use `Date.UTC(y, m+n+1, 0)` trick. UTC throughout.
 - **Iter 86 (Timedelta/TimedeltaIndex, 40→41)**: Internal ms; `floorDiv` helper. `biome-ignore lint/style/noNonNullAssertion:` for bounds-checked access.
 - **Iter 85 (Period/PeriodIndex, 39→40)**: Ordinal-based. Top-level regex. `default: throw` for exhaustiveness.
-- **Iter 84 (pipe, 38→39)**: Variadic-generic `<A extends unknown[], R>(fn, ...args: A)`.
-- **Iters 73–83**: fillna, interpolate, shift/diff, compare, where/mask, cut/qcut, interval, sample, apply, CategoricalIndex. Top-level regex. `extractName()` returns `string | null`. Barrel imports.
-- **Iters 53–72**: GroupBy, merge, str, dt, describe, csv, json, corr, rolling, expanding, ewm, melt, pivot, stack/unstack, value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex. `*SeriesLike` interfaces. `scalarKey` for Map keys.
+- **Iters 73–84**: fillna, interpolate, shift/diff, compare, where/mask, cut/qcut, interval, sample, apply, CategoricalIndex, pipe, DateOffset. Top-level regex. `extractName()` returns `string | null`. Barrel imports.
+- **Iters 53–72**: GroupBy, merge, str, dt, describe, csv, json, corr, rolling, expanding, ewm, melt, pivot, stack/unstack, value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex.
 
 ---
 
@@ -70,13 +70,21 @@ Now at 49 files (iter 94). Next candidates:
 
 **Current state (iter 92)**: 47 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops, stats/pow_mod, stats/add_sub_mul_div, core/datetime_tz.
 
-**Next**: io/read_excel (XLSX zero-dep parser) · string_methods for StringDtype · sparse arrays
+**Next**: io/read_excel (XLSX zero-dep parser) · stats/pivot_table · string_methods for StringDtype
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 95 — 2026-04-06 14:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24036457102)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/crosstab.ts` — `crosstab(index, columns, options?)` and `seriesCrosstab(a, b)` for cross-tabulation of two categorical factors.
+- **Metric**: 50 (previous: 49, delta: +1)
+- **Commit**: e74205d
+- **Notes**: Supports margins (row/col totals), normalize ('all'/'index'/'columns'), values+aggfunc for custom aggregation, dropna=false keeps NaN as a category. Uses same scalarKey() approach as factorize for stable Map keys. 60+ unit tests + property-based tests (grand total = n, normalize sums, margins invariants).
 
 ### Iteration 94 — 2026-04-06 14:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24035525591)
 
