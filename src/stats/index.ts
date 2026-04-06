@@ -169,3 +169,5 @@ export type {
 
 export { inferDtype } from "./infer_dtype.ts";
 export type { InferredDtype, InferDtypeOptions } from "./infer_dtype.ts";
+
+export { isna, notna, isnull, notnull } from "./notna.ts";

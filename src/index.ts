@@ -263,3 +263,4 @@ export { dataFrameAssign } from "./core/index.ts";
 export type { AssignColSpec, AssignSpec } from "./core/index.ts";
 export { inferDtype } from "./stats/index.ts";
 export type { InferredDtype, InferDtypeOptions } from "./stats/index.ts";
+export { isna, notna, isnull, notnull } from "./stats/index.ts";
