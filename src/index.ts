@@ -251,3 +251,5 @@ export { selectDtypes } from "./stats/index.ts";
 export type { DtypeSelector, SelectDtypesOptions } from "./stats/index.ts";
 export { Timestamp } from "./core/index.ts";
 export type { TimestampOptions, TimestampComponents, TimestampUnit } from "./core/index.ts";
+export { dataFrameAssign } from "./core/index.ts";
+export type { AssignColSpec, AssignSpec } from "./core/index.ts";

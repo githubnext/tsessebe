@@ -394,6 +394,11 @@
           <p>Filter DataFrame columns by dtype — <a href="select_dtypes.html" style="color: var(--accent);">interactive tutorial</a>. <code>selectDtypes(df, { include, exclude })</code> keeps or drops columns matching generic aliases ("number", "integer", "floating", "bool", "string", …) or concrete dtype names ("int64", "float32", …). Mirrors <code>pandas.DataFrame.select_dtypes()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>➕ DataFrame.assign()</h3>
+          <p>Add or replace columns on a DataFrame — <a href="assign.html" style="color: var(--accent);">interactive tutorial</a>. Accepts arrays, Series, or <strong>callables</strong> that receive the in-progress DataFrame, enabling chained derivations. <code>dataFrameAssign(df, spec)</code> standalone function or <code>df.assign(spec)</code> instance method. Mirrors <code>pandas.DataFrame.assign()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

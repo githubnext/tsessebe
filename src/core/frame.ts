@@ -293,21 +293,42 @@ export class DataFrame {
   /**
    * Add or replace columns.  Returns a new DataFrame.
    *
+   * Accepts three kinds of column specifiers:
+   * - `readonly Scalar[]` — values aligned by position
+   * - `Series<Scalar>` — a Series aligned by position
+   * - `(df: DataFrame) => readonly Scalar[] | Series<Scalar>` — callable that receives the
+   *   in-progress DataFrame (earlier columns in this call are already visible), enabling
+   *   chained derivations that mirror the pandas behaviour.
+   *
    * @example
    * ```ts
-   * const df2 = df.assign({ c: [7, 8, 9] });
+   * const df2 = df.assign({
+   *   c: [7, 8, 9],
+   *   d: (d) => d.col("c").add(d.col("a")), // callable — sees "c" already added
+   * });
    * ```
    */
-  assign(newCols: Readonly<Record<string, readonly Scalar[] | Series<Scalar>>>): DataFrame {
-    const colMap = new Map<string, Series<Scalar>>(this._columns);
-    for (const [name, val] of Object.entries(newCols)) {
-      if (val instanceof Series) {
-        colMap.set(name, val);
-      } else {
-        colMap.set(name, new Series({ data: val, index: this.index }));
-      }
+  assign(
+    newCols: Readonly<
+      Record<
+        string,
+        readonly Scalar[] | Series<Scalar> | ((df: DataFrame) => readonly Scalar[] | Series<Scalar>)
+      >
+    >,
+  ): DataFrame {
+    let working: DataFrame = this;
+    for (const [name, spec] of Object.entries(newCols)) {
+      const resolved: readonly Scalar[] | Series<Scalar> =
+        typeof spec === "function" ? spec(working) : spec;
+      const series: Series<Scalar> =
+        resolved instanceof Series
+          ? resolved
+          : new Series({ data: resolved, index: working.index });
+      const colMap = new Map<string, Series<Scalar>>(working._columns);
+      colMap.set(name, series);
+      working = new DataFrame(colMap, working.index);
     }
-    return new DataFrame(colMap, this.index);
+    return working;
   }
 
   /** Drop one or more columns by name.  Returns a new DataFrame. */

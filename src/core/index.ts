@@ -43,3 +43,5 @@ export { TZDatetimeIndex, tz_localize, tz_convert } from "./datetime_tz.ts";
 
 export { Timestamp } from "./timestamp.ts";
 export type { TimestampOptions, TimestampComponents, TimestampUnit } from "./timestamp.ts";
+export { dataFrameAssign } from "./assign.ts";
+export type { AssignColSpec, AssignSpec } from "./assign.ts";
