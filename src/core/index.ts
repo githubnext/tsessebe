@@ -17,3 +17,5 @@ export { MultiIndex } from "./multi_index.ts";
 export type { MultiIndexOptions } from "./multi_index.ts";
 export { Interval, IntervalIndex } from "./interval.ts";
 export type { IntervalClosed, IntervalIndexOptions } from "./interval.ts";
+export { CategoricalIndex } from "./categorical_index.ts";
+export type { CategoricalIndexOptions } from "./categorical_index.ts";

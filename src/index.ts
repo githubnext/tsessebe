@@ -153,3 +153,5 @@ export { sampleSeries, sampleDataFrame } from "./stats/index.ts";
 export type { SampleSeriesOptions, SampleDataFrameOptions } from "./stats/index.ts";
 export { applySeries, applymap, dataFrameApply } from "./stats/index.ts";
 export type { DataFrameApplyOptions } from "./stats/index.ts";
+export { CategoricalIndex } from "./core/index.ts";
+export type { CategoricalIndexOptions } from "./core/index.ts";
