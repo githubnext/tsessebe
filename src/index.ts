@@ -204,3 +204,11 @@ export {
   seriesSign,
   dataFrameSign,
 } from "./stats/index.ts";
+export {
+  seriesPow,
+  dataFramePow,
+  seriesMod,
+  dataFrameMod,
+  seriesFloorDiv,
+  dataFrameFloorDiv,
+} from "./stats/index.ts";

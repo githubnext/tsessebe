@@ -112,3 +112,12 @@ export {
   seriesSign,
   dataFrameSign,
 } from "./numeric_ops.ts";
+
+export {
+  seriesPow,
+  dataFramePow,
+  seriesMod,
+  dataFrameMod,
+  seriesFloorDiv,
+  dataFrameFloorDiv,
+} from "./pow_mod.ts";
