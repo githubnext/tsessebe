@@ -444,6 +444,11 @@
           <p>Bin-based frequency counting — <a href="value_counts_full.html" style="color: var(--accent);">interactive tutorial</a>. <code>valueCountsBinned(series, N)</code> divides numeric values into <em>N</em> equal-width intervals then counts frequencies, mirroring <code>pandas.Series.value_counts(bins=N)</code>. Supports <code>normalize</code> (return proportions), <code>sort</code> (by count or by interval), and <code>ascending</code>. NaN/null values are automatically excluded.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔁 duplicated / drop_duplicates</h3>
+          <p>Find and remove duplicate rows — <a href="duplicated.html" style="color: var(--accent);">interactive tutorial</a>. <code>duplicatedDataFrame(df, options?)</code> returns a boolean Series marking duplicate rows. <code>dropDuplicatesDataFrame(df, options?)</code> removes duplicates. <code>subset</code> restricts the check to specific columns; <code>keep</code> controls which occurrence to retain (<code>"first"</code>, <code>"last"</code>, or <code>false</code> for all). Series variants <code>duplicatedSeries</code>/<code>dropDuplicatesSeries</code> also available. Mirrors <code>pandas.DataFrame.duplicated</code> and <code>pandas.DataFrame.drop_duplicates</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

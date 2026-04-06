@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — duplicated / drop_duplicates</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>duplicated / drop_duplicates</h1>
+    <p>Find and remove duplicate rows — mirrors <code>pandas.DataFrame.duplicated</code> and <code>pandas.DataFrame.drop_duplicates</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <code>duplicatedDataFrame(df, options?)</code> returns a boolean <code>Series</code> indicating
+        which rows are duplicates of a previous (or later, depending on <code>keep</code>) row.
+        <code>dropDuplicatesDataFrame(df, options?)</code> returns a new DataFrame with duplicate rows
+        removed.
+        Both mirror
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html" target="_blank"><code>pandas.DataFrame.duplicated</code></a>
+        and
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.drop_duplicates.html" target="_blank"><code>pandas.DataFrame.drop_duplicates</code></a>.
+      </p>
+
+      <p>
+        Series variants <code>duplicatedSeries</code> and <code>dropDuplicatesSeries</code> operate
+        on a single column.
+      </p>
+
+      <h3>Options</h3>
+      <table>
+        <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>subset</code></td><td><code>string[]</code></td><td>all columns</td><td>Only consider these columns when checking for duplicates (DataFrame only).</td></tr>
+          <tr>
+            <td><code>keep</code></td>
+            <td><code>"first" | "last" | false</code></td>
+            <td><code>"first"</code></td>
+            <td>
+              <code>"first"</code> — keep the first occurrence, mark later ones.<br/>
+              <code>"last"</code> — keep the last occurrence, mark earlier ones.<br/>
+              <code>false</code> — mark <em>all</em> occurrences of any duplicate.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="example">
+      <h2>Example 1 — Basic: find duplicate rows</h2>
+      <pre><code>import { DataFrame, duplicatedDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Alice", "Carol"],
+  score: [90,      85,    90,      88    ],
+});
+
+// Row 2 ("Alice", 90) is a duplicate of Row 0
+const mask = duplicatedDataFrame(df);
+mask.values; // [false, false, true, false]
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 2 — Drop duplicate rows</h2>
+      <pre><code>import { DataFrame, dropDuplicatesDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Alice", "Carol"],
+  score: [90,      85,    90,      88    ],
+});
+
+const deduped = dropDuplicatesDataFrame(df);
+deduped.shape; // [3, 2]  — "Alice" row 2 removed
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 3 — subset: only check specific columns</h2>
+      <pre><code>import { DataFrame, dropDuplicatesDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:    [1, 2, 1, 3],
+  value: ["a", "b", "c", "d"],  // different values, but same id
+});
+
+// Drop based on "id" only — row 2 (id=1) is dup even though value differs
+const deduped = dropDuplicatesDataFrame(df, { subset: ["id"] });
+deduped.shape; // [3, 2]
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 4 — keep="last": keep the last occurrence</h2>
+      <pre><code>import { DataFrame, duplicatedDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  city: ["NYC", "LA", "NYC", "Chicago"],
+});
+
+// keep="last" → mark the FIRST occurrence of each dup, keep the last
+duplicatedDataFrame(df, { keep: "last" }).values;
+// [true, false, false, false]
+
+// keep=false → mark ALL occurrences of any duplicate
+duplicatedDataFrame(df, { keep: false }).values;
+// [true, false, true, false]
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 5 — Series: deduplicate values</h2>
+      <pre><code>import { Series, duplicatedSeries, dropDuplicatesSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 1, 3, 2, 4] });
+
+duplicatedSeries(s).values;     // [false, false, true, false, true, false]
+dropDuplicatesSeries(s).values; // [1, 2, 3, 4]
+
+// keep=false → mark all duplicate values
+duplicatedSeries(s, { keep: false }).values;
+// [true, true, true, false, true, false]
+</code></pre>
+    </section>
+  </main>
+
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

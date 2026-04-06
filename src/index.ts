@@ -273,3 +273,6 @@ export { searchsorted, searchsortedMany, argsortScalars } from "./core/index.ts"
 export type { SearchSortedSide, SearchSortedOptions } from "./core/index.ts";
 export { valueCountsBinned } from "./stats/index.ts";
 export type { ValueCountsBinnedOptions } from "./stats/index.ts";
+
+export { duplicatedSeries, duplicatedDataFrame, dropDuplicatesSeries, dropDuplicatesDataFrame } from "./stats/index.ts";
+export type { KeepPolicy, DuplicatedDataFrameOptions, DuplicatedSeriesOptions } from "./stats/index.ts";
