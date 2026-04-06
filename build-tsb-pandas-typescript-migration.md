@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T10:32:00Z |
-| Iteration Count | 89 |
-| Best Metric | 44 |
+| Last Run | 2026-04-06T11:35:00Z |
+| Iteration Count | 90 |
+| Best Metric | 45 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,14 +35,15 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 44 files (iter 89). Next candidates:
+Now at 45 files (iter 90). Next candidates:
 - `src/core/datetime_tz.ts` — timezone-aware DatetimeIndex with tz_localize / tz_convert
-- `src/stats/pow_mod.ts` — pow/mod/floordiv element-wise arithmetic between Series
+- `src/stats/add_sub_mul_div.ts` — element-wise add/subtract/multiply/divide for Series (vs scalar or other Series)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 90 (pow_mod, 44→45)**: `_mod` must use `a - Math.floor(a/b)*b` (not `((a%b)+b)%b`) to avoid addition overflow for large floats near `Number.MAX_VALUE`. `Math.floor(0/negative) = -0`; normalize with `r === 0 ? 0 : r`. Property tests for floating-point mod/floordiv identities must use integer inputs (`fc.integer`) to avoid subnormal precision failures.
 - **Iter 89 (numeric_ops, 43→44)**: `fc.float` requires 32-bit float bounds (use `fc.double` for double constraints). Property `sign(n)*abs(n)≈n` fails for ±Infinity via `Inf-Inf=NaN`; exclude infinities with `noDefaultInfinity:true`. Grouped floor/ceil/trunc/sqrt/exp/log*/sign in one module — 82 tests, 100% coverage.
 - **Iter 88 (DatetimeIndex/date_range/bdate_range, 42→43)**: `freqToOffset(freq, n)` takes multiplier (QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name`. 104 tests, 100% coverage.
 - **Iter 87 (DateOffset, 41→42)**: 11 offset classes. Anchored use `Date.UTC(y, m+n+1, 0)` trick. UTC throughout.
@@ -71,6 +72,14 @@ Now at 44 files (iter 89). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 90 — 2026-04-06 11:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24029842441)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/pow_mod.ts` — `seriesPow`/`dataFramePow`, `seriesMod`/`dataFrameMod`, `seriesFloorDiv`/`dataFrameFloorDiv`. Python/pandas sign semantics for mod; floor-toward-−∞ for floordiv.
+- **Metric**: 45 (previous: 44, delta: +1)
+- **Commit**: dbe17ed
+- **Notes**: `_mod` uses `a - floor(a/b)*b` to avoid addition overflow near MAX_VALUE. Normalize `-0 → 0`. Property tests for mod/floordiv must use `fc.integer` — float subnormals break the Euclidean identity. 36 tests, 100% coverage.
 
 ### Iteration 89 — 2026-04-06 10:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24028449864)
 
