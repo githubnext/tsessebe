@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T20:25:00Z |
-| Iteration Count | 106 |
-| Best Metric | 61 |
+| Last Run | 2026-04-06T20:47:00Z |
+| Iteration Count | 107 |
+| Best Metric | 62 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -33,15 +33,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 61 files (iter 106). Next candidates:
+Now at 62 files (iter 107). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/core/natsort.ts` — natural-sort for string indexes / columns
-- `src/stats/notna.ts` — notna()/isna() element-wise null checks (pandas.notna / pandas.isna)
+- `src/stats/dropna.ts` — standalone dropna() for Series/DataFrame (vs. methods already on class)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 107 (notna/isna)**: `SeriesOptions.name` is `string | null` (not `string | undefined`) — pass `s.name` directly. The `missing()` helper `v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v))` is the canonical missing test. Falsy-but-present values (0, "", false) are NOT missing. `isnull`/`notnull` are simple `const` aliases (`export const isnull = isna`). DataFrame overload builds a `Map<string, Series<Scalar>>` with `df.index` (already `Index<Label>`, no cast needed). 45 tests (unit + property-based).
 - **Iter 106 (infer_dtype)**: `inferDtype(values, {skipna})` uses `unknown[]` input type (not `Scalar[]`) so specialised objects like `Timestamp`, `Timedelta`, `Period`, `Interval` pass type-checks cleanly. The `classifyOne()` helper uses `instanceof` guards in precedence order (Timestamp before Date, since Timestamp extends nothing but must not accidentally match Date). `skipna=true` skips nulls; when all non-null kinds form a Set of size 1 the output is deterministic. 45 tests (unit + property-based).
 - **Iter 105 (pivotTableFull)**: Grand-total margins computed from raw data values (not re-aggregated cells) ensures mean/sum/count are all correct for "All" row/column. `marginValue()` helper concatenates all buckets for a fixed row or column key across all opposite keys. `sort=true` default mirrors pandas behavior. `rowKeyToLabel()` handles composite multi-key rows. The `as Label[]` cast removed since `Label[]` is directly assignable to `readonly Label[]`.
 - **Iter 104 (clip_with_bounds)**: `resolveBound()` helper unifies scalar/array/Series bounds into a per-element `(number|null)[]`. `Array.isArray` distinguishes arrays from Series at runtime. DataFrame element-wise clip handled by `_clipDFElementWise()`. When one bound is a DataFrame, the other is treated as scalar-only (array/Series non-DataFrame bounds are unsupported in element-wise mode — document the limitation).
@@ -65,13 +66,21 @@ Now at 61 files (iter 106). Next candidates:
 
 ## 🔭 Future Directions
 
-**State (iter 104)**: 59 files. Next: io/read_excel (XLSX zero-dep) · core/natsort (natural-sort for string indexes) · reshape/pivot_table (full pivot_table with aggfunc, margins)
+**State (iter 107)**: 62 files. Next: io/read_excel (XLSX zero-dep) · core/natsort (natural-sort for string indexes) · stats/where_na (dropna for series/dataframe standalone funcs)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 107 — 2026-04-06 20:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24050415894)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/notna.ts` — `isna`/`notna`/`isnull`/`notnull` element-wise missing-value detection. Works on scalars, arrays, Series, DataFrames. `isnull`/`notnull` are const aliases.
+- **Metric**: 62 (previous: 61, delta: +1)
+- **Commit**: 6a725aa
+- **Notes**: `SeriesOptions.name` is `string | null`, not `string | undefined` — must pass `s.name` directly. 45 unit + property-based tests. All pass.
 
 ### Iteration 106 — 2026-04-06 20:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24049095921)
 
