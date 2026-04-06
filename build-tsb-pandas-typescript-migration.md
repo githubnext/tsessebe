@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T09:42:00Z |
-| Iteration Count | 87 |
-| Best Metric | 42 |
+| Last Run | 2026-04-06T10:15:00Z |
+| Iteration Count | 88 |
+| Best Metric | 43 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,24 +35,21 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 42 files (iter 87). Next candidates:
-- `src/core/date_range.ts` — `date_range()` / `bdate_range()` generating DatetimeIndex sequences using DateOffset
+Now at 43 files (iter 88). Next candidates:
 - `src/stats/numeric_ops.ts` — additional numeric ops: floor(), ceil() for Series/DataFrame (abs/round already in elem_ops)
+- `src/core/datetime_tz.ts` — timezone-aware DatetimeIndex with tz_localize / tz_convert
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 87 (DateOffset, 41→42)**: `DateOffset` interface + 11 offset classes. Fixed-time offsets (Day/Hour/Minute/Second/Milli/Week) use simple ms arithmetic. Anchored offsets (MonthEnd/MonthBegin/YearEnd/YearBegin) use `Date.UTC(y, m+n+1, 0)` trick (day 0 = last day of prev month) for O(1) exact arithmetic — no loops needed. BusinessDay uses step-and-roll helpers. Week with weekday alignment converts pandas convention (0=Mon) to JS UTC day (0=Sun) via `pdToJsDow`. All operations in UTC to avoid DST. No private fields needed — compute jsDow inline.
-- **Iter 86 (Timedelta/TimedeltaIndex, 40→41)**: Internal ms representation; `floorDiv` helper returns `[quotient, remainder]` tuple for clean component extraction. Use `first = arr[0]; if (first === undefined) throw` instead of `as` cast for safe first-element access with `noUncheckedIndexedAccess`. `biome-ignore lint/style/noNonNullAssertion:` comment works for bounds-checked array access.
-- **Iter 85 (Period/PeriodIndex, 39→40)**: Ordinal-based internal representation (ms → periods since epoch) cleanly handles all 8 frequencies. `normFreq()` with for-of over const tuple handles aliases (Y→A, min→T). Biome auto-fix can corrupt JSDoc comment delimiters; fix manually after auto-write. Top-level regex constants required by `useTopLevelRegex`. Switch exhaustiveness via explicit `default: throw` satisfies `useDefaultSwitchClause`.
-- **Iter 84 (pipe, 38→39)**: Variadic-generic pattern `<A extends unknown[], R>(fn: (x, ...args: A) => R, ...args: A)` gives full type inference. `pipeChain`/`dataFramePipeChain` use for-of loop. `pipeTo`/`dataFramePipeTo` splice value at positional index.
-- **Iter 83 (CategoricalIndex, 37→38)**: Standalone class. `buildCategoryMap` for O(1) look-up. `fromCodes` validates codes. `compareLabels` throws when `ordered=false`. `unionCategories`/`intersectCategories` on category sets. Use `{ }` blocks around single-statement `if`.
-- **Iter 82 (apply, 36→37)**: `applySeries`/`applymap`/`dataFrameApply`. Helper fns `extractRow`/`applyAxis0`/`applyAxis1` keep CC≤15. `import fc from "fast-check"` (default import). Import `Scalar` from `"../../src/index.ts"`.
-- **Iter 81 (sample, 35→36)**: xorshift32 RNG. `buildCdf`+`rebuildCdf` for weighted without-replacement. `Array.from({length}, fn)`. Fisher-Yates partial shuffle for unweighted.
-- **Iters 73–80**: fillna, interpolate, shift/diff, compare, where/mask, cut/qcut, interval, sample. Use barrel imports (`../core/index.ts`). `extractName()` returns `string | null`. Top-level regex vars.
-- **Iters 67–72**: value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex. `scalarKey` for Map keys. `mapNumeric`/`makeClipFn`. `Number.NEGATIVE_INFINITY`. `cumulateNum`/`cumulateSc` + `poisoned` flag. CC≤15 by extracting helpers.
-- **Iters 53–66**: GroupBy, merge, str, dt, describe, csv, json, corr, rolling, expanding, ewm, melt, pivot, stack/unstack. `*SeriesLike` interfaces avoid circular imports. `getProp(obj,key)` for index-sig. Barrel files for `useImportRestrictions`. `import type`. `useForOf`. Top-level regex.
+- **Iter 88 (DatetimeIndex/date_range/bdate_range, 42→43)**: `freqToOffset(freq, n)` takes multiplier (QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name`. 104 tests, 100% coverage.
+- **Iter 87 (DateOffset, 41→42)**: 11 offset classes. Anchored use `Date.UTC(y, m+n+1, 0)` trick. UTC throughout.
+- **Iter 86 (Timedelta/TimedeltaIndex, 40→41)**: Internal ms; `floorDiv` helper. `biome-ignore lint/style/noNonNullAssertion:` for bounds-checked access.
+- **Iter 85 (Period/PeriodIndex, 39→40)**: Ordinal-based. Top-level regex. `default: throw` for exhaustiveness.
+- **Iter 84 (pipe, 38→39)**: Variadic-generic `<A extends unknown[], R>(fn, ...args: A)`.
+- **Iters 73–83**: fillna, interpolate, shift/diff, compare, where/mask, cut/qcut, interval, sample, apply, CategoricalIndex. Top-level regex. `extractName()` returns `string | null`. Barrel imports.
+- **Iters 53–72**: GroupBy, merge, str, dt, describe, csv, json, corr, rolling, expanding, ewm, melt, pivot, stack/unstack, value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex. `*SeriesLike` interfaces. `scalarKey` for Map keys.
 
 ---
 
@@ -64,15 +61,23 @@ Now at 42 files (iter 87). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 87)**: 42 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset.
+**Current state (iter 88)**: 43 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range.
 
-**Next**: `date_range()` / `bdate_range()` generating DatetimeIndex sequences using DateOffset · additional numeric ops (floor/ceil)
+**Next**: additional numeric ops (floor/ceil for Series/DataFrame) · tz-aware DatetimeIndex
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 88 — 2026-04-06 10:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24027453779)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/date_range.ts` — `DatetimeIndex`, `date_range()`, `bdate_range()`, `resolveFreq()` with 16 frequency aliases.
+- **Metric**: 43 (previous: 42, delta: +1)
+- **Commit**: 9795038
+- **Notes**: `freqToOffset(freq, n)` takes multiplier directly (enables QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name` for clean backward generation. 104 unit + property tests, 100% coverage.
 
 ### Iteration 87 — 2026-04-06 09:42 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24026629763)
 
@@ -82,30 +87,9 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: 3f80806
 - **Notes**: Anchored offsets use `Date.UTC(y, m+n+1, 0)` (day 0 trick) for O(1) arithmetic. UTC throughout. 100+ unit + property tests.
 
-### Iteration 86 — 2026-04-06 08:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24024993715)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/timedelta.ts` — `Timedelta` and `TimedeltaIndex` mirroring `pandas.Timedelta` / `pandas.TimedeltaIndex`.
-- **Metric**: 41 (previous: 40, delta: +1)
-- **Commit**: de7820d
-- **Notes**: Internal ms representation with `floorDiv` helper for clean component extraction. Supports fromComponents, fromMilliseconds, parse (pandas-style / ISO 8601 / HH:MM:SS), add/sub/mul/negate/abs/divBy, compareTo/equals, toString/toISOString. TimedeltaIndex with fromTimedeltas/fromRange/fromStrings, sort/unique/shift/min/max/filter. 60+ unit + property tests.
-
-### Iteration 85 — 2026-04-06 07:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24023324081)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/period.ts` — `Period` and `PeriodIndex` mirroring `pandas.Period` / `pandas.PeriodIndex`.
-- **Metric**: 40 (previous: 39, delta: +1)
-- **Commit**: 37c28bf
-- **Notes**: Ordinal-based representation (periods since 1970-01-01). Supports A/Q/M/W/D/H/T/S frequencies with aliases Y→A, min→T. Period: fromDate, fromString, add, diff, compareTo, equals, contains, asfreq. PeriodIndex: fromRange, periodRange, fromPeriods, shift, sort, unique, asfreq. 65+ unit + property tests. Biome-clean.
-
-### Iteration 84 — 2026-04-06 06:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24021812753)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/pipe.ts` — `pipeSeries()`, `dataFramePipe()`, `pipeChain()`, `dataFramePipeChain()`, `pipeTo()`, `dataFramePipeTo()` mirroring `pandas.Series.pipe()` / `pandas.DataFrame.pipe()`.
-- **Metric**: 39 (previous: 38, delta: +1)
-- **Commit**: 09f54f9
-- **Notes**: Variadic-generic pattern `<A extends unknown[], R>(fn: (x, ...args: A) => R, ...args: A)` gives full type inference. `pipeChain` uses for-of loop. `pipeTo` splices value at positional index. 47 unit + property tests.
-
+### Iteration 86 — 2026-04-06 08:35 UTC — ✅ Timedelta/TimedeltaIndex (40→41) commit: de7820d
+### Iteration 85 — 2026-04-06 07:35 UTC — ✅ Period/PeriodIndex (39→40) commit: 37c28bf
+### Iteration 84 — 2026-04-06 06:50 UTC — ✅ pipe/pipeChain/pipeTo (38→39) commit: 09f54f9
 ### Iteration 83 — 2026-04-06 05:49 UTC — ✅ CategoricalIndex (37→38) commit: 7444b7d
 ### Iteration 82 — 2026-04-06 05:07 UTC — ✅ apply/applymap/dataFrameApply (36→37) commit: 78354b8
 ### Iteration 81 — 2026-04-06 03:41 UTC — ✅ sample (35→36) commit: 2291bd9
