@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T05:49:52Z |
-| Iteration Count | 83 |
-| Best Metric | 38 |
+| Last Run | 2026-04-06T06:50:00Z |
+| Iteration Count | 84 |
+| Best Metric | 39 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -39,27 +39,21 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 38 files (iter 83). Next candidates:
-- `src/stats/pipe.ts` — pipe/pipe-through for chained operations
+Now at 39 files (iter 84). Next candidates:
 - `src/core/period.ts` — Period and PeriodIndex
+- `src/stats/clip_series_more.ts` — additional numeric ops
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 83 (CategoricalIndex, 37→38)**: Standalone class (not extending `Index<Label>`). `buildCategoryMap` for O(1) label→code lookup. All mutations return new instances. `fromCodes` validates codes are in `[0, nCats)` or -1. `compareLabels` throws when `ordered=false`. `unionCategories`/`intersectCategories` operate on category sets while keeping left-side data. Biome auto-fix handles `useBlockStatements` — use `{ }` blocks around single-statement `if` throw/return.
-- **Iter 82 (apply, 36→37)**: `applySeries(series, fn(v,label))` / `applymap(df, fn(v,colName))` / `dataFrameApply(df, fn, {axis})`. Helper functions `extractRow`/`applyAxis0`/`applyAxis1` keep CC≤15. Use `import fc from "fast-check"` (default import, not namespace). Import `Scalar` from `"../../src/index.ts"` not `"../../src/types.ts"` (useImportRestrictions). Biome auto-formats multi-line function signatures onto one line when ≤100 cols.
-- **Iter 81 (sample, 35→36)**: xorshift32 RNG (zero deps). `buildCdf` + `rebuildCdf` pattern for weighted without-replacement. Use `Array.from({length}, fn)` instead of for-loops where index isn't needed (avoids `useForOf` lint). `(arr as number[]).findIndex((v) => r < v)` cleaner than manual loop. `resolveWeights` separates weight validation from CDF construction. Fisher-Yates partial shuffle for unweighted without-replacement.
-- **Iter 80 (apply/applymap, 35→36)**: `allSeries([])` must return `false` (vacuously-true empty case returns wrong type). Use `new Array(n).fill(v)` not `Array(n).fill(v)`. Extract small helpers (broadcastAxis0/1, expandAxis0/1, fillColBuffers) to keep CC≤15. `Series.values` is `readonly` — use separate mutable `Scalar[]` buffers for assembly.
-- **Iter 79 (cut/qcut, 34→35)**: Import from `"../core/index.ts"` barrel (not sub-files) for `useImportRestrictions`. `extractName()` must return `string | null` not `string | undefined` (exactOptionalPropertyTypes). Top-level regex vars required (`useTopLevelRegex`). Shared `cutCore()` + `assignBins()` + `resolveLabels()` keep CC≤15. `cutIntervalIndex()`/`qcutIntervalIndex()` expose bins for downstream use.
-- **Iter 78 (interval, 33→34)**: `IntervalIndex` standalone class (not extending `Index<Label>`). `noUncheckedIndexedAccess`: `this.left[i] as number` after bounds check. Overlap: check `right===other.left` and test both closures.
-- **Iters 73–77**: fillna (3 strategies: scalar/ColumnFillMap/Series), interpolate (linear=interior only), shift/diff, compare (NaN→false), where/mask (partition property).
-- **Iter 72 (value_counts, 27→28)**: `scalarKey` for stable Map keys. `df.get(name)` not `df.tryCol()`. `import type` for type-only. Biome: `as number` not `!`.
-- **Iters 70–71**: `mapNumeric`/`makeClipFn`. `Number.NEGATIVE_INFINITY`/`Number.POSITIVE_INFINITY`. `cumulateNum`/`cumulateSc` + `poisoned` flag for skipna=false.
-- **Iters 67–69**: CC≤15 by extracting helpers. `Array.from({length:n},(_, i)=>i)`. `cartesianProduct` backward loop.
-- **Iters 63–66**: EWM online O(n). `buildCellMap`+`buildOutputCols`. `noNestedTernary`→if/else. `**` not `Math.pow`.
-- **Iters 57–62**: `*SeriesLike` interfaces avoid circular imports. `getProp(obj,key)` for index-sig. `as number` not `!`. `useBlockStatements`.
-- **Iters 53–56**: Barrel files for `useImportRestrictions`. `import type`. `useForOf`. Top-level regex.
+- **Iter 84 (pipe, 38→39)**: Variadic-generic pattern `<A extends unknown[], R>(fn: (x, ...args: A) => R, ...args: A)` gives full type inference. `pipeChain`/`dataFramePipeChain` use for-of loop. `pipeTo`/`dataFramePipeTo` splice value at positional index.
+- **Iter 83 (CategoricalIndex, 37→38)**: Standalone class. `buildCategoryMap` for O(1) look-up. `fromCodes` validates codes. `compareLabels` throws when `ordered=false`. `unionCategories`/`intersectCategories` on category sets. Use `{ }` blocks around single-statement `if`.
+- **Iter 82 (apply, 36→37)**: `applySeries`/`applymap`/`dataFrameApply`. Helper fns `extractRow`/`applyAxis0`/`applyAxis1` keep CC≤15. `import fc from "fast-check"` (default import). Import `Scalar` from `"../../src/index.ts"`.
+- **Iter 81 (sample, 35→36)**: xorshift32 RNG. `buildCdf`+`rebuildCdf` for weighted without-replacement. `Array.from({length}, fn)`. Fisher-Yates partial shuffle for unweighted.
+- **Iters 73–80**: fillna, interpolate, shift/diff, compare, where/mask, cut/qcut, interval, sample. Use barrel imports (`../core/index.ts`). `extractName()` returns `string | null`. Top-level regex vars.
+- **Iters 67–72**: value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex. `scalarKey` for Map keys. `mapNumeric`/`makeClipFn`. `Number.NEGATIVE_INFINITY`. `cumulateNum`/`cumulateSc` + `poisoned` flag. CC≤15 by extracting helpers.
+- **Iters 53–66**: GroupBy, merge, str, dt, describe, csv, json, corr, rolling, expanding, ewm, melt, pivot, stack/unstack. `*SeriesLike` interfaces avoid circular imports. `getProp(obj,key)` for index-sig. Barrel files for `useImportRestrictions`. `import type`. `useForOf`. Top-level regex.
 
 ---
 
@@ -71,15 +65,23 @@ Now at 38 files (iter 83). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 83)**: 38 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index.
+**Current state (iter 84)**: 39 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe.
 
-**Next**: pipe · Period/PeriodIndex
+**Next**: Period/PeriodIndex · Timedelta
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 84 — 2026-04-06 06:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24021812753)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/pipe.ts` — `pipeSeries()`, `dataFramePipe()`, `pipeChain()`, `dataFramePipeChain()`, `pipeTo()`, `dataFramePipeTo()` mirroring `pandas.Series.pipe()` / `pandas.DataFrame.pipe()`.
+- **Metric**: 39 (previous: 38, delta: +1)
+- **Commit**: 09f54f9
+- **Notes**: Variadic-generic pattern `<A extends unknown[], R>(fn: (x, ...args: A) => R, ...args: A)` gives full type inference. `pipeChain` uses for-of loop. `pipeTo` splices value at positional index. 47 unit + property tests.
 
 ### Iteration 83 — 2026-04-06 05:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24020523769)
 
