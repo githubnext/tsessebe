@@ -439,6 +439,11 @@
           <p>Binary search on sorted arrays — <a href="searchsorted.html" style="color: var(--accent);">interactive tutorial</a>. <code>searchsorted(a, v)</code> finds the insertion index for a single value (mirrors <code>numpy.searchsorted</code> / <code>pandas.Index.searchsorted</code>). <code>searchsortedMany(a, vs)</code> handles multiple queries at once. <code>argsortScalars(a)</code> computes the sort permutation for use with the <code>sorter</code> option on unsorted data. Supports <code>side="left"|"right"</code> and a custom <code>compareFn</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>📊 valueCountsBinned</h3>
+          <p>Bin-based frequency counting — <a href="value_counts_full.html" style="color: var(--accent);">interactive tutorial</a>. <code>valueCountsBinned(series, N)</code> divides numeric values into <em>N</em> equal-width intervals then counts frequencies, mirroring <code>pandas.Series.value_counts(bins=N)</code>. Supports <code>normalize</code> (return proportions), <code>sort</code> (by count or by interval), and <code>ascending</code>. NaN/null values are automatically excluded.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

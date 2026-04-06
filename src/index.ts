@@ -271,3 +271,5 @@ export { natCompare, natSorted, natSortKey, natArgSort } from "./core/index.ts";
 export type { NatSortOptions, NatSortedOptions } from "./core/index.ts";
 export { searchsorted, searchsortedMany, argsortScalars } from "./core/index.ts";
 export type { SearchSortedSide, SearchSortedOptions } from "./core/index.ts";
+export { valueCountsBinned } from "./stats/index.ts";
+export type { ValueCountsBinnedOptions } from "./stats/index.ts";

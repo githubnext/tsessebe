@@ -176,3 +176,6 @@ export { dropna, dropnaSeries, dropnaDataFrame } from "./dropna.ts";
 export type { DropnaHow, DropnaDataFrameOptions } from "./dropna.ts";
 
 export { combineFirstSeries, combineFirstDataFrame } from "./combine_first.ts";
+
+export { valueCountsBinned } from "./value_counts_full.ts";
+export type { ValueCountsBinnedOptions } from "./value_counts_full.ts";
