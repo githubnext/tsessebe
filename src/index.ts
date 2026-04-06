@@ -145,3 +145,5 @@ export type {
   ColumnFillMap,
   FillnaDataFrameOptions,
 } from "./stats/index.ts";
+export { Interval, IntervalIndex } from "./core/index.ts";
+export type { IntervalClosed, IntervalIndexOptions } from "./core/index.ts";

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Interval &amp; IntervalIndex</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .875rem; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; }
+    th { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>Interval &amp; IntervalIndex</h1>
+<p class="subtitle">
+  Numeric intervals with configurable endpoint closure —
+  mirrors <code>pandas.Interval</code> and <code>pandas.IntervalIndex</code>.
+</p>
+
+<section>
+  <h2>1 — Interval basics</h2>
+  <p>
+    An <code>Interval</code> represents a range between two numbers. The <code>closed</code>
+    parameter controls which endpoints are included:
+  </p>
+  <table>
+    <tr><th>closed</th><th>notation</th><th>left included?</th><th>right included?</th></tr>
+    <tr><td><code>"right"</code> (default)</td><td>(left, right]</td><td>no</td><td>yes</td></tr>
+    <tr><td><code>"left"</code></td><td>[left, right)</td><td>yes</td><td>no</td></tr>
+    <tr><td><code>"both"</code></td><td>[left, right]</td><td>yes</td><td>yes</td></tr>
+    <tr><td><code>"neither"</code></td><td>(left, right)</td><td>no</td><td>no</td></tr>
+  </table>
+  <pre><code id="ex1-code">import { Interval } from "tsb";
+
+const iv = new Interval(0, 1);       // default: right-closed (0, 1]
+console.log(iv.toString());          // "(0, 1]"
+console.log(iv.length);              // 1
+console.log(iv.mid);                 // 0.5
+console.log(iv.closedLeft);          // false
+console.log(iv.closedRight);         // true
+console.log(iv.contains(1));         // true  — right endpoint included
+console.log(iv.contains(0));         // false — left endpoint excluded
+console.log(iv.contains(0.5));       // true
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — All four closure modes</h2>
+  <pre><code id="ex2-code">import { Interval } from "tsb";
+
+const modes = ["right", "left", "both", "neither"];
+for (const m of modes) {
+  const iv = new Interval(0, 1, m);
+  const at0 = iv.contains(0);
+  const at1 = iv.contains(1);
+  const mid = iv.contains(0.5);
+  console.log(`${iv.toString().padEnd(12)} contains(0)=${at0} contains(0.5)=${mid} contains(1)=${at1}`);
+}
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — Interval.overlaps()</h2>
+  <p>
+    Two intervals <em>overlap</em> when they share at least one point.
+  </p>
+  <pre><code id="ex3-code">import { Interval } from "tsb";
+
+const a = new Interval(0, 2);
+const b = new Interval(1, 3);
+const c = new Interval(5, 6);
+
+console.log(a.overlaps(b));   // true  — share [1, 2]
+console.log(a.overlaps(c));   // false — gap between 2 and 5
+console.log(b.overlaps(a));   // true  — symmetric
+
+// Adjacent intervals sharing exactly one endpoint
+const left  = new Interval(0, 1, "right");   // (0, 1]
+const right = new Interval(1, 2, "left");    // [1, 2)
+console.log(left.overlaps(right));   // true  — both include point 1
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — IntervalIndex.fromBreaks()</h2>
+  <p>
+    The most common way to create an <code>IntervalIndex</code> is from a list of
+    break-points (like the output of <code>pandas.cut()</code>).
+    Given <em>n+1</em> breaks, you get <em>n</em> intervals.
+  </p>
+  <pre><code id="ex4-code">import { IntervalIndex } from "tsb";
+
+const idx = IntervalIndex.fromBreaks([0, 10, 20, 30, 40, 50]);
+console.log(idx.size);          // 5
+console.log(idx.at(0).toString());  // "(0, 10]"
+console.log(idx.at(-1).toString()); // "(40, 50]"
+console.log([...idx.left]);     // [0, 10, 20, 30, 40]
+console.log([...idx.right]);    // [10, 20, 30, 40, 50]
+console.log([...idx.mid]);      // [5, 15, 25, 35, 45]
+console.log(idx.isMonotonicIncreasing); // true
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — IntervalIndex.get_loc() — bin lookup</h2>
+  <p>
+    <code>get_loc(value)</code> finds which bin a value falls into.
+    Returns <code>-1</code> when the value isn't in any interval.
+  </p>
+  <pre><code id="ex5-code">import { IntervalIndex } from "tsb";
+
+// Grade bands: F [0,50), D [50,60), C [60,70), B [70,80), A [80,100]
+const bands = IntervalIndex.fromArrays(
+  [0,  50, 60, 70, 80],
+  [50, 60, 70, 80, 100],
+  "right"  // (left, right]
+);
+
+const scores = [45, 55, 65, 75, 95, 100, -1];
+const labels = ["F", "D", "C", "B", "A"];
+
+for (const score of scores) {
+  const bin = bands.get_loc(score);
+  const grade = bin >= 0 ? labels[bin] : "out of range";
+  console.log(`score ${score} → ${grade}`);
+}
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — IntervalIndex.contains() and overlaps()</h2>
+  <pre><code id="ex6-code">import { Interval, IntervalIndex } from "tsb";
+
+const idx = IntervalIndex.fromBreaks([0, 5, 10, 15]);
+// → (0,5], (5,10], (10,15]
+
+// contains: one boolean per interval
+console.log(idx.contains(7));    // [false, true, false]
+console.log(idx.contains(5));    // [true,  false, false]  (right-closed: 5 ∈ (0,5])
+
+// overlaps: does each interval share any point with the query?
+const query = new Interval(4, 6); // (4, 6]
+console.log(idx.overlaps(query)); // [true, true, false] — (0,5] and (5,10] both overlap
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — IntervalIndex.filter() and rename()</h2>
+  <pre><code id="ex7-code">import { Interval, IntervalIndex } from "tsb";
+
+const idx = IntervalIndex.fromBreaks([0, 1, 2, 3, 4, 5], "right", { name: "raw" });
+
+// Keep only intervals that overlap with (1.5, 3.5]
+const query = new Interval(1.5, 3.5);
+const mask = idx.overlaps(query);
+const filtered = idx.filter(mask);
+
+console.log(filtered.size);           // 3
+console.log(filtered.toString());     // shows (1, 2], (2, 3], (3, 4]
+
+// Rename the index axis
+const named = idx.rename("score_bins");
+console.log(named.name);              // "score_bins"
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<section>
+  <h2>8 — Building from Interval objects</h2>
+  <pre><code id="ex8-code">import { Interval, IntervalIndex } from "tsb";
+
+// Custom irregular intervals
+const intervals = [
+  new Interval(0, 5, "both"),     // [0, 5]
+  new Interval(5, 10, "neither"), // (5, 10)
+  new Interval(10, 20, "left"),   // [10, 20)
+];
+const idx = IntervalIndex.fromIntervals(intervals);
+console.log(idx.size);            // 3
+// Closure mode comes from first interval
+console.log(idx.closed);          // "both"
+console.log(idx.toString());
+</code></pre>
+  <div class="output" id="ex8-output">Loading…</div>
+</section>
+
+<script>
+const examples = document.querySelectorAll("section");
+examples.forEach((section) => {
+  const codeEl = section.querySelector("code");
+  const outEl  = section.querySelector(".output");
+  if (!codeEl || !outEl) return;
+  const code = codeEl.textContent ?? "";
+  window.__tsb_run?.(code, outEl);
+});
+</script>
+</body>
+</html>
