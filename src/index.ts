@@ -184,3 +184,23 @@ export {
 export type { DateOffset, WeekOptions } from "./core/index.ts";
 export { DatetimeIndex, date_range, bdate_range, resolveFreq } from "./core/index.ts";
 export type { DateRangeFreq, DateRangeOptions, DatetimeIndexOptions } from "./core/index.ts";
+export {
+  seriesFloor,
+  dataFrameFloor,
+  seriesCeil,
+  dataFrameCeil,
+  seriesTrunc,
+  dataFrameTrunc,
+  seriesSqrt,
+  dataFrameSqrt,
+  seriesExp,
+  dataFrameExp,
+  seriesLog,
+  dataFrameLog,
+  seriesLog2,
+  dataFrameLog2,
+  seriesLog10,
+  dataFrameLog10,
+  seriesSign,
+  dataFrameSign,
+} from "./stats/index.ts";

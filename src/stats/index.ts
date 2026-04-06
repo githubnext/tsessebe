@@ -92,3 +92,23 @@ export {
   pipeChain,
   dataFramePipeChain,
 } from "./pipe.ts";
+export {
+  seriesFloor,
+  dataFrameFloor,
+  seriesCeil,
+  dataFrameCeil,
+  seriesTrunc,
+  dataFrameTrunc,
+  seriesSqrt,
+  dataFrameSqrt,
+  seriesExp,
+  dataFrameExp,
+  seriesLog,
+  dataFrameLog,
+  seriesLog2,
+  dataFrameLog2,
+  seriesLog10,
+  dataFrameLog10,
+  seriesSign,
+  dataFrameSign,
+} from "./numeric_ops.ts";
