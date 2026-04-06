@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T18:21:40Z |
-| Iteration Count | 102 |
-| Best Metric | 57 |
+| Last Run | 2026-04-06T18:49:46Z |
+| Iteration Count | 103 |
+| Best Metric | 58 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,15 +35,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 57 files (iter 102). Next candidates:
+Now at 58 files (iter 103). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/stats/clip_with_bounds.ts` — DataFrame.clip() enhancements with lower/upper Series
-- `src/core/assign.ts` — DataFrame.assign() for adding new columns via callables
+- `src/core/natsort.ts` — natural-sort for string indexes / columns
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 103 (dataFrameAssign)**: Callable specifiers need to receive the in-progress `working` DataFrame (updated after each step) — not the original `df`. The helper `_addOrReplaceColumn` preserves column order for replacements by iterating existing column names and substituting in-place. `import type { Scalar }` is sufficient — no need to import `Label` or `Index` in the assign module.
 - **Iter 102 (NamedAgg)**: Circular value imports between `groupby.ts` and `named_agg.ts` avoided by using only `import type` for cross-dependencies. The internal `_resolveColSpecs` type was updated from `ReadonlyMap<string, AggFn>` to `ReadonlyMap<string, { srcCol: string; fn: AggFn }>` to cleanly separate output column name from source column.
 - **Iter 101 (select_dtypes)**: `DataFrame.fromColumns` accepts only plain arrays — passing a `Series` with custom `Dtype` loses the dtype. Use `new DataFrame(new Map(...), rowIndex)` directly to preserve custom dtypes. `fc.float()` requires 32-bit boundaries — use `fc.double()` for general floats.
 - **Iter 100 (memory_usage)**: RangeIndex cost = constant 24 bytes. Variable-width dtypes: 8 bytes/element shallow; `length*2+56` for strings when deep=true.
@@ -63,13 +64,21 @@ Now at 57 files (iter 102). Next candidates:
 
 ## 🔭 Future Directions
 
-**State (iter 102)**: 57 files. Next: io/read_excel (XLSX zero-dep) · stats/clip (DataFrame.clip with Series bounds) · core/assign (DataFrame.assign())
+**State (iter 103)**: 58 files. Next: io/read_excel (XLSX zero-dep) · stats/clip (DataFrame.clip with Series bounds) · core/natsort (natural-sort for string indexes)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 103 — 2026-04-06 18:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24045614643)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/assign.ts` — `dataFrameAssign()`, `AssignColSpec`, `AssignSpec`. Extended `DataFrame.assign()` instance method to accept callables.
+- **Metric**: 58 (previous: 57, delta: +1)
+- **Commit**: 945b4a5
+- **Notes**: Callables receive the in-progress DataFrame (updated after each prior spec). Helper `_addOrReplaceColumn` preserves column order on replacement. 18 unit + 4 property tests.
 
 ### Iteration 102 — 2026-04-06 18:21 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24044453532)
 
