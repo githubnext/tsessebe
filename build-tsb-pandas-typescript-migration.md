@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T21:46:00Z |
-| Iteration Count | 109 |
-| Best Metric | 64 |
+| Last Run | 2026-04-06T22:13:00Z |
+| Iteration Count | 110 |
+| Best Metric | 65 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -30,15 +30,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 64 files (iter 109). Next candidates:
+Now at 65 files (iter 110). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/core/natsort.ts` — natural-sort for string indexes / columns
 - `src/stats/value_counts_full.ts` — enhanced value_counts with bins/normalize
+- `src/core/searchsorted.ts` — binary search on sorted Index/array
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 110 (natsort)**: Tokenise strings into alternating text/digit chunks with regex `/(\d+)/g`. Digit tokens compare numerically; text tokens compare lexicographically (optionally case-folded). `natArgSort` pre-computes keys then sorts indices — avoids re-tokenising on every comparison. Property tests (anti-symmetry, permutation correctness, argSort≡sorted) catch corner cases effectively.
 - **Iter 109 (combine_first)**: `buildLabelMap(idx)` helper creates `Map<string, number[]>` for O(1) label lookup. `Index.union()` handles the index union cleanly. The key insight: check `isMissing(selfVal)` before falling back to `other`. DataFrame path iterates union rows × union cols — straightforward nested loop with per-column Series construction.
 - **Iter 108 (dropna standalone)**: `dropna(series)` dispatches to `s.dropna()`. DataFrame path: `axis=0` pre-fetches column arrays into a `Map` for efficient row scanning. `how='all'` checks `nullCount < checkCols.length`. `thresh` checks `nonNullCount >= thresh`. `subset` filters columns before scanning. `axis=1` scans each column's values. `_selectRows()` builds a boolean mask via `Set<number>` then calls `df.filter()`. `_selectCols()` delegates to `df.select()`. Zero `as` casts needed. 44 tests (unit + property-based).
 - **Iter 107 (notna/isna)**: `SeriesOptions.name` is `string | null` (not `string | undefined`) — pass `s.name` directly. The `missing()` helper `v === null || v === undefined || (typeof v === 'number' && Number.isNaN(v))` is the canonical missing test. `isnull`/`notnull` are simple `const` aliases. DataFrame overload builds a `Map<string, Series<Scalar>>` with `df.index`.
@@ -68,6 +69,14 @@ Now at 64 files (iter 109). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 110 — 2026-04-06 22:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24053743467)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/natsort.ts` — `natCompare`, `natSorted`, `natSortKey`, `natArgSort` mirroring `natsort.natsorted()` / `pandas.Index.sort_values(key=natsort_keygen())`.
+- **Metric**: 65 (previous: 64, delta: +1)
+- **Commit**: 1e9ef3b
+- **Notes**: Tokeniser splits on `/(\d+)/g`; digit tokens compare numerically. `natArgSort` pre-computes keys. 5 property-based tests (anti-symmetry, permutation, argSort≡sorted, reverse negation). Tests/playground included.
 
 ### Iteration 109 — 2026-04-06 21:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24052777878)
 
