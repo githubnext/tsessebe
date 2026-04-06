@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T10:15:00Z |
-| Iteration Count | 88 |
-| Best Metric | 43 |
+| Last Run | 2026-04-06T10:32:00Z |
+| Iteration Count | 89 |
+| Best Metric | 44 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,14 +35,15 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 43 files (iter 88). Next candidates:
-- `src/stats/numeric_ops.ts` — additional numeric ops: floor(), ceil() for Series/DataFrame (abs/round already in elem_ops)
+Now at 44 files (iter 89). Next candidates:
 - `src/core/datetime_tz.ts` — timezone-aware DatetimeIndex with tz_localize / tz_convert
+- `src/stats/pow_mod.ts` — pow/mod/floordiv element-wise arithmetic between Series
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 89 (numeric_ops, 43→44)**: `fc.float` requires 32-bit float bounds (use `fc.double` for double constraints). Property `sign(n)*abs(n)≈n` fails for ±Infinity via `Inf-Inf=NaN`; exclude infinities with `noDefaultInfinity:true`. Grouped floor/ceil/trunc/sqrt/exp/log*/sign in one module — 82 tests, 100% coverage.
 - **Iter 88 (DatetimeIndex/date_range/bdate_range, 42→43)**: `freqToOffset(freq, n)` takes multiplier (QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name`. 104 tests, 100% coverage.
 - **Iter 87 (DateOffset, 41→42)**: 11 offset classes. Anchored use `Date.UTC(y, m+n+1, 0)` trick. UTC throughout.
 - **Iter 86 (Timedelta/TimedeltaIndex, 40→41)**: Internal ms; `floorDiv` helper. `biome-ignore lint/style/noNonNullAssertion:` for bounds-checked access.
@@ -61,9 +62,9 @@ Now at 43 files (iter 88). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 88)**: 43 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range.
+**Current state (iter 89)**: 44 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops.
 
-**Next**: additional numeric ops (floor/ceil for Series/DataFrame) · tz-aware DatetimeIndex
+**Next**: tz-aware DatetimeIndex (tz_localize/tz_convert) · pow/mod/floordiv element-wise arithmetic
 
 ---
 
@@ -71,7 +72,13 @@ Now at 43 files (iter 88). Next candidates:
 
 All iterations in reverse chronological order (newest first).
 
-### Iteration 88 — 2026-04-06 10:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24027453779)
+### Iteration 89 — 2026-04-06 10:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24028449864)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/numeric_ops.ts` — `floor`, `ceil`, `trunc`, `sqrt`, `exp`, `log`, `log2`, `log10`, `sign` for Series and DataFrame.
+- **Metric**: 44 (previous: 43, delta: +1)
+- **Commit**: 34d33df
+- **Notes**: `fc.float` requires 32-bit float bounds; used `fc.double` for property tests. `sign(n)*abs(n)≈n` property fails for ±Infinity due to `Inf-Inf=NaN`; fixed with `noDefaultInfinity:true`. 82 tests, 100% coverage on new file.
 
 - **Status**: ✅ Accepted
 - **Change**: Added `src/core/date_range.ts` — `DatetimeIndex`, `date_range()`, `bdate_range()`, `resolveFreq()` with 16 frequency aliases.
