@@ -264,3 +264,5 @@ export type { AssignColSpec, AssignSpec } from "./core/index.ts";
 export { inferDtype } from "./stats/index.ts";
 export type { InferredDtype, InferDtypeOptions } from "./stats/index.ts";
 export { isna, notna, isnull, notnull } from "./stats/index.ts";
+export { dropna, dropnaSeries, dropnaDataFrame } from "./stats/index.ts";
+export type { DropnaHow, DropnaDataFrameOptions } from "./stats/index.ts";

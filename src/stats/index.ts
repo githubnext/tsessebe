@@ -171,3 +171,6 @@ export { inferDtype } from "./infer_dtype.ts";
 export type { InferredDtype, InferDtypeOptions } from "./infer_dtype.ts";
 
 export { isna, notna, isnull, notnull } from "./notna.ts";
+
+export { dropna, dropnaSeries, dropnaDataFrame } from "./dropna.ts";
+export type { DropnaHow, DropnaDataFrameOptions } from "./dropna.ts";
