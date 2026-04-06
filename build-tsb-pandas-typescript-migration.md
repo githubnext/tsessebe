@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T11:48:00Z |
-| Iteration Count | 91 |
-| Best Metric | 46 |
+| Last Run | 2026-04-06T12:20:00Z |
+| Iteration Count | 92 |
+| Best Metric | 47 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,15 +35,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 46 files (iter 91). Next candidates:
-- `src/core/datetime_tz.ts` — timezone-aware DatetimeIndex with tz_localize / tz_convert
-- `src/io/read_excel.ts` — Excel file reader (XLSX parsing)
-- `src/stats/abs_round_clip.ts` — already in elem_ops; next: string methods for StringDtype Series
+Now at 47 files (iter 92). Next candidates:
+- `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
+- `src/stats/string_methods.ts` — string dtype operations (StringDtype Series operations)
+- `src/core/sparse.ts` — SparseArray / SparseDtype
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 92 (datetime_tz, 46→47)**: `utcOffsetMs(utcMs, tz)` uses `Intl.DateTimeFormat("en-CA", {hour12:false}).formatToParts()` to extract local time components, then computes `localMs - utcMs`. Two-step refinement (`off1=utcOffsetMs(wallMs)`, `est=wallMs-off1`, `off2=utcOffsetMs(est)`, result=`wallMs-off2`) correctly handles both spring-forward (shifts forward) and fall-back (uses pre-transition EDT). `% 24` on hour handles the rare "24:00" midnight representation. Test NYC EST (+5h), EDT (+4h), IST (+5:30h), UTC (identity). Property tests: UTC round-trip, tz_convert preserves ms, filter complement partition.
 - **Iter 91 (add_sub_mul_div, 45→46)**: For commutative ops (add/mul), radd/rmul simply delegate to the forward form. For rsub/rdiv, reverse the operand order with a separate lambda. Property tests for `add+sub` inverse and `mul+div` inverse are clean with `fc.integer` to avoid float precision issues. Distributive law tests (mul over add) are valid for integers too.
 - **Iter 90 (pow_mod, 44→45)**: `_mod` must use `a - Math.floor(a/b)*b` (not `((a%b)+b)%b`) to avoid addition overflow for large floats near `Number.MAX_VALUE`. `Math.floor(0/negative) = -0`; normalize with `r === 0 ? 0 : r`. Property tests for floating-point mod/floordiv identities must use integer inputs (`fc.integer`) to avoid subnormal precision failures.
 - **Iter 89 (numeric_ops, 43→44)**: `fc.float` requires 32-bit float bounds (use `fc.double` for double constraints). Property `sign(n)*abs(n)≈n` fails for ±Infinity via `Inf-Inf=NaN`; exclude infinities with `noDefaultInfinity:true`. Grouped floor/ceil/trunc/sqrt/exp/log*/sign in one module — 82 tests, 100% coverage.
@@ -65,15 +66,23 @@ Now at 46 files (iter 91). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 91)**: 46 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops, stats/pow_mod, stats/add_sub_mul_div.
+**Current state (iter 92)**: 47 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops, stats/pow_mod, stats/add_sub_mul_div, core/datetime_tz.
 
-**Next**: tz-aware DatetimeIndex (tz_localize/tz_convert) · io/read_parquet or io/read_excel
+**Next**: io/read_excel (XLSX zero-dep parser) · string_methods for StringDtype · sparse arrays
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 92 — 2026-04-06 12:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24031504495)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/datetime_tz.ts` — `TZDatetimeIndex`, `tz_localize()`, `tz_convert()`. Timezone-aware DatetimeIndex using `Intl.DateTimeFormat` + two-step UTC offset refinement for DST handling.
+- **Metric**: 47 (previous: 46, delta: +1)
+- **Commit**: 7877c82
+- **Notes**: `utcOffsetMs` uses `formatToParts` to get local time, computes `localMs - utcMs`. Two-step refinement handles spring-forward (shifts forward) and fall-back (uses EDT pre-transition). 55+ tests including NYC DST cases and property tests. `TZDatetimeIndex` has full API: sort, unique, filter, slice, concat (same-tz), contains, min, max, toLocalStrings, tz_convert, tz_localize_none.
 
 ### Iteration 91 — 2026-04-06 11:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24030601247)
 
@@ -105,27 +114,8 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: 9795038
 - **Notes**: `freqToOffset(freq, n)` takes multiplier directly (enables QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name` for clean backward generation. 104 unit + property tests, 100% coverage.
 
-### Iteration 87 — 2026-04-06 09:42 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24026629763)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/date_offset.ts` — `DateOffset` interface plus `Day`, `Hour`, `Minute`, `Second`, `Milli`, `Week` (weekday alignment), `MonthEnd`, `MonthBegin`, `YearEnd`, `YearBegin`, `BusinessDay`.
-- **Metric**: 42 (previous: 41, delta: +1)
-- **Commit**: 3f80806
-- **Notes**: Anchored offsets use `Date.UTC(y, m+n+1, 0)` (day 0 trick) for O(1) arithmetic. UTC throughout. 100+ unit + property tests.
-
-### Iteration 86 — 2026-04-06 08:35 UTC — ✅ Timedelta/TimedeltaIndex (40→41) commit: de7820d
-### Iteration 85 — 2026-04-06 07:35 UTC — ✅ Period/PeriodIndex (39→40) commit: 37c28bf
-### Iteration 84 — 2026-04-06 06:50 UTC — ✅ pipe/pipeChain/pipeTo (38→39) commit: 09f54f9
-### Iteration 83 — 2026-04-06 05:49 UTC — ✅ CategoricalIndex (37→38) commit: 7444b7d
-### Iteration 82 — 2026-04-06 05:07 UTC — ✅ apply/applymap/dataFrameApply (36→37) commit: 78354b8
-### Iteration 81 — 2026-04-06 03:41 UTC — ✅ sample (35→36) commit: 2291bd9
-### Iteration 79 — 2026-04-06 01:06 UTC — ✅ cut/qcut (34→35) commit: f26b4cc
-### Iteration 78 — 2026-04-06 00:29 UTC — ✅ Interval/IntervalIndex (33→34) commit: 281be7f
-### Iteration 77 — 2026-04-05 23:45 UTC — ✅ fillna (32→33)
-### Iteration 76 — 2026-04-05 23:11 UTC — ✅ interpolate (31→32)
-### Iteration 75 — 2026-04-05 22:50 UTC — ✅ shift_diff (30→31)
-### Iteration 74 — 2026-04-05 22:09 UTC — ✅ compare (29→30)
-### Iteration 73 — 2026-04-05 21:50 UTC — ✅ where_mask (28→29)
+### Iters 87–91 — ✅ DateOffset (41→42), date_range/DatetimeIndex (42→43), numeric_ops (43→44), pow_mod (44→45), add_sub_mul_div (45→46)
+### Iters 73–86 — ✅ where_mask, compare, shift_diff, interpolate, fillna, Interval, cut/qcut, sample, apply, CategoricalIndex, pipe, Period, Timedelta, DateOffset (28→41)
 ### Iters 67–72 — ✅ value_counts, elem_ops, cum_ops, nlargest, rank, MultiIndex (22→28)
 ### Iters 60–66 — ✅ corr/cov, rolling, expanding×2, cat_accessor, melt+pivot, ewm, stack/unstack (15→22)
 ### Iterations 53–59 — ✅ GroupBy, merge, str, dt, describe/quantile, csv I/O, json I/O (8→14)
