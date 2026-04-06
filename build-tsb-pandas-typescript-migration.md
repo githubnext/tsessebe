@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T11:35:00Z |
-| Iteration Count | 90 |
-| Best Metric | 45 |
+| Last Run | 2026-04-06T11:48:00Z |
+| Iteration Count | 91 |
+| Best Metric | 46 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,14 +35,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 45 files (iter 90). Next candidates:
+Now at 46 files (iter 91). Next candidates:
 - `src/core/datetime_tz.ts` — timezone-aware DatetimeIndex with tz_localize / tz_convert
-- `src/stats/add_sub_mul_div.ts` — element-wise add/subtract/multiply/divide for Series (vs scalar or other Series)
+- `src/io/read_excel.ts` — Excel file reader (XLSX parsing)
+- `src/stats/abs_round_clip.ts` — already in elem_ops; next: string methods for StringDtype Series
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 91 (add_sub_mul_div, 45→46)**: For commutative ops (add/mul), radd/rmul simply delegate to the forward form. For rsub/rdiv, reverse the operand order with a separate lambda. Property tests for `add+sub` inverse and `mul+div` inverse are clean with `fc.integer` to avoid float precision issues. Distributive law tests (mul over add) are valid for integers too.
 - **Iter 90 (pow_mod, 44→45)**: `_mod` must use `a - Math.floor(a/b)*b` (not `((a%b)+b)%b`) to avoid addition overflow for large floats near `Number.MAX_VALUE`. `Math.floor(0/negative) = -0`; normalize with `r === 0 ? 0 : r`. Property tests for floating-point mod/floordiv identities must use integer inputs (`fc.integer`) to avoid subnormal precision failures.
 - **Iter 89 (numeric_ops, 43→44)**: `fc.float` requires 32-bit float bounds (use `fc.double` for double constraints). Property `sign(n)*abs(n)≈n` fails for ±Infinity via `Inf-Inf=NaN`; exclude infinities with `noDefaultInfinity:true`. Grouped floor/ceil/trunc/sqrt/exp/log*/sign in one module — 82 tests, 100% coverage.
 - **Iter 88 (DatetimeIndex/date_range/bdate_range, 42→43)**: `freqToOffset(freq, n)` takes multiplier (QS=MonthBegin(3)). `negateOffset()` dispatches on `offset.name`. 104 tests, 100% coverage.
@@ -63,15 +65,23 @@ Now at 45 files (iter 90). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 89)**: 44 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops.
+**Current state (iter 91)**: 46 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops, stats/pow_mod, stats/add_sub_mul_div.
 
-**Next**: tz-aware DatetimeIndex (tz_localize/tz_convert) · pow/mod/floordiv element-wise arithmetic
+**Next**: tz-aware DatetimeIndex (tz_localize/tz_convert) · io/read_parquet or io/read_excel
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 91 — 2026-04-06 11:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24030601247)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/add_sub_mul_div.ts` — `seriesAdd`/`seriesSub`/`seriesMul`/`seriesDiv` and reversed counterparts (`seriesRadd`/`seriesRsub`/`seriesRmul`/`seriesRdiv`) plus DataFrame equivalents.
+- **Metric**: 46 (previous: 45, delta: +1)
+- **Commit**: a919aed
+- **Notes**: Commutative ops (add/mul) delegate radd/rmul to the forward form. rsub/rdiv use a reversed lambda. 50+ property and unit tests, 100% coverage. IEEE-754 division-by-zero semantics preserved.
 
 ### Iteration 90 — 2026-04-06 11:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24029842441)
 
