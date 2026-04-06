@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T03:41:36Z |
-| Iteration Count | 81 |
-| Best Metric | 36 |
+| Last Run | 2026-04-06T05:07:00Z |
+| Iteration Count | 82 |
+| Best Metric | 37 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -39,15 +39,15 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 36 files (iter 81). Next candidates:
+Now at 37 files (iter 82). Next candidates:
 - `src/core/categorical_index.ts` — CategoricalIndex
 - `src/stats/pipe.ts` — pipe/pipe-through for chained operations
-- `src/stats/apply.ts` — element-wise apply (Series.apply, DataFrame.applymap, DataFrame.apply)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 82 (apply, 36→37)**: `applySeries(series, fn(v,label))` / `applymap(df, fn(v,colName))` / `dataFrameApply(df, fn, {axis})`. Helper functions `extractRow`/`applyAxis0`/`applyAxis1` keep CC≤15. Use `import fc from "fast-check"` (default import, not namespace). Import `Scalar` from `"../../src/index.ts"` not `"../../src/types.ts"` (useImportRestrictions). Biome auto-formats multi-line function signatures onto one line when ≤100 cols.
 - **Iter 81 (sample, 35→36)**: xorshift32 RNG (zero deps). `buildCdf` + `rebuildCdf` pattern for weighted without-replacement. Use `Array.from({length}, fn)` instead of for-loops where index isn't needed (avoids `useForOf` lint). `(arr as number[]).findIndex((v) => r < v)` cleaner than manual loop. `resolveWeights` separates weight validation from CDF construction. Fisher-Yates partial shuffle for unweighted without-replacement.
 - **Iter 80 (apply/applymap, 35→36)**: `allSeries([])` must return `false` (vacuously-true empty case returns wrong type). Use `new Array(n).fill(v)` not `Array(n).fill(v)`. Extract small helpers (broadcastAxis0/1, expandAxis0/1, fillColBuffers) to keep CC≤15. `Series.values` is `readonly` — use separate mutable `Scalar[]` buffers for assembly.
 - **Iter 79 (cut/qcut, 34→35)**: Import from `"../core/index.ts"` barrel (not sub-files) for `useImportRestrictions`. `extractName()` must return `string | null` not `string | undefined` (exactOptionalPropertyTypes). Top-level regex vars required (`useTopLevelRegex`). Shared `cutCore()` + `assignBins()` + `resolveLabels()` keep CC≤15. `cutIntervalIndex()`/`qcutIntervalIndex()` expose bins for downstream use.
@@ -70,15 +70,23 @@ Now at 36 files (iter 81). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 81)**: 36 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample.
+**Current state (iter 82)**: 37 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply.
 
-**Next**: CategoricalIndex · pipe · apply (Series.apply/DataFrame.applymap/DataFrame.apply)
+**Next**: CategoricalIndex · pipe
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 82 — 2026-04-06 05:07 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24019334747)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/apply.ts` — `applySeries()`, `applymap()`, and `dataFrameApply()` mirroring `pandas.Series.apply()`, `pandas.DataFrame.applymap()`, and `pandas.DataFrame.apply()`.
+- **Metric**: 37 (previous: 36, delta: +1)
+- **Commit**: 78354b8
+- **Notes**: Clean implementation with extractRow/applyAxis0/applyAxis1 helpers; 39 tests (unit + property-based); 100% coverage; biome-clean.
 
 ### Iteration 81 — 2026-04-06 03:41 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24017697656)
 
