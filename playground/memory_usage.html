@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — memory_usage</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #222; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.9rem; }
+    .result { background: #e8f5e9; border-left: 4px solid #43a047; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    .error  { background: #ffebee; border-left: 4px solid #e53935; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    button { margin-top: 0.5rem; padding: 0.4rem 1rem; background: #0969da; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0550ae; }
+    textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.9rem; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; background: #fff; min-height: 140px; }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+  <h1>🧮 <code>memory_usage</code></h1>
+  <p>
+    Estimate the memory consumed by a <code>Series</code> or <code>DataFrame</code> —
+    mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.memory_usage.html" target="_blank">pandas.Series.memory_usage()</a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.memory_usage.html" target="_blank">pandas.DataFrame.memory_usage()</a>.
+  </p>
+  <p>
+    Two options control the calculation:
+    <ul>
+      <li><code>index</code> (default <code>true</code>) — include index bytes.</li>
+      <li><code>deep</code> (default <code>false</code>) — traverse values to measure string / object sizes exactly; otherwise uses itemsize × length for fixed-width dtypes or 8 bytes/pointer for variable-width.</li>
+    </ul>
+  </p>
+
+  <h2>1 · Series memory_usage — fixed-width dtype</h2>
+  <pre>const s = new Series({ data: [1, 2, 3, 4], dtype: Dtype.int32 });
+// int32 → 4 bytes/element × 4 = 16 bytes of data
+// RangeIndex → 3 × 8 = 24 bytes (only start/stop/step stored)
+seriesMemoryUsage(s);             // 40  (data + index)
+seriesMemoryUsage(s, { index: false }); // 16 (data only)</pre>
+  <div id="r1" class="result">click Run to evaluate</div>
+  <button onclick="run1()">Run</button>
+
+  <h2>2 · Series memory_usage — string dtype (shallow vs deep)</h2>
+  <pre>const s = new Series({ data: ["hello", "world", "tsb"], dtype: Dtype.string });
+// shallow: 3 × 8 bytes (one pointer per element)
+seriesMemoryUsage(s, { index: false });           // 24
+// deep: actual char data — each string = length*2 + 56 bytes overhead
+seriesMemoryUsage(s, { index: false, deep: true }); // "hello"=66, "world"=66, "tsb"=62 → 194</pre>
+  <div id="r2" class="result">click Run to evaluate</div>
+  <button onclick="run2()">Run</button>
+
+  <h2>3 · DataFrame memory_usage — per-column breakdown</h2>
+  <pre>const df = new DataFrame({
+  id:    new Series({ data: [1, 2, 3], dtype: Dtype.int32 }),
+  score: new Series({ data: [9.5, 8.1, 7.2], dtype: Dtype.float64 }),
+  name:  new Series({ data: ["Alice", "Bob", "Carol"], dtype: Dtype.string }),
+});
+const mu = dataFrameMemoryUsage(df);
+// Returns Series indexed by ["Index", "id", "score", "name"]
+// Index (RangeIndex) → 24 bytes
+// id    (int32 × 3)  → 12 bytes
+// score (float64 × 3)→ 24 bytes
+// name  (string × 3, shallow) → 24 bytes</pre>
+  <div id="r3" class="result">click Run to evaluate</div>
+  <button onclick="run3()">Run</button>
+
+  <h2>4 · DataFrame memory_usage — deep=true for string columns</h2>
+  <pre>const df = new DataFrame({
+  label: new Series({ data: ["short", "a slightly longer string"], dtype: Dtype.string }),
+});
+dataFrameMemoryUsage(df, { deep: true, index: false })
+// "short"                  → 5*2+56 = 66
+// "a slightly longer string" → 24*2+56 = 104</pre>
+  <div id="r4" class="result">click Run to evaluate</div>
+  <button onclick="run4()">Run</button>
+
+  <h2>5 · Total memory across all columns</h2>
+  <pre>const df = new DataFrame({
+  a: new Series({ data: Array.from({length: 1000}, (_,i) => i), dtype: Dtype.int64 }),
+  b: new Series({ data: Array.from({length: 1000}, (_,i) => i * 0.1), dtype: Dtype.float64 }),
+});
+const mu = dataFrameMemoryUsage(df, { index: false });
+mu.sum(); // 1000*8 + 1000*8 = 16000 bytes</pre>
+  <div id="r5" class="result">click Run to evaluate</div>
+  <button onclick="run5()">Run</button>
+
+  <script type="module">
+    import {
+      Series, DataFrame, Dtype,
+      seriesMemoryUsage, dataFrameMemoryUsage,
+    } from "https://esm.sh/gh/githubnext/tsessebe/src/index.ts?bundle=false" ;
+    // Fallback: use local module bundled inline
+  </script>
+
+  <script type="module">
+    // Runtime shim — use in-page ES module approach
+    const CDN = "https://esm.run/tsb@0.0.1";
+
+    async function getModule() {
+      // Try to use a globally available tsb; otherwise provide a mock
+      if (window._tsb) return window._tsb;
+      // Inline pure-JS minimal implementation for playground demo
+      return null;
+    }
+
+    function fmt(v) {
+      if (v === null || v === undefined) return String(v);
+      if (typeof v === "object" && v !== null && v.constructor && v.constructor.name === "Series") {
+        const rows = [];
+        for (let i = 0; i < v.index.size; i++) {
+          rows.push(`  ${v.index.at(i)}: ${v.values[i]}`);
+        }
+        return `Series(\n${rows.join("\n")}\n)`;
+      }
+      return JSON.stringify(v);
+    }
+
+    // ── stub implementations for the playground (no bundler available) ──────
+
+    const POINTER = 8;
+    const STR_OVH = 56;
+
+    class Dtype_ {
+      constructor(name, itemsize) { this.name = name; this.itemsize = itemsize; }
+      static int8   = new Dtype_("int8",   1);
+      static int16  = new Dtype_("int16",  2);
+      static int32  = new Dtype_("int32",  4);
+      static int64  = new Dtype_("int64",  8);
+      static float32= new Dtype_("float32",4);
+      static float64= new Dtype_("float64",8);
+      static bool   = new Dtype_("bool",   1);
+      static string = new Dtype_("string", 0);
+      static object = new Dtype_("object", 0);
+    }
+
+    class Index_ {
+      constructor(labels) { this._labels = labels; }
+      get size() { return this._labels.length; }
+      at(i) { return this._labels[i]; }
+    }
+
+    class RangeIndex_ extends Index_ {
+      constructor(n) { super(Array.from({length: n}, (_,i) => i)); this._n = n; }
+    }
+
+    class Series_ {
+      constructor({ data, dtype, name, index }) {
+        this.values = [...data];
+        this.dtype = dtype ?? Dtype_.float64;
+        this.name = name ?? null;
+        this.index = index ?? new RangeIndex_(data.length);
+        this.size = data.length;
+      }
+      sum() { return this.values.reduce((a,b)=>a+b, 0); }
+    }
+
+    class DataFrame_ {
+      constructor(cols) {
+        this._cols = new Map(Object.entries(cols));
+        const first = this._cols.values().next().value;
+        this.index = first ? first.index : new RangeIndex_(0);
+      }
+      [Symbol.iterator]() { return this._cols.entries(); }
+    }
+
+    function deepVal(v) {
+      if (v === null || v === undefined) return POINTER;
+      if (typeof v === "boolean") return 1;
+      if (typeof v === "number") return 8;
+      if (typeof v === "bigint") return 8;
+      if (typeof v === "string") return v.length * 2 + STR_OVH;
+      return POINTER;
+    }
+
+    function elemSz(dt) { return dt.itemsize > 0 ? dt.itemsize : POINTER; }
+
+    function idxMem(idx, deep) {
+      if (idx instanceof RangeIndex_) return 3 * 8;
+      const n = idx.size;
+      if (deep) { let t = 0; for (let i=0;i<n;i++) t += deepVal(idx.at(i)); return t; }
+      return n * POINTER;
+    }
+
+    function seriesMemoryUsage_(s, { index=true, deep=false } = {}) {
+      let total = deep
+        ? s.values.reduce((a,v) => a + deepVal(v), 0)
+        : s.size * elemSz(s.dtype);
+      if (index) total += idxMem(s.index, deep);
+      return total;
+    }
+
+    function dataFrameMemoryUsage_(df, { index=true, deep=false } = {}) {
+      const names = [], vals = [];
+      if (index) { names.push("Index"); vals.push(idxMem(df.index, deep)); }
+      for (const [name, col] of df) {
+        names.push(name);
+        vals.push(deep
+          ? col.values.reduce((a,v) => a + deepVal(v), 0)
+          : col.size * elemSz(col.dtype));
+      }
+      return new Series_({ data: vals, index: new Index_(names), name: "memory_usage" });
+    }
+
+    const Dtype = Dtype_;
+    const Series = Series_;
+    const DataFrame = DataFrame_;
+    const seriesMemoryUsage = seriesMemoryUsage_;
+    const dataFrameMemoryUsage = dataFrameMemoryUsage_;
+
+    // ── demos ────────────────────────────────────────────────────────────────
+
+    window.run1 = function() {
+      try {
+        const s = new Series({ data: [1, 2, 3, 4], dtype: Dtype.int32 });
+        const withIdx = seriesMemoryUsage(s);
+        const noIdx   = seriesMemoryUsage(s, { index: false });
+        document.getElementById("r1").className = "result";
+        document.getElementById("r1").textContent =
+          `seriesMemoryUsage(s)                   = ${withIdx} bytes\n` +
+          `seriesMemoryUsage(s, {index:false})    = ${noIdx} bytes\n` +
+          `(int32: 4 bytes×4 = 16; RangeIndex = 24)`;
+      } catch(e) {
+        document.getElementById("r1").className = "error";
+        document.getElementById("r1").textContent = String(e);
+      }
+    };
+
+    window.run2 = function() {
+      try {
+        const s = new Series({ data: ["hello", "world", "tsb"], dtype: Dtype.string });
+        const shallow = seriesMemoryUsage(s, { index: false });
+        const deep    = seriesMemoryUsage(s, { index: false, deep: true });
+        document.getElementById("r2").className = "result";
+        document.getElementById("r2").textContent =
+          `shallow (pointer per element): ${shallow} bytes\n` +
+          `deep (actual char data):       ${deep} bytes\n` +
+          `  "hello" = 5×2+56 = 66\n  "world" = 5×2+56 = 66\n  "tsb"   = 3×2+56 = 62`;
+      } catch(e) {
+        document.getElementById("r2").className = "error";
+        document.getElementById("r2").textContent = String(e);
+      }
+    };
+
+    window.run3 = function() {
+      try {
+        const df = new DataFrame({
+          id:    new Series({ data: [1, 2, 3], dtype: Dtype.int32 }),
+          score: new Series({ data: [9.5, 8.1, 7.2], dtype: Dtype.float64 }),
+          name:  new Series({ data: ["Alice", "Bob", "Carol"], dtype: Dtype.string }),
+        });
+        const mu = dataFrameMemoryUsage(df);
+        document.getElementById("r3").className = "result";
+        document.getElementById("r3").textContent = fmt(mu);
+      } catch(e) {
+        document.getElementById("r3").className = "error";
+        document.getElementById("r3").textContent = String(e);
+      }
+    };
+
+    window.run4 = function() {
+      try {
+        const df = new DataFrame({
+          label: new Series({ data: ["short", "a slightly longer string"], dtype: Dtype.string }),
+        });
+        const mu = dataFrameMemoryUsage(df, { deep: true, index: false });
+        document.getElementById("r4").className = "result";
+        document.getElementById("r4").textContent =
+          fmt(mu) + `\n\nsum = ${mu.sum()} bytes`;
+      } catch(e) {
+        document.getElementById("r4").className = "error";
+        document.getElementById("r4").textContent = String(e);
+      }
+    };
+
+    window.run5 = function() {
+      try {
+        const df = new DataFrame({
+          a: new Series({ data: Array.from({length:1000},(_,i)=>i), dtype: Dtype.int64 }),
+          b: new Series({ data: Array.from({length:1000},(_,i)=>i*0.1), dtype: Dtype.float64 }),
+        });
+        const mu = dataFrameMemoryUsage(df, { index: false });
+        document.getElementById("r5").className = "result";
+        document.getElementById("r5").textContent =
+          `column "a" → ${mu.at("a")} bytes\n` +
+          `column "b" → ${mu.at("b")} bytes\n` +
+          `total      → ${mu.sum()} bytes`;
+      } catch(e) {
+        document.getElementById("r5").className = "error";
+        document.getElementById("r5").textContent = String(e);
+      }
+    };
+  </script>
+
+  <p style="margin-top:3rem;color:#666;font-size:0.85rem;">
+    Part of <strong>tsb</strong> — a TypeScript port of pandas.
+    Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>.
+  </p>
+</body>
+</html>

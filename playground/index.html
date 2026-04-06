@@ -379,6 +379,11 @@
           <p>A single point in time — <a href="timestamp.html" style="color: var(--accent);">interactive tutorial</a>. Construct from ISO strings, numbers, or JS Dates. Component accessors: year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, dayofweek, dayofyear, quarter, week. Calendar flags: is_month_start, is_month_end, is_quarter_start/end, is_year_start/end, is_leap_year. Methods: isoformat, strftime, floor, ceil, round, normalize, tz_localize, tz_convert, add, sub, day_name, month_name. Mirrors <code>pandas.Timestamp</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🧮 memory_usage</h3>
+          <p>Estimate memory consumption of Series and DataFrame — <a href="memory_usage.html" style="color: var(--accent);">interactive tutorial</a>. <code>seriesMemoryUsage(s)</code> returns total bytes; <code>dataFrameMemoryUsage(df)</code> returns a per-column Series. <code>index</code> option (default true) includes index bytes; <code>deep</code> option (default false) traverses string/object values for exact sizing. Fixed-width dtypes use <code>itemsize × length</code>; variable-width dtypes use 8 bytes/pointer. Mirrors <code>pandas.Series.memory_usage()</code> and <code>pandas.DataFrame.memory_usage()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

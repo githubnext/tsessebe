@@ -153,3 +153,6 @@ export type { AggFunc, Normalize, CrosstabOptions } from "./crosstab.ts";
 
 export { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "./to_numeric.ts";
 export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./to_numeric.ts";
+
+export { seriesMemoryUsage, dataFrameMemoryUsage } from "./memory_usage.ts";
+export type { MemoryUsageOptions } from "./memory_usage.ts";
