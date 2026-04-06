@@ -163,3 +163,6 @@ export {
   pipeChain,
   dataFramePipeChain,
 } from "./stats/index.ts";
+
+export { Period, PeriodIndex } from "./core/index.ts";
+export type { PeriodFreq, PeriodIndexOptions } from "./core/index.ts";
