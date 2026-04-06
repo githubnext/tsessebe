@@ -156,3 +156,6 @@ export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./to_
 
 export { seriesMemoryUsage, dataFrameMemoryUsage } from "./memory_usage.ts";
 export type { MemoryUsageOptions } from "./memory_usage.ts";
+
+export { selectDtypes } from "./select_dtypes.ts";
+export type { DtypeSelector, SelectDtypesOptions } from "./select_dtypes.ts";

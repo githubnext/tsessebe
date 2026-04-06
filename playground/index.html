@@ -384,6 +384,11 @@
           <p>Estimate memory consumption of Series and DataFrame — <a href="memory_usage.html" style="color: var(--accent);">interactive tutorial</a>. <code>seriesMemoryUsage(s)</code> returns total bytes; <code>dataFrameMemoryUsage(df)</code> returns a per-column Series. <code>index</code> option (default true) includes index bytes; <code>deep</code> option (default false) traverses string/object values for exact sizing. Fixed-width dtypes use <code>itemsize × length</code>; variable-width dtypes use 8 bytes/pointer. Mirrors <code>pandas.Series.memory_usage()</code> and <code>pandas.DataFrame.memory_usage()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔍 select_dtypes</h3>
+          <p>Filter DataFrame columns by dtype — <a href="select_dtypes.html" style="color: var(--accent);">interactive tutorial</a>. <code>selectDtypes(df, { include, exclude })</code> keeps or drops columns matching generic aliases ("number", "integer", "floating", "bool", "string", …) or concrete dtype names ("int64", "float32", …). Mirrors <code>pandas.DataFrame.select_dtypes()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

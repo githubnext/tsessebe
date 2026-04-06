@@ -245,5 +245,7 @@ export { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "./s
 export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./stats/index.ts";
 export { seriesMemoryUsage, dataFrameMemoryUsage } from "./stats/index.ts";
 export type { MemoryUsageOptions } from "./stats/index.ts";
+export { selectDtypes } from "./stats/index.ts";
+export type { DtypeSelector, SelectDtypesOptions } from "./stats/index.ts";
 export { Timestamp } from "./core/index.ts";
 export type { TimestampOptions, TimestampComponents, TimestampUnit } from "./core/index.ts";
