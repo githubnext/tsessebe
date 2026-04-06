@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T15:19:29Z |
-| Iteration Count | 96 |
-| Best Metric | 51 |
+| Last Run | 2026-04-06T15:48:18Z |
+| Iteration Count | 97 |
+| Best Metric | 52 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -35,16 +35,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 51 files (iter 96). Next candidates:
+Now at 52 files (iter 97). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/stats/pivot_table.ts` — already in pivot.ts; next: `pd.json_normalize` or `pd.to_numeric`
-- `src/io/json_normalize.ts` — flatten nested JSON to flat DataFrame
-- `src/stats/wide_to_long.ts` — ✅ DONE (iter 96)
+- `src/core/timestamp.ts` — pandas Timestamp class
+- `src/stats/to_numeric.ts` — pd.to_numeric, coerce strings/mixed to numbers
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 97 (json_normalize, 51→52)**: `jsonNormalize` uses recursive `flattenObject(obj, sep, maxLevel, prefix, depth)`. `getPath(obj, path[])` traverses nested keys. `normalizeWithPath` handles `recordPath` + meta extraction. Meta values from parent record are replicated to each child row. `toPathArray` normalizes `string | readonly string[]` paths. Arrays at leaf positions are JSON-stringified. Column insertion order is first-seen (union across all rows). Missing columns in any row get `null`. `rows ??= []` handles the edge case after chained intermediate path extraction.
 - **Iter 96 (wide_to_long, 50→51)**: `wideToLong` uses per-stub precompiled regexes (`buildStubRegex`). `escapeRegex` guards against special chars in stub/sep. Suffix ordering is first-seen from left-to-right column scan. Missing stub×suffix combinations fill with `null`. `parseSuffix` returns `number` for purely numeric suffixes (`/^-?\d+(\.\d+)?$/`), else `string`. The `j` conflict check allows `j === stubname` (stub overwritten) but rejects clashes with unrelated existing columns.
 - **Iter 95 (crosstab, 49→50)**: `crosstab` uses same `scalarKey()` pattern as `factorize` for stable Map keys. `collectUniques()` preserves first-seen order (matches pandas). `buckets` for values+aggfunc uses `Array.from<number[]|undefined>({length}, () => undefined)` for clean typing (avoids `fill(undefined)` `any[]` issue). Normalization applied before margins so margin totals reflect raw counts. Property tests: sum of all cells = n, normalize='all' grand sum ≈ 1, normalize='index' all row sums ≈ 1, normalize='columns' all col sums ≈ 1, margins All column = row sum.
 - **Iter 94 (factorize, 48→49)**: `factorize` uses stable string key (`typeof v:String(v)`) to handle null/undefined/NaN separately. `useNaSentinel=true` assigns -1 to missing values. `sort=true` remaps via sorted array. Property tests: valid indices, no duplicate uniques, round-trip, sorted order.
@@ -70,15 +70,23 @@ Now at 51 files (iter 96). Next candidates:
 
 ## 🔭 Future Directions
 
-**Current state (iter 96)**: 51 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, reshape/wide_to_long, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops, stats/pow_mod, stats/add_sub_mul_div, core/datetime_tz, stats/get_dummies, stats/factorize, stats/crosstab, reshape/wide_to_long.
+**Current state (iter 97)**: 52 files — Series, DataFrame, GroupBy, concat, merge, str/dt/cat accessors, stats/describe, io/csv, io/json, io/json_normalize, stats/corr, window/rolling, window/expanding, window/ewm, reshape/melt, reshape/pivot, reshape/stack_unstack, reshape/wide_to_long, MultiIndex, stats/rank, stats/nlargest, stats/cum_ops, stats/elem_ops, stats/value_counts, stats/where_mask, stats/compare, stats/shift_diff, stats/interpolate, stats/fillna, core/interval, stats/cut, stats/sample, stats/apply, core/categorical_index, stats/pipe, core/period, core/timedelta, core/date_offset, core/date_range, stats/numeric_ops, stats/pow_mod, stats/add_sub_mul_div, core/datetime_tz, stats/get_dummies, stats/factorize, stats/crosstab.
 
-**Next**: io/json_normalize (flatten nested JSON) · io/read_excel (XLSX zero-dep) · core/pd_timestamp (pandas Timestamp class)
+**Next**: io/read_excel (XLSX zero-dep) · core/pd_timestamp (pandas Timestamp class) · stats/to_numeric (coerce mixed types to numbers)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 97 — 2026-04-06 15:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24038653649)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/io/json_normalize.ts` — `jsonNormalize(data, options?)` to flatten nested JSON to a flat DataFrame, mirroring `pandas.json_normalize()`.
+- **Metric**: 52 (previous: 51, delta: +1)
+- **Commit**: c74a398
+- **Notes**: Recursive `flattenObject` with `maxLevel` depth guard. `recordPath` drills into nested arrays; `meta` replicates parent fields to each child row. Arrays at leaf positions stringify to JSON. 35+ unit + 4 property tests. Full playground page.
 
 ### Iteration 96 — 2026-04-06 15:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24037601583)
 
