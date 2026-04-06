@@ -174,3 +174,5 @@ export { isna, notna, isnull, notnull } from "./notna.ts";
 
 export { dropna, dropnaSeries, dropnaDataFrame } from "./dropna.ts";
 export type { DropnaHow, DropnaDataFrameOptions } from "./dropna.ts";
+
+export { combineFirstSeries, combineFirstDataFrame } from "./combine_first.ts";

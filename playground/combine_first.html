@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — combine_first</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>combine_first</h1>
+    <p>Patch missing values in a Series or DataFrame with values from another — mirrors <code>pandas.Series.combine_first</code> and <code>pandas.DataFrame.combine_first</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <code>combineFirstSeries(self, other)</code> and <code>combineFirstDataFrame(self, other)</code>
+        update the calling object with non-null values from <code>other</code>.
+        The result index is the <strong>union</strong> of both index sets.
+        For each label, <code>self</code>'s value takes priority; <code>other</code>'s value is only
+        used when <code>self</code>'s value is missing (<code>null</code>, <code>undefined</code>, or <code>NaN</code>).
+      </p>
+      <p>
+        Mirrors
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.combine_first.html" target="_blank"><code>pandas.Series.combine_first</code></a>
+        and
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.combine_first.html" target="_blank"><code>pandas.DataFrame.combine_first</code></a>.
+      </p>
+
+      <h3>Semantics</h3>
+      <table>
+        <thead><tr><th>Self value</th><th>Other value</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>non-null</td><td>anything</td><td>self value</td></tr>
+          <tr><td>null / NaN</td><td>non-null</td><td>other value</td></tr>
+          <tr><td>null / NaN</td><td>null / missing</td><td><code>null</code></td></tr>
+          <tr><td>—</td><td>any (new label)</td><td>other value</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="example">
+      <h2>Example 1 — Series: fill gaps with values from another Series</h2>
+      <pre><code>import { Series, combineFirstSeries } from "tsb";
+
+const a = new Series({ data: [1, null, 3], index: ["x", "y", "z"] });
+const b = new Series({ data: [10, 20, 30, 40], index: ["x", "y", "z", "w"] });
+
+const result = combineFirstSeries(a, b);
+// index: ["x", "y", "z", "w"]
+// values: [1, 20, 3, 40]
+//
+// - "x": a has 1 (non-null) → keeps 1
+// - "y": a has null → filled from b → 20
+// - "z": a has 3 (non-null) → keeps 3
+// - "w": a has no entry → comes from b → 40
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 2 — DataFrame: patch missing cells across row/column union</h2>
+      <pre><code>import { DataFrame, combineFirstDataFrame } from "tsb";
+
+const a = DataFrame.fromColumns(
+  { x: [1, null], y: [3, 4] },
+  { index: ["r0", "r1"] },
+);
+const b = DataFrame.fromColumns(
+  { x: [10, 20], z: [30, 40] },
+  { index: ["r0", "r2"] },
+);
+
+const result = combineFirstDataFrame(a, b);
+// rows:    r0, r1, r2
+// columns: x, y, z
+//
+// result["r0"]["x"] = 1   (a wins)
+// result["r1"]["x"] = null (a had null, b has no r1 → null)
+// result["r2"]["x"] = 20  (a has no r2 → from b)
+// result["r0"]["y"] = 3   (a only)
+// result["r1"]["y"] = 4   (a only)
+// result["r2"]["y"] = null (no r2 in a, no y in b)
+// result["r0"]["z"] = 30  (b only)
+// result["r1"]["z"] = null (b has no r1)
+// result["r2"]["z"] = 40  (b only)
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 3 — NaN is treated as missing</h2>
+      <pre><code>import { Series, combineFirstSeries } from "tsb";
+
+const sensor1 = new Series({
+  data: [NaN, 22.5, 23.1, NaN],
+  index: [0, 1, 2, 3],
+  name: "temperature",
+});
+const sensor2 = new Series({
+  data: [21.0, 22.0, NaN, 24.0],
+  index: [0, 1, 2, 3],
+  name: "temperature",
+});
+
+const merged = combineFirstSeries(sensor1, sensor2);
+// values: [21.0, 22.5, 23.1, 24.0]
+// Gaps in sensor1 filled from sensor2
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 4 — Temporal data backfill</h2>
+      <pre><code>import { Series, combineFirstSeries } from "tsb";
+
+// Primary data source with some gaps
+const primary = new Series({
+  data: [100, null, 102, null, 104],
+  index: ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05"],
+});
+
+// Secondary source to fill gaps + extends to June
+const backup = new Series({
+  data: [99, 101, 103, 103, 105, 106],
+  index: ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06"],
+});
+
+const complete = combineFirstSeries(primary, backup);
+// index:  2024-01, 2024-02, 2024-03, 2024-04, 2024-05, 2024-06
+// values: 100,     101,     102,     103,     104,     106
+</code></pre>
+    </section>
+  </main>
+</body>
+</html>
