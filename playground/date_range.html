@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — date_range / bdate_range</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --yellow: #d29922;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; line-height: 1.6; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+    header h1 { font-size: 1.4rem; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); font-size: 0.9rem; }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+    h2 { color: var(--accent); margin: 2rem 0 0.75rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .example { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .example { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; }
+    input, select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; width: 100%; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1.2rem; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+    button:hover { opacity: 0.85; }
+    .output { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.82rem; white-space: pre-wrap; max-height: 320px; overflow-y: auto; color: var(--green); margin-top: 1rem; }
+    .error { color: var(--red) !important; }
+    .section { margin-bottom: 0.75rem; }
+    .section label { display: inline-block; width: 90px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+    th, td { border: 1px solid var(--border); padding: 0.4rem 0.75rem; text-align: left; }
+    th { background: var(--surface); color: var(--muted); font-weight: 500; }
+    td { font-family: monospace; }
+    .pill { display: inline-block; background: var(--border); border-radius: 3px; padding: 0.1rem 0.4rem; font-family: monospace; font-size: 0.8rem; }
+    .back { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
+    .back:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>tsb — <span>date_range / bdate_range</span></h1>
+  <p>Generate fixed-frequency DatetimeIndex sequences · mirrors <code>pandas.date_range</code> &amp; <code>pandas.bdate_range</code></p>
+</header>
+<main>
+  <a href="index.html" class="back">← back to index</a>
+
+  <h2>Frequency Reference</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>String</th><th>Offset</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill">D</span></td><td>Calendar day</td><td>2024-01-01 → 2024-01-02</td></tr>
+        <tr><td><span class="pill">B</span></td><td>Business day (Mon–Fri)</td><td>2024-01-05 → 2024-01-08</td></tr>
+        <tr><td><span class="pill">H</span></td><td>Hour</td><td>2024-01-01T00 → 2024-01-01T01</td></tr>
+        <tr><td><span class="pill">T</span> / <span class="pill">min</span></td><td>Minute</td><td></td></tr>
+        <tr><td><span class="pill">S</span></td><td>Second</td><td></td></tr>
+        <tr><td><span class="pill">MS</span></td><td>Month-start (1st)</td><td>2024-01-01 → 2024-02-01</td></tr>
+        <tr><td><span class="pill">ME</span></td><td>Month-end (last day)</td><td>2024-01-31 → 2024-02-29</td></tr>
+        <tr><td><span class="pill">QS</span></td><td>Quarter-start</td><td>2024-01-01 → 2024-04-01</td></tr>
+        <tr><td><span class="pill">QE</span></td><td>Quarter-end</td><td>2024-03-31 → 2024-06-30</td></tr>
+        <tr><td><span class="pill">AS</span> / <span class="pill">YS</span></td><td>Year-start (Jan 1)</td><td>2024-01-01 → 2025-01-01</td></tr>
+        <tr><td><span class="pill">AE</span> / <span class="pill">YE</span></td><td>Year-end (Dec 31)</td><td>2024-12-31 → 2025-12-31</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Interactive Builder</h2>
+  <div class="card">
+    <div class="example">
+      <div>
+        <div class="section">
+          <label>Function</label>
+          <select id="fn"><option value="date_range">date_range</option><option value="bdate_range">bdate_range</option></select>
+        </div>
+        <div class="section">
+          <label>start</label>
+          <input type="text" id="start" value="2024-01-01" placeholder="e.g. 2024-01-01" />
+        </div>
+        <div class="section">
+          <label>end</label>
+          <input type="text" id="end" placeholder="e.g. 2024-01-10 (optional)" />
+        </div>
+        <div class="section">
+          <label>periods</label>
+          <input type="number" id="periods" min="0" max="200" placeholder="e.g. 10 (optional)" />
+        </div>
+        <div class="section">
+          <label>freq</label>
+          <select id="freq">
+            <option value="D">D — Day</option>
+            <option value="B">B — BusinessDay</option>
+            <option value="H">H — Hour</option>
+            <option value="T">T — Minute</option>
+            <option value="S">S — Second</option>
+            <option value="MS">MS — MonthStart</option>
+            <option value="ME">ME — MonthEnd</option>
+            <option value="QS">QS — QuarterStart</option>
+            <option value="QE">QE — QuarterEnd</option>
+            <option value="AS">AS — YearStart</option>
+            <option value="AE">AE — YearEnd</option>
+            <option value="W">W — Week</option>
+          </select>
+        </div>
+        <div class="section">
+          <label>normalize</label>
+          <select id="normalize"><option value="false">false</option><option value="true">true</option></select>
+        </div>
+        <div class="section" style="margin-top:0.75rem">
+          <button onclick="runBuilder()">Generate</button>
+        </div>
+      </div>
+      <div>
+        <label style="margin-bottom:0.5rem">Result</label>
+        <div id="builderOut" class="output">Press Generate →</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>DatetimeIndex Operations</h2>
+  <div class="card">
+    <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1rem">
+      Generate an index, then apply <code>.sort()</code>, <code>.unique()</code>, <code>.normalize()</code>, <code>.shift(n, freq)</code>, <code>.filter()</code>, <code>.min()</code> / <code>.max()</code>.
+    </p>
+    <div class="example">
+      <div>
+        <div class="section">
+          <label>Base range (start + periods, freq D)</label>
+          <input type="text" id="opStart" value="2024-01-10" />
+        </div>
+        <div class="section">
+          <label>periods</label>
+          <input type="number" id="opPeriods" value="7" min="1" max="50" />
+        </div>
+        <div class="section">
+          <label>Operation</label>
+          <select id="operation">
+            <option value="sort">sort(ascending=true)</option>
+            <option value="sortDesc">sort(ascending=false)</option>
+            <option value="unique">unique()</option>
+            <option value="normalize">normalize()</option>
+            <option value="shiftFwd">shift(+3, "D")</option>
+            <option value="shiftBwd">shift(-3, "D")</option>
+            <option value="snap">snap("MS")</option>
+            <option value="min">min() + max()</option>
+            <option value="filter">filter(weekday ≠ Mon)</option>
+            <option value="slice">slice(1, 4)</option>
+            <option value="concat">concat(7-day range 2024-02-01)</option>
+          </select>
+        </div>
+        <button onclick="runOps()">Apply</button>
+      </div>
+      <div>
+        <label style="margin-bottom:0.5rem">Result</label>
+        <div id="opsOut" class="output">Press Apply →</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Code Snippets</h2>
+  <div class="card">
+    <div id="snippet" class="output" style="color:var(--text)">Select a scenario to see the TypeScript code:</div>
+    <div style="margin-top:0.75rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+      <button onclick="showSnippet('basic')">Basic daily range</button>
+      <button onclick="showSnippet('biz')">Business days</button>
+      <button onclick="showSnippet('monthly')">Monthly</button>
+      <button onclick="showSnippet('endPeriods')">end + periods</button>
+      <button onclick="showSnippet('ops')">Index operations</button>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+// ──────────────────────────────────────────────────────────────────────────────
+// Inline minimal implementations for the playground (no bundler needed)
+// ──────────────────────────────────────────────────────────────────────────────
+
+const MS_PER_DAY = 86_400_000;
+
+function normDate(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
+function parseDate(v) {
+  if (v instanceof Date) return new Date(v.getTime());
+  const d = new Date(v);
+  if (isNaN(d.getTime())) throw new RangeError(`Cannot parse date: "${v}"`);
+  return d;
+}
+
+// Minimal DateOffset classes
+class Day { constructor(n=1){this.n=n;this.name="Day";}  apply(d){return new Date(d.getTime()+this.n*MS_PER_DAY);} rollforward(d){return new Date(d.getTime());} rollback(d){return new Date(d.getTime());} onOffset(){return true;} }
+class Hour { constructor(n=1){this.n=n;this.name="Hour";} apply(d){return new Date(d.getTime()+this.n*3600000);} rollforward(d){return new Date(d.getTime());} rollback(d){return new Date(d.getTime());} onOffset(){return true;} }
+class Minute { constructor(n=1){this.n=n;this.name="Minute";} apply(d){return new Date(d.getTime()+this.n*60000);} rollforward(d){return new Date(d.getTime());} rollback(d){return new Date(d.getTime());} onOffset(){return true;} }
+class Second { constructor(n=1){this.n=n;this.name="Second";} apply(d){return new Date(d.getTime()+this.n*1000);} rollforward(d){return new Date(d.getTime());} rollback(d){return new Date(d.getTime());} onOffset(){return true;} }
+class Milli { constructor(n=1){this.n=n;this.name="Milli";} apply(d){return new Date(d.getTime()+this.n);} rollforward(d){return new Date(d.getTime());} rollback(d){return new Date(d.getTime());} onOffset(){return true;} }
+class Week { constructor(n=1){this.n=n;this.name="Week";} apply(d){return new Date(d.getTime()+this.n*7*MS_PER_DAY);} rollforward(d){return new Date(d.getTime());} rollback(d){return new Date(d.getTime());} onOffset(){return true;} }
+
+function lastDayOfMonth(y,m) { return new Date(Date.UTC(y,m+1,0)).getUTCDate(); }
+function isMonthEnd(d) { return d.getUTCDate()===lastDayOfMonth(d.getUTCFullYear(),d.getUTCMonth()); }
+function isMonthBegin(d) { return d.getUTCDate()===1; }
+function isYearEnd(d) { return d.getUTCMonth()===11&&d.getUTCDate()===31; }
+function isYearBegin(d) { return d.getUTCMonth()===0&&d.getUTCDate()===1; }
+function isWeekday(d) { const w=d.getUTCDay(); return w>=1&&w<=5; }
+
+class MonthBegin {
+  constructor(n=1){this.n=n;this.name="MonthBegin";}
+  apply(d){
+    const y=d.getUTCFullYear(),m=d.getUTCMonth(),n=this.n;
+    if(isMonthBegin(d)||n>0) return new Date(Date.UTC(y,m+n,1));
+    return new Date(Date.UTC(y,m+n+1,1));
+  }
+  rollforward(d){ if(isMonthBegin(d)) return new Date(d.getTime()); const y=d.getUTCFullYear(),m=d.getUTCMonth(); return new Date(Date.UTC(y,m+1,1)); }
+  rollback(d){ if(isMonthBegin(d)) return new Date(d.getTime()); return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),1)); }
+  onOffset(d){ return isMonthBegin(d); }
+}
+class MonthEnd {
+  constructor(n=1){this.n=n;this.name="MonthEnd";}
+  apply(d){
+    const y=d.getUTCFullYear(),m=d.getUTCMonth(),n=this.n;
+    if(isMonthEnd(d)) return new Date(Date.UTC(y,m+n+1,0));
+    if(n>0) return new Date(Date.UTC(y,m+n,0));
+    const prev=new Date(Date.UTC(y,m,0));
+    return new Date(Date.UTC(prev.getUTCFullYear(),prev.getUTCMonth()+n+2,0));
+  }
+  rollforward(d){ if(isMonthEnd(d)) return new Date(d.getTime()); const y=d.getUTCFullYear(),m=d.getUTCMonth(); return new Date(Date.UTC(y,m+1,0)); }
+  rollback(d){ if(isMonthEnd(d)) return new Date(d.getTime()); return new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),0)); }
+  onOffset(d){ return isMonthEnd(d); }
+}
+class YearBegin {
+  constructor(n=1){this.n=n;this.name="YearBegin";}
+  apply(d){
+    const y=d.getUTCFullYear(),n=this.n;
+    if(isYearBegin(d)||n>0) return new Date(Date.UTC(y+n,0,1));
+    return new Date(Date.UTC(y+n+1,0,1));
+  }
+  rollforward(d){ if(isYearBegin(d)) return new Date(d.getTime()); return new Date(Date.UTC(d.getUTCFullYear()+1,0,1)); }
+  rollback(d){ if(isYearBegin(d)) return new Date(d.getTime()); return new Date(Date.UTC(d.getUTCFullYear(),0,1)); }
+  onOffset(d){ return isYearBegin(d); }
+}
+class YearEnd {
+  constructor(n=1){this.n=n;this.name="YearEnd";}
+  apply(d){
+    const y=d.getUTCFullYear(),n=this.n;
+    if(isYearEnd(d)) return new Date(Date.UTC(y+n,11,31));
+    if(n>0) return new Date(Date.UTC(y+n-1,11,31));
+    return new Date(Date.UTC(y+n,11,31));
+  }
+  rollforward(d){ if(isYearEnd(d)) return new Date(d.getTime()); return new Date(Date.UTC(d.getUTCFullYear(),11,31)); }
+  rollback(d){ if(isYearEnd(d)) return new Date(d.getTime()); return new Date(Date.UTC(d.getUTCFullYear()-1,11,31)); }
+  onOffset(d){ return isYearEnd(d); }
+}
+class BusinessDay {
+  constructor(n=1){this.n=n;this.name="BusinessDay";}
+  apply(d){
+    let cur=new Date(d.getTime()),steps=Math.abs(this.n),fwd=this.n>=0;
+    for(let i=0;i<steps;i++){
+      const next=new Date(cur.getTime()+(fwd?MS_PER_DAY:-MS_PER_DAY));
+      if(fwd){ cur=next; while(!isWeekday(cur)) cur=new Date(cur.getTime()+MS_PER_DAY); }
+      else { cur=next; while(!isWeekday(cur)) cur=new Date(cur.getTime()-MS_PER_DAY); }
+    }
+    return cur;
+  }
+  rollforward(d){ let cur=new Date(d.getTime()); while(!isWeekday(cur)) cur=new Date(cur.getTime()+MS_PER_DAY); return cur; }
+  rollback(d){ let cur=new Date(d.getTime()); while(!isWeekday(cur)) cur=new Date(cur.getTime()-MS_PER_DAY); return cur; }
+  onOffset(d){ return isWeekday(d); }
+}
+
+function freqToOffset(freq, n=1) {
+  if (typeof freq === "object") return freq;
+  switch(freq){
+    case "D": return new Day(n);
+    case "B": return new BusinessDay(n);
+    case "H": return new Hour(n);
+    case "T": case "min": return new Minute(n);
+    case "S": return new Second(n);
+    case "L": case "ms": return new Milli(n);
+    case "W": return new Week(n);
+    case "MS": return new MonthBegin(n);
+    case "ME": return new MonthEnd(n);
+    case "QS": return new MonthBegin(n*3);
+    case "QE": return new MonthEnd(n*3);
+    case "AS": case "YS": return new YearBegin(n);
+    case "AE": case "YE": return new YearEnd(n);
+    default: throw new Error(`Unknown freq: ${freq}`);
+  }
+}
+
+function negateOffset(off) {
+  return freqToOffset(off.name === "MonthBegin" ? "MS" : off.name === "MonthEnd" ? "ME" :
+    off.name === "YearBegin" ? "AS" : off.name === "YearEnd" ? "AE" :
+    off.name === "BusinessDay" ? "B" : off.name === "Week" ? "W" :
+    off.name === "Hour" ? "H" : off.name === "Minute" ? "T" :
+    off.name === "Second" ? "S" : off.name === "Milli" ? "L" : "D", -off.n);
+}
+
+class DatetimeIndex {
+  constructor(dates, name=null) {
+    this._dates = Object.freeze([...dates]);
+    this.name = name;
+  }
+  static fromDates(dates, name=null) { return new DatetimeIndex(dates, name); }
+  get size() { return this._dates.length; }
+  get empty() { return this._dates.length === 0; }
+  get values() { return this._dates; }
+  at(i) { const d=this._dates[i]; if(d===undefined) throw new RangeError(`Index ${i} out of bounds`); return d; }
+  toArray() { return [...this._dates]; }
+  toStrings() { return this._dates.map(d=>d.toISOString()); }
+  min() { if(!this._dates.length) return null; return this._dates.reduce((a,b)=>a.getTime()<b.getTime()?a:b); }
+  max() { if(!this._dates.length) return null; return this._dates.reduce((a,b)=>a.getTime()>b.getTime()?a:b); }
+  sort(asc=true) { return new DatetimeIndex([...this._dates].sort((a,b)=>asc?a.getTime()-b.getTime():b.getTime()-a.getTime()), this.name); }
+  unique() { const s=new Set(); const o=[]; for(const d of this._dates){const m=d.getTime();if(!s.has(m)){s.add(m);o.push(d);}} return new DatetimeIndex(o,this.name); }
+  filter(fn) { return new DatetimeIndex(this._dates.filter((d,i)=>fn(d,i)), this.name); }
+  normalize() { return new DatetimeIndex(this._dates.map(normDate), this.name); }
+  shift(n, freq) { if(n===0) return new DatetimeIndex(this._dates,this.name); const off=freqToOffset(freq,n); return new DatetimeIndex(this._dates.map(d=>off.apply(d)),this.name); }
+  snap(freq) { const off=freqToOffset(freq); return new DatetimeIndex(this._dates.map(d=>off.rollforward(d)),this.name); }
+  slice(s,e) { return new DatetimeIndex(this._dates.slice(s,e),this.name); }
+  concat(other) { return new DatetimeIndex([...this._dates,...other._dates],this.name); }
+  contains(d) { const ms=d.getTime(); return this._dates.some(x=>x.getTime()===ms); }
+  [Symbol.iterator]() { return this._dates[Symbol.iterator](); }
+}
+
+function rangeStartEnd(start, end, off) {
+  if(start.getTime()>end.getTime()) return [];
+  const out=[start]; let cur=start;
+  for(let i=0;i<1000000;i++){
+    const next=off.apply(cur);
+    if(next.getTime()>end.getTime()) break;
+    if(next.getTime()===cur.getTime()) break;
+    out.push(next); cur=next;
+  }
+  return out;
+}
+function rangeStartPeriods(start, n, off) {
+  if(n<=0) return [];
+  const out=[start]; let cur=start;
+  while(out.length<n){ const next=off.apply(cur); if(next.getTime()===cur.getTime()) break; out.push(next); cur=next; }
+  return out;
+}
+function rangeEndPeriods(end, n, off) {
+  if(n<=0) return [];
+  const neg=negateOffset(off);
+  const out=[end]; let cur=end;
+  while(out.length<n){ const prev=neg.apply(cur); if(prev.getTime()===cur.getTime()) break; out.push(prev); cur=prev; }
+  return out.reverse();
+}
+
+function date_range({start, end, periods, freq="D", normalize=false, name=null}={}) {
+  if(start===undefined&&end===undefined) throw new Error("date_range: start or end required");
+  const off=freqToOffset(freq);
+  let s=start!==undefined?parseDate(start):null;
+  let e=end!==undefined?parseDate(end):null;
+  if(normalize){if(s)s=normDate(s);if(e)e=normDate(e);}
+  let dates;
+  if(s&&e&&periods===undefined) dates=rangeStartEnd(s,e,off);
+  else if(s&&periods!==undefined) dates=rangeStartPeriods(s,periods,off);
+  else if(e&&periods!==undefined) dates=rangeEndPeriods(e,periods,off);
+  else throw new Error("date_range: provide start+end, start+periods, or end+periods");
+  return DatetimeIndex.fromDates(dates,name);
+}
+
+function bdate_range(opts={}) {
+  return date_range({freq:"B",...opts});
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// UI
+// ──────────────────────────────────────────────────────────────────────────────
+
+window.runBuilder = function() {
+  const fn=document.getElementById("fn").value;
+  const start=document.getElementById("start").value||undefined;
+  const endVal=document.getElementById("end").value||undefined;
+  const perVal=document.getElementById("periods").value;
+  const periods=perVal?parseInt(perVal):undefined;
+  const freq=document.getElementById("freq").value;
+  const normalize=document.getElementById("normalize").value==="true";
+  const out=document.getElementById("builderOut");
+  try {
+    const idx = fn==="bdate_range"
+      ? bdate_range({start,end:endVal,periods,freq,normalize})
+      : date_range({start,end:endVal,periods,freq,normalize});
+    const lines=idx.toStrings();
+    const preview=lines.slice(0,30);
+    const text=`DatetimeIndex (size=${idx.size}, freq="${freq}")\n\n`
+      +preview.join("\n")
+      +(lines.length>30?`\n... (${lines.length-30} more)`:"");
+    out.textContent=text;
+    out.className="output";
+  } catch(e) {
+    out.textContent="Error: "+e.message;
+    out.className="output error";
+  }
+};
+
+window.runOps = function() {
+  const start=document.getElementById("opStart").value||"2024-01-10";
+  const periods=parseInt(document.getElementById("opPeriods").value)||7;
+  const op=document.getElementById("operation").value;
+  const out=document.getElementById("opsOut");
+  try {
+    let idx=date_range({start,periods});
+    let result,label;
+    switch(op){
+      case "sort":       result=idx.sort(true); label="sort(ascending=true)"; break;
+      case "sortDesc":   result=idx.sort(false); label="sort(ascending=false)"; break;
+      case "unique":     result=idx.unique(); label="unique()"; break;
+      case "normalize":
+        idx=DatetimeIndex.fromDates([new Date(start+"T12:30:00Z"),...date_range({start,periods:periods-1}).toArray()]);
+        result=idx.normalize(); label="normalize()"; break;
+      case "shiftFwd":   result=idx.shift(3,"D"); label="shift(+3, 'D')"; break;
+      case "shiftBwd":   result=idx.shift(-3,"D"); label="shift(-3, 'D')"; break;
+      case "snap":       result=idx.snap("MS"); label="snap('MS') — rollforward to month start"; break;
+      case "min": {
+        const mn=idx.min(),mx=idx.max();
+        out.textContent=`min: ${mn?.toISOString()||"null"}\nmax: ${mx?.toISOString()||"null"}`;
+        out.className="output"; return;
+      }
+      case "filter":     result=idx.filter(d=>d.getUTCDay()!==1); label="filter(d => getUTCDay() !== 1) — exclude Mondays"; break;
+      case "slice":      result=idx.slice(1,4); label="slice(1, 4)"; break;
+      case "concat": {
+        const b=date_range({start:"2024-02-01",periods});
+        result=idx.concat(b); label=`concat(date_range('2024-02-01', periods=${periods}))`; break;
+      }
+      default: return;
+    }
+    out.textContent=`${label}\n(size=${result.size})\n\n`+result.toStrings().join("\n");
+    out.className="output";
+  } catch(e){
+    out.textContent="Error: "+e.message;
+    out.className="output error";
+  }
+};
+
+const snippets = {
+  basic: `import { date_range } from "tsb";
+
+// Generate 5 daily dates
+const idx = date_range({ start: "2024-01-01", end: "2024-01-05" });
+idx.size;           // 5
+idx.at(0).toISOString(); // "2024-01-01T00:00:00.000Z"
+idx.toStrings();
+// ["2024-01-01…", "2024-01-02…", "2024-01-03…", …]`,
+
+  biz: `import { bdate_range } from "tsb";
+
+// 5 business days from a Monday
+const idx = bdate_range({ start: "2024-01-01", periods: 5 });
+idx.size;           // 5
+idx.toStrings();
+// Mon Jan 1 → Fri Jan 5 (skips weekends)
+
+// Jan 5 (Fri) + 1 business day = Jan 8 (Mon)
+const idx2 = bdate_range({ start: "2024-01-05", periods: 2 });
+idx2.at(1).toISOString(); // "2024-01-08T00:00:00.000Z"`,
+
+  monthly: `import { date_range } from "tsb";
+
+// Monthly range (month-starts)
+const ms = date_range({ start: "2024-01-01", end: "2024-12-01", freq: "MS" });
+ms.size;  // 12
+
+// Quarterly ends
+const qe = date_range({ start: "2024-03-31", periods: 4, freq: "QE" });
+qe.toStrings();
+// ["2024-03-31…", "2024-06-30…", "2024-09-30…", "2024-12-31…"]`,
+
+  endPeriods: `import { date_range } from "tsb";
+
+// 3 dates ending on Jan 10
+const idx = date_range({ end: "2024-01-10", periods: 3 });
+idx.at(0).toISOString(); // "2024-01-08T00:00:00.000Z"
+idx.at(2).toISOString(); // "2024-01-10T00:00:00.000Z"
+
+// 4 hourly dates ending at noon
+const hourly = date_range({
+  end: "2024-01-01T03:00:00Z",
+  periods: 4,
+  freq: "H",
+});
+hourly.at(0).toISOString(); // "2024-01-01T00:00:00.000Z"`,
+
+  ops: `import { date_range, DatetimeIndex } from "tsb";
+
+const idx = date_range({ start: "2024-03-01", periods: 10 });
+
+// Sort descending
+idx.sort(false).at(0).toISOString(); // last date
+
+// Remove duplicates
+idx.unique().size;  // 10 (already unique)
+
+// Shift forward 1 week
+idx.shift(7, "D").at(0).toISOString(); // "2024-03-08T00:00:00.000Z"
+
+// Snap to next month-start
+idx.snap("MS").at(0).toISOString();    // "2024-04-01T00:00:00.000Z"
+
+// Filter weekends out
+const weekdays = idx.filter(d => {
+  const dow = d.getUTCDay();
+  return dow !== 0 && dow !== 6;
+});
+
+// min / max
+idx.min()?.toISOString(); // "2024-03-01T00:00:00.000Z"
+idx.max()?.toISOString(); // "2024-03-10T00:00:00.000Z"`,
+};
+
+window.showSnippet = function(key) {
+  document.getElementById("snippet").textContent = snippets[key] || "";
+};
+</script>
+</body>
+</html>

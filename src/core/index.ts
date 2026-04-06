@@ -37,3 +37,5 @@ export {
   BusinessDay,
 } from "./date_offset.ts";
 export type { DateOffset, WeekOptions } from "./date_offset.ts";
+export { DatetimeIndex, date_range, bdate_range, resolveFreq } from "./date_range.ts";
+export type { DateRangeFreq, DateRangeOptions, DatetimeIndexOptions } from "./date_range.ts";

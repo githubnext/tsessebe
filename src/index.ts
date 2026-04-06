@@ -182,3 +182,5 @@ export {
   BusinessDay,
 } from "./core/index.ts";
 export type { DateOffset, WeekOptions } from "./core/index.ts";
+export { DatetimeIndex, date_range, bdate_range, resolveFreq } from "./core/index.ts";
+export type { DateRangeFreq, DateRangeOptions, DatetimeIndexOptions } from "./core/index.ts";
