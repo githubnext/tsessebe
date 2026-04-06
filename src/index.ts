@@ -241,3 +241,5 @@ export { factorize, seriesFactorize } from "./stats/index.ts";
 export type { FactorizeOptions, FactorizeResult } from "./stats/index.ts";
 export { crosstab, seriesCrosstab } from "./stats/index.ts";
 export type { AggFunc, Normalize, CrosstabOptions } from "./stats/index.ts";
+export { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "./stats/index.ts";
+export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./stats/index.ts";

@@ -149,3 +149,7 @@ export type { FactorizeOptions, FactorizeResult } from "./factorize.ts";
 
 export { crosstab, seriesCrosstab } from "./crosstab.ts";
 export type { AggFunc, Normalize, CrosstabOptions } from "./crosstab.ts";
+
+
+export { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "./to_numeric.ts";
+export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./to_numeric.ts";
