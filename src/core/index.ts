@@ -47,3 +47,5 @@ export { dataFrameAssign } from "./assign.ts";
 export type { AssignColSpec, AssignSpec } from "./assign.ts";
 export { natCompare, natSorted, natSortKey, natArgSort } from "./natsort.ts";
 export type { NatSortOptions, NatSortedOptions } from "./natsort.ts";
+export { searchsorted, searchsortedMany, argsortScalars } from "./searchsorted.ts";
+export type { SearchSortedSide, SearchSortedOptions } from "./searchsorted.ts";

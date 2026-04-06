@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — searchsorted</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>searchsorted</h1>
+    <p>Binary search on sorted arrays — mirrors <code>numpy.searchsorted</code> and <code>pandas.Index.searchsorted</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <code>searchsorted(a, v)</code> returns the index at which value <code>v</code> should be inserted
+        into the <strong>sorted</strong> array <code>a</code> to keep it sorted. This is the standard
+        binary-search operation used throughout pandas for alignment, binning, and lookup.
+      </p>
+      <p>
+        Two side modes:
+        <code>side = "left"</code> (default) places insertion <em>before</em> any equal elements;
+        <code>side = "right"</code> places it <em>after</em>.
+      </p>
+      <p>
+        Three exports:
+        <code>searchsorted(a, v)</code> — single value search;
+        <code>searchsortedMany(a, vs)</code> — vectorised search over multiple values;
+        <code>argsortScalars(a)</code> — compute a sort permutation (for the <code>sorter</code> option).
+      </p>
+    </section>
+
+    <section>
+      <h2>1 · Basic usage</h2>
+      <pre><code>import { searchsorted, searchsortedMany, argsortScalars } from "tsb";
+
+const a = [1, 3, 5, 7, 9];
+
+// Where would 4 go?
+console.log(searchsorted(a, 4));          // → 2  (between 3 and 5)
+
+// Where would 5 go — before existing 5?
+console.log(searchsorted(a, 5));          // → 2  (side="left" default)
+
+// Where would 5 go — after existing 5?
+console.log(searchsorted(a, 5, { side: "right" }));  // → 3
+
+// Out-of-range values
+console.log(searchsorted(a, 0));          // → 0  (before everything)
+console.log(searchsorted(a, 99));         // → 5  (after everything)</code></pre>
+    </section>
+
+    <section>
+      <h2>2 · Vectorised search with searchsortedMany</h2>
+      <pre><code>import { searchsortedMany } from "tsb";
+
+const prices = [10, 20, 30, 40, 50];
+
+// Find where several bid prices would fall
+const bids = [15, 25, 50, 55];
+console.log(searchsortedMany(prices, bids));
+// → [1, 2, 4, 5]
+
+// side="right" for after-equal semantics
+console.log(searchsortedMany(prices, [20, 40], { side: "right" }));
+// → [2, 4]</code></pre>
+    </section>
+
+    <section>
+      <h2>3 · Searching unsorted data with <code>sorter</code></h2>
+      <pre><code>import { searchsorted, argsortScalars } from "tsb";
+
+// argsortScalars returns the permutation that would sort the array
+const data = [50, 10, 30, 20, 40];
+const sorter = argsortScalars(data);
+// sorter → [1, 3, 2, 4, 0]  (indices of 10, 20, 30, 40, 50)
+
+// Now search without sorting the original array
+console.log(searchsorted(data, 25, { sorter }));          // → 2  (between 20 and 30)
+console.log(searchsorted(data, 30, { sorter }));          // → 2  (left of 30)
+console.log(searchsorted(data, 30, { side: "right", sorter }));  // → 3</code></pre>
+    </section>
+
+    <section>
+      <h2>4 · String arrays</h2>
+      <pre><code>import { searchsorted } from "tsb";
+
+const words = ["apple", "banana", "cherry", "date", "elderberry"];
+
+console.log(searchsorted(words, "blueberry"));  // → 2  (between banana and cherry)
+console.log(searchsorted(words, "cherry"));     // → 2  (left of cherry)
+console.log(searchsorted(words, "cherry", { side: "right" }));  // → 3</code></pre>
+    </section>
+
+    <section>
+      <h2>5 · Custom comparator</h2>
+      <pre><code>import { searchsorted } from "tsb";
+
+// Case-insensitive string search
+const arr = ["apple", "Banana", "cherry"];  // sorted case-insensitively
+const cmp = (a: unknown, b: unknown) => {
+  const sa = String(a).toLowerCase();
+  const sb = String(b).toLowerCase();
+  return sa < sb ? -1 : sa > sb ? 1 : 0;
+};
+
+console.log(searchsorted(arr, "banana", { compareFn: cmp }));  // → 1
+console.log(searchsorted(arr, "CHERRY", { compareFn: cmp }));  // → 2</code></pre>
+    </section>
+
+    <section>
+      <h2>6 · pandas equivalents</h2>
+      <pre><code># Python / pandas
+import pandas as pd
+import numpy as np
+
+idx = pd.Index([1, 3, 5, 7, 9])
+idx.searchsorted(4)              # → 2
+idx.searchsorted(5)              # → 2  (side='left')
+idx.searchsorted(5, side='right')  # → 3
+
+np.searchsorted([1, 3, 5, 7, 9], [2, 5, 8])  # → [1, 2, 4]
+
+# TypeScript / tsb equivalent
+import { searchsorted, searchsortedMany } from "tsb";
+searchsorted([1, 3, 5, 7, 9], 4)                          // → 2
+searchsorted([1, 3, 5, 7, 9], 5)                          // → 2
+searchsorted([1, 3, 5, 7, 9], 5, { side: "right" })       // → 3
+searchsortedMany([1, 3, 5, 7, 9], [2, 5, 8])              // → [1, 2, 4]</code></pre>
+    </section>
+  </main>
+</body>
+</html>

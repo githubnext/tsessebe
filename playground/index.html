@@ -434,6 +434,11 @@
           <p>Natural-order string sorting — <a href="natsort.html" style="color: var(--accent);">interactive tutorial</a>. <code>natSorted(arr)</code> sorts strings so embedded numbers compare numerically ("file2" before "file10"). <code>natCompare(a, b)</code> is a drop-in comparator for <code>Array.sort</code>. <code>natSortKey(s)</code> exposes the internal token array; <code>natArgSort(arr)</code> returns permutation indices. Supports <code>ignoreCase</code>, <code>reverse</code>, and a <code>key</code> extractor for object arrays. Mirrors <code>natsort.natsorted()</code> / <code>pandas.Index.sort_values(key=natsort_keygen())</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔎 searchsorted</h3>
+          <p>Binary search on sorted arrays — <a href="searchsorted.html" style="color: var(--accent);">interactive tutorial</a>. <code>searchsorted(a, v)</code> finds the insertion index for a single value (mirrors <code>numpy.searchsorted</code> / <code>pandas.Index.searchsorted</code>). <code>searchsortedMany(a, vs)</code> handles multiple queries at once. <code>argsortScalars(a)</code> computes the sort permutation for use with the <code>sorter</code> option on unsorted data. Supports <code>side="left"|"right"</code> and a custom <code>compareFn</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>
