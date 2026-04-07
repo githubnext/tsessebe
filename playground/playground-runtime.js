@@ -151,6 +151,24 @@ function executeCode(jsCode) {
   return outputs.join("\n");
 }
 
+// ── Editor abstraction (supports both <textarea> and <pre contenteditable>) ──
+
+function isTextarea(el) {
+  return el.tagName === "TEXTAREA";
+}
+
+function getEditorCode(editor) {
+  return isTextarea(editor) ? editor.value : editor.textContent;
+}
+
+function setEditorCode(editor, code) {
+  if (isTextarea(editor)) {
+    editor.value = code;
+  } else {
+    editor.textContent = code;
+  }
+}
+
 // ── Playground block setup ─────────────────────────────────────────
 
 function setupBlock(block, ts) {
@@ -160,10 +178,11 @@ function setupBlock(block, ts) {
   var output = block.querySelector(".playground-output");
   if (!editor || !runBtn || !output) return;
 
-  var originalCode = editor.value;
+  var originalCode = getEditorCode(editor);
 
   // Auto-resize textarea to fit content
   function autoResize() {
+    if (!isTextarea(editor)) return;
     editor.style.height = "auto";
     editor.style.height = editor.scrollHeight + 2 + "px";
   }
@@ -174,11 +193,17 @@ function setupBlock(block, ts) {
   editor.addEventListener("keydown", function (e) {
     if (e.key === "Tab") {
       e.preventDefault();
-      var start = editor.selectionStart;
-      var end = editor.selectionEnd;
-      editor.value =
-        editor.value.substring(0, start) + "  " + editor.value.substring(end);
-      editor.selectionStart = editor.selectionEnd = start + 2;
+      if (isTextarea(editor)) {
+        var start = editor.selectionStart;
+        var end = editor.selectionEnd;
+        editor.value =
+          editor.value.substring(0, start) +
+          "  " +
+          editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+      } else {
+        document.execCommand("insertText", false, "  ");
+      }
     }
     // Ctrl+Enter or Cmd+Enter runs the code
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -192,7 +217,7 @@ function setupBlock(block, ts) {
     output.classList.remove("error");
     output.classList.add("active");
     try {
-      var code = editor.value;
+      var code = getEditorCode(editor);
       var js = transformCode(code, ts);
       var result = executeCode(js);
       output.textContent =
@@ -206,7 +231,7 @@ function setupBlock(block, ts) {
   // Reset button handler
   if (resetBtn) {
     resetBtn.addEventListener("click", function () {
-      editor.value = originalCode;
+      setEditorCode(editor, originalCode);
       output.textContent = "";
       output.classList.remove("error", "active");
       autoResize();
