@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T09:54:48Z |
-| Iteration Count | 123 |
-| Best Metric | 78 |
+| Last Run | 2026-04-07T08:30:00Z |
+| Iteration Count | 122 |
+| Best Metric | 77 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -22,22 +22,21 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 78 files (iter 123). Next candidates:
+Now at 77 files (iter 122). Next candidates:
+- `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/stats/cut_extended.ts` — pd.cut with `ordered` dtype and per-bin labels
 - `src/stats/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
-- `src/io/read_html.ts` — HTML table reader (DOM-like zero-dep parser)
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 123 (read_fwf)**: `inferColspecs()` uses a `Set<number>` to track content positions across sample lines, avoiding TypedArray index access issues with `noUncheckedIndexedAccess`. Use `charAt()` for string character access (returns `""` instead of `undefined`). Colspecs infer from whitespace in all sample lines combined (not intersection).
 - **Iter 122 (seriesMap/dataFrameTransform)**: `resolveMapper()` coerces function/Map/dict/Series to a `(v: Scalar) => Scalar` lookup. `naAction="ignore"` only skips NA for function args. `dataFrameTransform` axis=1 rebuilds cols from row results. Dict arg (per-column fn) passes through unlisted columns unchanged.
 - **Iter 121 (replace)**: `encodeKey(v)` maps Scalar→string for Map lookup. Missing sentinels: `"null"/"undefined"/"NaN"`. Per-column dict detection: if any top-level value is a plain object. Biome `useBlockStatements` — run `--fix --unsafe`.
 - **Iter 120 (pct_change)**: Formula `(x[i]-x[i-p])/|x[i-p]|`. `periods=0`→all-NaN. Use `Map<string, Series<Scalar>>` for DataFrame cols. `Number.NaN` not `NaN`. `import fc from "fast-check"` (default import). Extract sub-helpers if complexity>15.
@@ -57,21 +56,13 @@ Now at 78 files (iter 123). Next candidates:
 
 ## 🔭 Future Directions
 
-**State (iter 123)**: 78 files. Next: stats/cut_extended (ordered dtype + per-bin labels) · stats/wide_to_long_enhanced · io/read_html (HTML table parser)
+**State (iter 122)**: 77 files. Next: io/read_excel (XLSX zero-dep) · stats/cut_extended (ordered dtype + per-bin labels) · stats/wide_to_long_enhanced
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
-
-### Iteration 123 — 2026-04-07 09:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24075374959)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/io/read_fwf.ts` — `readFwf()` implementing `pandas.read_fwf()` with auto-inferred column boundaries, explicit colspecs, column widths, header/names/skipRows/nRows/comment/naValues/indexCol options.
-- **Metric**: 78 (previous: 77, delta: +1)
-- **Commit**: 0f14cb7
-- **Notes**: `inferColspecs()` uses `for...of` over a sorted `Set<number>` to avoid unchecked index access. `charAt()` for string access. 28 unit + 3 property-based tests across basic parsing, colspecs, widths, header options, skipRows/nRows, comments, NA values, and indexCol.
 
 ### Iteration 122 — 2026-04-07 08:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24071953536)
 
