@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — describe &amp; quantile</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="breadcrumb">
+      <a href="index.html">tsb playground</a> › describe &amp; quantile
+    </nav>
+
+    <h1>describe &amp; quantile — Summary Statistics</h1>
+    <p class="intro">
+      <code>describe()</code> and <code>Series.quantile()</code> give you the
+      same concise statistical summary that
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html"
+        >pandas <code>DataFrame.describe()</code></a
+      >
+      produces.  For numeric data you get <em>count</em>, <em>mean</em>,
+      <em>std</em>, <em>min</em>, user-defined percentiles, and <em>max</em>.
+      For categorical / string data you get <em>count</em>, <em>unique</em>,
+      <em>top</em>, and <em>freq</em>.
+    </p>
+
+    <section class="tutorial">
+      <h2>1 — Describe a numeric Series</h2>
+      <p>
+        Pass any <code>Series</code> with numeric data and get back a labeled
+        <code>Series</code> of statistics.  Percentiles default to 25&nbsp;%, 50&nbsp;%,
+        and 75&nbsp;% — just like pandas.
+      </p>
+      <div class="editor" id="series-numeric-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: [4, 7, 13, 16, 21, 3, 9, 12], name: "scores" });
+
+const stats = tsb.describe(s);
+console.log("count :", stats.at("count"));
+console.log("mean  :", stats.at("mean").toFixed(2));
+console.log("std   :", stats.at("std").toFixed(2));
+console.log("min   :", stats.at("min"));
+console.log("25%   :", stats.at("25%"));
+console.log("50%   :", stats.at("50%"));
+console.log("75%   :", stats.at("75%"));
+console.log("max   :", stats.at("max"));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="series-numeric-editor">▶ Run</button>
+      <pre class="output" id="series-numeric-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>2 — Custom percentiles</h2>
+      <p>
+        Override the default percentile set with the <code>percentiles</code>
+        option.  Pass any array of values in [0, 1].
+      </p>
+      <div class="editor" id="custom-pct-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const prices = new tsb.Series({
+  data: [100, 200, 150, 300, 250, 180, 90, 400, 210, 175],
+  name: "price",
+});
+
+// Get deciles: 10th through 90th percentile
+const stats = tsb.describe(prices, {
+  percentiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+});
+console.log(stats.index.values);
+for (const label of stats.index.values) {
+  console.log(`${label.toString().padEnd(5)}: ${Number(stats.at(label)).toFixed(2)}`);
+}
+</pre>
+      </div>
+      <button class="run-btn" data-editor="custom-pct-editor">▶ Run</button>
+      <pre class="output" id="custom-pct-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>3 — Describe a categorical Series</h2>
+      <p>
+        For non-numeric Series, <code>describe()</code> switches to categorical
+        mode: <em>count</em>, <em>unique</em>, <em>top</em> (most frequent
+        value), and <em>freq</em> (its count).  Nulls are silently excluded.
+      </p>
+      <div class="editor" id="series-cat-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const dept = new tsb.Series({
+  data: ["Engineering", "Marketing", "Engineering", "HR", "Engineering", null, "Marketing"],
+  name: "department",
+});
+
+const stats = tsb.describe(dept);
+console.log("count :", stats.at("count"));
+console.log("unique:", stats.at("unique"));
+console.log("top   :", stats.at("top"));
+console.log("freq  :", stats.at("freq"));
+</pre>
+      </div>
+      <button class="run-btn" data-editor="series-cat-editor">▶ Run</button>
+      <pre class="output" id="series-cat-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>4 — Describe a DataFrame</h2>
+      <p>
+        When passed a <code>DataFrame</code>, <code>describe()</code> returns a
+        new <code>DataFrame</code> where each column is a stat Series.  By
+        default only numeric columns are included (<code>include: "number"</code>).
+      </p>
+      <div class="editor" id="df-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  age:    [25, 30, 35, 28, 45, 22, 31, 40],
+  salary: [50000, 70000, 90000, 62000, 110000, 45000, 75000, 95000],
+  score:  [82, 90, 88, 76, 95, 70, 85, 92],
+});
+
+const summary = tsb.describe(df);
+
+// Print row by row
+for (const label of summary.index.values) {
+  const row = summary.columns.values
+    .map(col => `${col}: ${Number(summary.col(col).at(label)).toFixed(1)}`)
+    .join("   ");
+  console.log(`${String(label).padEnd(8)} ${row}`);
+}
+</pre>
+      </div>
+      <button class="run-btn" data-editor="df-editor">▶ Run</button>
+      <pre class="output" id="df-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>5 — include="all" for mixed DataFrames</h2>
+      <p>
+        Set <code>include: "all"</code> to describe both numeric and
+        categorical columns in a single call.  Numeric stats get
+        <code>null</code> for categorical-only rows and vice-versa.
+      </p>
+      <div class="editor" id="df-all-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Alice", "Carol", "Bob"],
+  score: [88, 92, 75, 95, 83],
+});
+
+const summary = tsb.describe(df, { include: "all" });
+console.log("rows :", summary.index.values);
+console.log("cols :", summary.columns.values);
+
+// Show the name (categorical) stats
+console.log("\n--- name column ---");
+for (const lbl of summary.index.values) {
+  const v = summary.col("name").at(lbl);
+  if (v !== null) console.log(`${String(lbl).padEnd(8)}: ${v}`);
+}
+
+// Show the score (numeric) stats
+console.log("\n--- score column ---");
+for (const lbl of summary.index.values) {
+  const v = summary.col("score").at(lbl);
+  if (v !== null) console.log(`${String(lbl).padEnd(8)}: ${Number(v).toFixed(2)}`);
+}
+</pre>
+      </div>
+      <button class="run-btn" data-editor="df-all-editor">▶ Run</button>
+      <pre class="output" id="df-all-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>6 — Series.quantile()</h2>
+      <p>
+        <code>Series.quantile(q)</code> computes a single quantile via linear
+        interpolation — the same algorithm pandas uses as its default
+        (<code>method="linear"</code>).  <code>q=0.5</code> is the median.
+      </p>
+      <div class="editor" id="quantile-editor">
+<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: [3, 7, 1, 9, 5, 11, 2, 8, 4, 6] });
+
+console.log("Q0   (min)   :", s.quantile(0));
+console.log("Q0.25 (Q1)   :", s.quantile(0.25));
+console.log("Q0.5  (med)  :", s.quantile(0.5));
+console.log("Q0.75 (Q3)   :", s.quantile(0.75));
+console.log("Q1   (max)   :", s.quantile(1));
+
+// Compare with median()
+console.log("\nmedian()     :", s.median());
+console.log("quantile(0.5):", s.quantile(0.5));
+console.log("Equal?       :", s.quantile(0.5) === s.median());
+</pre>
+      </div>
+      <button class="run-btn" data-editor="quantile-editor">▶ Run</button>
+      <pre class="output" id="quantile-output"></pre>
+    </section>
+
+    <section class="tutorial">
+      <h2>7 — Standalone quantile() utility</h2>
+      <p>
+        The low-level <code>quantile(sorted, q)</code> function works on any
+        sorted plain array and is useful when you have pre-filtered data.
+      </p>
+      <div class="editor" id="standalone-editor">
+<pre class="code" contenteditable="true" spellcheck="false">// Pre-sorted exam scores
+const sorted = [42, 55, 61, 67, 72, 78, 81, 85, 90, 95];
+
+// IQR = Q3 - Q1
+const q1 = tsb.quantile(sorted, 0.25);
+const q3 = tsb.quantile(sorted, 0.75);
+const iqr = q3 - q1;
+
+console.log("Q1  :", q1);
+console.log("Q3  :", q3);
+console.log("IQR :", iqr);
+
+// Detect outliers: values outside [Q1 - 1.5·IQR, Q3 + 1.5·IQR]
+const lower = q1 - 1.5 * iqr;
+const upper = q3 + 1.5 * iqr;
+console.log(`Fence: [${lower.toFixed(1)}, ${upper.toFixed(1)}]`);
+
+// Check each value
+for (const v of sorted) {
+  if (v < lower || v > upper) console.log(`  OUTLIER: ${v}`);
+}
+console.log("No outliers found in this dataset.");
+</pre>
+      </div>
+      <button class="run-btn" data-editor="standalone-editor">▶ Run</button>
+      <pre class="output" id="standalone-output"></pre>
+    </section>
+
+    <script src="runtime.js"></script>
+  </body>
+</html>

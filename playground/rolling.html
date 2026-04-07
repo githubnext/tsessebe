@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Rolling Windows</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>Rolling Windows</h1>
+<p class="subtitle">Sliding-window aggregations — mirrors <code>pandas.Series.rolling()</code> and <code>pandas.DataFrame.rolling()</code>.</p>
+
+<section>
+  <h2>1 — Basic rolling mean</h2>
+  <p>Call <code>series.rolling(window)</code> to get a <code>Rolling</code> object, then call <code>.mean()</code>.</p>
+  <pre><code id="ex1-code">import { Series } from "tsb";
+
+const prices = new Series({
+  data: [100, 102, 98, 105, 110, 108, 112],
+  name: "price",
+});
+
+// 3-day rolling mean — first two positions are null (not enough data)
+const ma3 = prices.rolling(3).mean();
+console.log(ma3.toArray());
+</code></pre>
+  <div class="output" id="ex1-out">▶ run</div>
+</section>
+
+<section>
+  <h2>2 — minPeriods: allow partial windows</h2>
+  <p>By default <code>minPeriods = window</code>.  Set it lower to get results for the initial positions too.</p>
+  <pre><code id="ex2-code">import { Series } from "tsb";
+
+const s = new Series({ data: [10, 20, 30, 40, 50] });
+
+// window=3 but minPeriods=1 → start computing from index 0
+const result = s.rolling(3, { minPeriods: 1 }).mean();
+console.log(result.toArray()); // [10, 15, 20, 30, 40]
+</code></pre>
+  <div class="output" id="ex2-out">▶ run</div>
+</section>
+
+<section>
+  <h2>3 — Rolling sum, std, var, min, max</h2>
+  <pre><code id="ex3-code">import { Series } from "tsb";
+
+const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9] });
+const w = s.rolling(3);
+
+console.log("sum :", w.sum().toArray());
+console.log("std :", w.std().toArray().map(v =>
+  v === null ? null : Number(v.toFixed(4))));
+console.log("min :", w.min().toArray());
+console.log("max :", w.max().toArray());
+</code></pre>
+  <div class="output" id="ex3-out">▶ run</div>
+</section>
+
+<section>
+  <h2>4 — Rolling count (handles nulls)</h2>
+  <p><code>count()</code> counts valid (non-null / non-NaN) observations in each window.  It ignores <code>minPeriods</code>.</p>
+  <pre><code id="ex4-code">import { Series } from "tsb";
+
+const s = new Series({ data: [1, null, 3, null, 5] });
+
+// count valid observations per window
+console.log(s.rolling(2).count().toArray()); // [1, 1, 1, 1, 1]
+console.log(s.rolling(3).count().toArray()); // [1, 1, 2, 1, 2]
+
+// mean() with minPeriods=1 skips null-only windows
+console.log(s.rolling(2, { minPeriods: 1 }).mean().toArray());
+</code></pre>
+  <div class="output" id="ex4-out">▶ run</div>
+</section>
+
+<section>
+  <h2>5 — Rolling median</h2>
+  <p>Useful for robust estimation — less sensitive to outliers than the mean.</p>
+  <pre><code id="ex5-code">import { Series } from "tsb";
+
+const s = new Series({ data: [1, 3, 5, 1, 100, 2, 4] });
+
+const meanW = s.rolling(3, { minPeriods: 1 }).mean().toArray();
+const medW  = s.rolling(3, { minPeriods: 1 }).median().toArray();
+
+console.log("mean  :", meanW.map(v => v === null ? null : +v.toFixed(2)));
+console.log("median:", medW);
+</code></pre>
+  <div class="output" id="ex5-out">▶ run</div>
+</section>
+
+<section>
+  <h2>6 — Custom aggregation with apply()</h2>
+  <p>Pass any function <code>(values: readonly number[]) =&gt; number</code> to <code>apply()</code>.</p>
+  <pre><code id="ex6-code">import { Series } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+// Rolling range (max - min)
+const range = s.rolling(3).apply(vals =>
+  Math.max(...vals) - Math.min(...vals)
+);
+console.log("range:", range.toArray()); // [null, null, 2, 2, 2]
+
+// Rolling product
+const prod = s.rolling(2).apply(vals => vals.reduce((a, b) => a * b, 1));
+console.log("prod :", prod.toArray()); // [null, 2, 6, 12, 20]
+</code></pre>
+  <div class="output" id="ex6-out">▶ run</div>
+</section>
+
+<section>
+  <h2>7 — Centered window</h2>
+  <p>Set <code>center: true</code> to centre the window label, giving a symmetric look-ahead/look-behind view.</p>
+  <pre><code id="ex7-code">import { Series } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+// trailing (default)
+const trailing = s.rolling(3).mean().toArray();
+// centered
+const centered = s.rolling(3, { center: true, minPeriods: 1 }).mean().toArray();
+
+console.log("trailing:", trailing);  // [null, null, 2, 3, 4]
+console.log("centered:", centered); // [1.5, 2, 3, 4, 4.5]
+</code></pre>
+  <div class="output" id="ex7-out">▶ run</div>
+</section>
+
+<section>
+  <h2>8 — DataFrame.rolling()</h2>
+  <p>Aggregations are applied column-by-column, returning a new DataFrame with the same shape.</p>
+  <pre><code id="ex8-code">import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  open:  [100, 101, 103, 102, 105],
+  close: [101, 103, 102, 105, 107],
+});
+
+const rolled = df.rolling(3).mean();
+console.log(rolled.col("open").toArray());
+console.log(rolled.col("close").toArray());
+</code></pre>
+  <div class="output" id="ex8-out">▶ run</div>
+</section>
+
+<div class="note">
+  💡 <strong>Tip</strong>: chain rolling methods — e.g. <code>df.rolling(5).std()</code> gives a DataFrame of 5-day rolling standard deviations across all numeric columns.  Compare with <code>.mean()</code> to spot volatility spikes.
+</div>
+
+<script>
+(async () => {
+  const { Series, DataFrame } = await import("./dist/index.js").catch(() => ({}));
+
+  if (!Series) {
+    document.querySelectorAll(".output").forEach(el => { el.textContent = "(build tsb first: bun run build)"; });
+    return;
+  }
+
+  function run(id, fn) {
+    const el = document.getElementById(id + "-out");
+    const lines = [];
+    const origLog = console.log;
+    console.log = (...args) => { lines.push(args.map(String).join(" ")); };
+    try { fn(); } catch (e) { lines.push("Error: " + e.message); }
+    console.log = origLog;
+    el.textContent = lines.join("\n");
+  }
+
+  run("ex1", () => {
+    const prices = new Series({ data: [100, 102, 98, 105, 110, 108, 112], name: "price" });
+    const ma3 = prices.rolling(3).mean();
+    console.log(ma3.toArray());
+  });
+
+  run("ex2", () => {
+    const s = new Series({ data: [10, 20, 30, 40, 50] });
+    const result = s.rolling(3, { minPeriods: 1 }).mean();
+    console.log(result.toArray());
+  });
+
+  run("ex3", () => {
+    const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9] });
+    const w = s.rolling(3);
+    console.log("sum :", w.sum().toArray());
+    console.log("std :", w.std().toArray().map(v => v === null ? null : Number(v.toFixed(4))));
+    console.log("min :", w.min().toArray());
+    console.log("max :", w.max().toArray());
+  });
+
+  run("ex4", () => {
+    const s = new Series({ data: [1, null, 3, null, 5] });
+    console.log(s.rolling(2).count().toArray());
+    console.log(s.rolling(3).count().toArray());
+    console.log(s.rolling(2, { minPeriods: 1 }).mean().toArray());
+  });
+
+  run("ex5", () => {
+    const s = new Series({ data: [1, 3, 5, 1, 100, 2, 4] });
+    const meanW = s.rolling(3, { minPeriods: 1 }).mean().toArray();
+    const medW  = s.rolling(3, { minPeriods: 1 }).median().toArray();
+    console.log("mean  :", meanW.map(v => v === null ? null : +v.toFixed(2)));
+    console.log("median:", medW);
+  });
+
+  run("ex6", () => {
+    const s = new Series({ data: [1, 2, 3, 4, 5] });
+    const range = s.rolling(3).apply(vals => Math.max(...vals) - Math.min(...vals));
+    console.log("range:", range.toArray());
+    const prod = s.rolling(2).apply(vals => vals.reduce((a, b) => a * b, 1));
+    console.log("prod :", prod.toArray());
+  });
+
+  run("ex7", () => {
+    const s = new Series({ data: [1, 2, 3, 4, 5] });
+    const trailing = s.rolling(3).mean().toArray();
+    const centered = s.rolling(3, { center: true, minPeriods: 1 }).mean().toArray();
+    console.log("trailing:", trailing);
+    console.log("centered:", centered);
+  });
+
+  run("ex8", () => {
+    const df = DataFrame.fromColumns({ open: [100, 101, 103, 102, 105], close: [101, 103, 102, 105, 107] });
+    const rolled = df.rolling(3).mean();
+    console.log(rolled.col("open").toArray());
+    console.log(rolled.col("close").toArray());
+  });
+})();
+</script>
+</body>
+</html>

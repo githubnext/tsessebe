@@ -155,9 +155,99 @@
           <div class="status done">✅ Complete</div>
         </div>
         <div class="feature-card">
+          <h3>🔀 GroupBy</h3>
+          <p>Split-apply-combine — <a href="groupby.html" style="color: var(--accent);">interactive tutorial</a>. groupby, agg, transform, apply, filter.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔗 concat</h3>
+          <p>Combine Series and DataFrames — <a href="concat.html" style="color: var(--accent);">interactive tutorial</a>. axis=0/1, outer/inner join, ignoreIndex.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔀 merge</h3>
+          <p>SQL-style DataFrame joins — <a href="merge.html" style="color: var(--accent);">interactive tutorial</a>. inner/left/right/outer, on/left_on/right_on, suffixes.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔡 str accessor</h3>
+          <p>Vectorised string operations — <a href="string_accessor.html" style="color: var(--accent);">interactive tutorial</a>. lower/upper/strip/pad/contains/replace/split/extract &amp; predicates.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📅 dt accessor</h3>
+          <p>Vectorised datetime operations — <a href="datetime_accessor.html" style="color: var(--accent);">interactive tutorial</a>. Calendar components, boolean boundaries, strftime, floor/ceil/round.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📊 describe</h3>
+          <p>Summary statistics — <a href="describe.html" style="color: var(--accent);">interactive tutorial</a>. count/mean/std/min/percentiles/max for numeric; count/unique/top/freq for categorical. Series.quantile().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
           <h3>📥 I/O</h3>
-          <p>read_csv, read_json, read_parquet, to_csv, to_json.</p>
-          <div class="status">⏳ Planned</div>
+          <p>CSV I/O — <a href="csv.html" style="color: var(--accent);">interactive tutorial</a>. readCsv / toCsv with dtype inference, NA handling, quoted fields, custom separators.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📥 JSON I/O</h3>
+          <p>JSON I/O — <a href="json.html" style="color: var(--accent);">interactive tutorial</a>. readJson / toJson with five orient formats: records, split, index, columns, values.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📈 corr &amp; cov</h3>
+          <p>Pearson correlation &amp; covariance — <a href="corr.html" style="color: var(--accent);">interactive tutorial</a>. Series.corr(), DataFrame.corr(), DataFrame.cov(), dataFrameCorr(), dataFrameCov() with index alignment, null handling, and configurable ddof/minPeriods.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🪟 rolling</h3>
+          <p>Sliding-window aggregations — <a href="rolling.html" style="color: var(--accent);">interactive tutorial</a>. Series.rolling() and DataFrame.rolling() with mean, sum, std, var, min, max, count, median, apply. Supports minPeriods and centered windows.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📈 expanding</h3>
+          <p>Growing-window aggregations — Series.expanding() and DataFrame.expanding() with mean, sum, std, var, min, max, count, median, apply. Window grows from start to current position.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🏷️ cat accessor</h3>
+          <p>Categorical operations — <a href="cat_accessor.html" style="color: var(--accent);">interactive tutorial</a>. Series.cat with categories, codes, ordered, addCategories, removeCategories, renameCategories, setCategories, reorderCategories, valueCounts.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📉 ewm</h3>
+          <p>Exponentially Weighted Moving aggregations — <a href="ewm.html" style="color: var(--accent);">interactive tutorial</a>. Series.ewm() and DataFrame.ewm() with mean, std, var, cov, corr, apply. Decay via span, com, halflife, or alpha. Supports adjust and ignoreNa.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔀 melt</h3>
+          <p>Wide-to-long reshape — <a href="melt.html" style="color: var(--accent);">interactive tutorial</a>. Unpivot columns into variable/value pairs with id_vars, value_vars, var_name, value_name.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔄 pivot &amp; pivotTable</h3>
+          <p>Reshape with aggregation — <a href="pivot.html" style="color: var(--accent);">interactive tutorial</a>. pivot() for unique reshaping; pivotTable() for aggregation (mean/sum/count/min/max/first/last) with fill_value and dropna support.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📐 stack &amp; unstack</h3>
+          <p>Pivot column labels to/from row index — <a href="stack_unstack.html" style="color: var(--accent);">interactive tutorial</a>. stack() rotates columns into a compound-index Series; unstack() recovers the DataFrame. Custom sep, dropna, and fill_value support.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🏆 rank</h3>
+          <p>Assign numerical ranks to values — <a href="rank.html" style="color: var(--accent);">interactive tutorial</a>. rankSeries() and rankDataFrame() with tie methods (average/min/max/first/dense), NaN handling (keep/top/bottom), percentage ranks, and axis support.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>🔝 nlargest / nsmallest</h3>
+          <p>Return the n largest or smallest values — <a href="nlargest.html" style="color: var(--accent);">interactive tutorial</a>. nlargestSeries(), nsmallestSeries(), nlargestDataFrame(), nsmallestDataFrame() with keep='first'/'last'/'all' tie-handling, NaN exclusion, and multi-column DataFrame sorting.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3>📈 cumulative operations</h3>
+          <p>Compute running totals, products, maxima, and minima — <a href="cum_ops.html" style="color: var(--accent);">interactive tutorial</a>. cumsum(), cumprod(), cummax(), cummin() for Series and DataFrame with skipna support and axis=0/1.</p>
+          <div class="status done">✅ Complete</div>
         </div>
       </div>
     </section>

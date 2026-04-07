@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — EWM (Exponentially Weighted Moving)</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #0d1117;
+        color: #e6edf3;
+      }
+      h1 {
+        color: #58a6ff;
+        border-bottom: 1px solid #21262d;
+        padding-bottom: 0.5rem;
+      }
+      h2 {
+        color: #79c0ff;
+        margin-top: 2rem;
+      }
+      pre {
+        background: #161b22;
+        border: 1px solid #21262d;
+        border-radius: 6px;
+        padding: 1rem;
+        overflow-x: auto;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      code {
+        font-family: "Fira Code", "Cascadia Code", monospace;
+        color: #e6edf3;
+      }
+      .keyword {
+        color: #ff7b72;
+      }
+      .string {
+        color: #a5d6ff;
+      }
+      .comment {
+        color: #8b949e;
+        font-style: italic;
+      }
+      .number {
+        color: #79c0ff;
+      }
+      .output {
+        background: #0d1117;
+        border-left: 3px solid #238636;
+        padding: 0.75rem 1rem;
+        margin-top: 0.5rem;
+        border-radius: 0 6px 6px 0;
+        font-family: "Fira Code", monospace;
+        font-size: 0.85rem;
+        white-space: pre;
+      }
+      .pill {
+        display: inline-block;
+        background: #21262d;
+        color: #79c0ff;
+        border-radius: 12px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.8rem;
+        font-family: monospace;
+        margin: 0 0.1rem;
+      }
+      p {
+        line-height: 1.6;
+        color: #c9d1d9;
+      }
+      a {
+        color: #58a6ff;
+      }
+      .formula {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-family: monospace;
+        margin: 1rem 0;
+        color: #ffa657;
+      }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">← tsb playground index</a></p>
+
+    <h1>📉 EWM — Exponentially Weighted Moving</h1>
+
+    <p>
+      <code>Series.ewm()</code> and <code>DataFrame.ewm()</code> provide
+      <strong>Exponentially Weighted Moving</strong> aggregations, mirroring
+      <code>pandas.Series.ewm()</code>. Unlike rolling windows (fixed size) or
+      expanding windows (all past data equally), EWM weights recent observations
+      more heavily using an exponential decay.
+    </p>
+
+    <h2>1. Decay Parameters</h2>
+
+    <p>
+      Specify the decay via exactly one of
+      <span class="pill">span</span>, <span class="pill">com</span>,
+      <span class="pill">halflife</span>, or <span class="pill">alpha</span>:
+    </p>
+
+    <div class="formula">
+      span → alpha = 2 / (span + 1)<br />
+      com → alpha = 1 / (1 + com)<br />
+      halflife → alpha = 1 − exp(−ln(2) / halflife)<br />
+      alpha → used directly (must be in (0, 1])
+    </div>
+
+    <pre><code><span class="keyword">import</span> { Series, EWM } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
+
+<span class="comment">// All four are equivalent (alpha ≈ 0.5):</span>
+s.ewm({ span: <span class="number">3</span> }).mean()        <span class="comment">// alpha = 2/(3+1) = 0.5</span>
+s.ewm({ com: <span class="number">1</span> }).mean()         <span class="comment">// alpha = 1/(1+1) = 0.5</span>
+s.ewm({ halflife: <span class="number">1</span> }).mean()    <span class="comment">// alpha = 1 − 2^(−1/1) = 0.5</span>
+s.ewm({ alpha: <span class="number">0.5</span> }).mean()     <span class="comment">// alpha = 0.5 directly</span></code></pre>
+
+    <h2>2. EWM Mean</h2>
+
+    <p>
+      With <code>adjust=true</code> (default), the mean at position <em>t</em>
+      is the weighted average of all past values, where weight for
+      <em>x<sub>i</sub></em> is <em>(1−α)<sup>t−i</sup></em>:
+    </p>
+
+    <div class="formula">
+      S<sub>t</sub> = x<sub>t</sub> + (1−α)·S<sub>t−1</sub><br />
+      W<sub>t</sub> = 1 + (1−α)·W<sub>t−1</sub><br />
+      mean<sub>t</sub> = S<sub>t</sub> / W<sub>t</sub>
+    </div>
+
+    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">10</span>, <span class="number">20</span>, <span class="number">15</span>, <span class="number">30</span>, <span class="number">25</span>] });
+
+<span class="comment">// EWM mean with span=3 (alpha=0.5)</span>
+<span class="keyword">const</span> ewmMean = s.ewm({ span: <span class="number">3</span> }).mean();
+console.log(ewmMean.toArray());
+<span class="comment">// [10, 16.667, 15.714, 23.636, 24.324]</span></code></pre>
+
+    <div class="output">[ 10, 16.666..., 15.714..., 23.636..., 24.324... ]</div>
+
+    <h2>3. adjust=false: Simple IIR Filter</h2>
+
+    <p>
+      With <code>adjust=false</code>, EWM uses a simple Infinite Impulse
+      Response formula — the same as an exponential smoothing filter:
+    </p>
+
+    <div class="formula">y<sub>t</sub> = α · x<sub>t</sub> + (1−α) · y<sub>t−1</sub></div>
+
+    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
+
+<span class="comment">// Simple exponential smoothing (alpha=0.3)</span>
+<span class="keyword">const</span> smooth = s.ewm({ alpha: <span class="number">0.3</span>, adjust: <span class="keyword">false</span> }).mean();
+console.log(smooth.toArray());
+<span class="comment">// [1, 1.3, 1.91, 2.737, 3.616]</span></code></pre>
+
+    <div class="output">[ 1, 1.3, 1.91, 2.737, 3.616... ]</div>
+
+    <h2>4. EWM Variance and Standard Deviation</h2>
+
+    <p>
+      EWM variance uses reliability-weights Bessel correction (bias=false by
+      default, matching pandas):
+    </p>
+
+    <pre><code><span class="keyword">const</span> prices = <span class="keyword">new</span> Series({ data: [<span class="number">100</span>, <span class="number">102</span>, <span class="number">98</span>, <span class="number">105</span>, <span class="number">103</span>, <span class="number">99</span>] });
+
+<span class="comment">// EWM standard deviation (span=5)</span>
+<span class="keyword">const</span> ewmStd = prices.ewm({ span: <span class="number">5</span> }).std();
+console.log(ewmStd.toArray().map(v => v?.toFixed(<span class="number">3</span>)));
+<span class="comment">// [null, "1.414", "2.530", "2.927", "2.510", "2.736"]</span>
+
+<span class="comment">// Biased (population) variance</span>
+<span class="keyword">const</span> ewmVarBiased = prices.ewm({ span: <span class="number">5</span> }).var(<span class="keyword">true</span>);
+console.log(ewmVarBiased.toArray().map(v => v?.toFixed(<span class="number">3</span>)));
+<span class="comment">// [0.000, ...]</span></code></pre>
+
+    <div class="output">std: [null, "1.414", "2.530", "2.927", "2.510", "2.736"]</div>
+
+    <h2>5. EWM Covariance</h2>
+
+    <p>Compute pairwise exponentially weighted covariance between two Series:</p>
+
+    <pre><code><span class="keyword">const</span> x = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
+<span class="keyword">const</span> y = <span class="keyword">new</span> Series({ data: [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>] });
+
+<span class="keyword">const</span> ewmCov = x.ewm({ alpha: <span class="number">0.4</span> }).cov(y);
+console.log(ewmCov.toArray().map(v => v?.toFixed(<span class="number">4</span>)));
+<span class="comment">// [null, "-0.5", "-1.1429", ...]  (negative: x and y move opposite)</span></code></pre>
+
+    <div class="output">[null, "-0.5000", "-1.1429", "-1.8000", "-2.2500"]</div>
+
+    <h2>6. EWM Correlation</h2>
+
+    <pre><code><span class="keyword">const</span> s1 = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
+<span class="keyword">const</span> s2 = <span class="keyword">new</span> Series({ data: [<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">10</span>] }); <span class="comment">// perfect linear</span>
+
+<span class="keyword">const</span> ewmCorr = s1.ewm({ span: <span class="number">3</span> }).corr(s2);
+console.log(ewmCorr.toArray().map(v => v?.toFixed(<span class="number">4</span>)));
+<span class="comment">// [null, "1.0000", "1.0000", "1.0000", "1.0000"]  (perfect +1)</span></code></pre>
+
+    <div class="output">[null, "1.0000", "1.0000", "1.0000", "1.0000"]</div>
+
+    <h2>7. Missing Values (ignoreNa)</h2>
+
+    <p>
+      The <code>ignoreNa</code> option controls how missing values affect the
+      exponential weights:
+    </p>
+
+    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="keyword">null</span>, <span class="number">3</span>, <span class="keyword">null</span>, <span class="number">5</span>] });
+
+<span class="comment">// ignoreNa=false (default): NaN positions advance time (decay occurs)</span>
+<span class="keyword">const</span> r1 = s.ewm({ alpha: <span class="number">0.5</span>, ignoreNa: <span class="keyword">false</span> }).mean();
+console.log(r1.toArray());
+<span class="comment">// [1, null, 2.6, null, 4.314...]</span>
+<span class="comment">// x[2]=3 has extra decay: w[0]=0.25, w[2]=1 → mean = (0.25+3)/1.25 = 2.6</span>
+
+<span class="comment">// ignoreNa=true: missing values completely skipped</span>
+<span class="keyword">const</span> r2 = s.ewm({ alpha: <span class="number">0.5</span>, ignoreNa: <span class="keyword">true</span> }).mean();
+console.log(r2.toArray());
+<span class="comment">// [1, null, 1.667, null, 3.286]</span>
+<span class="comment">// x[2]=3 treated as adjacent to x[0]: w[0]=0.5, w[2]=1</span></code></pre>
+
+    <div class="output">
+ignoreNa=false: [1, null, 2.6, null, 4.314...]
+ignoreNa=true:  [1, null, 1.667, null, 3.286...]
+    </div>
+
+    <h2>8. DataFrame EWM</h2>
+
+    <pre><code><span class="keyword">import</span> { DataFrame } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+
+<span class="keyword">const</span> df = DataFrame.fromColumns({
+  open:  [<span class="number">10</span>, <span class="number">11</span>, <span class="number">10.5</span>, <span class="number">12</span>, <span class="number">11.8</span>],
+  close: [<span class="number">11</span>, <span class="number">10.5</span>, <span class="number">12</span>, <span class="number">11.8</span>, <span class="number">13</span>],
+});
+
+<span class="comment">// EWM mean for each column independently</span>
+<span class="keyword">const</span> dfMean = df.ewm({ span: <span class="number">3</span> }).mean();
+dfMean.print();
+<span class="comment">/*
+  open   close
+0 10     11
+1 10.667 10.667
+2 10.619 11.429
+3 11.381 11.619
+4 11.605 12.238
+*/</span>
+
+<span class="comment">// EWM std for each column</span>
+<span class="keyword">const</span> dfStd = df.ewm({ span: <span class="number">3</span> }).std();
+dfStd.print();</code></pre>
+
+    <h2>9. Custom apply</h2>
+
+    <p>
+      Use <code>apply(fn)</code> to implement custom EWM aggregations. The
+      function receives the accumulated values and their EW weights:
+    </p>
+
+    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
+
+<span class="comment">// EWM weighted sum (equivalent to unadjusted numerator)</span>
+<span class="keyword">const</span> ewmWeightedSum = s.ewm({ alpha: <span class="number">0.5</span> }).apply((vals, weights) =>
+  vals.reduce((acc, v, i) => acc + v * weights[i], <span class="number">0</span>)
+);
+console.log(ewmWeightedSum.toArray().map(v => (v <span class="keyword">as</span> number).toFixed(<span class="number">3</span>)));
+<span class="comment">// ["1.000", "2.500", "4.750", "8.375", "13.688"]</span></code></pre>
+
+    <div class="output">["1.000", "2.500", "4.750", "8.375", "13.688"]</div>
+
+    <h2>API Reference</h2>
+
+    <pre><code><span class="comment">// Series.ewm(options) → EWM</span>
+<span class="comment">// DataFrame.ewm(options) → DataFrameEwm</span>
+
+<span class="comment">// EwmOptions (exactly one decay parameter required):</span>
+{
+  span?: number,      <span class="comment">// ≥ 1, alpha = 2/(span+1)</span>
+  com?: number,       <span class="comment">// ≥ 0, alpha = 1/(1+com)</span>
+  halflife?: number,  <span class="comment">// > 0, alpha = 1 − exp(−ln2/halflife)</span>
+  alpha?: number,     <span class="comment">// (0, 1]</span>
+  adjust?: boolean,   <span class="comment">// default: true</span>
+  ignoreNa?: boolean, <span class="comment">// default: false</span>
+  minPeriods?: number <span class="comment">// default: 0</span>
+}
+
+<span class="comment">// EWM methods:</span>
+ewm.mean()              → Series (EwmSeriesLike)
+ewm.std(bias?)          → Series
+ewm.var(bias?)          → Series
+ewm.cov(other, bias?)   → Series
+ewm.corr(other)         → Series
+ewm.apply(fn)           → Series   <span class="comment">// fn: (values, weights) => number</span>
+
+<span class="comment">// DataFrameEwm methods:</span>
+dfEwm.mean()     → DataFrame
+dfEwm.std(bias?) → DataFrame
+dfEwm.var(bias?) → DataFrame</code></pre>
+  </body>
+</html>

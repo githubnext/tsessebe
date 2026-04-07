@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — merge Tutorial</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 { font-size: 1.4rem; color: var(--accent); }
+    header a { color: #8b949e; font-size: 0.9rem; text-decoration: none; }
+    header a:hover { color: var(--accent); }
+    main {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin: 2rem 0 0.75rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+    p { color: #8b949e; margin-bottom: 0.75rem; }
+    code { font-family: var(--font-mono); font-size: 0.88rem; background: #21262d; padding: 0.1em 0.35em; border-radius: 3px; }
+    .example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin: 1rem 0;
+      overflow: hidden;
+    }
+    .example-header {
+      background: #21262d;
+      padding: 0.4rem 1rem;
+      font-size: 0.8rem;
+      color: #8b949e;
+      border-bottom: 1px solid var(--border);
+    }
+    pre {
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+    .kw  { color: #ff7b72; }
+    .fn  { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .num { color: #79c0ff; }
+    .cmt { color: #8b949e; }
+    .out {
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+    }
+    .out .label { font-size: 0.75rem; color: #8b949e; margin-bottom: 0.4rem; }
+    table { border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
+    th { color: var(--accent); border-bottom: 1px solid var(--border); padding: 0.25rem 0.75rem; text-align: left; }
+    td { color: var(--text); padding: 0.2rem 0.75rem; }
+    tr:nth-child(even) td { background: #21262d; }
+    .null { color: #8b949e; font-style: italic; }
+    .tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 0.1em 0.5em;
+      border-radius: 20px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    .tag-inner { background: #1f4a30; color: var(--green); }
+    .tag-left  { background: #2d2a1b; color: var(--orange); }
+    .tag-right { background: #1e2d4f; color: var(--accent); }
+    .tag-outer { background: #3a1f2a; color: #f9826c; }
+    footer {
+      text-align: center;
+      color: #8b949e;
+      font-size: 0.8rem;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>tsb</h1>
+  <a href="index.html">← back to index</a>
+  <span style="margin-left:auto;color:#8b949e;font-size:0.85rem;">merge — SQL-style DataFrame joins</span>
+</header>
+
+<main>
+  <h2>Overview</h2>
+  <p>
+    <code>merge(left, right, options)</code> is the tsb equivalent of <code>pandas.merge</code> /
+    <code>DataFrame.merge</code>. It performs SQL-style joins between two DataFrames, matching rows
+    by shared key column values.
+  </p>
+  <p>
+    Four join types are supported: <code>"inner"</code> (default), <code>"left"</code>,
+    <code>"right"</code>, and <code>"outer"</code>. Key columns can be specified via
+    <code>on</code>, <code>left_on</code>/<code>right_on</code>, or using the row index
+    with <code>left_index</code>/<code>right_index</code>.
+  </p>
+
+  <!-- ── Inner join ─────────────────────────────────────────────────────────── -->
+  <h2>Inner join <span class="tag tag-inner">default</span></h2>
+  <p>
+    Returns only the rows where the key column value exists in <em>both</em> DataFrames.
+    This is equivalent to a SQL <code>INNER JOIN</code>.
+  </p>
+
+  <div class="example">
+    <div class="example-header">inner join — only matching rows are kept</div>
+    <pre><span class="kw">import</span> { <span class="fn">DataFrame</span>, <span class="fn">merge</span> } <span class="kw">from</span> <span class="str">"tsb"</span>;
+
+<span class="kw">const</span> orders = <span class="fn">DataFrame</span>.fromColumns({
+  orderId:    [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>],
+  customerId: [<span class="num">10</span>, <span class="num">20</span>, <span class="num">10</span>, <span class="num">30</span>],
+  amount:     [<span class="num">100</span>, <span class="num">200</span>, <span class="num">150</span>, <span class="num">80</span>],
+});
+<span class="kw">const</span> customers = <span class="fn">DataFrame</span>.fromColumns({
+  customerId: [<span class="num">10</span>, <span class="num">20</span>, <span class="num">40</span>],
+  name:       [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Dave"</span>],
+});
+
+<span class="cmt">// Default how="inner" — customers 30 and 40 have no match → excluded</span>
+<span class="kw">const</span> result = <span class="fn">merge</span>(orders, customers, { on: <span class="str">"customerId"</span> });
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output (3 rows — customerId 10 matches twice, 20 once)</div>
+      <table>
+        <tr><th>customerId</th><th>orderId</th><th>amount</th><th>name</th></tr>
+        <tr><td>10</td><td>1</td><td>100</td><td>Alice</td></tr>
+        <tr><td>10</td><td>3</td><td>150</td><td>Alice</td></tr>
+        <tr><td>20</td><td>2</td><td>200</td><td>Bob</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Left join ──────────────────────────────────────────────────────────── -->
+  <h2>Left join <span class="tag tag-left">how="left"</span></h2>
+  <p>
+    Keeps <em>all</em> rows from the left DataFrame. Right-side columns are filled with
+    <code>null</code> where no match is found.
+  </p>
+
+  <div class="example">
+    <div class="example-header">left join — all orders retained, missing customer info → null</div>
+    <pre><span class="kw">const</span> result = <span class="fn">merge</span>(orders, customers, {
+  on:  <span class="str">"customerId"</span>,
+  how: <span class="str">"left"</span>,
+});
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output (4 rows — order with customerId=30 gets null name)</div>
+      <table>
+        <tr><th>customerId</th><th>orderId</th><th>amount</th><th>name</th></tr>
+        <tr><td>10</td><td>1</td><td>100</td><td>Alice</td></tr>
+        <tr><td>10</td><td>3</td><td>150</td><td>Alice</td></tr>
+        <tr><td>20</td><td>2</td><td>200</td><td>Bob</td></tr>
+        <tr><td>30</td><td>4</td><td>80</td><td class="null">null</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Right join ─────────────────────────────────────────────────────────── -->
+  <h2>Right join <span class="tag tag-right">how="right"</span></h2>
+  <p>
+    Keeps <em>all</em> rows from the right DataFrame. Left-side columns are filled with
+    <code>null</code> where no match is found.
+  </p>
+
+  <div class="example">
+    <div class="example-header">right join — all customers retained, Dave (id=40) gets null order info</div>
+    <pre><span class="kw">const</span> result = <span class="fn">merge</span>(orders, customers, {
+  on:  <span class="str">"customerId"</span>,
+  how: <span class="str">"right"</span>,
+});
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output (4 rows — customer 10 appears twice due to 2 orders)</div>
+      <table>
+        <tr><th>customerId</th><th>orderId</th><th>amount</th><th>name</th></tr>
+        <tr><td>10</td><td>1</td><td>100</td><td>Alice</td></tr>
+        <tr><td>10</td><td>3</td><td>150</td><td>Alice</td></tr>
+        <tr><td>20</td><td>2</td><td>200</td><td>Bob</td></tr>
+        <tr><td>40</td><td class="null">null</td><td class="null">null</td><td>Dave</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Outer join ─────────────────────────────────────────────────────────── -->
+  <h2>Outer join <span class="tag tag-outer">how="outer"</span></h2>
+  <p>
+    Keeps <em>all</em> rows from both DataFrames. Fills <code>null</code> wherever
+    there is no matching row on the other side.
+  </p>
+
+  <div class="example">
+    <div class="example-header">outer join — full union of both sides</div>
+    <pre><span class="kw">const</span> left  = <span class="fn">DataFrame</span>.fromColumns({ k: [<span class="num">1</span>, <span class="num">2</span>], v: [<span class="num">10</span>, <span class="num">20</span>] });
+<span class="kw">const</span> right = <span class="fn">DataFrame</span>.fromColumns({ k: [<span class="num">2</span>, <span class="num">3</span>], w: [<span class="num">200</span>, <span class="num">300</span>] });
+
+<span class="kw">const</span> result = <span class="fn">merge</span>(left, right, { on: <span class="str">"k"</span>, how: <span class="str">"outer"</span> });
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output (3 rows)</div>
+      <table>
+        <tr><th>k</th><th>v</th><th>w</th></tr>
+        <tr><td>1</td><td>10</td><td class="null">null</td></tr>
+        <tr><td>2</td><td>20</td><td>200</td></tr>
+        <tr><td>3</td><td class="null">null</td><td>300</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── left_on / right_on ─────────────────────────────────────────────────── -->
+  <h2>Joining on different column names</h2>
+  <p>
+    When the key columns have different names in each DataFrame, use
+    <code>left_on</code> and <code>right_on</code> instead of <code>on</code>.
+    Both columns appear in the result.
+  </p>
+
+  <div class="example">
+    <div class="example-header">left_on / right_on — employee id in left, generic id in right</div>
+    <pre><span class="kw">const</span> employees = <span class="fn">DataFrame</span>.fromColumns({
+  empId:  [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+  salary: [<span class="num">50000</span>, <span class="num">60000</span>, <span class="num">70000</span>],
+});
+<span class="kw">const</span> departments = <span class="fn">DataFrame</span>.fromColumns({
+  id:   [<span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>],
+  dept: [<span class="str">"Eng"</span>, <span class="str">"HR"</span>, <span class="str">"Fin"</span>],
+});
+
+<span class="kw">const</span> result = <span class="fn">merge</span>(employees, departments, {
+  left_on:  <span class="str">"empId"</span>,
+  right_on: <span class="str">"id"</span>,
+});
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output (2 rows — empId 2 and 3 match)</div>
+      <table>
+        <tr><th>empId</th><th>salary</th><th>id</th><th>dept</th></tr>
+        <tr><td>2</td><td>60000</td><td>2</td><td>Eng</td></tr>
+        <tr><td>3</td><td>70000</td><td>3</td><td>HR</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Suffixes ───────────────────────────────────────────────────────────── -->
+  <h2>Suffix handling for overlapping columns</h2>
+  <p>
+    When both DataFrames have a non-key column with the same name, tsb appends suffixes
+    (<code>_x</code> and <code>_y</code> by default) to disambiguate them. Override with
+    the <code>suffixes</code> option.
+  </p>
+
+  <div class="example">
+    <div class="example-header">suffixes — both DataFrames have a "score" column</div>
+    <pre><span class="kw">const</span> left  = <span class="fn">DataFrame</span>.fromColumns({ id: [<span class="num">1</span>, <span class="num">2</span>], score: [<span class="num">80</span>, <span class="num">90</span>] });
+<span class="kw">const</span> right = <span class="fn">DataFrame</span>.fromColumns({ id: [<span class="num">1</span>, <span class="num">2</span>], score: [<span class="num">75</span>, <span class="num">95</span>] });
+
+<span class="kw">const</span> result = <span class="fn">merge</span>(left, right, {
+  on:       <span class="str">"id"</span>,
+  suffixes: [<span class="str">"_pre"</span>, <span class="str">"_post"</span>],
+});
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output</div>
+      <table>
+        <tr><th>id</th><th>score_pre</th><th>score_post</th></tr>
+        <tr><td>1</td><td>80</td><td>75</td></tr>
+        <tr><td>2</td><td>90</td><td>95</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Multiple keys ─────────────────────────────────────────────────────── -->
+  <h2>Multiple key columns</h2>
+  <p>
+    Pass an array to <code>on</code> to join on multiple columns simultaneously.
+  </p>
+
+  <div class="example">
+    <div class="example-header">composite key — year + month</div>
+    <pre><span class="kw">const</span> actuals = <span class="fn">DataFrame</span>.fromColumns({
+  year:  [<span class="num">2024</span>, <span class="num">2024</span>, <span class="num">2025</span>],
+  month: [<span class="num">1</span>,    <span class="num">2</span>,    <span class="num">1</span>],
+  sales: [<span class="num">1200</span>, <span class="num">980</span>, <span class="num">1400</span>],
+});
+<span class="kw">const</span> targets = <span class="fn">DataFrame</span>.fromColumns({
+  year:   [<span class="num">2024</span>, <span class="num">2025</span>],
+  month:  [<span class="num">1</span>,    <span class="num">1</span>],
+  target: [<span class="num">1000</span>, <span class="num">1300</span>],
+});
+
+<span class="kw">const</span> result = <span class="fn">merge</span>(actuals, targets, { on: [<span class="str">"year"</span>, <span class="str">"month"</span>] });
+result.<span class="fn">toRecords</span>();</pre>
+    <div class="out">
+      <div class="label">Output (2 rows — Feb 2024 has no target)</div>
+      <table>
+        <tr><th>year</th><th>month</th><th>sales</th><th>target</th></tr>
+        <tr><td>2024</td><td>1</td><td>1200</td><td>1000</td></tr>
+        <tr><td>2025</td><td>1</td><td>1400</td><td>1300</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── sort option ────────────────────────────────────────────────────────── -->
+  <h2>sort option</h2>
+  <p>
+    Pass <code>sort: true</code> to sort the result by the first join-key column after merging.
+  </p>
+
+  <div class="example">
+    <div class="example-header">sort=true — result sorted by key column</div>
+    <pre><span class="kw">const</span> left  = <span class="fn">DataFrame</span>.fromColumns({ k: [<span class="num">3</span>, <span class="num">1</span>, <span class="num">2</span>], v: [<span class="num">30</span>, <span class="num">10</span>, <span class="num">20</span>] });
+<span class="kw">const</span> right = <span class="fn">DataFrame</span>.fromColumns({ k: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>], w: [<span class="num">100</span>, <span class="num">200</span>, <span class="num">300</span>] });
+
+<span class="kw">const</span> result = <span class="fn">merge</span>(left, right, { on: <span class="str">"k"</span>, sort: <span class="kw">true</span> });
+[...result.<span class="fn">col</span>(<span class="str">"k"</span>).values]; <span class="cmt">// [1, 2, 3]</span></pre>
+    <div class="out">
+      <div class="label">k column values</div>
+      <pre>[1, 2, 3]</pre>
+    </div>
+  </div>
+
+  <!-- ── API summary ────────────────────────────────────────────────────────── -->
+  <h2>API summary</h2>
+  <div class="example">
+    <div class="example-header">MergeOptions interface</div>
+    <pre><span class="kw">interface</span> <span class="fn">MergeOptions</span> {
+  how?:         <span class="str">"inner"</span> | <span class="str">"outer"</span> | <span class="str">"left"</span> | <span class="str">"right"</span>; <span class="cmt">// default: "inner"</span>
+  on?:          <span class="kw">string</span> | <span class="kw">string</span>[];         <span class="cmt">// shared column(s)</span>
+  left_on?:     <span class="kw">string</span> | <span class="kw">string</span>[];         <span class="cmt">// key column(s) in left</span>
+  right_on?:    <span class="kw">string</span> | <span class="kw">string</span>[];         <span class="cmt">// key column(s) in right</span>
+  left_index?:  <span class="kw">boolean</span>;                   <span class="cmt">// use left row-index as key</span>
+  right_index?: <span class="kw">boolean</span>;                   <span class="cmt">// use right row-index as key</span>
+  suffixes?:    [<span class="kw">string</span>, <span class="kw">string</span>];          <span class="cmt">// default: ["_x", "_y"]</span>
+  sort?:        <span class="kw">boolean</span>;                   <span class="cmt">// sort result by key column</span>
+}</pre>
+  </div>
+</main>
+
+<footer>
+  tsb — a TypeScript port of pandas &nbsp;·&nbsp;
+  <a href="https://github.com/githubnext/tsessebe" style="color:#58a6ff;">github.com/githubnext/tsessebe</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — value_counts</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.6;
+        color: #1a1a1a;
+      }
+      h1 { color: #2563eb; }
+      h2 { color: #1e40af; margin-top: 2rem; }
+      pre {
+        background: #f1f5f9;
+        border-left: 4px solid #2563eb;
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 4px;
+      }
+      code { font-family: "Fira Code", monospace; font-size: 0.9em; }
+      .output {
+        background: #f0fdf4;
+        border-left: 4px solid #16a34a;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border-radius: 4px;
+        white-space: pre;
+        font-family: monospace;
+      }
+      .note {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+        border-radius: 4px;
+      }
+      a { color: #2563eb; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>value_counts</code></h1>
+    <p>
+      Count unique values in a <strong>Series</strong> or unique row combinations in a
+      <strong>DataFrame</strong>. Mirrors
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.value_counts.html"
+        ><code>pandas.Series.value_counts()</code></a
+      >
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.value_counts.html"
+        ><code>pandas.DataFrame.value_counts()</code></a
+      >.
+    </p>
+
+    <h2>1 · Basic usage (Series)</h2>
+    <pre><code>import { Series } from "tsb";
+import { valueCounts } from "tsb";
+
+const s = new Series({ data: ["apple", "banana", "apple", "cherry", "banana", "apple"] });
+const vc = valueCounts(s);
+// index  → ["apple", "banana", "cherry"]
+// values → [3, 2, 1]   (sorted descending by default)</code></pre>
+    <div class="output">index  → apple=3  banana=2  cherry=1</div>
+
+    <h2>2 · Normalize — return proportions</h2>
+    <pre><code>const pct = valueCounts(s, { normalize: true });
+// values → [0.5, 0.333…, 0.167…]   (must sum to 1)</code></pre>
+    <div class="output">apple=0.50  banana=0.33  cherry=0.17</div>
+
+    <h2>3 · Sort order</h2>
+    <pre><code>// Ascending order (least frequent first)
+const asc = valueCounts(s, { ascending: true });
+
+// Preserve insertion order (no sort)
+const ins = valueCounts(s, { sort: false });</code></pre>
+
+    <h2>4 · Missing-value handling</h2>
+    <pre><code>const sWithNull = new Series({ data: ["a", null, "b", null, "a"] });
+
+// dropna=true (default) — exclude nulls
+const dropNull = valueCounts(sWithNull);
+// index → ["a", "b"], values → [2, 1]
+
+// dropna=false — include nulls
+const keepNull = valueCounts(sWithNull, { dropna: false });
+// index → ["a", "b", null], values → [2, 1, 2]</code></pre>
+    <div class="output">dropna=true : a=2  b=1
+dropna=false: a=2  b=1  null=2</div>
+
+    <h2>5 · DataFrame value_counts</h2>
+    <pre><code>import { DataFrame } from "tsb";
+import { dataFrameValueCounts } from "tsb";
+
+const df = DataFrame.fromRecords([
+  { city: "NYC", temp: "hot" },
+  { city: "NYC", temp: "cold" },
+  { city: "LA",  temp: "hot" },
+  { city: "NYC", temp: "hot" },
+]);
+
+const vc = dataFrameValueCounts(df);
+// Counts each unique (city, temp) combination
+// "NYC|hot"  → 2
+// "NYC|cold" → 1
+// "LA|hot"   → 1</code></pre>
+    <div class="output">NYC|hot=2   NYC|cold=1   LA|hot=1</div>
+
+    <h2>6 · DataFrame subset</h2>
+    <pre><code>// Restrict to a subset of columns
+const vc2 = dataFrameValueCounts(df, { subset: ["city"] });
+// Only counts by city: NYC=3, LA=1</code></pre>
+    <div class="output">NYC=3   LA=1</div>
+
+    <h2>7 · API reference</h2>
+    <pre><code>// Series
+valueCounts(series, {
+  normalize?: boolean,   // default false — return proportions instead of counts
+  sort?:      boolean,   // default true  — sort by frequency
+  ascending?: boolean,   // default false — highest count first when sort=true
+  dropna?:    boolean,   // default true  — exclude missing values
+}): Series&lt;number&gt;
+
+// DataFrame
+dataFrameValueCounts(df, {
+  subset?:    readonly string[],  // columns to use (default: all)
+  normalize?: boolean,
+  sort?:      boolean,
+  ascending?: boolean,
+  dropna?:    boolean,
+}): Series&lt;number&gt;</code></pre>
+
+    <div class="note">
+      <strong>Note:</strong> The result Series is indexed by the unique values (or composite
+      <code>"v1|v2|…"</code> strings for DataFrames). Use <code>.index.values</code> and
+      <code>.values</code> to inspect the labels and counts respectively.
+    </div>
+
+    <p>← <a href="index.html">Back to feature list</a></p>
+  </body>
+</html>
