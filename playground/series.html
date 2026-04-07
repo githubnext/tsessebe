@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Series Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+
+    /* ── Loading overlay ──────────────────────────────── */
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+
+    /* ── Section cards ────────────────────────────────── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+
+    /* ── Playground block ─────────────────────────────── */
+    .playground-block {
+      margin-top: 0.75rem;
+    }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .playground-run { font-weight: 600; }
+
+    /* ── Editor textarea ──────────────────────────────── */
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    /* ── Output area ──────────────────────────────────── */
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active {
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .playground-output.error {
+      color: var(--red);
+      border-color: var(--red);
+    }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay (hidden once TS compiler + tsb are ready) -->
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📊 Series — Interactive Playground</h1>
+  <p>
+    <code>Series</code> is a one-dimensional labeled array — the TypeScript
+    equivalent of <code>pandas.Series</code>.  It supports element access,
+    arithmetic, statistics, boolean masking, and missing-value handling.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
+
+  <!-- ── 1. Creating a Series ────────────────────────── -->
+  <div class="section">
+    <h2>Creating a Series</h2>
+    <p>Construct a Series from an options object or use <code>Series.fromObject()</code> for key→value data.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+// From data array with default integer index
+const s1 = new Series({ data: [10, 20, 30] });
+console.log(s1.toString());
+
+// With custom index and name
+const s2 = new Series({
+  data: [100, 200, 300],
+  index: ["a", "b", "c"],
+  name: "revenue",
+});
+console.log(s2.toString());
+
+// From an object (keys become index labels)
+const s3 = Series.fromObject({ x: 1, y: 2, z: 3 });
+console.log(s3.toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 2. Properties ───────────────────────────────── -->
+  <div class="section">
+    <h2>Properties</h2>
+    <p>Inspect the size, shape, dtype, and other metadata of a Series.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({
+  data: [10, 20, 30, 40],
+  index: ["a", "b", "c", "d"],
+  name: "scores",
+});
+
+console.log("size:  ", s.size);
+console.log("length:", s.length);
+console.log("shape: ", s.shape);
+console.log("ndim:  ", s.ndim);
+console.log("empty: ", s.empty);
+console.log("values:", s.values);
+console.log("dtype: ", s.dtype.toString());
+console.log("name:  ", s.name);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 3. Element Access ───────────────────────────── -->
+  <div class="section">
+    <h2>Element Access</h2>
+    <p>Use <code>at()</code> / <code>iat()</code> for single elements, and <code>loc()</code> / <code>iloc()</code> for label-based or positional slicing.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({
+  data: [10, 20, 30, 40, 50],
+  index: ["a", "b", "c", "d", "e"],
+  name: "vals",
+});
+
+// Single element by label
+console.log("at('c'):", s.at("c"));
+
+// Single element by position
+console.log("iat(0): ", s.iat(0));
+console.log("iat(-1):", s.iat(-1));
+
+// Multiple labels → sub-Series
+console.log("\nloc(['a', 'c', 'e']):");
+console.log(s.loc(["a", "c", "e"]).toString());
+
+// Multiple positions → sub-Series
+console.log("\niloc([1, 3]):");
+console.log(s.iloc([1, 3]).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 4. Arithmetic ───────────────────────────────── -->
+  <div class="section">
+    <h2>Arithmetic</h2>
+    <p>Element-wise operations with a scalar or another Series: <code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code>, <code>mod</code>, <code>pow</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const a = new Series({ data: [10, 20, 30], index: ["x", "y", "z"] });
+const b = new Series({ data: [1, 2, 3],   index: ["x", "y", "z"] });
+
+console.log("add(5):", a.add(5).values);
+console.log("sub(b):", a.sub(b).values);
+console.log("mul(2):", a.mul(2).values);
+console.log("div(b):", a.div(b).values);
+console.log("mod(7):", a.mod(7).values);
+console.log("pow(2):", a.pow(2).values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 5. Comparison ───────────────────────────────── -->
+  <div class="section">
+    <h2>Comparison</h2>
+    <p>Element-wise comparison returns a boolean Series: <code>eq</code>, <code>ne</code>, <code>lt</code>, <code>le</code>, <code>gt</code>, <code>ge</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+console.log("eq(3):", s.eq(3).values);
+console.log("ne(3):", s.ne(3).values);
+console.log("lt(3):", s.lt(3).values);
+console.log("le(3):", s.le(3).values);
+console.log("gt(3):", s.gt(3).values);
+console.log("ge(3):", s.ge(3).values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 6. Filtering & Boolean Masking ──────────────── -->
+  <div class="section">
+    <h2>Filtering &amp; Boolean Masking</h2>
+    <p>Use <code>filter()</code> with a boolean array or boolean Series to select elements.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({
+  data: [10, 25, 5, 40, 15],
+  index: ["a", "b", "c", "d", "e"],
+  name: "prices",
+});
+
+// Filter with a boolean array
+const mask = [true, false, true, false, true];
+console.log("Boolean array filter:");
+console.log(s.filter(mask).toString());
+
+// Filter with a comparison result (boolean Series)
+console.log("\nValues > 12:");
+console.log(s.filter(s.gt(12)).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 7. Missing Values ───────────────────────────── -->
+  <div class="section">
+    <h2>Missing Values</h2>
+    <p>Detect, drop, and fill <code>null</code> / <code>NaN</code> values.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: [1, null, 3, null, 5], name: "sparse" });
+
+console.log("isna: ", s.isna().values);
+console.log("notna:", s.notna().values);
+
+console.log("\ndropna():");
+console.log(s.dropna().toString());
+
+console.log("\nfillna(0):");
+console.log(s.fillna(0).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 8. Statistics ───────────────────────────────── -->
+  <div class="section">
+    <h2>Statistics</h2>
+    <p>Aggregation and descriptive statistics: <code>sum</code>, <code>mean</code>, <code>std</code>, <code>median</code>, <code>unique</code>, <code>valueCounts</code>, and more.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: [4, 1, 7, 4, 2, 7, 4] });
+
+console.log("sum:    ", s.sum());
+console.log("mean:   ", s.mean());
+console.log("min:    ", s.min());
+console.log("max:    ", s.max());
+console.log("std:    ", s.std());
+console.log("var:    ", s.var());
+console.log("median: ", s.median());
+console.log("count:  ", s.count());
+console.log("nunique:", s.nunique());
+console.log("unique: ", s.unique());
+
+console.log("\nvalueCounts():");
+console.log(s.valueCounts().toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 9. Sorting ──────────────────────────────────── -->
+  <div class="section">
+    <h2>Sorting</h2>
+    <p>Sort by values or by index labels, with control over direction and NA placement.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({
+  data: [30, 10, null, 20],
+  index: ["c", "a", "d", "b"],
+});
+
+console.log("sortValues (ascending):");
+console.log(s.sortValues().toString());
+
+console.log("\nsortValues (descending, na first):");
+console.log(s.sortValues(false, "first").toString());
+
+console.log("\nsortIndex:");
+console.log(s.sortIndex().toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 10. Try It Yourself ─────────────────────────── -->
+  <div class="section">
+    <h2>🧪 Try It Yourself</h2>
+    <p>Write your own tsb code below. All exports from <code>tsb</code> are available:
+      <code>Series</code>, <code>Index</code>, <code>RangeIndex</code>, <code>Dtype</code>, and more.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript — Scratch Pad</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+// Try it! Build a Series and explore the API.
+const temps = new Series({
+  data: [72, 68, 75, 80, 77],
+  index: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  name: "temperature",
+});
+
+console.log(temps.toString());
+console.log("\nMean:", temps.mean());
+console.log("Hot days (>= 75):");
+console.log(temps.filter(temps.ge(75)).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+
+  <!-- Playground runtime: loads TypeScript compiler + tsb bundle, sets up editors -->
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
