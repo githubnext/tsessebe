@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T10:49:00Z |
-| Iteration Count | 124 |
-| Best Metric | 79 |
+| Last Run | 2026-04-07T11:22:59Z |
+| Iteration Count | 125 |
+| Best Metric | 80 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -26,17 +26,17 @@
 
 ## 🎯 Current Priorities
 
-**Note**: The state file was behind by 2 iterations (123 added `read_fwf.ts`, 124 added `mode.ts`). Now at 79 files (iter 124). Next candidates:
+**State (iter 125)**: 80 files. Next candidates:
 - `src/stats/cut_extended.ts` — pd.cut with `ordered` dtype and per-bin labels
 - `src/stats/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/stats/autocorr.ts` — Series.autocorr(lag) autocorrelation
-- `src/stats/skew_kurt.ts` — Series.skew() and Series.kurt() statistical moments
+- `src/stats/abs_round.ts` — Series.abs(), Series.round(decimals), DataFrame equivalents
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 125 (autocorr)**: `autocorr(series, lag)` = Pearson correlation of `s[lag:]` vs `s[:-lag]`. Negative lags symmetric (|lag| used). Missing/non-numeric values silently dropped per-pair. Lag 0 → 1, zero variance → NaN, |lag|≥n → NaN. No bun available in sandbox — evaluate via find/grep/wc only.
 - **Iter 124 (mode)**: `computeMode()` builds a freq-map, finds maxCount, returns all values with that count sorted ascending. `compareForMode()` handles mixed types: numbers < strings < booleans; missing last. DataFrame mode pads shorter columns with `null`. `scalarKey()` maps all missing sentinels to distinct prefixed keys (not `__MISSING__`) for correctness. Bun not available in agent sandbox — use evaluation via `find/grep/wc`.
 - **Iter 123 (read_fwf)**: state file was not updated by iter 123 run (77→78 was not reflected). Always re-read git log to find actual HEAD metric before planning.
 - **Iter 122 (seriesMap/dataFrameTransform)**: `resolveMapper()` coerces function/Map/dict/Series to a `(v: Scalar) => Scalar` lookup. `naAction="ignore"` only skips NA for function args. `dataFrameTransform` axis=1 rebuilds cols from row results. Dict arg (per-column fn) passes through unlisted columns unchanged.
@@ -65,6 +65,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 125 — 2026-04-07 11:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24078727612)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/autocorr.ts` — `autocorr(series, lag, options)` Pearson autocorrelation coefficient mirroring `pandas.Series.autocorr(lag)`.
+- **Metric**: 80 (previous best: 79, delta: +1)
+- **Commit**: 7b8ed12
+- **Notes**: Pairs `s[lag:]` with `s[:-lag]`, drops missing/non-numeric pairs, computes Pearson correlation. Negative lags treated symmetrically. 25 unit tests + 5 property-based tests covering arithmetic sequences, periodic signals, missing values, minPeriods, and scale/shift invariance.
 
 ### Iteration 124 — 2026-04-07 10:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24077482397)
 
