@@ -537,6 +537,11 @@
           <p>Cast a Series or DataFrame to a different dtype — <a href="astype.html" style="color: var(--accent);">interactive tutorial</a>. <code>astype(series, dtype)</code> converts all values to the target dtype (int, float, bool, string, object) with consistent null-preservation. <code>dataFrameAstype(df, spec)</code> accepts a single dtype or a per-column <code>Record&lt;string, dtype&gt;</code>. Mirrors <code>pandas.Series.astype()</code> and <code>pandas.DataFrame.astype()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔀 convert_dtypes</h3>
+          <p>Infer the best possible dtype for each column — <a href="convert_dtypes.html" style="color: var(--accent);">interactive tutorial</a>. <code>convertDtypes(series)</code> promotes whole-number floats to <code>int64</code>, boolean arrays to <code>bool</code>, and string arrays to <code>string</code>. <code>dataFrameConvertDtypes(df)</code> applies this independently to each column. Null values are always preserved. Mirrors <code>pandas.DataFrame.convert_dtypes()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

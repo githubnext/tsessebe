@@ -55,3 +55,5 @@ export { alignSeries, alignDataFrame } from "./align.ts";
 export type { AlignSeriesOptions, AlignDataFrameOptions } from "./align.ts";
 export { astype, dataFrameAstype } from "./astype.ts";
 export type { AstypeErrors, AstypeOptions, AstypeSpec } from "./astype.ts";
+export { convertDtypes, dataFrameConvertDtypes } from "./convert_dtypes.ts";
+export type { ConvertDtypesOptions } from "./convert_dtypes.ts";

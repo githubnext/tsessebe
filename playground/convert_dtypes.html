@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · convert_dtypes</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --red: #f85149;
+        --code-bg: #1f2937;
+        font-size: 16px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; }
+      header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+      header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+      header a:hover { color: var(--accent); }
+      h1 { font-size: 1.4rem; color: var(--accent); }
+      main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+      h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+      p { color: var(--muted); margin-bottom: 0.75rem; }
+      pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85rem; margin-bottom: 1rem; }
+      .demo { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+      .demo label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.3rem; }
+      .demo textarea { background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; width: 100%; margin-bottom: 0.75rem; font-family: monospace; resize: vertical; }
+      .demo select { background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.9rem; margin-bottom: 0.75rem; }
+      .checkboxes { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 0.75rem; }
+      .checkboxes label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); cursor: pointer; }
+      .checkboxes input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+      button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1rem; font-size: 0.9rem; cursor: pointer; font-weight: 600; margin-right: 0.5rem; }
+      button:hover { opacity: 0.85; }
+      .result-box { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-top: 0.75rem; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; }
+      .result-box.good { border-color: var(--green); }
+      .result-box.error { border-color: var(--red); color: var(--red); }
+      table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin-top: 0.5rem; }
+      th { background: var(--code-bg); color: var(--accent); text-align: left; padding: 0.4rem 0.75rem; border: 1px solid var(--border); }
+      td { padding: 0.35rem 0.75rem; border: 1px solid var(--border); color: var(--text); }
+      tr:hover td { background: var(--code-bg); }
+      .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.75rem; font-weight: 600; background: var(--code-bg); color: var(--accent); border: 1px solid var(--border); margin-left: 0.4rem; }
+      .dtype-tag { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.75rem; background: var(--surface); border: 1px solid var(--border); color: var(--orange); font-family: monospace; }
+      .dtype-changed { color: var(--green); border-color: var(--green); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="index.html">← tsb</a>
+      <h1>convert_dtypes <span class="badge">dtype inference</span></h1>
+    </header>
+    <main>
+      <p>
+        <strong>convert_dtypes</strong> infers the best dtype for each column of a Series or DataFrame —
+        mirroring <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.convert_dtypes.html" style="color:var(--accent)">pandas.DataFrame.convert_dtypes()</a>.
+        Integer-valued floats become <code>int64</code>, string columns become <code>string</code>,
+        and boolean columns become <code>bool</code>. Null values are always preserved.
+      </p>
+
+      <h2>API</h2>
+      <pre>import { convertDtypes, dataFrameConvertDtypes } from "tsb";
+
+// Series
+const s = new Series({ data: [1.0, 2.0, null, 3.0] });
+const s2 = convertDtypes(s);
+// s2.dtype.name === "int64"  ← whole-number floats promoted to int
+
+// DataFrame — each column converted independently
+const df = DataFrame.fromColumns({
+  a: [1.0, 2.0, 3.0],       // whole-number floats → int64
+  b: ["x", "y", "z"],        // strings             → string
+  c: [true, false, true],    // booleans             → bool
+  d: [1.5, 2.5, 3.5],        // fractional floats   → float64
+});
+const df2 = dataFrameConvertDtypes(df);
+
+// Options (all default true):
+dataFrameConvertDtypes(df, {
+  convertInteger: true,   // promote whole-number cols → int64
+  convertBoolean: true,   // promote boolean cols → bool
+  convertFloating: true,  // promote float cols → float64
+  convertString:  true,   // promote string cols → string
+});</pre>
+
+      <h2>Interactive Demo — DataFrame</h2>
+      <div class="demo">
+        <label>Column definitions (one per line: <code>name: val1, val2, val3</code>). Use <code>null</code> for missing.</label>
+        <textarea id="colDefs" rows="6">a: 1.0, 2.0, null, 3.0
+b: x, y, z
+c: true, false, true
+d: 1.5, 2.5, 3.5
+e: 1, hello, true</textarea>
+
+        <label style="margin-top:0.5rem">Conversion options:</label>
+        <div class="checkboxes">
+          <label><input type="checkbox" id="optInt" checked> convertInteger</label>
+          <label><input type="checkbox" id="optBool" checked> convertBoolean</label>
+          <label><input type="checkbox" id="optFloat" checked> convertFloating</label>
+          <label><input type="checkbox" id="optStr" checked> convertString</label>
+        </div>
+
+        <button onclick="runDemo()">Run convert_dtypes</button>
+        <div id="result" class="result-box" style="display:none"></div>
+      </div>
+
+      <h2>Behaviour Reference</h2>
+      <table>
+        <thead>
+          <tr><th>Non-null values</th><th>Result dtype</th><th>Condition</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>All <code>boolean</code></td><td><span class="dtype-tag">bool</span></td><td>convertBoolean: true</td></tr>
+          <tr><td>All whole-number <code>number</code></td><td><span class="dtype-tag">int64</span></td><td>convertInteger: true</td></tr>
+          <tr><td>All <code>number</code> (may have fraction)</td><td><span class="dtype-tag">float64</span></td><td>convertFloating: true</td></tr>
+          <tr><td>All <code>string</code></td><td><span class="dtype-tag">string</span></td><td>convertString: true</td></tr>
+          <tr><td>Mixed / other</td><td><span class="dtype-tag">object</span></td><td>always</td></tr>
+          <tr><td>All null/undefined</td><td><em>unchanged</em></td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Idempotence</h2>
+      <p>
+        Calling <code>convert_dtypes</code> twice on the same Series or DataFrame always gives the same
+        result as calling it once — the inferred dtype is stable once applied.
+      </p>
+    </main>
+
+    <script type="module">
+      function parseValue(raw) {
+        const s = raw.trim();
+        if (s === "null" || s === "") return null;
+        if (s === "true") return true;
+        if (s === "false") return false;
+        const n = Number(s);
+        if (!isNaN(n) && s !== "") return n;
+        return s;
+      }
+
+      function isNull(v) { return v === null || v === undefined; }
+      function isWholeNumber(n) { return Number.isFinite(n) && Math.floor(n) === n; }
+
+      function inferBestDtype(values, opts) {
+        let allBool = true, allInt = true, allFloat = true, allStr = true;
+        let hasNonNull = false;
+        for (const v of values) {
+          if (isNull(v)) continue;
+          hasNonNull = true;
+          const t = typeof v;
+          if (t !== "boolean") allBool = false;
+          if (t !== "number" || !isWholeNumber(v)) allInt = false;
+          if (t !== "number") allFloat = false;
+          if (t !== "string") allStr = false;
+        }
+        if (!hasNonNull) return null;
+        if (allBool && opts.convertBoolean) return "bool";
+        if (allInt && opts.convertInteger) return "int64";
+        if (allFloat && opts.convertFloating) return "float64";
+        if (allStr && opts.convertString) return "string";
+        return "object";
+      }
+
+      function castValue(v, dtype) {
+        if (isNull(v)) return null;
+        switch (dtype) {
+          case "bool": return Boolean(v);
+          case "int64": { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : null; }
+          case "float64": return Number(v);
+          case "string": return String(v);
+          default: return v;
+        }
+      }
+
+      window.runDemo = function() {
+        const lines = document.getElementById("colDefs").value.trim().split("\n");
+        const opts = {
+          convertInteger: document.getElementById("optInt").checked,
+          convertBoolean: document.getElementById("optBool").checked,
+          convertFloating: document.getElementById("optFloat").checked,
+          convertString: document.getElementById("optStr").checked,
+        };
+
+        const result = document.getElementById("result");
+        result.style.display = "block";
+        result.className = "result-box good";
+
+        try {
+          const cols = {};
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            const colon = line.indexOf(":");
+            if (colon < 0) throw new Error(`Invalid line: "${line}". Expected "name: v1, v2, ..."`);
+            const name = line.slice(0, colon).trim();
+            const vals = line.slice(colon + 1).split(",").map(parseValue);
+            cols[name] = vals;
+          }
+
+          const colNames = Object.keys(cols);
+          if (colNames.length === 0) throw new Error("No columns defined.");
+
+          // Build table HTML
+          let html = '<table><thead><tr><th>Column</th><th>Before dtype</th><th>After dtype</th><th>Values</th></tr></thead><tbody>';
+          for (const name of colNames) {
+            const values = cols[name];
+            const dtype = inferBestDtype(values, opts);
+            const targetDtype = dtype ?? "object";
+            const afterVals = values.map(v => castValue(v, targetDtype));
+
+            const beforeDtype = (() => {
+              let hasNum = false, hasBool = false, hasStr = false, hasMix = false;
+              for (const v of values) {
+                if (isNull(v)) continue;
+                const t = typeof v;
+                if (t === "number") hasNum = true;
+                else if (t === "boolean") hasBool = true;
+                else if (t === "string") hasStr = true;
+                else hasMix = true;
+              }
+              if (hasMix) return "object";
+              if (hasNum && !hasBool && !hasStr) return "float64";
+              if (hasBool && !hasNum && !hasStr) return "bool";
+              if (hasStr && !hasNum && !hasBool) return "string";
+              return "object";
+            })();
+
+            const changed = targetDtype !== beforeDtype;
+            const afterTag = `<span class="dtype-tag${changed ? " dtype-changed" : ""}">${targetDtype}${changed ? " ✓" : ""}</span>`;
+            const beforeTag = `<span class="dtype-tag">${beforeDtype}</span>`;
+            const valStr = afterVals.map(v => v === null ? "<em>null</em>" : String(v)).join(", ");
+            html += `<tr><td><strong>${name}</strong></td><td>${beforeTag}</td><td>${afterTag}</td><td>${valStr}</td></tr>`;
+          }
+          html += "</tbody></table>";
+          result.innerHTML = html;
+        } catch (e) {
+          result.className = "result-box error";
+          result.textContent = String(e);
+        }
+      };
+
+      // Run on load
+      runDemo();
+    </script>
+  </body>
+</html>
