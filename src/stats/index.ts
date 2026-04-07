@@ -232,3 +232,6 @@ export type {
 
 export { autocorr } from "./autocorr.ts";
 export type { AutocorrOptions } from "./autocorr.ts";
+
+export { absSeries, roundSeries, absDataFrame, roundDataFrame } from "./abs_round.ts";
+export type { RoundDecimals } from "./abs_round.ts";

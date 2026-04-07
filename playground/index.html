@@ -511,6 +511,11 @@
           <p>Pearson autocorrelation coefficient for Series — <a href="autocorr.html" style="color: var(--accent);">interactive tutorial</a>. <code>autocorr(series, lag)</code> computes the Pearson correlation between <code>series[lag:]</code> and <code>series[:-lag]</code>. Missing values are silently dropped before computing. Returns <code>1</code> at lag 0, <code>NaN</code> when <code>|lag| ≥ length</code> or zero variance. Mirrors <code>pandas.Series.autocorr()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔢 abs &amp; round</h3>
+          <p>Element-wise absolute value and rounding for Series and DataFrame — <a href="abs_round.html" style="color: var(--accent);">interactive tutorial</a>. <code>absSeries</code> / <code>absDataFrame</code> replace numeric values with their absolute value; non-numeric values pass through unchanged. <code>roundSeries(s, decimals)</code> / <code>roundDataFrame(df, decimals)</code> round each numeric element to a given number of decimal places (supports negative decimals and per-column precision dicts). Mirrors <code>pandas.Series.abs()</code>, <code>pandas.Series.round()</code>, <code>pandas.DataFrame.abs()</code>, <code>pandas.DataFrame.round()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

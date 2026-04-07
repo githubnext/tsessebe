@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · abs &amp; round</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --red: #f85149;
+        --code-bg: #1f2937;
+        font-size: 16px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; }
+      header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+      header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+      header a:hover { color: var(--accent); }
+      h1 { font-size: 1.4rem; color: var(--accent); }
+      main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+      h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+      p { color: var(--muted); margin-bottom: 0.75rem; }
+      pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85rem; margin-bottom: 1rem; }
+      .demo { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+      .demo label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.3rem; }
+      .demo input, .demo select { background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.9rem; width: 100%; margin-bottom: 0.75rem; }
+      .demo input[type=number] { width: 80px; }
+      button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1rem; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
+      button:hover { opacity: 0.85; }
+      .result-box { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; margin-top: 0.75rem; font-family: monospace; font-size: 0.9rem; }
+      .result-box.good { border-color: var(--green); color: var(--green); }
+      table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin-top: 0.5rem; }
+      th { background: var(--code-bg); color: var(--accent); text-align: left; padding: 0.4rem 0.75rem; border: 1px solid var(--border); }
+      td { padding: 0.35rem 0.75rem; border: 1px solid var(--border); font-family: monospace; }
+      .note { color: var(--muted); font-size: 0.85rem; }
+      .row { display: flex; gap: 1rem; flex-wrap: wrap; }
+      .row .demo { flex: 1; min-width: 280px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="index.html">← tsb</a>
+      <h1>🔢 abs &amp; round</h1>
+    </header>
+    <main>
+      <p>
+        <code>absSeries</code> / <code>absDataFrame</code> return element-wise absolute
+        values for numeric data. <code>roundSeries</code> / <code>roundDataFrame</code>
+        round each numeric element to a given number of decimal places.
+        Both mirror the pandas <code>.abs()</code> and <code>.round()</code> methods.
+        Non-numeric values (<code>null</code>, strings, booleans) pass through unchanged.
+      </p>
+
+      <pre>import { absSeries, roundSeries, absDataFrame, roundDataFrame } from "tsb";
+import { Series, DataFrame } from "tsb";
+
+// Series.abs()
+const s = new Series([-3.5, 1.2, null, -0.8]);
+absSeries(s).values;         // [3.5, 1.2, null, 0.8]
+
+// Series.round(decimals)
+roundSeries(s, 1).values;    // [-3.5, 1.2, null, -0.8]
+roundSeries(s, 0).values;    // [-4, 1, null, -1]
+
+// DataFrame.abs()
+const df = DataFrame.fromColumns({ a: [-1, 2, -3], b: [3.14, -2.71, 0] });
+absDataFrame(df).toRecords();
+// [{ a: 1, b: 3.14 }, { a: 2, b: 2.71 }, { a: 3, b: 0 }]
+
+// DataFrame.round() — scalar or per-column dict
+roundDataFrame(df, 1).toRecords();
+roundDataFrame(df, { a: 0, b: 2 }).toRecords();</pre>
+
+      <h2>Series.abs() — interactive</h2>
+      <div class="demo">
+        <label>Values (comma-separated, use "null" or "NaN" for missing)</label>
+        <input type="text" id="abs-input" value="-3.5, 1.2, null, -0.8, NaN, 2.71" />
+        <button onclick="runAbsSeries()">Compute abs</button>
+        <div id="abs-result" class="result-box" style="display:none"></div>
+      </div>
+
+      <h2>Series.round() — interactive</h2>
+      <div class="demo">
+        <label>Values</label>
+        <input type="text" id="round-input" value="3.14159, -2.71828, 1.5, null, -0.5" />
+        <label>Decimals <span class="note">(negative to round to tens)</span></label>
+        <input type="number" id="round-decimals" value="2" min="-6" max="10" step="1" />
+        <button onclick="runRoundSeries()">Compute round</button>
+        <div id="round-result" class="result-box" style="display:none"></div>
+      </div>
+
+      <h2>DataFrame.abs() and DataFrame.round() — interactive</h2>
+      <div class="demo">
+        <label>Column <b>a</b> values</label>
+        <input type="text" id="df-a" value="-1, 2, -3.7, null" />
+        <label>Column <b>b</b> values</label>
+        <input type="text" id="df-b" value="3.14159, -2.71828, 0, 99.9" />
+        <label>round decimals for col a</label>
+        <input type="number" id="df-da" value="0" min="-3" max="6" />
+        <label>round decimals for col b</label>
+        <input type="number" id="df-db" value="2" min="-3" max="6" />
+        <button onclick="runDataFrameDemo()">Compute abs &amp; round</button>
+        <div id="df-result" class="result-box" style="display:none"></div>
+      </div>
+
+      <h2>Behaviour notes</h2>
+      <ul style="color:var(--muted);padding-left:1.5rem;margin-bottom:1rem;">
+        <li><code>null</code> / <code>undefined</code> / <code>NaN</code> pass through <em>unchanged</em> for both <code>abs</code> and <code>round</code>.</li>
+        <li>Strings and booleans also pass through unchanged (only numeric values are transformed).</li>
+        <li>Negative <code>decimals</code> rounds to the nearest 10, 100, etc. — e.g. <code>roundSeries(s, -1)</code> rounds to tens.</li>
+        <li>For <code>roundDataFrame</code> with a per-column dict, columns not in the dict are left unchanged.</li>
+      </ul>
+    </main>
+
+    <script type="module">
+      // ── minimal runtime ──────────────────────────────────────────────────────
+
+      function isMissing(v) {
+        return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+      }
+
+      function parseValues(str) {
+        return str.split(",").map((tok) => {
+          const t = tok.trim();
+          if (t === "null" || t === "") return null;
+          if (t === "NaN") return Number.NaN;
+          if (t === "true") return true;
+          if (t === "false") return false;
+          const n = Number(t);
+          return Number.isNaN(n) ? t : n;
+        });
+      }
+
+      function roundNum(n, d) {
+        if (d < 0) { const f = 10 ** -d; return Math.round(n / f) * f; }
+        return Number(n.toFixed(d));
+      }
+
+      function fmtVal(v) {
+        if (v === null) return "null";
+        if (v === undefined) return "undefined";
+        if (typeof v === "number" && Number.isNaN(v)) return "NaN";
+        return String(v);
+      }
+
+      function absArr(arr) {
+        return arr.map((v) => (typeof v === "number" && !Number.isNaN(v)) ? Math.abs(v) : v);
+      }
+
+      function roundArr(arr, d) {
+        return arr.map((v) => (typeof v === "number" && !Number.isNaN(v)) ? roundNum(v, d) : v);
+      }
+
+      window.runAbsSeries = function () {
+        const vals = parseValues(document.getElementById("abs-input").value);
+        const result = absArr(vals);
+        const box = document.getElementById("abs-result");
+        box.style.display = "block";
+        box.className = "result-box good";
+        box.innerHTML = `<b>Input :</b>  [${vals.map(fmtVal).join(", ")}]<br><b>Output:</b>  [${result.map(fmtVal).join(", ")}]`;
+      };
+
+      window.runRoundSeries = function () {
+        const vals = parseValues(document.getElementById("round-input").value);
+        const d = parseInt(document.getElementById("round-decimals").value, 10);
+        const result = roundArr(vals, d);
+        const box = document.getElementById("round-result");
+        box.style.display = "block";
+        box.className = "result-box good";
+        box.innerHTML = `<b>decimals = ${d}</b><br><b>Input :</b>  [${vals.map(fmtVal).join(", ")}]<br><b>Output:</b>  [${result.map(fmtVal).join(", ")}]`;
+      };
+
+      window.runDataFrameDemo = function () {
+        const aVals = parseValues(document.getElementById("df-a").value);
+        const bVals = parseValues(document.getElementById("df-b").value);
+        const da = parseInt(document.getElementById("df-da").value, 10);
+        const db = parseInt(document.getElementById("df-db").value, 10);
+
+        const absA = absArr(aVals);
+        const absB = absArr(bVals);
+        const roundA = roundArr(aVals, da);
+        const roundB = roundArr(bVals, db);
+
+        const n = Math.max(aVals.length, bVals.length);
+
+        function tableRows(aa, bb, label) {
+          let html = `<tr><th>#</th><th>a</th><th>b</th></tr>`;
+          for (let i = 0; i < n; i++) {
+            html += `<tr><td>${i}</td><td>${fmtVal(aa[i] ?? null)}</td><td>${fmtVal(bb[i] ?? null)}</td></tr>`;
+          }
+          return `<p style="margin-top:.75rem;color:var(--accent);font-weight:600">${label}</p><table>${html}</table>`;
+        }
+
+        const box = document.getElementById("df-result");
+        box.style.display = "block";
+        box.className = "result-box good";
+        box.innerHTML =
+          tableRows(absA, absB, "absDataFrame(df)") +
+          tableRows(roundA, roundB, `roundDataFrame(df, { a: ${da}, b: ${db} })`);
+      };
+    </script>
+  </body>
+</html>

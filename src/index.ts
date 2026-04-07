@@ -333,3 +333,6 @@ export type {
 
 export { autocorr } from "./stats/index.ts";
 export type { AutocorrOptions } from "./stats/index.ts";
+
+export { absSeries, roundSeries, absDataFrame, roundDataFrame } from "./stats/index.ts";
+export type { RoundDecimals } from "./stats/index.ts";
