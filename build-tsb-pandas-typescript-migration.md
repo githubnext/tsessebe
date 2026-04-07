@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T11:22:59Z |
-| Iteration Count | 125 |
-| Best Metric | 80 |
+| Last Run | 2026-04-07T11:49:32Z |
+| Iteration Count | 126 |
+| Best Metric | 81 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -26,16 +26,17 @@
 
 ## 🎯 Current Priorities
 
-**State (iter 125)**: 80 files. Next candidates:
+**State (iter 126)**: 81 files. Next candidates:
 - `src/stats/cut_extended.ts` — pd.cut with `ordered` dtype and per-bin labels
 - `src/stats/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/stats/abs_round.ts` — Series.abs(), Series.round(decimals), DataFrame equivalents
+- `src/stats/skew_kurt_extended.ts` — rolling skew/kurtosis, Series.skew(skipna), DataFrame.skew(axis)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 126 (abs/round)**: `absSeries`/`absDataFrame` — only transform `typeof v === "number" && !Number.isNaN(v)` values; pass everything else through. `roundSeries(s, d)` uses `Number(n.toFixed(d))` for positive d; for negative d uses `Math.round(n / 10^-d) * 10^-d`. DataFrame iteration uses `df.columns.values as string[]` + `df.col(name)` — not `for...of df` (no Symbol.iterator on DataFrame). Per-column dict for roundDataFrame: columns not in dict pass through unchanged.
 - **Iter 125 (autocorr)**: `autocorr(series, lag)` = Pearson correlation of `s[lag:]` vs `s[:-lag]`. Negative lags symmetric (|lag| used). Missing/non-numeric values silently dropped per-pair. Lag 0 → 1, zero variance → NaN, |lag|≥n → NaN. No bun available in sandbox — evaluate via find/grep/wc only.
 - **Iter 124 (mode)**: `computeMode()` builds a freq-map, finds maxCount, returns all values with that count sorted ascending. `compareForMode()` handles mixed types: numbers < strings < booleans; missing last. DataFrame mode pads shorter columns with `null`. `scalarKey()` maps all missing sentinels to distinct prefixed keys (not `__MISSING__`) for correctness. Bun not available in agent sandbox — use evaluation via `find/grep/wc`.
 - **Iter 123 (read_fwf)**: state file was not updated by iter 123 run (77→78 was not reflected). Always re-read git log to find actual HEAD metric before planning.
@@ -58,13 +59,21 @@
 
 ## 🔭 Future Directions
 
-**State (iter 124)**: 79 files. Next: stats/cut_extended (ordered dtype + per-bin labels) · stats/autocorr (Series autocorrelation) · stats/skew_kurt (skewness/kurtosis) · io/read_excel (zero-dep XLSX)
+**State (iter 126)**: 81 files. Next: stats/cut_extended (ordered dtype + per-bin labels) · stats/wide_to_long_enhanced · io/read_excel (zero-dep XLSX)
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 126 — 2026-04-07 11:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24079727260)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/abs_round.ts` — `absSeries`, `roundSeries`, `absDataFrame`, `roundDataFrame` mirroring `pandas.Series.abs()`, `.round()`, `pandas.DataFrame.abs()`, `.round()`.
+- **Metric**: 81 (previous best: 80, delta: +1)
+- **Commit**: dfe5449
+- **Notes**: Non-numeric values (null/undefined/NaN/strings/booleans) pass through unchanged. `roundSeries(s, d)` uses `Number(n.toFixed(d))` for correct round-half-away-from-zero; negative decimals rounds to tens/hundreds. Per-column precision dict supported for DataFrame. 30 unit + 2 property-based tests.
 
 ### Iteration 125 — 2026-04-07 11:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24078727612)
 
@@ -90,32 +99,7 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: 3ca9d3c
 - **Notes**: State file was not updated after this run (scheduling anomaly). Corrected in iter 124.
 
-### Iteration 122 — 2026-04-07 08:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24071953536)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/map.ts` — `seriesMap()` (function/Map/dict/Series args with `naAction`) and `dataFrameTransform()` (column-wise, row-wise, per-column dict).
-- **Metric**: 77 (previous: 76, delta: +1)
-- **Commit**: ba0dd37
-- **Notes**: `resolveMapper()` coerces all four arg types into `(v) => Scalar`. Axis-1 transform rebuilds columns from per-row function results. Dict arg skips unlisted columns. 47 unit + property-based tests covering both functions.
-
-### Iteration 121 — 2026-04-07 07:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24069894548)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/replace.ts` — `replaceSeries()` and `replaceDataFrame()` with scalar, list-pair, and dict forms; per-column DataFrame replacement via nested dicts.
-- **Metric**: 76 (previous: 75, delta: +1)
-- **Commit**: 55651f2
-- **Notes**: `encodeKey()` maps all Scalar types to stable string keys for Map lookup. Missing sentinels (null/undefined/NaN) become `"null"/"undefined"/"NaN"` — used directly as dict keys. Per-column detection checks if any top-level dict value is a plain object. 47 unit + property-based tests.
-
-### Iteration 120 — 2026-04-07 06:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24067846118)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/pct_change.ts` — `pctChange(series, periods)` and `dataFramePctChange(df, periods, {axis})` mirroring `pandas.Series.pct_change()` and `pandas.DataFrame.pct_change()`.
-- **Metric**: 75 (previous: 74, delta: +1)
-- **Commit**: e0a4185
-- **Notes**: Formula `(x[i] - x[i-p]) / |x[i-p]|`. Zero prior → ±Infinity. `periods=0` → all-NaN. Axis=0 (column-wise) and axis=1 (row-wise). 36 unit + property-based tests.
-
-### Iteration 119 — 2026-04-07 05:37 UTC — ✅ unique/nunique (74)
-### Iteration 118 — 2026-04-07 04:55 UTC — ✅ between (73)
+### Iteration 122 — ✅ map/transform (77) · Iteration 121 — ✅ replace (76) · Iteration 120 — ✅ pct_change (75)
 
 ### Iters 116–119 — ✅ (metrics 71→74): explode, isin, between, unique/nunique
 
