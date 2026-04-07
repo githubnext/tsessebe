@@ -299,3 +299,14 @@ export type { PctChangeOptions } from "./stats/index.ts";
 
 export { replaceSeries, replaceDataFrame } from "./stats/index.ts";
 export type { ReplaceDict, ReplacePerColumnDict, ReplaceArg } from "./stats/index.ts";
+
+export { seriesMap, dataFrameTransform } from "./stats/index.ts";
+export type {
+  NaAction,
+  MapDict,
+  MapArg,
+  SeriesMapOptions,
+  TransformFn,
+  TransformArg,
+  TransformOptions,
+} from "./stats/index.ts";

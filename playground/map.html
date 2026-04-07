@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · map / transform</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --red: #f85149;
+        --code-bg: #1f2937;
+        font-size: 16px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; }
+      header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+      header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+      header a:hover { color: var(--accent); }
+      h1 { font-size: 1.4rem; color: var(--accent); }
+      main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+      h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+      p { color: var(--muted); margin-bottom: 0.75rem; }
+      pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85rem; margin-bottom: 1rem; }
+      .demo { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+      .demo label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.3rem; }
+      .demo input, .demo textarea, .demo select { background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.9rem; width: 100%; margin-bottom: 0.75rem; font-family: monospace; }
+      button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1rem; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
+      button:hover { opacity: 0.85; }
+      .row { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; }
+      .row > * { flex: 1; min-width: 200px; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin-top: 0.5rem; }
+      th { background: var(--code-bg); color: var(--accent); text-align: left; padding: 0.4rem 0.75rem; border: 1px solid var(--border); }
+      td { padding: 0.35rem 0.75rem; border: 1px solid var(--border); font-family: monospace; }
+      td.null { color: var(--muted); font-style: italic; }
+      .output { margin-top: 0.75rem; }
+      .badge { display: inline-block; background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.78rem; font-family: monospace; margin: 0 2px; }
+      .note { color: var(--muted); font-size: 0.85rem; }
+      .error { color: var(--red); font-size: 0.85rem; }
+      .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+      .tab { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px 4px 0 0; padding: 0.4rem 1rem; cursor: pointer; font-size: 0.88rem; }
+      .tab.active { background: var(--accent); color: #0d1117; font-weight: 600; border-color: var(--accent); }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="index.html">← tsb</a>
+      <h1>🗺️ map / transform</h1>
+    </header>
+    <main>
+      <p>
+        <code>seriesMap</code> maps each element of a Series through a function, <code>Map</code>,
+        plain-object dict, or another Series — mirroring
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.map.html"
+           style="color:var(--accent)">pandas.Series.map</a>.
+        <code>dataFrameTransform</code> applies a function to each column (or row) and returns
+        a same-shaped DataFrame — mirroring
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.transform.html"
+           style="color:var(--accent)">pandas.DataFrame.transform</a>.
+      </p>
+
+      <!-- ── seriesMap ── -->
+      <h2>seriesMap</h2>
+      <p>Map Series values through a function, <code>Map</code>, dict, or lookup Series.</p>
+
+      <div class="tabs" id="map-tabs">
+        <div class="tab active" data-target="map-fn">Function</div>
+        <div class="tab" data-target="map-dict">Dict</div>
+        <div class="tab" data-target="map-series">Series lookup</div>
+      </div>
+
+      <!-- Function tab -->
+      <div class="tab-content active" id="map-fn">
+        <pre>import { Series, seriesMap } from "tsb";
+
+const s = new Series({ data: [1, 2, null, 4] });
+seriesMap(s, (v) => (v as number) * 10).values;
+// [10, 20, null, 40]   ← null passed to fn by default
+
+// na_action="ignore" skips missing values
+seriesMap(s, (v) => (v as number) * 10, { naAction: "ignore" }).values;
+// [10, 20, null, 40]   ← null preserved unchanged</pre>
+        <div class="demo">
+          <label>Values (comma-separated, use "null" for missing)</label>
+          <input id="fn-values" value="1, 2, null, 4, 5" />
+          <label>Transform expression (use <code>v</code> for the value)</label>
+          <input id="fn-expr" value="v * 10" />
+          <div class="row">
+            <div>
+              <label>na_action</label>
+              <select id="fn-na">
+                <option value="">default (pass NA to fn)</option>
+                <option value="ignore">ignore (skip NA)</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="runFnMap()">Run</button>
+          <div class="output" id="fn-output"></div>
+        </div>
+      </div>
+
+      <!-- Dict tab -->
+      <div class="tab-content" id="map-dict">
+        <pre>import { Series, seriesMap } from "tsb";
+
+const s = new Series({ data: ["a", "b", "c", "d"] });
+seriesMap(s, { a: 1, b: 2, c: 3 }).values;
+// [1, 2, 3, undefined]   ← "d" not in dict → undefined</pre>
+        <div class="demo">
+          <label>Values (comma-separated strings or numbers)</label>
+          <input id="dict-values" value="a, b, c, d" />
+          <label>Dict (JSON object, e.g. {"a":1,"b":2,"c":3})</label>
+          <input id="dict-map" value='{"a": 1, "b": 2, "c": 3}' />
+          <button onclick="runDictMap()">Run</button>
+          <div class="output" id="dict-output"></div>
+        </div>
+      </div>
+
+      <!-- Series lookup tab -->
+      <div class="tab-content" id="map-series">
+        <pre>import { Series, seriesMap } from "tsb";
+
+const lookup = new Series({ data: ["alpha","beta","gamma"], index: [1,2,3] });
+const s = new Series({ data: [2, 1, 3, 99] });
+seriesMap(s, lookup).values;
+// ["beta", "alpha", "gamma", undefined]</pre>
+        <div class="demo">
+          <label>Source values (comma-separated)</label>
+          <input id="sl-values" value="2, 1, 3, 99" />
+          <label>Lookup Series index (comma-separated)</label>
+          <input id="sl-index" value="1, 2, 3" />
+          <label>Lookup Series data (comma-separated)</label>
+          <input id="sl-data" value="alpha, beta, gamma" />
+          <button onclick="runSeriesLookup()">Run</button>
+          <div class="output" id="sl-output"></div>
+        </div>
+      </div>
+
+      <!-- ── dataFrameTransform ── -->
+      <h2>dataFrameTransform</h2>
+      <p>Apply a function to each column (axis=0) or row (axis=1) of a DataFrame, returning a same-shaped result.</p>
+
+      <div class="tabs" id="tf-tabs">
+        <div class="tab active" data-target="tf-col">Column-wise (axis=0)</div>
+        <div class="tab" data-target="tf-row">Row-wise (axis=1)</div>
+        <div class="tab" data-target="tf-dict">Per-column dict</div>
+      </div>
+
+      <!-- Column-wise tab -->
+      <div class="tab-content active" id="tf-col">
+        <pre>import { DataFrame, dataFrameTransform } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1,2,3], b: [10,20,30] });
+// Subtract column mean from each value (z-score numerator)
+dataFrameTransform(df, (col) => {
+  const mean = col.values.reduce((s,v) => s + (v as number), 0) / col.values.length;
+  return col.values.map((v) => (v as number) - mean);
+});</pre>
+        <div class="demo">
+          <label>Column A values (comma-separated numbers)</label>
+          <input id="tf-a" value="1, 2, 3, 4, 5" />
+          <label>Column B values (comma-separated numbers)</label>
+          <input id="tf-b" value="10, 20, 30, 40, 50" />
+          <label>Transform expression (use <code>col</code> for the column Series)</label>
+          <input id="tf-expr" value="col.values.map((v) => (v as number) - col.values.reduce((s,x)=>s+(x as number),0)/col.values.length)" />
+          <button onclick="runTfCol()">Run</button>
+          <div class="output" id="tf-col-output"></div>
+        </div>
+      </div>
+
+      <!-- Row-wise tab -->
+      <div class="tab-content" id="tf-row">
+        <pre>import { DataFrame, dataFrameTransform } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1,2,3], b: [4,5,6] });
+// Negate every value in each row
+dataFrameTransform(df, (row) => row.values.map((v) => -(v as number)), { axis: 1 });</pre>
+        <div class="demo">
+          <label>Column A values</label>
+          <input id="tr-a" value="1, 2, 3" />
+          <label>Column B values</label>
+          <input id="tr-b" value="4, 5, 6" />
+          <button onclick="runTfRow()">Run</button>
+          <div class="output" id="tf-row-output"></div>
+        </div>
+      </div>
+
+      <!-- Per-column dict tab -->
+      <div class="tab-content" id="tf-dict">
+        <pre>import { DataFrame, dataFrameTransform } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1,2,3], b: [4,5,6], c: [7,8,9] });
+// Only transform columns a and b; c passes through unchanged
+dataFrameTransform(df, {
+  a: (col) => col.values.map((v) => (v as number) * 100),
+  b: (col) => col.values.map((v) => -(v as number)),
+});</pre>
+        <div class="demo">
+          <label>Column A</label>
+          <input id="td-a" value="1, 2, 3" />
+          <label>Column B</label>
+          <input id="td-b" value="4, 5, 6" />
+          <label>Column C (pass-through)</label>
+          <input id="td-c" value="7, 8, 9" />
+          <button onclick="runTfDict()">Run</button>
+          <div class="output" id="tf-dict-output"></div>
+        </div>
+      </div>
+    </main>
+
+    <script type="module">
+      // ── minimal tsb stubs for playground (no bundler) ─────────────────────
+
+      class Index {
+        constructor(values) { this._v = values ?? []; }
+        get values() { return this._v; }
+        get size() { return this._v.length; }
+        at(i) { return this._v[i]; }
+        indexOf(label) {
+          for (let i = 0; i < this._v.length; i++) if (this._v[i] === label) return i;
+          return -1;
+        }
+      }
+
+      class Series {
+        constructor({ data = [], index, name } = {}) {
+          this._data = [...data];
+          this._index = index instanceof Index ? index : new Index(index ?? data.map((_, i) => i));
+          this._name = name;
+        }
+        get values() { return this._data; }
+        get index() { return this._index; }
+        get name() { return this._name; }
+        get length() { return this._data.length; }
+      }
+
+      class DataFrame {
+        constructor(map, index) {
+          this._map = map;
+          this._cols = [...map.keys()];
+          this._index = index;
+          this._nrows = index ? index.size : 0;
+        }
+        static fromColumns(obj) {
+          const map = new Map();
+          let nrows = 0;
+          for (const [k, arr] of Object.entries(obj)) {
+            nrows = arr.length;
+            map.set(k, new Series({ data: arr, name: k }));
+          }
+          const idx = new Index([...Array(nrows).keys()]);
+          return new DataFrame(map, idx);
+        }
+        get columns() { return new Index(this._cols); }
+        get index() { return this._index; }
+        get shape() { return [this._nrows, this._cols.length]; }
+        col(name) { return this._map.get(name); }
+      }
+
+      // ── seriesMap ─────────────────────────────────────────────────────────
+
+      function isMissing(v) { return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v)); }
+
+      function resolveMapper(arg) {
+        if (typeof arg === "function") return arg;
+        if (arg instanceof Map) return (v) => arg.has(v) ? arg.get(v) : undefined;
+        if (arg instanceof Series) {
+          const lkp = new Map();
+          const labels = arg.index.values;
+          const vals = arg.values;
+          for (let i = 0; i < labels.length; i++) lkp.set(labels[i], vals[i]);
+          return (v) => lkp.has(v) ? lkp.get(v) : undefined;
+        }
+        return (v) => {
+          const key = String(v);
+          if (Object.prototype.hasOwnProperty.call(arg, key)) return arg[key];
+          if (typeof v === "number" && Object.prototype.hasOwnProperty.call(arg, v)) return arg[v];
+          return undefined;
+        };
+      }
+
+      function seriesMap(series, arg, opts = {}) {
+        const { naAction } = opts;
+        const mapper = resolveMapper(arg);
+        const out = series.values.map((v) => {
+          if (naAction === "ignore" && isMissing(v)) return v;
+          return mapper(v);
+        });
+        return new Series({ data: out, index: series.index, name: series.name });
+      }
+
+      // ── dataFrameTransform ────────────────────────────────────────────────
+
+      function dataFrameTransform(df, func, opts = {}) {
+        const axis = opts.axis ?? 0;
+        const nRows = df.index.size;
+        const colNames = df.columns.values;
+        const colMap = new Map();
+
+        if (axis === 1 || axis === "columns") {
+          const colIdx = new Index(colNames);
+          const colData = colNames.map(() => new Array(nRows));
+          for (let i = 0; i < nRows; i++) {
+            const row = new Series({ data: colNames.map(n => df.col(n).values[i]), index: colIdx });
+            const result = func(row);
+            const arr = result instanceof Series ? [...result.values] : [...result];
+            for (let j = 0; j < colNames.length; j++) colData[j][i] = arr[j];
+          }
+          for (let j = 0; j < colNames.length; j++) {
+            const name = colNames[j];
+            colMap.set(name, new Series({ data: colData[j], index: df.index, name }));
+          }
+        } else if (typeof func === "function") {
+          for (const name of colNames) {
+            const col = df.col(name);
+            const result = func(col);
+            const arr = result instanceof Series ? [...result.values] : [...result];
+            colMap.set(name, new Series({ data: arr, index: df.index, name }));
+          }
+        } else {
+          for (const name of colNames) {
+            const col = df.col(name);
+            const fn = func[name];
+            if (fn) {
+              const result = fn(col);
+              const arr = result instanceof Series ? [...result.values] : [...result];
+              colMap.set(name, new Series({ data: arr, index: df.index, name }));
+            } else {
+              colMap.set(name, col);
+            }
+          }
+        }
+        return new DataFrame(colMap, df.index);
+      }
+
+      // ── rendering helpers ─────────────────────────────────────────────────
+
+      function parseValues(str) {
+        return str.split(",").map(s => {
+          const t = s.trim();
+          if (t === "null" || t === "") return null;
+          if (t === "true") return true;
+          if (t === "false") return false;
+          const n = Number(t);
+          return Number.isNaN(n) ? t : n;
+        });
+      }
+
+      function renderSeries(s) {
+        let html = '<table><tr><th>index</th><th>value</th></tr>';
+        const labels = s.index.values;
+        s.values.forEach((v, i) => {
+          const display = v === null || v === undefined ? "null" : String(v);
+          const cls = (v === null || v === undefined) ? " class=\"null\"" : "";
+          html += `<tr><td>${labels[i]}</td><td${cls}>${display}</td></tr>`;
+        });
+        return html + "</table>";
+      }
+
+      function renderDataFrame(df) {
+        const cols = df.columns.values;
+        let html = '<table><tr><th>index</th>' + cols.map(c => `<th>${c}</th>`).join("") + '</tr>';
+        for (let i = 0; i < df.index.size; i++) {
+          html += `<tr><td>${df.index.at(i)}</td>`;
+          for (const c of cols) {
+            const v = df.col(c).values[i];
+            const display = (v === null || v === undefined) ? "null" : String(v);
+            const cls = (v === null || v === undefined) ? " class=\"null\"" : "";
+            html += `<td${cls}>${display}</td>`;
+          }
+          html += "</tr>";
+        }
+        return html + "</table>";
+      }
+
+      function showError(id, msg) {
+        document.getElementById(id).innerHTML = `<p class="error">Error: ${msg}</p>`;
+      }
+
+      // ── demo handlers ─────────────────────────────────────────────────────
+
+      window.runFnMap = function() {
+        try {
+          const data = parseValues(document.getElementById("fn-values").value);
+          const expr = document.getElementById("fn-expr").value.trim();
+          const na = document.getElementById("fn-na").value || undefined;
+          const fn = new Function("v", `return ${expr}`);
+          const s = new Series({ data });
+          const result = seriesMap(s, (v) => fn(v), { naAction: na });
+          document.getElementById("fn-output").innerHTML = renderSeries(result);
+        } catch(e) { showError("fn-output", e.message); }
+      };
+
+      window.runDictMap = function() {
+        try {
+          const data = parseValues(document.getElementById("dict-values").value);
+          const dict = JSON.parse(document.getElementById("dict-map").value);
+          const s = new Series({ data });
+          const result = seriesMap(s, dict);
+          document.getElementById("dict-output").innerHTML = renderSeries(result);
+        } catch(e) { showError("dict-output", e.message); }
+      };
+
+      window.runSeriesLookup = function() {
+        try {
+          const data = parseValues(document.getElementById("sl-values").value);
+          const idx = parseValues(document.getElementById("sl-index").value);
+          const ldata = parseValues(document.getElementById("sl-data").value);
+          const lookup = new Series({ data: ldata, index: idx });
+          const s = new Series({ data });
+          const result = seriesMap(s, lookup);
+          document.getElementById("sl-output").innerHTML = renderSeries(result);
+        } catch(e) { showError("sl-output", e.message); }
+      };
+
+      window.runTfCol = function() {
+        try {
+          const a = parseValues(document.getElementById("tf-a").value);
+          const b = parseValues(document.getElementById("tf-b").value);
+          const expr = document.getElementById("tf-expr").value.trim();
+          const fn = new Function("col", `return ${expr}`);
+          const df = DataFrame.fromColumns({ a, b });
+          const result = dataFrameTransform(df, (col) => fn(col));
+          document.getElementById("tf-col-output").innerHTML = renderDataFrame(result);
+        } catch(e) { showError("tf-col-output", e.message); }
+      };
+
+      window.runTfRow = function() {
+        try {
+          const a = parseValues(document.getElementById("tr-a").value);
+          const b = parseValues(document.getElementById("tr-b").value);
+          const df = DataFrame.fromColumns({ a, b });
+          const result = dataFrameTransform(df, (row) => row.values.map((v) => -(v)), { axis: 1 });
+          document.getElementById("tf-row-output").innerHTML = renderDataFrame(result);
+        } catch(e) { showError("tf-row-output", e.message); }
+      };
+
+      window.runTfDict = function() {
+        try {
+          const a = parseValues(document.getElementById("td-a").value);
+          const b = parseValues(document.getElementById("td-b").value);
+          const c = parseValues(document.getElementById("td-c").value);
+          const df = DataFrame.fromColumns({ a, b, c });
+          const result = dataFrameTransform(df, {
+            a: (col) => col.values.map((v) => v * 100),
+            b: (col) => col.values.map((v) => -v),
+          });
+          document.getElementById("tf-dict-output").innerHTML = renderDataFrame(result);
+        } catch(e) { showError("tf-dict-output", e.message); }
+      };
+
+      // ── tab switching ─────────────────────────────────────────────────────
+
+      document.querySelectorAll(".tabs").forEach((tabBar) => {
+        tabBar.querySelectorAll(".tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            tabBar.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            const target = tab.dataset.target;
+            // find sibling tab-contents
+            const parent = tabBar.parentElement;
+            parent.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+            document.getElementById(target).classList.add("active");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

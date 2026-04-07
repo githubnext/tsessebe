@@ -491,6 +491,11 @@
           <p>Value substitution for Series and DataFrame — <a href="replace.html" style="color: var(--accent);">interactive tutorial</a>. <code>replaceSeries(series, old, new)</code> replaces scalar, list-pair, or dict-form mappings. <code>replaceDataFrame(df, ...)</code> applies global or per-column substitution. Missing values (<code>null</code>, <code>undefined</code>, <code>NaN</code>) are replaceable via string keys in the dict form. Mirrors <code>pandas.Series.replace()</code> and <code>pandas.DataFrame.replace()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature">
+          <h3>🗺️ map / transform</h3>
+          <p>Element-wise value mapping and same-shape DataFrame transformation — <a href="map.html" style="color: var(--accent);">interactive tutorial</a>. <code>seriesMap(series, arg)</code> maps each value through a function, ES <code>Map</code>, plain-object dict, or lookup Series (with optional <code>na_action="ignore"</code>). <code>dataFrameTransform(df, func, {axis})</code> applies a function column-wise or row-wise, returning a same-shaped DataFrame; supports per-column dict of functions. Mirrors <code>pandas.Series.map()</code> and <code>pandas.DataFrame.transform()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

@@ -200,3 +200,14 @@ export type { PctChangeOptions } from "./pct_change.ts";
 
 export { replaceSeries, replaceDataFrame } from "./replace.ts";
 export type { ReplaceDict, ReplacePerColumnDict, ReplaceArg } from "./replace.ts";
+
+export { seriesMap, dataFrameTransform } from "./map.ts";
+export type {
+  NaAction,
+  MapDict,
+  MapArg,
+  SeriesMapOptions,
+  TransformFn,
+  TransformArg,
+  TransformOptions,
+} from "./map.ts";
