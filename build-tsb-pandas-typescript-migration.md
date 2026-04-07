@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T15:32:49Z |
-| Iteration Count | 131 |
-| Best Metric | 86 |
+| Last Run | 2026-04-07T16:25:42Z |
+| Iteration Count | 132 |
+| Best Metric | 87 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -22,19 +22,20 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 131)**: 86 files. Next candidates:
+**State (iter 132)**: 87 files. Next candidates:
 - `src/reshape/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/core/convert_dtypes.ts` — smart dtype inference/coercion (pandas convert_dtypes)
+- `src/core/select_dtypes_enhanced.ts` — select_dtypes with include/exclude lists and numpy-style dtype aliases
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 132 (convert_dtypes)**: `inferBestDtype()` checks allBool→bool, allInt (whole numbers)→int64, allFloat→float64, allStr→string, else object. Bool checked before int (booleans are typeof "number"=false, safe). Idempotent by construction. `castValue()` dispatches by dtype. `dataFrameConvertDtypes` wraps per-column. Options: convertBoolean, convertInteger, convertFloating, convertString all default true.
 - **Iter 131 (astype)**: `castOne(v, dt)` by dtype kind. null/undefined always preserved as null. `errors='raise'|'ignore'` — on ignore, failed casts → null. `dataFrameAstype` accepts single dtype (applies to all cols) or `Record<col, dtype>` (per-column). Raises `RangeError` for unknown columns in spec. Single dtype path uses `Dtype.from(name)` singleton.
 - **Iter 130 (cut_extended)**: `cutWithBins`/`qcutWithBins` return `{result, bins}` for retbins. `cutOrdered`/`qcutOrdered` return `{result, categories, ordered:true, bins}`. `compareCategories(a,b,cats)` → neg/zero/pos; null < any. `sortByCategory`. Property: antisymmetric, non-decreasing.
 - **Iter 129 (rolling_cross_corr)**: `crossCorr(x,y,{lags})` — pairs (x[i],y[i-l]). Lag fmt: `l<0→"lag_neg{|l|}"`. Symmetry: crossCorr(x,y,l)==crossCorr(y,x,-l).
@@ -66,6 +67,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 132 — 2026-04-07 16:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24092268181)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/convert_dtypes.ts` — `convertDtypes(series)` and `dataFrameConvertDtypes(df)` mirroring `pandas.DataFrame.convert_dtypes()`.
+- **Metric**: 87 (previous best: 86, delta: +1)
+- **Commit**: 2a9ff73
+- **Notes**: inferBestDtype() promotes whole-number floats→int64, floats→float64, bools→bool, strings→string. Idempotent. Options: convertBoolean/convertInteger/convertFloating/convertString all default true. Property tests: idempotent, null count preserved, type-correct output.
 
 ### Iteration 131 — 2026-04-07 15:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24089832656)
 
