@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T00:36:00Z |
-| Iteration Count | 114 |
-| Best Metric | 69 |
+| Last Run | 2026-04-07T01:04:10Z |
+| Iteration Count | 115 |
+| Best Metric | 70 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -28,15 +28,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 69 files (iter 114). Next candidates:
+Now at 70 files (iter 115). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/stats/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
-- `src/core/align.ts` — align two Series/DataFrames to a common index (inner/outer/left/right join)
+- `src/core/swap_level.ts` — swaplevel for MultiIndex (swap two levels of a MultiIndex)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 115 (align)**: `alignSeries` and `alignDataFrame` are thin wrappers over `reindexSeries`/`reindexDataFrame` — the heavy lifting is already done. Key design: `resolveIndex()` switches on the `join` policy using `Index.union()`, `.intersection()`, or the original index. For `alignDataFrame`, normalise `axis` to `0 | 1 | null` before branching; `null` aligns both axes. Column indices are `Index<string>` — casting from `Index<Label>` via `as Index<string>` is safe since `resolveIndex` returns the same element type.
 - **Iter 114 (reindex)**: `Index` constructor takes `(data: readonly T[], name?)` — NOT `{ data }`. The `toIndex()` helper must call `new Index(src)` directly. Property tests need to ensure data/labels lengths match before constructing a Series. Two-pass `leftDist/rightVal` + `rightDist/rightVal` arrays enable O(n) nearest fill. `applyFfill` increments `streak` in both the "fill applied" and "no prior value" branches to correctly enforce `limit`. `applyNearest` prefers right (forward) on equidistant tie — matching pandas.
 - **Iter 113 (duplicated/drop_duplicates)**: `df.has(col)` is the correct method (not `df.hasColumn()`). Row key built by JSON-encoding each cell value with `\x00`-prefixed sentinels for null/NaN to avoid collisions. `computeDuplicateMask()` centralises all three `keep` policies. Test files need `import type { Scalar }` when mixing number/string in a `Map<string, Series<Scalar>>`.
 - **Iter 111 (searchsorted)**: Binary search using bisect algorithm. `side="left"` stops at first `a[mid] >= v`; `side="right"` stops at first `a[mid] > v`. NaN treated as greater than all numbers (consistent ordering). `argsortScalars` produces the `sorter` permutation. Internal `bisect()` helper accepts a `get(i)` accessor, making `sorter` support zero-cost (just re-route the accessor). 44 unit tests + 4 property-based tests (insertion preserves sort, left≤right, result in [0,n], sorter≡presorted).
@@ -70,6 +71,14 @@ Now at 69 files (iter 114). Next candidates:
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 115 — 2026-04-07 01:04 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24059017375)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/align.ts` — `alignSeries` and `alignDataFrame` mirroring `pandas.Series.align` / `pandas.DataFrame.align`.
+- **Metric**: 70 (previous: 69, delta: +1)
+- **Commit**: 6407469
+- **Notes**: `alignSeries` supports outer/inner/left/right join policies using `reindexSeries` internally. `alignDataFrame` normalises the `axis` parameter (0/1/null) and delegates to `reindexDataFrame`. 42 unit tests + 4 property-based tests.
 
 ### Iteration 114 — 2026-04-07 00:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24058069960)
 
