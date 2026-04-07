@@ -10,7 +10,7 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T08:54:16Z |
+| Last Run | 2026-04-07T09:54:48Z |
 | Iteration Count | 123 |
 | Best Metric | 78 |
 | Target Metric | — |
@@ -65,13 +65,13 @@ Now at 78 files (iter 123). Next candidates:
 
 All iterations in reverse chronological order (newest first).
 
-### Iteration 123 — 2026-04-07 08:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24072923487)
+### Iteration 123 — 2026-04-07 09:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24075374959)
 
 - **Status**: ✅ Accepted
 - **Change**: Added `src/io/read_fwf.ts` — `readFwf()` implementing `pandas.read_fwf()` with auto-inferred column boundaries, explicit colspecs, column widths, header/names/skipRows/nRows/comment/naValues/indexCol options.
 - **Metric**: 78 (previous: 77, delta: +1)
-- **Commit**: 0baec5e
-- **Notes**: `inferColspecs()` uses a `Set<number>` to track non-whitespace character positions across sample lines. `charAt()` used for string access (safe with `noUncheckedIndexedAccess`). 25 unit + 3 property-based tests.
+- **Commit**: 0f14cb7
+- **Notes**: `inferColspecs()` uses `for...of` over a sorted `Set<number>` to avoid unchecked index access. `charAt()` for string access. 28 unit + 3 property-based tests across basic parsing, colspecs, widths, header options, skipRows/nRows, comments, NA values, and indexCol.
 
 ### Iteration 122 — 2026-04-07 08:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24071953536)
 
