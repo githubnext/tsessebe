@@ -336,3 +336,6 @@ export type { AutocorrOptions } from "./stats/index.ts";
 
 export { absSeries, roundSeries, absDataFrame, roundDataFrame } from "./stats/index.ts";
 export type { RoundDecimals } from "./stats/index.ts";
+
+export { rollingSkew, rollingKurtosis, rollingSkewDataFrame, rollingKurtosisDataFrame } from "./stats/index.ts";
+export type { RollingMomentsOptions, RollingMomentsDataFrameOptions } from "./stats/index.ts";

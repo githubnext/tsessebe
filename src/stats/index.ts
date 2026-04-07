@@ -235,3 +235,6 @@ export type { AutocorrOptions } from "./autocorr.ts";
 
 export { absSeries, roundSeries, absDataFrame, roundDataFrame } from "./abs_round.ts";
 export type { RoundDecimals } from "./abs_round.ts";
+
+export { rollingSkew, rollingKurtosis, rollingSkewDataFrame, rollingKurtosisDataFrame } from "./rolling_moments.ts";
+export type { RollingMomentsOptions, RollingMomentsDataFrameOptions } from "./rolling_moments.ts";

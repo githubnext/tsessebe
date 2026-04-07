@@ -516,6 +516,11 @@
           <p>Element-wise absolute value and rounding for Series and DataFrame — <a href="abs_round.html" style="color: var(--accent);">interactive tutorial</a>. <code>absSeries</code> / <code>absDataFrame</code> replace numeric values with their absolute value; non-numeric values pass through unchanged. <code>roundSeries(s, decimals)</code> / <code>roundDataFrame(df, decimals)</code> round each numeric element to a given number of decimal places (supports negative decimals and per-column precision dicts). Mirrors <code>pandas.Series.abs()</code>, <code>pandas.Series.round()</code>, <code>pandas.DataFrame.abs()</code>, <code>pandas.DataFrame.round()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>📈 rolling skew &amp; kurtosis</h3>
+          <p>Rolling Fisher-Pearson skewness and bias-corrected excess kurtosis for Series and DataFrame — <a href="rolling_moments.html" style="color: var(--accent);">interactive tutorial</a>. <code>rollingSkew(series, window)</code> computes the sliding-window adjusted skewness (≥ 3 valid values required); <code>rollingKurtosis(series, window)</code> computes excess kurtosis (≥ 4 required). Both support <code>minPeriods</code>, <code>center</code>, and DataFrame column-wise variants. Mirrors <code>pandas.Series.rolling(n).skew()</code> and <code>.kurt()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

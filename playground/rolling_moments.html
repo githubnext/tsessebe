@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Rolling Skew &amp; Kurtosis</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #0f172a; color: #e2e8f0; }
+      h1 { color: #38bdf8; } h2 { color: #7dd3fc; }
+      .card { background: #1e293b; border-radius: 8px; padding: 1.25rem; margin: 1rem 0; }
+      pre { background: #0f172a; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.6; color: #a3e635; }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; }
+      .output { color: #34d399; }
+      .comment { color: #64748b; }
+      table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+      th { background: #0f172a; color: #7dd3fc; padding: 0.5rem; text-align: left; }
+      td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #334155; font-size: 0.875rem; font-family: monospace; }
+      .null { color: #64748b; font-style: italic; }
+      a { color: #38bdf8; }
+    </style>
+  </head>
+  <body>
+    <h1>📊 Rolling Skew &amp; Kurtosis</h1>
+    <p>
+      <code>rollingSkew</code> and <code>rollingKurtosis</code> compute sliding-window
+      Fisher-Pearson skewness and bias-corrected excess kurtosis, mirroring
+      <code>pandas.Series.rolling(n).skew()</code> and <code>.kurt()</code>.
+    </p>
+
+    <div class="card">
+      <h2>What Are These?</h2>
+      <p>
+        <strong>Skewness</strong> measures the asymmetry of a distribution: positive skew
+        means a longer right tail, negative skew means a longer left tail.
+        Requires ≥ 3 values per window.
+      </p>
+      <p>
+        <strong>Kurtosis</strong> (excess) measures the "peakedness" vs. a normal
+        distribution: positive kurtosis = heavier tails (leptokurtic), negative = lighter
+        tails (platykurtic). Requires ≥ 4 values per window.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Rolling Skewness — <code>rollingSkew(series, window)</code></h2>
+      <pre><code><span class="comment">// Mirrors: pd.Series.rolling(window).skew()</span>
+import { Series, rollingSkew } from "tsb";
+
+const prices = new Series({ data: [100, 102, 98, 105, 103, 110, 95, 108] });
+
+const skew3 = rollingSkew(prices, 3);
+<span class="comment">// window=3: first 2 positions → null (need ≥ 3)</span>
+<span class="comment">// position 2: [100, 102, 98] → slightly left-skewed</span>
+<span class="output">// [null, null, -0.707, 0.935, -0.935, 0.935, -0.935, 0.688]</span>
+
+<span class="comment">// Custom minPeriods (default: 3)</span>
+const skew5mp4 = rollingSkew(prices, 5, { minPeriods: 4 });
+<span class="comment">// position 3 has 4 values → can compute</span>
+
+<span class="comment">// Centred window</span>
+const skewCentered = rollingSkew(prices, 3, { center: true });
+<span class="comment">// window spans i-1, i, i+1 instead of i-2, i-1, i</span></code></pre>
+    </div>
+
+    <div class="card">
+      <h2>Rolling Kurtosis — <code>rollingKurtosis(series, window)</code></h2>
+      <pre><code><span class="comment">// Mirrors: pd.Series.rolling(window).kurt()</span>
+import { Series, rollingKurtosis } from "tsb";
+
+<span class="comment">// Uniform spacing [1,2,3,4,5] → excess kurtosis ≈ -1.2 (platykurtic)</span>
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+const kurt5 = rollingKurtosis(s, 5);
+<span class="output">// [null, null, null, null, -1.2]</span>
+
+<span class="comment">// Larger window on financial returns</span>
+const returns = new Series({ data: [0.01, -0.02, 0.05, -0.03, 0.08, -0.01, 0.02] });
+const kurt4 = rollingKurtosis(returns, 4);
+<span class="comment">// Detects heavy-tailed or light-tailed windows</span></code></pre>
+    </div>
+
+    <div class="card">
+      <h2>DataFrame Support</h2>
+      <pre><code>import { DataFrame, rollingSkewDataFrame, rollingKurtosisDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  tech:    [150, 148, 155, 160, 145, 170, 140, 165],
+  finance: [80,  82,  79,  85,  81,  90,  75,  88],
+});
+
+<span class="comment">// Column-wise rolling skew (axis=0, default)</span>
+const skewDf = rollingSkewDataFrame(df, 4);
+<span class="output">// tech and finance columns each get rolling skew applied</span>
+
+<span class="comment">// Column-wise rolling kurtosis</span>
+const kurtDf = rollingKurtosisDataFrame(df, 5);</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>Mathematical Properties</h2>
+      <table>
+        <tr><th>Property</th><th>Skew</th><th>Kurtosis</th></tr>
+        <tr><td>Min valid observations</td><td>3</td><td>4</td></tr>
+        <tr><td>Zero-variance window</td><td><span class="null">null</span></td><td><span class="null">null</span></td></tr>
+        <tr><td>Missing values</td><td>Skipped (uses valid count)</td><td>Skipped (uses valid count)</td></tr>
+        <tr><td>Arithmetic sequence skew</td><td>0</td><td>−1.2 (n=5), depends on n</td></tr>
+        <tr><td>Scale invariant</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Shift invariant</td><td>✓</td><td>✓</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Formulas</h2>
+      <p><strong>Fisher-Pearson Adjusted Skew</strong> (matches pandas <code>.skew()</code>):</p>
+      <pre><code>g1 = m3 / σ³   (biased standardised 3rd moment)
+G1 = √(n(n-1)) / (n-2) × g1</code></pre>
+      <p><strong>Bias-Corrected Excess Kurtosis</strong> (matches pandas <code>.kurt()</code>):</p>
+      <pre><code>G2 = (n+1)·n·(n-1) / ((n-2)·(n-3)) × (m4/m2²) − 3(n-1)² / ((n-2)·(n-3))</code></pre>
+    </div>
+
+    <p>← <a href="index.html">Back to tsb playground index</a></p>
+  </body>
+</html>
