@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Dtype Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+
+    /* ── Loading overlay ──────────────────────────────── */
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+
+    /* ── Section cards ────────────────────────────────── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+
+    /* ── Playground block ─────────────────────────────── */
+    .playground-block {
+      margin-top: 0.75rem;
+    }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .playground-run { font-weight: 600; }
+
+    /* ── Editor textarea ──────────────────────────────── */
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    /* ── Output area ──────────────────────────────────── */
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active {
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .playground-output.error {
+      color: var(--red);
+      border-color: var(--red);
+    }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay (hidden once TS compiler + tsb are ready) -->
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>🔢 Dtype — Interactive Playground</h1>
+  <p>
+    The <code>Dtype</code> class is tsb's immutable, singleton type descriptor
+    — mirroring pandas' dtype hierarchy with 16 built-in types covering
+    integers, floats, booleans, strings, datetimes, and more.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
+
+  <!-- ── 1. Creating Dtypes ──────────────────────────── -->
+  <div class="section">
+    <h2>Creating Dtypes</h2>
+    <p>Obtain dtype instances via <code>Dtype.from()</code> or use the static singletons.
+      Identity comparison (<code>===</code>) works because every dtype is a cached singleton.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+// Factory method — returns cached singleton
+const dt = Dtype.from("int64");
+console.log("from('int64'):", dt.toString());
+
+// Static singletons — same object
+console.log("Dtype.int64 === from('int64'):", Dtype.int64 === dt);
+
+// All 16 built-in dtypes
+const all = [
+  Dtype.int8, Dtype.int16, Dtype.int32, Dtype.int64,
+  Dtype.uint8, Dtype.uint16, Dtype.uint32, Dtype.uint64,
+  Dtype.float32, Dtype.float64,
+  Dtype.bool, Dtype.string, Dtype.object,
+  Dtype.datetime, Dtype.timedelta, Dtype.category,
+];
+console.log("All dtypes:", all.map(d => d.name).join(", "));
+console.log("Total count:", all.length);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 2. Kind Classification ──────────────────────── -->
+  <div class="section">
+    <h2>Kind Classification</h2>
+    <p>Each dtype exposes boolean predicates for its classification —
+      <code>isNumeric</code>, <code>isInteger</code>, <code>isFloat</code>, and more.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+const dt = Dtype.int32;
+console.log("dtype:", dt.name, "  kind:", dt.kind);
+console.log("isNumeric:", dt.isNumeric);
+console.log("isInteger:", dt.isInteger);
+console.log("isSignedInteger:", dt.isSignedInteger);
+console.log("isUnsignedInteger:", dt.isUnsignedInteger);
+console.log("isFloat:", dt.isFloat);
+
+console.log("\n--- Non-numeric types ---");
+const checks = [Dtype.bool, Dtype.string, Dtype.datetime, Dtype.timedelta, Dtype.category, Dtype.object];
+for (const d of checks) {
+  console.log(`${d.name}: isBool=${d.isBool}, isString=${d.isString}, isDatetime=${d.isDatetime}, isTimedelta=${d.isTimedelta}, isCategory=${d.isCategory}, isObject=${d.isObject}`);
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 3. Item Sizes ───────────────────────────────── -->
+  <div class="section">
+    <h2>Item Sizes</h2>
+    <p>The <code>itemsize</code> property returns the byte width of each element.
+      Variable-length types (string, object, category) return <code>0</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+const dtypes = [
+  Dtype.int8, Dtype.int16, Dtype.int32, Dtype.int64,
+  Dtype.uint8, Dtype.uint16, Dtype.uint32, Dtype.uint64,
+  Dtype.float32, Dtype.float64,
+  Dtype.bool, Dtype.string, Dtype.object,
+  Dtype.datetime, Dtype.timedelta, Dtype.category,
+];
+
+console.log("Dtype        Itemsize (bytes)");
+console.log("─────────────────────────────");
+for (const d of dtypes) {
+  const pad = d.name.padEnd(13);
+  console.log(`${pad}${d.itemsize}`);
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 4. Type Casting ─────────────────────────────── -->
+  <div class="section">
+    <h2>Type Casting</h2>
+    <p>Use <code>canCastTo()</code> to check safe promotion rules — whether values
+      of one dtype can be losslessly represented in another.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+// Widening: smaller int → larger int is safe
+console.log("int8 → int32:", Dtype.int8.canCastTo(Dtype.int32));
+console.log("int32 → int64:", Dtype.int32.canCastTo(Dtype.int64));
+
+// Narrowing: larger → smaller is NOT safe
+console.log("int64 → int8:", Dtype.int64.canCastTo(Dtype.int8));
+
+// Unsigned → signed needs extra headroom
+console.log("uint8 → int16:", Dtype.uint8.canCastTo(Dtype.int16));
+console.log("uint8 → int8:", Dtype.uint8.canCastTo(Dtype.int8));
+
+// Bool → numeric is safe
+console.log("bool → float64:", Dtype.bool.canCastTo(Dtype.float64));
+
+// String → object is safe
+console.log("string → object:", Dtype.string.canCastTo(Dtype.object));
+
+// Cross-family: int → float
+console.log("int32 → float64:", Dtype.int32.canCastTo(Dtype.float64));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 5. Common Type Resolution ───────────────────── -->
+  <div class="section">
+    <h2>Common Type Resolution</h2>
+    <p><code>Dtype.commonType()</code> finds the smallest dtype that can represent
+      both inputs without loss. Falls back to <code>object</code> when no numeric
+      promotion exists.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+// Same type → same type
+console.log("int32 + int32:", Dtype.commonType(Dtype.int32, Dtype.int32).name);
+
+// Promotion within family
+console.log("int8 + int64:", Dtype.commonType(Dtype.int8, Dtype.int64).name);
+console.log("float32 + float64:", Dtype.commonType(Dtype.float32, Dtype.float64).name);
+
+// Mixed int + float → float64
+console.log("int32 + float32:", Dtype.commonType(Dtype.int32, Dtype.float32).name);
+
+// Bool + numeric → numeric
+console.log("bool + int64:", Dtype.commonType(Dtype.bool, Dtype.int64).name);
+
+// Incompatible → object
+console.log("string + int32:", Dtype.commonType(Dtype.string, Dtype.int32).name);
+console.log("datetime + float64:", Dtype.commonType(Dtype.datetime, Dtype.float64).name);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 6. Type Inference ───────────────────────────── -->
+  <div class="section">
+    <h2>Type Inference</h2>
+    <p><code>Dtype.inferFrom()</code> auto-detects the most specific dtype from
+      an array of values — booleans, integers, floats, dates, strings, or mixed.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+// All booleans → bool
+console.log("booleans:", Dtype.inferFrom([true, false, true]).name);
+
+// All integers → int64
+console.log("integers:", Dtype.inferFrom([1, 2, 3, 100]).name);
+
+// Floats or NaN → float64
+console.log("floats:", Dtype.inferFrom([1.5, 2.7, 3.14]).name);
+console.log("with NaN:", Dtype.inferFrom([1, NaN, 3]).name);
+
+// Dates → datetime
+console.log("dates:", Dtype.inferFrom([new Date(), new Date("2024-01-01")]).name);
+
+// Strings → string
+console.log("strings:", Dtype.inferFrom(["hello", "world"]).name);
+
+// Mixed types → object
+console.log("mixed:", Dtype.inferFrom([1, "hello", true]).name);
+
+// Empty → float64 (pandas default)
+console.log("empty:", Dtype.inferFrom([]).name);
+
+// Nulls are ignored during inference
+console.log("with nulls:", Dtype.inferFrom([null, 42, null]).name);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 7. Try It Yourself ──────────────────────────── -->
+  <div class="section">
+    <h2>🧪 Try It Yourself</h2>
+    <p>Write your own tsb code below. All exports from <code>tsb</code> are available:
+      <code>Dtype</code>, <code>Series</code>, <code>Index</code>, and more.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript — Scratch Pad</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Dtype } from "tsb";
+
+// Explore dtype relationships
+const numericTypes = [
+  Dtype.int8, Dtype.int16, Dtype.int32, Dtype.int64,
+  Dtype.float32, Dtype.float64,
+];
+
+// Build a casting compatibility matrix
+console.log("Casting matrix (row → col):");
+const header = "          " + numericTypes.map(d => d.name.padEnd(8)).join("");
+console.log(header);
+for (const from of numericTypes) {
+  const row = numericTypes.map(to => (from.canCastTo(to) ? "✓" : "✗").padEnd(8)).join("");
+  console.log(`${from.name.padEnd(10)}${row}`);
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+
+  <!-- Playground runtime: loads TypeScript compiler + tsb bundle, sets up editors -->
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
