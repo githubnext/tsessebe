@@ -330,3 +330,6 @@ export type {
   MomentsDataFrameOptions,
   SemDataFrameOptions,
 } from "./stats/index.ts";
+
+export { autocorr } from "./stats/index.ts";
+export type { AutocorrOptions } from "./stats/index.ts";

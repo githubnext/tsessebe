@@ -506,6 +506,11 @@
           <p>Statistical moment functions for Series and DataFrame — <a href="moments.html" style="color: var(--accent);">interactive tutorial</a>. <code>modeSeries(s)</code> returns all tied-most-frequent values; <code>modeDataFrame(df)</code> column/row-wise. <code>skewSeries(s)</code> computes the adjusted Fisher-Pearson skewness coefficient. <code>kurtosisSeries(s)</code> returns excess kurtosis. <code>semSeries(s)</code> computes standard error of the mean as <code>std(ddof)/√n</code>. All have DataFrame equivalents with axis support. Mirrors <code>pandas.Series.mode()</code>, <code>.skew()</code>, <code>.kurt()</code>, and <code>.sem()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔄 autocorr</h3>
+          <p>Pearson autocorrelation coefficient for Series — <a href="autocorr.html" style="color: var(--accent);">interactive tutorial</a>. <code>autocorr(series, lag)</code> computes the Pearson correlation between <code>series[lag:]</code> and <code>series[:-lag]</code>. Missing values are silently dropped before computing. Returns <code>1</code> at lag 0, <code>NaN</code> when <code>|lag| ≥ length</code> or zero variance. Mirrors <code>pandas.Series.autocorr()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

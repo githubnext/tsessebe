@@ -229,3 +229,6 @@ export type {
   MomentsDataFrameOptions,
   SemDataFrameOptions,
 } from "./moments.ts";
+
+export { autocorr } from "./autocorr.ts";
+export type { AutocorrOptions } from "./autocorr.ts";
