@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-06T23:46:00Z |
-| Iteration Count | 113 |
-| Best Metric | 68 |
+| Last Run | 2026-04-07T00:36:00Z |
+| Iteration Count | 114 |
+| Best Metric | 69 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -28,15 +28,16 @@
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 68 files (iter 113). Next candidates:
+Now at 69 files (iter 114). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/stats/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
-- `src/core/reindex.ts` — reindex Series/DataFrame to new index with fill method
+- `src/core/align.ts` — align two Series/DataFrames to a common index (inner/outer/left/right join)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 114 (reindex)**: `Index` constructor takes `(data: readonly T[], name?)` — NOT `{ data }`. The `toIndex()` helper must call `new Index(src)` directly. Property tests need to ensure data/labels lengths match before constructing a Series. Two-pass `leftDist/rightVal` + `rightDist/rightVal` arrays enable O(n) nearest fill. `applyFfill` increments `streak` in both the "fill applied" and "no prior value" branches to correctly enforce `limit`. `applyNearest` prefers right (forward) on equidistant tie — matching pandas.
 - **Iter 113 (duplicated/drop_duplicates)**: `df.has(col)` is the correct method (not `df.hasColumn()`). Row key built by JSON-encoding each cell value with `\x00`-prefixed sentinels for null/NaN to avoid collisions. `computeDuplicateMask()` centralises all three `keep` policies. Test files need `import type { Scalar }` when mixing number/string in a `Map<string, Series<Scalar>>`.
 - **Iter 111 (searchsorted)**: Binary search using bisect algorithm. `side="left"` stops at first `a[mid] >= v`; `side="right"` stops at first `a[mid] > v`. NaN treated as greater than all numbers (consistent ordering). `argsortScalars` produces the `sorter` permutation. Internal `bisect()` helper accepts a `get(i)` accessor, making `sorter` support zero-cost (just re-route the accessor). 44 unit tests + 4 property-based tests (insertion preserves sort, left≤right, result in [0,n], sorter≡presorted).
 - **Iter 110 (natsort)**: Tokenise strings into alternating text/digit chunks with regex `/(\d+)/g`. Digit tokens compare numerically; text tokens compare lexicographically (optionally case-folded). `natArgSort` pre-computes keys then sorts indices — avoids re-tokenising on every comparison. Property tests (anti-symmetry, permutation correctness, argSort≡sorted) catch corner cases effectively.
@@ -62,13 +63,21 @@ Now at 68 files (iter 113). Next candidates:
 
 ## 🔭 Future Directions
 
-**State (iter 112)**: 67 files. Next: io/read_excel (XLSX zero-dep) · core/where_searchsorted alignment helpers
+**State (iter 114)**: 69 files. Next: io/read_excel (XLSX zero-dep) · core/align (align two Series/DataFrames) · stats/wide_to_long_enhanced
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 114 — 2026-04-07 00:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24058069960)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/reindex.ts` — `reindexSeries` and `reindexDataFrame` mirroring `pandas.Series.reindex` / `pandas.DataFrame.reindex`.
+- **Metric**: 69 (previous: 68, delta: +1)
+- **Commit**: 56d501f
+- **Notes**: `reindexSeries` supports `fillValue`, `method` (ffill/bfill/nearest), and `limit`. `reindexDataFrame` accepts `index` and/or `columns` options. Two-pass O(n) algorithm for nearest fill. `Index` constructor takes positional array (not `{data}` options). 42 tests (unit + 4 property-based).
 
 ### Iteration 113 — 2026-04-06 23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24056802429)
 
@@ -79,37 +88,17 @@ All iterations in reverse chronological order (newest first).
 - **Notes**: Row keys JSON-encoded with `\x00` sentinels for null/NaN. `computeDuplicateMask()` centralises `keep="first"|"last"|false` logic. `df.has()` (not `hasColumn`). 54 tests (unit + property).
 
 ### Iteration 112 — 2026-04-06 23:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24055806100)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/value_counts_full.ts` — `valueCountsBinned(series, N)` mirroring `pandas.Series.value_counts(bins=N)`.
-- **Metric**: 67 (previous: 66, delta: +1)
-- **Commit**: 25e8549
-- **Notes**: Uses `cut()+cutIntervalIndex()` internally. Supports sort/ascending/normalize. NaN/null excluded. 22 unit tests + 4 property-based tests.
+- **Status**: ✅ Accepted | **Metric**: 67 (+1) | `valueCountsBinned` — value_counts with bins=N
 
 ### Iteration 111 — 2026-04-06 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24054920717)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/searchsorted.ts` — `searchsorted`, `searchsortedMany`, `argsortScalars` mirroring `numpy.searchsorted` / `pandas.Index.searchsorted`.
-- **Metric**: 66 (previous: 65, delta: +1)
-- **Commit**: 2ad0e89
-- **Notes**: Bisect algorithm with `side="left"|"right"`. `sorter` support via `get(i)` accessor abstraction. Default comparator handles null/NaN/mixed types. 44 unit tests + 4 property tests.
+- **Status**: ✅ Accepted | **Metric**: 66 (+1) | `searchsorted` — binary search (left/right sides, sorter)
 
 ### Iteration 110 — 2026-04-06 22:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24053743467)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/natsort.ts` — `natCompare`, `natSorted`, `natSortKey`, `natArgSort` mirroring `natsort.natsorted()` / `pandas.Index.sort_values(key=natsort_keygen())`.
-- **Metric**: 65 (previous: 64, delta: +1)
-- **Commit**: 1e9ef3b
-- **Notes**: Tokeniser splits on `/(\d+)/g`; digit tokens compare numerically. `natArgSort` pre-computes keys. 5 property-based tests (anti-symmetry, permutation, argSort≡sorted, reverse negation). Tests/playground included.
+- **Status**: ✅ Accepted | **Metric**: 65 (+1) | `natsort` — natural-order string sorting
 
 ### Iteration 109 — 2026-04-06 21:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24052777878)
+- **Status**: ✅ Accepted | **Metric**: 64 (+1) | `combine_first` — fill missing from other Series/DataFrame
 
-- **Status**: ✅ Accepted
-- **Change**: Added `src/stats/combine_first.ts` — `combineFirstSeries` and `combineFirstDataFrame` mirroring `pandas.Series.combine_first` / `pandas.DataFrame.combine_first`.
-- **Metric**: 64 (previous: 63, delta: +1)
-- **Commit**: 9d3fb42
-- **Notes**: `buildLabelMap` helper builds label→positions for O(1) lookup. Union index via `Index.union()`. Self values take priority; null/NaN/undefined treated as missing. 30+ unit tests + 3 property-based tests.
-
-### Iters 103–112 — ✅ (metrics 58→67): assign, clip_with_bounds, pivotTableFull, infer_dtype, notna/isna, dropna, combine_first, natsort, searchsorted, valueCountsBinned
+### Iters 103–108 — ✅ (metrics 58→63): assign, clip_with_bounds, pivotTableFull, infer_dtype, notna/isna, dropna
 ### Iters 53–102 — ✅ (metrics 8→57): named_agg, select_dtypes, memory_usage, Timestamp, to_numeric, json_normalize, wide_to_long, crosstab, get_dummies, factorize, datetime_tz, numeric_ops, DateOffset, date_range, where_mask, compare, shift_diff, interpolate, fillna, Interval, cut/qcut, sample, apply, CategoricalIndex, pipe, Period, Timedelta, Foundation+GroupBy+merge+str+dt+describe+csv/json+corr+rolling+expanding+ewm+stack/unstack+melt/pivot+value_counts+MultiIndex
 ### Iterations 1–52 — ✅ Earlier work on diverged branches
