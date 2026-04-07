@@ -454,6 +454,11 @@
           <p>Align a Series or DataFrame to a new axis — <a href="reindex.html" style="color: var(--accent);">interactive tutorial</a>. <code>reindexSeries(s, newLabels)</code> realigns a Series, inserting <code>null</code> (or a custom <code>fillValue</code>) for missing labels. <code>reindexDataFrame(df, { index?, columns? })</code> realigns rows and/or columns. Supports fill methods: <code>"ffill"</code> (forward fill), <code>"bfill"</code> (backward fill), <code>"nearest"</code>, and a <code>limit</code> cap. Mirrors <code>pandas.Series.reindex</code> and <code>pandas.DataFrame.reindex</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>↔️ align</h3>
+          <p>Align two Series or DataFrames to a common axis — <a href="align.html" style="color: var(--accent);">interactive tutorial</a>. <code>alignSeries(a, b, { join? })</code> aligns two Series. <code>alignDataFrame(a, b, { join?, axis? })</code> aligns DataFrames on rows, columns, or both. Supports <code>join="outer"</code> (union, default), <code>"inner"</code> (intersection), <code>"left"</code>, <code>"right"</code> policies. Mirrors <code>pandas.Series.align</code> and <code>pandas.DataFrame.align</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

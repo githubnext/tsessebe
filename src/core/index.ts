@@ -51,3 +51,5 @@ export { searchsorted, searchsortedMany, argsortScalars } from "./searchsorted.t
 export type { SearchSortedSide, SearchSortedOptions } from "./searchsorted.ts";
 export { reindexSeries, reindexDataFrame } from "./reindex.ts";
 export type { ReindexMethod, ReindexSeriesOptions, ReindexDataFrameOptions } from "./reindex.ts";
+export { alignSeries, alignDataFrame } from "./align.ts";
+export type { AlignSeriesOptions, AlignDataFrameOptions } from "./align.ts";

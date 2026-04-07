@@ -278,3 +278,6 @@ export { duplicatedSeries, duplicatedDataFrame, dropDuplicatesSeries, dropDuplic
 export type { KeepPolicy, DuplicatedDataFrameOptions, DuplicatedSeriesOptions } from "./stats/index.ts";
 export { reindexSeries, reindexDataFrame } from "./core/index.ts";
 export type { ReindexMethod, ReindexSeriesOptions, ReindexDataFrameOptions } from "./core/index.ts";
+
+export { alignSeries, alignDataFrame } from "./core/index.ts";
+export type { AlignSeriesOptions, AlignDataFrameOptions } from "./core/index.ts";
