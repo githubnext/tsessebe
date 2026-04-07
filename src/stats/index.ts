@@ -264,3 +264,10 @@ export type {
   CutOrderedOptions,
   QCutOrderedOptions,
 } from "./cut_extended.ts";
+
+export { idxmin, idxmax, idxminDataFrame, idxmaxDataFrame } from "./idxminmax.ts";
+export type {
+  IdxMinMaxOptions,
+  IdxAxis,
+  IdxMinMaxDataFrameOptions,
+} from "./idxminmax.ts";

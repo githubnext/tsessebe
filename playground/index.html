@@ -542,6 +542,12 @@
           <p>Infer the best possible dtype for each column — <a href="convert_dtypes.html" style="color: var(--accent);">interactive tutorial</a>. <code>convertDtypes(series)</code> promotes whole-number floats to <code>int64</code>, boolean arrays to <code>bool</code>, and string arrays to <code>string</code>. <code>dataFrameConvertDtypes(df)</code> applies this independently to each column. Null values are always preserved. Mirrors <code>pandas.DataFrame.convert_dtypes()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+
+        <div class="feature-card">
+          <h3>🔍 idxmin / idxmax</h3>
+          <p>Return the index label of the minimum or maximum value — <a href="idxminmax.html" style="color: var(--accent);">interactive tutorial</a>. <code>idxmin(series)</code> and <code>idxmax(series)</code> return the <em>label</em> (from the Series index) at the position of the extremum. <code>idxminDataFrame(df)</code> / <code>idxmaxDataFrame(df)</code> support <code>axis 0</code> (per-column row label) and <code>axis 1</code> (per-row column name), with configurable <code>skipna</code>. Mirrors <code>pandas.Series.idxmin()</code>, <code>.idxmax()</code>, and the DataFrame variants.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — idxmin / idxmax</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #f8f9fa;
+        color: #212529;
+      }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; border-bottom: 2px solid #0f3460; padding-bottom: 6px; }
+      pre {
+        background: #1e1e2e;
+        color: #cdd6f4;
+        padding: 16px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .result {
+        background: #e8f5e9;
+        border-left: 4px solid #4caf50;
+        padding: 12px 16px;
+        border-radius: 0 8px 8px 0;
+        margin: 8px 0;
+        font-family: monospace;
+      }
+      .note {
+        background: #fff3e0;
+        border-left: 4px solid #ff9800;
+        padding: 12px 16px;
+        border-radius: 0 8px 8px 0;
+        margin: 8px 0;
+      }
+      table {
+        border-collapse: collapse;
+        margin: 12px 0;
+        width: 100%;
+      }
+      th, td {
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+        text-align: left;
+      }
+      th { background: #343a40; color: #fff; }
+      tr:nth-child(even) { background: #f8f9fa; }
+      a { color: #0f3460; }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 idxmin / idxmax</h1>
+    <p>
+      Return the <strong>index label</strong> of the minimum or maximum value in a
+      <code>Series</code> or <code>DataFrame</code>.
+      Mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.idxmin.html">pandas.Series.idxmin()</a>
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.idxmax.html">pandas.DataFrame.idxmax()</a>.
+    </p>
+
+    <h2>Series: idxmin / idxmax</h2>
+    <pre>
+import { Series, idxmin, idxmax } from "tsb";
+
+// Numeric series with custom string index
+const s = new Series({ data: [3, 1, 4, 1, 5, 9, 2, 6], index: ["a","b","c","d","e","f","g","h"] });
+
+idxmin(s);  // → "b"   (value 1 at position "b")
+idxmax(s);  // → "f"   (value 9 at position "f")
+    </pre>
+    <div class="result">idxmin → "b" &nbsp; idxmax → "f"</div>
+
+    <h2>Handling missing values (skipna)</h2>
+    <pre>
+const s2 = new Series({ data: [NaN, 2, 1], index: ["a", "b", "c"] });
+
+idxmin(s2);                    // → "c"  (NaN skipped by default)
+idxmin(s2, { skipna: false }); // → "a"  (NaN encountered first → return its label)
+    </pre>
+    <div class="result">idxmin (skipna: true) → "c" &nbsp;&nbsp; idxmin (skipna: false) → "a"</div>
+
+    <h2>DataFrame: axis 0 — row label of extremum per column</h2>
+    <pre>
+import { DataFrame, idxminDataFrame, idxmaxDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  price:    [120, 85, 200, 95],
+  quantity: [5,   10,  2,  8],
+  rating:   [4.5, 3.8, 4.9, 4.1],
+});
+
+idxminDataFrame(df);
+// Series: { price: 1, quantity: 2, rating: 1 }
+// (row 1 has min price, row 2 has min quantity, row 1 has min rating)
+
+idxmaxDataFrame(df);
+// Series: { price: 2, quantity: 1, rating: 2 }
+    </pre>
+    <table>
+      <thead><tr><th>column</th><th>idxmin</th><th>idxmax</th></tr></thead>
+      <tbody>
+        <tr><td>price</td><td>1 (85)</td><td>2 (200)</td></tr>
+        <tr><td>quantity</td><td>2 (2)</td><td>1 (10)</td></tr>
+        <tr><td>rating</td><td>1 (3.8)</td><td>2 (4.9)</td></tr>
+      </tbody>
+    </table>
+
+    <h2>DataFrame: axis 1 — column name of extremum per row</h2>
+    <pre>
+idxminDataFrame(df, { axis: 1 });
+// For each row, which column has the smallest value?
+// → Series: [0→"quantity", 1→"rating", 2→"quantity", 3→"rating"]
+// (row 0: price=120, quantity=5, rating=4.5 → "quantity" is smallest)
+
+idxmaxDataFrame(df, { axis: 1 });
+// → Series: [0→"price", 1→"price", 2→"price", 3→"price"]
+    </pre>
+    <div class="note">
+      <strong>Note:</strong> When <code>axis: 1</code>, the result is indexed by the DataFrame's
+      row index, and each value is the <em>column name</em> where the extremum occurs.
+    </div>
+
+    <h2>API Reference</h2>
+    <table>
+      <thead><tr><th>Function</th><th>Returns</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>idxmin(series, opts?)</code></td>
+          <td><code>Label | null</code></td>
+          <td>Index label of minimum value in Series</td>
+        </tr>
+        <tr>
+          <td><code>idxmax(series, opts?)</code></td>
+          <td><code>Label | null</code></td>
+          <td>Index label of maximum value in Series</td>
+        </tr>
+        <tr>
+          <td><code>idxminDataFrame(df, opts?)</code></td>
+          <td><code>Series&lt;Scalar&gt;</code></td>
+          <td>Per-column or per-row index label of minimum</td>
+        </tr>
+        <tr>
+          <td><code>idxmaxDataFrame(df, opts?)</code></td>
+          <td><code>Series&lt;Scalar&gt;</code></td>
+          <td>Per-column or per-row index label of maximum</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Options</h2>
+    <table>
+      <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>skipna</code></td><td><code>true</code></td><td>Skip NaN / null values</td></tr>
+        <tr><td><code>axis</code></td><td><code>0</code></td><td>0 / "index": per-column; 1 / "columns": per-row</td></tr>
+      </tbody>
+    </table>
+
+    <p><a href="index.html">← Back to tsb playground</a></p>
+  </body>
+</html>

@@ -369,3 +369,6 @@ export { astype, dataFrameAstype } from "./core/index.ts";
 export { convertDtypes, dataFrameConvertDtypes } from "./core/index.ts";
 export type { ConvertDtypesOptions } from "./core/index.ts";
 export type { AstypeErrors, AstypeOptions, AstypeSpec } from "./core/index.ts";
+
+export { idxmin, idxmax, idxminDataFrame, idxmaxDataFrame } from "./stats/index.ts";
+export type { IdxMinMaxOptions, IdxAxis, IdxMinMaxDataFrameOptions } from "./stats/index.ts";
