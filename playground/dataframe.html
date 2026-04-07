@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tsb — DataFrame Tutorial</title>
+  <title>tsb — DataFrame Playground</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -22,340 +22,619 @@
       color: var(--text);
       font-family: system-ui, -apple-system, sans-serif;
       line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
     }
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    header h1 { font-size: 1.4rem; color: var(--accent); }
-    header a { color: #8b949e; font-size: 0.9rem; text-decoration: none; }
-    header a:hover { color: var(--accent); }
-    main {
-      max-width: 860px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
-    }
-    h2 {
-      font-size: 1.5rem;
-      margin: 2rem 0 0.5rem;
-      color: var(--accent);
-    }
-    p { margin: 0.5rem 0 1rem; color: #8b949e; }
-    .example {
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 2rem;
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
     }
-    .example-header {
+    .back { margin-bottom: 2rem; display: inline-block; }
+
+    /* ── Loading overlay ──────────────────────────────── */
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+
+    /* ── Section cards ────────────────────────────────── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+
+    /* ── Playground block ─────────────────────────────── */
+    .playground-block {
+      margin-top: 0.75rem;
+    }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .playground-run { font-weight: 600; }
+
+    /* ── Editor textarea ──────────────────────────────── */
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
       background: #0d1117;
-      border-bottom: 1px solid var(--border);
-      padding: 0.5rem 1rem;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    /* ── Output area ──────────────────────────────────── */
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
       font-size: 0.85rem;
       color: #8b949e;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
     }
-    .example-header span { color: var(--green); font-weight: 600; }
-    pre {
-      padding: 1rem;
-      overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: 0.88rem;
-      line-height: 1.5;
-    }
-    .kw  { color: #ff7b72; }
-    .fn  { color: #d2a8ff; }
-    .str { color: #a5d6ff; }
-    .num { color: #79c0ff; }
-    .cmt { color: #8b949e; font-style: italic; }
-    .out {
-      background: #0d1117;
-      border-top: 1px solid var(--border);
-      padding: 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
+    .playground-output.active {
       color: var(--green);
+      border-color: var(--green);
     }
-    .tag {
-      display: inline-block;
+    .playground-output.error {
+      color: var(--red);
+      border-color: var(--red);
+    }
+    .playground-hint {
       font-size: 0.75rem;
-      padding: 0.1rem 0.5rem;
-      border-radius: 4px;
-      background: #1f3a5a;
-      color: var(--accent);
-      margin-right: 0.5rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
     }
-    .note {
-      background: #1a2232;
-      border-left: 3px solid var(--accent);
-      padding: 0.75rem 1rem;
-      border-radius: 0 6px 6px 0;
-      margin: 1rem 0 1.5rem;
-      font-size: 0.9rem;
-      color: #cdd9e5;
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>🗃️ DataFrame</h1>
-  </div>
-  <a href="index.html">← Back to tsb Playground</a>
-</header>
-<main>
 
+  <!-- Loading overlay (hidden once TS compiler + tsb are ready) -->
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>🗃️ DataFrame — Interactive Playground</h1>
   <p>
-    <code>DataFrame</code> is the heart of <strong>tsb</strong>: a two-dimensional, column-oriented
-    table where every column is a typed <code>Series</code>. It mirrors <code>pandas.DataFrame</code>
-    with a fully strict TypeScript API.
+    <code>DataFrame</code> is the heart of <strong style="color: var(--text);">tsb</strong>: a
+    two-dimensional, column-oriented table where every column is a typed
+    <code>Series</code>. It mirrors <code>pandas.DataFrame</code> with a fully
+    strict TypeScript API.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
   </p>
 
-  <!-- ── Construction ─────────────────────────────────────────────────── -->
-  <h2>Construction</h2>
-  <p>Three factory methods cover the most common shapes of input data.</p>
+  <!-- ── 1. Construction ─────────────────────────────────── -->
+  <div class="section">
+    <h2>Construction</h2>
+    <p>Three factory methods cover the most common shapes of input data:
+      <code>fromColumns</code>, <code>fromRecords</code>, and <code>from2D</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
 
-  <div class="example">
-    <div class="example-header">
-      <span>fromColumns</span>
-      <span class="tag">most common</span>
-    </div>
-    <pre><code><span class="kw">import</span> { DataFrame } <span class="kw">from</span> <span class="str">"tsb"</span>;
-
-<span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
-  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Carol"</span>],
-  age:   [<span class="num">30</span>, <span class="num">25</span>, <span class="num">35</span>],
-  score: [<span class="num">90</span>, <span class="num">80</span>, <span class="num">95</span>],
+// fromColumns — most common
+const df1 = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol"],
+  age:   [30, 25, 35],
+  score: [90, 80, 95],
 });
+console.log("fromColumns:");
+console.log(df1.toString());
 
-console.log(df.<span class="fn">toString</span>());</code></pre>
-    <div class="out">         name  age  score
------------------------
-0  Alice    30   90
-1  Bob      25   80
-2  Carol    35   95</div>
-  </div>
-
-  <div class="example">
-    <div class="example-header">
-      <span>fromRecords</span>
-      <span class="tag">array of objects</span>
-    </div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromRecords</span>([
-  { city: <span class="str">"London"</span>, pop: <span class="num">9_000_000</span> },
-  { city: <span class="str">"Tokyo"</span>,  pop: <span class="num">14_000_000</span> },
-  { city: <span class="str">"NYC"</span>,    pop: <span class="num">8_300_000</span> },
+// fromRecords — array of objects
+const df2 = DataFrame.fromRecords([
+  { city: "London", pop: 9_000_000 },
+  { city: "Tokyo",  pop: 14_000_000 },
+  { city: "NYC",    pop: 8_300_000 },
 ]);
+console.log("\nfromRecords shape:", df2.shape);
 
-df.shape;  <span class="cmt">// [3, 2]</span></code></pre>
-  </div>
-
-  <div class="example">
-    <div class="example-header">
-      <span>from2D</span>
-      <span class="tag">matrix</span>
-    </div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">from2D</span>(
-  [[<span class="num">1</span>, <span class="num">4</span>], [<span class="num">2</span>, <span class="num">5</span>], [<span class="num">3</span>, <span class="num">6</span>]],
-  [<span class="str">"a"</span>, <span class="str">"b"</span>],
+// from2D — matrix with column names
+const df3 = DataFrame.from2D(
+  [[1, 4], [2, 5], [3, 6]],
+  ["a", "b"],
 );
-
-df.<span class="fn">col</span>(<span class="str">"a"</span>).<span class="fn">values</span>;  <span class="cmt">// [1, 2, 3]</span></code></pre>
+console.log("\nfrom2D col 'a' values:", df3.col("a").values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <!-- ── Shape & Properties ────────────────────────────────────────────── -->
-  <h2>Shape &amp; Properties</h2>
+  <!-- ── 2. Properties ────────────────────────────────────── -->
+  <div class="section">
+    <h2>Properties</h2>
+    <p>Inspect the shape, dimensionality, size, and axes of a DataFrame.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
 
-  <div class="example">
-    <div class="example-header"><span>shape / ndim / size / empty</span></div>
-    <pre><code>df.shape;  <span class="cmt">// [3, 3]  — [rows, cols]</span>
-df.ndim;   <span class="cmt">// 2</span>
-df.size;   <span class="cmt">// 9  — rows × cols</span>
-df.empty;  <span class="cmt">// false</span>
-
-df.index;    <span class="cmt">// RangeIndex(0, 1, 2)</span>
-df.columns;  <span class="cmt">// Index(["name", "age", "score"])</span></code></pre>
-  </div>
-
-  <!-- ── Column Access ─────────────────────────────────────────────────── -->
-  <h2>Column Access</h2>
-
-  <div class="example">
-    <div class="example-header"><span>col / get / has</span></div>
-    <pre><code>df.<span class="fn">col</span>(<span class="str">"age"</span>);         <span class="cmt">// Series — throws if missing</span>
-df.<span class="fn">get</span>(<span class="str">"age"</span>);         <span class="cmt">// Series | undefined</span>
-df.<span class="fn">has</span>(<span class="str">"age"</span>);         <span class="cmt">// true</span>
-df.<span class="fn">col</span>(<span class="str">"age"</span>).<span class="fn">mean</span>(); <span class="cmt">// 30</span></code></pre>
-  </div>
-
-  <!-- ── Slicing ────────────────────────────────────────────────────────── -->
-  <h2>Slicing</h2>
-
-  <div class="example">
-    <div class="example-header"><span>head / tail / iloc / loc</span></div>
-    <pre><code>df.<span class="fn">head</span>(<span class="num">2</span>);               <span class="cmt">// first 2 rows</span>
-df.<span class="fn">tail</span>(<span class="num">1</span>);               <span class="cmt">// last row</span>
-df.<span class="fn">iloc</span>([<span class="num">0</span>, <span class="num">2</span>]);          <span class="cmt">// rows at positions 0 and 2</span>
-df.<span class="fn">loc</span>([<span class="str">"Alice"</span>]);         <span class="cmt">// rows where index label = "Alice"</span></code></pre>
-  </div>
-
-  <!-- ── Column Mutations ──────────────────────────────────────────────── -->
-  <h2>Column Mutations</h2>
-  <div class="note">All mutation methods return a <strong>new</strong> DataFrame — tsb is immutable.</div>
-
-  <div class="example">
-    <div class="example-header"><span>assign / drop / select / rename</span></div>
-    <pre><code><span class="cmt">// Add or replace a column</span>
-<span class="kw">const</span> df2 = df.<span class="fn">assign</span>({ bonus: [<span class="num">5</span>, <span class="num">10</span>, <span class="num">15</span>] });
-
-<span class="cmt">// Remove columns</span>
-<span class="kw">const</span> df3 = df.<span class="fn">drop</span>([<span class="str">"score"</span>]);
-
-<span class="cmt">// Reorder / subset columns</span>
-<span class="kw">const</span> df4 = df.<span class="fn">select</span>([<span class="str">"age"</span>, <span class="str">"name"</span>]);
-
-<span class="cmt">// Rename a column</span>
-<span class="kw">const</span> df5 = df.<span class="fn">rename</span>({ age: <span class="str">"years"</span> });</code></pre>
-  </div>
-
-  <!-- ── Missing Values ───────────────────────────────────────────────── -->
-  <h2>Missing Values</h2>
-
-  <div class="example">
-    <div class="example-header"><span>isna / notna / dropna / fillna</span></div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
-  a: [<span class="num">1</span>, <span class="kw">null</span>, <span class="num">3</span>],
-  b: [<span class="num">4</span>, <span class="num">5</span>, <span class="kw">null</span>],
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol"],
+  age:   [30, 25, 35],
+  score: [90, 80, 95],
 });
 
-df.<span class="fn">isna</span>().<span class="fn">toRecords</span>();   <span class="cmt">// [{ a: false, b: false }, ...]</span>
-df.<span class="fn">dropna</span>().shape;       <span class="cmt">// [1, 2] — only row 0 has no nulls</span>
-df.<span class="fn">fillna</span>(<span class="num">0</span>).toRecords(); <span class="cmt">// nulls → 0</span></code></pre>
+console.log("shape:", df.shape);     // [rows, cols]
+console.log("ndim:", df.ndim);       // always 2
+console.log("size:", df.size);       // rows × cols
+console.log("empty:", df.empty);     // false
+console.log("index:", df.index.toString());
+console.log("columns:", df.columns.toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <!-- ── Aggregations ──────────────────────────────────────────────────── -->
-  <h2>Aggregations</h2>
+  <!-- ── 3. Column Access ─────────────────────────────────── -->
+  <div class="section">
+    <h2>Column Access</h2>
+    <p>Retrieve columns with <code>col()</code> (throws if missing),
+      <code>get()</code> (returns undefined), and check existence with <code>has()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
 
-  <div class="example">
-    <div class="example-header"><span>sum / mean / min / max / std / count / describe</span></div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
-  a: [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>],
-  b: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol"],
+  age:   [30, 25, 35],
+  score: [90, 80, 95],
 });
 
-df.<span class="fn">sum</span>();   <span class="cmt">// Series { a: 60, b: 6 }</span>
-df.<span class="fn">mean</span>();  <span class="cmt">// Series { a: 20, b: 2 }</span>
-df.<span class="fn">min</span>();   <span class="cmt">// Series { a: 10, b: 1 }</span>
-df.<span class="fn">max</span>();   <span class="cmt">// Series { a: 30, b: 3 }</span>
+// col() returns a Series — throws if the column is missing
+console.log("col('age'):", df.col("age").toString());
 
-df.<span class="fn">describe</span>();
-<span class="cmt">// DataFrame with rows: count, mean, std, min, max</span>
-<span class="cmt">// columns: a, b</span></code></pre>
+// get() returns Series | undefined
+console.log("get('score'):", df.get("score")?.values);
+console.log("get('nope'):", df.get("nope"));
+
+// has() checks existence
+console.log("has('name'):", df.has("name"));
+console.log("has('xyz'):", df.has("xyz"));
+
+// Chain into Series methods
+console.log("mean age:", df.col("age").mean());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <!-- ── Sorting ────────────────────────────────────────────────────────── -->
-  <h2>Sorting</h2>
+  <!-- ── 4. Slicing ───────────────────────────────────────── -->
+  <div class="section">
+    <h2>Slicing</h2>
+    <p>Select rows by position with <code>head()</code>, <code>tail()</code>,
+      <code>iloc()</code>, or by label with <code>loc()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Index } from "tsb";
 
-  <div class="example">
-    <div class="example-header"><span>sortValues / sortIndex</span></div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
-  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Carol"</span>],
-  score: [<span class="num">90</span>, <span class="num">80</span>, <span class="num">95</span>],
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol", "Dave", "Eve"],
+  score: [90, 80, 95, 70, 85],
 });
 
-<span class="cmt">// Sort ascending</span>
-df.<span class="fn">sortValues</span>(<span class="str">"score"</span>).<span class="fn">col</span>(<span class="str">"name"</span>).<span class="fn">values</span>;
-<span class="cmt">// ["Bob", "Alice", "Carol"]</span>
+console.log("head(2):");
+console.log(df.head(2).toString());
 
-<span class="cmt">// Sort descending</span>
-df.<span class="fn">sortValues</span>(<span class="str">"score"</span>, <span class="kw">false</span>).<span class="fn">col</span>(<span class="str">"name"</span>).<span class="fn">values</span>;
-<span class="cmt">// ["Carol", "Alice", "Bob"]</span>
+console.log("\ntail(2):");
+console.log(df.tail(2).toString());
 
-<span class="cmt">// Multi-column sort</span>
-df.<span class="fn">sortValues</span>([<span class="str">"group"</span>, <span class="str">"score"</span>], [<span class="kw">true</span>, <span class="kw">false</span>]);</code></pre>
+console.log("\niloc([0, 2, 4]):");
+console.log(df.iloc([0, 2, 4]).toString());
+
+// loc() uses index labels
+const labeled = DataFrame.fromColumns(
+  { val: [10, 20, 30] },
+  { index: new Index(["a", "b", "c"]) },
+);
+console.log("\nloc(['a', 'c']):");
+console.log(labeled.loc(["a", "c"]).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <!-- ── Apply ──────────────────────────────────────────────────────────── -->
-  <h2>Apply</h2>
+  <!-- ── 5. Column Mutations ──────────────────────────────── -->
+  <div class="section">
+    <h2>Column Mutations</h2>
+    <p>All mutation methods return a <strong style="color: var(--text);">new</strong>
+      DataFrame — tsb is immutable. Use <code>assign()</code>, <code>drop()</code>,
+      <code>select()</code>, and <code>rename()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
 
-  <div class="example">
-    <div class="example-header"><span>apply(fn, axis)</span></div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>], b: [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>] });
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol"],
+  age:   [30, 25, 35],
+  score: [90, 80, 95],
+});
 
-<span class="cmt">// axis=0: apply to each column</span>
-df.<span class="fn">apply</span>((s) => s.<span class="fn">sum</span>(), <span class="num">0</span>);
-<span class="cmt">// Series { a: 6, b: 15 }</span>
+// assign — add or replace columns
+const withBonus = df.assign({ bonus: [5, 10, 15] });
+console.log("assign:");
+console.log(withBonus.toString());
 
-<span class="cmt">// axis=1: apply to each row</span>
-df.<span class="fn">apply</span>((s) => s.<span class="fn">sum</span>(), <span class="num">1</span>);
-<span class="cmt">// Series [5, 7, 9]</span></code></pre>
+// drop — remove columns
+const dropped = df.drop(["score"]);
+console.log("\ndrop(['score']):");
+console.log(dropped.toString());
+
+// select — reorder / subset columns
+const selected = df.select(["score", "name"]);
+console.log("\nselect(['score', 'name']):");
+console.log(selected.toString());
+
+// rename — rename columns
+const renamed = df.rename({ age: "years" });
+console.log("\nrename({ age: 'years' }):");
+console.log(renamed.columns.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <!-- ── Iteration ─────────────────────────────────────────────────────── -->
-  <h2>Iteration</h2>
+  <!-- ── 6. Missing Values ────────────────────────────────── -->
+  <div class="section">
+    <h2>Missing Values</h2>
+    <p>Detect, drop, and fill <code>null</code> values across the entire DataFrame.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
 
-  <div class="example">
-    <div class="example-header"><span>items / iterrows</span></div>
-    <pre><code><span class="cmt">// Iterate over (columnName, Series) pairs</span>
-<span class="kw">for</span> (<span class="kw">const</span> [name, col] <span class="kw">of</span> df.<span class="fn">items</span>()) {
-  console.<span class="fn">log</span>(name, col.<span class="fn">sum</span>());
+const df = DataFrame.fromColumns({
+  a: [1, null, 3],
+  b: [4, 5, null],
+});
+
+console.log("isna():");
+console.log(df.isna().toString());
+
+console.log("\nnotna():");
+console.log(df.notna().toString());
+
+// dropna — keep only rows with no nulls
+console.log("\ndropna() shape:", df.dropna().shape);
+console.log(df.dropna().toString());
+
+// fillna — replace nulls with a value
+console.log("\nfillna(0):");
+console.log(df.fillna(0).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 7. Aggregations ──────────────────────────────────── -->
+  <div class="section">
+    <h2>Aggregations</h2>
+    <p>Column-wise aggregates: <code>sum()</code>, <code>mean()</code>,
+      <code>min()</code>, <code>max()</code>, <code>count()</code>, and the
+      all-in-one <code>describe()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [10, 20, 30],
+  b: [1, 2, 3],
+});
+
+console.log("sum:  ", df.sum().toString());
+console.log("mean: ", df.mean().toString());
+console.log("min:  ", df.min().toString());
+console.log("max:  ", df.max().toString());
+console.log("count:", df.count().toString());
+
+console.log("\ndescribe():");
+console.log(df.describe().toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 8. Sorting ───────────────────────────────────────── -->
+  <div class="section">
+    <h2>Sorting</h2>
+    <p>Sort rows by column values with <code>sortValues()</code> or by the
+      index with <code>sortIndex()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Index } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol"],
+  score: [90, 80, 95],
+});
+
+// Sort ascending by score
+console.log("sortValues('score'):");
+console.log(df.sortValues("score").toString());
+
+// Sort descending
+console.log("\nsortValues('score', false):");
+console.log(df.sortValues("score", false).toString());
+
+// Sort by index
+const labeled = DataFrame.fromColumns(
+  { val: [30, 10, 20] },
+  { index: new Index(["c", "a", "b"]) },
+);
+console.log("\nsortIndex():");
+console.log(labeled.sortIndex().toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 9. Apply & Iteration ─────────────────────────────── -->
+  <div class="section">
+    <h2>Apply &amp; Iteration</h2>
+    <p>Use <code>apply()</code> to run a function over columns (axis 0) or rows
+      (axis 1). Iterate with <code>items()</code> and <code>iterrows()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3],
+  b: [4, 5, 6],
+});
+
+// apply axis=0 — aggregate each column
+console.log("apply(sum, axis=0):", df.apply((s) => s.sum(), 0).toString());
+
+// apply axis=1 — aggregate each row
+console.log("apply(sum, axis=1):", df.apply((s) => s.sum(), 1).toString());
+
+// items() — iterate over (colName, Series) pairs
+console.log("\nitems():");
+for (const [name, col] of df.items()) {
+  console.log(`  ${name}: sum = ${col.sum()}`);
 }
 
-<span class="cmt">// Iterate over (rowLabel, rowSeries) pairs</span>
-<span class="kw">for</span> (<span class="kw">const</span> [label, row] <span class="kw">of</span> df.<span class="fn">iterrows</span>()) {
-  console.<span class="fn">log</span>(label, row.<span class="fn">toObject</span>());
-}</code></pre>
+// iterrows() — iterate over (label, rowSeries) pairs
+console.log("\niterrows():");
+for (const [label, row] of df.iterrows()) {
+  console.log(`  row ${label}:`, row.values);
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <!-- ── Conversion ─────────────────────────────────────────────────────── -->
-  <h2>Conversion</h2>
+  <!-- ── 10. Conversion ───────────────────────────────────── -->
+  <div class="section">
+    <h2>Conversion</h2>
+    <p>Convert between DataFrames and plain JavaScript structures.
+      Use <code>setIndex()</code> and <code>resetIndex()</code> to manipulate
+      the row index.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
 
-  <div class="example">
-    <div class="example-header"><span>toRecords / toDict / toArray</span></div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({ a: [<span class="num">1</span>, <span class="num">2</span>], b: [<span class="num">3</span>, <span class="num">4</span>] });
-
-df.<span class="fn">toRecords</span>();
-<span class="cmt">// [{ a: 1, b: 3 }, { a: 2, b: 4 }]</span>
-
-df.<span class="fn">toDict</span>();
-<span class="cmt">// { a: [1, 2], b: [3, 4] }</span>
-
-df.<span class="fn">toArray</span>();
-<span class="cmt">// [[1, 3], [2, 4]]</span></code></pre>
-  </div>
-
-  <!-- ── Index Manipulation ────────────────────────────────────────────── -->
-  <h2>Index Manipulation</h2>
-
-  <div class="example">
-    <div class="example-header"><span>setIndex / resetIndex</span></div>
-    <pre><code><span class="kw">const</span> df = DataFrame.<span class="fn">fromColumns</span>({
-  name:  [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>],
-  score: [<span class="num">90</span>, <span class="num">80</span>],
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob"],
+  score: [90, 80],
 });
 
-<span class="cmt">// Promote "name" to the row index</span>
-<span class="kw">const</span> indexed = df.<span class="fn">setIndex</span>(<span class="str">"name"</span>);
-indexed.index.values;  <span class="cmt">// ["Alice", "Bob"]</span>
-indexed.columns.values; <span class="cmt">// ["score"]</span>
+console.log("toRecords():", df.toRecords());
+console.log("toDict():", df.toDict());
+console.log("toArray():", df.toArray());
 
-<span class="cmt">// Restore a numeric index</span>
-<span class="kw">const</span> reset = indexed.<span class="fn">resetIndex</span>();
-reset.columns.values; <span class="cmt">// ["index", "score"]</span></code></pre>
+// setIndex — promote a column to the row index
+const indexed = df.setIndex("name");
+console.log("\nsetIndex('name'):");
+console.log(indexed.toString());
+console.log("index values:", indexed.index.values);
+console.log("columns:", indexed.columns.values);
+
+// resetIndex — restore a numeric index
+const reset = indexed.resetIndex();
+console.log("\nresetIndex():");
+console.log(reset.toString());
+console.log("columns:", reset.columns.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
   </div>
 
-  <p style="margin-top: 2rem; font-size: 0.85rem; color: #484f58;">
-    tsb is a TypeScript port of pandas, built from first principles.
-    &mdash; <a href="index.html" style="color: var(--accent);">← Back to Playground</a>
-  </p>
+  <!-- ── 11. Try It Yourself ──────────────────────────────── -->
+  <div class="section">
+    <h2>🧪 Try It Yourself</h2>
+    <p>Write your own tsb code below. All exports from <code>tsb</code> are available:
+      <code>DataFrame</code>, <code>Series</code>, <code>Index</code>, <code>Dtype</code>, and more.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript — Scratch Pad</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Series } from "tsb";
 
-</main>
+// Build a DataFrame, explore, and transform!
+const sales = DataFrame.fromRecords([
+  { product: "Widget", qty: 100, price: 9.99 },
+  { product: "Gadget", qty: 50,  price: 24.99 },
+  { product: "Doohickey", qty: 200, price: 4.99 },
+]);
+
+console.log(sales.toString());
+console.log("\nTotal qty:", sales.col("qty").sum());
+console.log("Avg price:", sales.col("price").mean());
+console.log("\nSorted by price (desc):");
+console.log(sales.sortValues("price", false).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+
+  <!-- Playground runtime: loads TypeScript compiler + tsb bundle, sets up editors -->
+  <script type="module" src="playground-runtime.js"></script>
 </body>
 </html>
