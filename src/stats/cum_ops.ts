@@ -193,11 +193,7 @@ function rowWiseCum(df: DataFrame, skipna: boolean, fn: CumFn): DataFrame {
 }
 
 /** Dispatch cumulative op over a DataFrame with the given axis. */
-function dfCum(
-  df: DataFrame,
-  options: DataFrameCumOpsOptions,
-  fn: CumFn,
-): DataFrame {
+function dfCum(df: DataFrame, options: DataFrameCumOpsOptions, fn: CumFn): DataFrame {
   const skipna = options.skipna ?? true;
   const axis = options.axis ?? 0;
   if (axis === 1 || axis === "columns") {

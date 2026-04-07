@@ -83,7 +83,10 @@ function colWiseElem(df: DataFrame, fn: (v: number) => number): DataFrame {
 // ─── clip ─────────────────────────────────────────────────────────────────────
 
 /** Build a clip transform function from lower / upper bounds. */
-function makeClipFn(lower: number | null | undefined, upper: number | null | undefined): (v: number) => number {
+function makeClipFn(
+  lower: number | null | undefined,
+  upper: number | null | undefined,
+): (v: number) => number {
   const lo = lower ?? Number.NEGATIVE_INFINITY;
   const hi = upper ?? Number.POSITIVE_INFINITY;
   return (v: number): number => {

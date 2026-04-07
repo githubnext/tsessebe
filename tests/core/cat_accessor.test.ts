@@ -360,9 +360,7 @@ describe("CategoricalAccessor — property tests", () => {
         const s2 = s.cat.removeUnusedCategories();
         const cats = new Set(s2.cat.categories.values.map(String));
         const vals = new Set(
-          data
-            .filter((v): v is string => v !== null && v !== undefined)
-            .map(String),
+          data.filter((v): v is string => v !== null && v !== undefined).map(String),
         );
         for (const c of cats) {
           if (!vals.has(c)) {

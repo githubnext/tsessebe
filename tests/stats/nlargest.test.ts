@@ -18,7 +18,7 @@ import type { Label, Scalar } from "../../src/index.ts";
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function s(data: readonly Scalar[], name?: string): Series<Scalar> {
-  return new Series({ data: [...data], name });
+  return new Series({ data: [...data], ...(name !== undefined ? { name } : {}) });
 }
 
 function vals(series: Series<Scalar>): Scalar[] {
@@ -55,7 +55,7 @@ describe("nlargestSeries", () => {
   });
 
   it("excludes NaN values", () => {
-    const result = nlargestSeries(s([3, NaN, 5, NaN, 1]), 3);
+    const result = nlargestSeries(s([3, Number.NaN, 5, Number.NaN, 1]), 3);
     expect(vals(result)).toEqual([5, 3, 1]);
   });
 
@@ -75,7 +75,7 @@ describe("nlargestSeries", () => {
     const series = new Series({ data: [5, 5, 5], index: [0, 1, 2] });
     const result = nlargestSeries(series, 2, { keep: "last" });
     expect(vals(result)).toEqual([5, 5]);
-    expect(idxVals(result)).toEqual([1, 2]);
+    expect(idxVals(result)).toEqual([2, 1]);
   });
 
   it("keep='all' returns all ties at boundary", () => {
@@ -126,7 +126,7 @@ describe("nlargestSeries", () => {
   });
 
   it("all NaN returns empty", () => {
-    const result = nlargestSeries(s([NaN, NaN]), 2);
+    const result = nlargestSeries(s([Number.NaN, Number.NaN]), 2);
     expect(vals(result)).toEqual([]);
   });
 });
@@ -157,7 +157,7 @@ describe("nsmallestSeries", () => {
   });
 
   it("excludes NaN values", () => {
-    const result = nsmallestSeries(s([3, NaN, 5, NaN, 1]), 2);
+    const result = nsmallestSeries(s([3, Number.NaN, 5, Number.NaN, 1]), 2);
     expect(vals(result)).toEqual([1, 3]);
   });
 
@@ -172,7 +172,7 @@ describe("nsmallestSeries", () => {
     const series = new Series({ data: [1, 1, 1, 5], index: [0, 1, 2, 3] });
     const result = nsmallestSeries(series, 2, { keep: "last" });
     expect(vals(result)).toEqual([1, 1]);
-    expect(idxVals(result)).toEqual([1, 2]);
+    expect(idxVals(result)).toEqual([2, 1]);
   });
 
   it("keep='all' returns all ties at boundary", () => {
@@ -252,7 +252,7 @@ describe("nlargestDataFrame", () => {
   it("keep='last' selects last tie at boundary", () => {
     const df = DataFrame.fromColumns({ a: [5, 5, 5] });
     const result = nlargestDataFrame(df, 2, { columns: "a", keep: "last" });
-    expect([...result.index.values]).toEqual([1, 2]);
+    expect([...result.index.values]).toEqual([2, 1]);
   });
 
   it("keep='all' returns all ties at boundary", () => {
@@ -355,14 +355,11 @@ describe("nlargestSeries property tests", () => {
 
   it("nlargest + nsmallest together cover original data when n = length", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.float({ noNaN: true }), { minLength: 1, maxLength: 10 }),
-        (data) => {
-          const series = s(data as Scalar[]);
-          const largest = nlargestSeries(series, data.length);
-          return largest.size === data.length;
-        },
-      ),
+      fc.property(fc.array(fc.float({ noNaN: true }), { minLength: 1, maxLength: 10 }), (data) => {
+        const series = s(data as Scalar[]);
+        const largest = nlargestSeries(series, data.length);
+        return largest.size === data.length;
+      }),
     );
   });
 

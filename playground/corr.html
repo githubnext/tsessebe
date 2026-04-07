@@ -1,73 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — corr &amp; cov</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <nav class="breadcrumb">
-      <a href="index.html">tsb playground</a> › corr &amp; cov
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — corr &amp; cov Playground</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
 
-    <h1>corr &amp; cov — Pearson Correlation &amp; Covariance</h1>
-    <p class="intro">
-      <code>DataFrame.corr()</code>, <code>DataFrame.cov()</code>, and
-      <code>Series.corr()</code> mirror
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html"
-        >pandas <code>DataFrame.corr()</code></a
-      >
-      and
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.cov.html"
-        >pandas <code>DataFrame.cov()</code></a
-      >.
-      The standalone <code>pearsonCorr(a, b)</code> and
-      <code>dataFrameCorr(df)</code> / <code>dataFrameCov(df)</code> functions
-      provide the same functionality.
+    /* ── Loading overlay ──────────────────────────────── */
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+
+    /* ── Section cards ────────────────────────────────── */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+
+    /* ── Playground block ─────────────────────────────── */
+    .playground-block {
+      margin-top: 0.75rem;
+    }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .playground-run { font-weight: 600; }
+
+    /* ── Editor (contenteditable pre) ─────────────────── */
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    /* ── Output area ──────────────────────────────────── */
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active {
+      color: var(--green);
+      border-color: var(--green);
+    }
+    .playground-output.error {
+      color: var(--red);
+      border-color: var(--red);
+    }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay (hidden once TS compiler + tsb are ready) -->
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📊 corr &amp; cov — Interactive Playground</h1>
+  <p>
+    <code>pearsonCorr(a, b)</code> computes the Pearson correlation between two
+    Series. <code>dataFrameCorr(df)</code> and <code>dataFrameCov(df)</code>
+    produce symmetric N×N correlation and covariance matrices — mirroring
+    <code>pandas.DataFrame.corr()</code> and
+    <code>pandas.DataFrame.cov()</code>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
+
+  <!-- ── 1. Series pearsonCorr ───────────────────────── -->
+  <div class="section">
+    <h2>1 · Series pearsonCorr</h2>
+    <p>
+      <code>pearsonCorr(a, b)</code> computes the Pearson correlation coefficient
+      between two Series, aligning on shared index labels and ignoring missing
+      values. Returns a number in [−1, 1], or <code>NaN</code> when a valid
+      result cannot be computed.
     </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" title="Run (Ctrl+Enter)" disabled>▶ Run</button>
+          <button class="playground-reset" title="Reset">↺ Reset</button>
+        </div>
+      </div>
+      <pre class="playground-editor" contenteditable="true" spellcheck="false">import { Series, pearsonCorr } from "tsb";
 
-    <section class="tutorial">
-      <h2>1 — Series.corr() — Pearson correlation between two Series</h2>
-      <p>
-        <code>a.corr(b)</code> computes the Pearson correlation coefficient
-        between Series <em>a</em> and <em>b</em>, aligning on shared index
-        labels and ignoring missing values.  Returns a number in [−1, 1], or
-        <code>NaN</code> when a valid result cannot be computed.
-      </p>
-      <div class="editor" id="series-corr-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const temperature = new tsb.Series({ data: [22, 24, 28, 31, 35], name: "temp_C" });
-const ice_cream   = new tsb.Series({ data: [120, 145, 190, 230, 285], name: "sales" });
+const temperature = new Series({ data: [22, 24, 28, 31, 35], name: "temp_C" });
+const ice_cream   = new Series({ data: [120, 145, 190, 230, 285], name: "sales" });
 
-const r = temperature.corr(ice_cream);
+const r = pearsonCorr(temperature, ice_cream);
 console.log("Pearson r:", r.toFixed(4));   // strong positive correlation
 
 // Negative correlation
-const warm_clothes = new tsb.Series({ data: [310, 280, 210, 150, 90], name: "jackets" });
-console.log("r (temp vs jackets):", temperature.corr(warm_clothes).toFixed(4));
-</pre>
-      </div>
-      <button class="run-btn" data-editor="series-corr-editor">▶ Run</button>
-      <pre class="output" id="series-corr-output"></pre>
-    </section>
+const warm_clothes = new Series({ data: [310, 280, 210, 150, 90], name: "jackets" });
+console.log("r (temp vs jackets):", pearsonCorr(temperature, warm_clothes).toFixed(4));
 
-    <section class="tutorial">
-      <h2>2 — DataFrame.corr() — pairwise correlation matrix</h2>
-      <p>
-        <code>df.corr()</code> returns a symmetric N×N DataFrame where entry
-        [i, j] is the Pearson correlation between columns <em>i</em> and
-        <em>j</em>.  Diagonal entries are always 1.  Only numeric columns are
-        included; string columns are silently skipped.
-      </p>
-      <div class="editor" id="df-corr-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+// Missing values are dropped per-pair
+const c = new Series({ data: [1, null, 3, 4] });
+const d = new Series({ data: [2,    4, 6, 8] });
+console.log("r (nulls dropped):", pearsonCorr(c, d).toFixed(4));
+
+// Require at least 5 valid pairs — returns NaN when fewer exist
+console.log("r (minPeriods=5):", pearsonCorr(c, d, { minPeriods: 5 }));</pre>
+      <pre class="playground-output">Click ▶ Run to execute</pre>
+      <div class="playground-hint">Ctrl+Enter to run</div>
+    </div>
+  </div>
+
+  <!-- ── 2. DataFrame corr matrix ────────────────────── -->
+  <div class="section">
+    <h2>2 · DataFrame corr matrix (dataFrameCorr)</h2>
+    <p>
+      <code>dataFrameCorr(df)</code> returns a symmetric N×N DataFrame where
+      entry [i, j] is the Pearson correlation between columns <em>i</em> and
+      <em>j</em>. Diagonal entries are always 1. Only numeric columns are
+      included; string columns are silently skipped.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" title="Run (Ctrl+Enter)" disabled>▶ Run</button>
+          <button class="playground-reset" title="Reset">↺ Reset</button>
+        </div>
+      </div>
+      <pre class="playground-editor" contenteditable="true" spellcheck="false">import { DataFrame, dataFrameCorr } from "tsb";
+
+const df = DataFrame.fromColumns({
   height: [160, 172, 185, 155, 168],
   weight: [55,   72,  90,  48,  65],
   age:    [22,   35,  28,  19,  31],
   city:   ["A", "B", "C", "A", "B"],  // non-numeric — skipped
 });
 
-const r = df.corr();
+const r = dataFrameCorr(df);
 console.log("columns:", [...r.columns.values]);
 console.log("shape:", r.shape);
 
@@ -76,28 +276,37 @@ const rHW = r.col("weight").iat(0);  // corr(height, weight)
 const rHA = r.col("age").iat(0);     // corr(height, age)
 console.log("height–weight r:", rHW.toFixed(4));
 console.log("height–age r:   ", rHA.toFixed(4));
-console.log("diagonal:", [r.col("height").iat(0), r.col("weight").iat(1), r.col("age").iat(2)]);
-</pre>
-      </div>
-      <button class="run-btn" data-editor="df-corr-editor">▶ Run</button>
-      <pre class="output" id="df-corr-output"></pre>
-    </section>
+console.log("diagonal:", [r.col("height").iat(0), r.col("weight").iat(1), r.col("age").iat(2)]);</pre>
+      <pre class="playground-output">Click ▶ Run to execute</pre>
+      <div class="playground-hint">Ctrl+Enter to run</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>3 — DataFrame.cov() — pairwise covariance matrix</h2>
-      <p>
-        <code>df.cov()</code> returns the sample covariance matrix (denominator
-        <em>n − 1</em>).  Pass <code>ddof=0</code> for population covariance.
-        Diagonal entries are the variance of each column.
-      </p>
-      <div class="editor" id="df-cov-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const returns = tsb.DataFrame.fromColumns({
+  <!-- ── 3. DataFrame cov matrix ─────────────────────── -->
+  <div class="section">
+    <h2>3 · DataFrame cov matrix (dataFrameCov)</h2>
+    <p>
+      <code>dataFrameCov(df)</code> returns the sample covariance matrix
+      (denominator <em>n − 1</em>). Pass <code>{ ddof: 0 }</code> for
+      population covariance. Diagonal entries are the variance of each column.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" title="Run (Ctrl+Enter)" disabled>▶ Run</button>
+          <button class="playground-reset" title="Reset">↺ Reset</button>
+        </div>
+      </div>
+      <pre class="playground-editor" contenteditable="true" spellcheck="false">import { DataFrame, dataFrameCov } from "tsb";
+
+const returns = DataFrame.fromColumns({
   AAPL: [ 0.02,  0.01, -0.03,  0.04,  0.01],
   GOOG: [ 0.01,  0.02, -0.02,  0.03,  0.02],
   TSLA: [-0.05,  0.08, -0.10,  0.12, -0.03],
 });
 
-const cov = returns.cov();
+const cov = dataFrameCov(returns);
 console.log("Covariance matrix:");
 for (const col of cov.columns.values) {
   const vals = [...cov.col(col).values].map(v => (v).toFixed(6));
@@ -105,70 +314,67 @@ for (const col of cov.columns.values) {
 }
 
 // Compare sample (ddof=1) vs population (ddof=0) variance
-const varAAPL_sample = returns.cov(1).col("AAPL").iat(0);
-const varAAPL_pop    = returns.cov(0).col("AAPL").iat(0);
-console.log("\nAAPL sample variance:", varAAPL_sample.toFixed(6));
-console.log("AAPL population variance:", varAAPL_pop.toFixed(6));
-</pre>
+const varSample = dataFrameCov(returns, { ddof: 1 }).col("AAPL").iat(0);
+const varPop    = dataFrameCov(returns, { ddof: 0 }).col("AAPL").iat(0);
+console.log("\nAAPL sample variance:", varSample.toFixed(6));
+console.log("AAPL population variance:", varPop.toFixed(6));</pre>
+      <pre class="playground-output">Click ▶ Run to execute</pre>
+      <div class="playground-hint">Ctrl+Enter to run</div>
+    </div>
+  </div>
+
+  <!-- ── 4. Scratch Pad ──────────────────────────────── -->
+  <div class="section">
+    <h2>🧪 Scratch Pad</h2>
+    <p>Write your own corr &amp; cov code below. All exports from <code>tsb</code> are available:
+      <code>DataFrame</code>, <code>Series</code>, <code>pearsonCorr</code>,
+      <code>dataFrameCorr</code>, <code>dataFrameCov</code>, and more.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript — Scratch Pad</span>
+        <div class="playground-actions">
+          <button class="playground-run" title="Run (Ctrl+Enter)" disabled>▶ Run</button>
+          <button class="playground-reset" title="Reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="df-cov-editor">▶ Run</button>
-      <pre class="output" id="df-cov-output"></pre>
-    </section>
+      <pre class="playground-editor" contenteditable="true" spellcheck="false">import { DataFrame, Series, pearsonCorr, dataFrameCorr, dataFrameCov } from "tsb";
 
-    <section class="tutorial">
-      <h2>4 — Handling missing values and index alignment</h2>
-      <p>
-        All functions align on shared index labels (inner join) and silently
-        drop pairs where either value is <code>null</code> or
-        <code>NaN</code>.  Use <code>minPeriods</code> to require a minimum
-        number of valid observation pairs.
-      </p>
-      <div class="editor" id="missing-editor">
-<pre class="code" contenteditable="true" spellcheck="false">// Different indices — only shared labels are used
-const a = new tsb.Series({ data: [1, 2, 3, 4], index: ["w", "x", "y", "z"] });
-const b = new tsb.Series({ data: [5, 6, 7, 8], index: ["x", "y", "z", "q"] });
-// shared: x(2,5), y(3,6), z(4,7)
-console.log("corr (inner join):", tsb.pearsonCorr(a, b).toFixed(4));  // 1.0
+// Try it! Explore correlation and covariance.
+const a = new Series({ data: [1, 2, 3, 4, 5] });
+const b = new Series({ data: [2, 4, 6, 8, 10] });
 
-// Missing values are dropped per-pair
-const c = new tsb.Series({ data: [1, null, 3, 4] });
-const d = new tsb.Series({ data: [2,    4, 6, 8] });
-// null at position 1 is dropped; pairs (1,2),(3,6),(4,8) remain
-console.log("corr (nulls dropped):", tsb.pearsonCorr(c, d).toFixed(4));  // 1.0
+console.log("Perfect positive r:", pearsonCorr(a, b));
 
-// Require at least 5 valid pairs — returns NaN when fewer exist
-console.log("corr (minPeriods=5):", tsb.pearsonCorr(c, d, { minPeriods: 5 }));  // NaN
-</pre>
-      </div>
-      <button class="run-btn" data-editor="missing-editor">▶ Run</button>
-      <pre class="output" id="missing-output"></pre>
-    </section>
+const df = DataFrame.fromColumns({
+  x: [1, 2, 3, 4, 5],
+  y: [5, 4, 3, 2, 1],
+  z: [2, 4, 6, 8, 10],
+});
 
-    <script type="module">
-      import * as tsb from "./tsb.js";
-      window.tsb = tsb;
+console.log("\nCorrelation matrix:");
+for (const col of dataFrameCorr(df).columns.values) {
+  const vals = [...dataFrameCorr(df).col(col).values].map(v => (v).toFixed(2));
+  console.log(col + ":", vals.join("  "));
+}
 
-      document.querySelectorAll(".run-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const editorId = btn.getAttribute("data-editor");
-          const outputId = editorId.replace("-editor", "-output");
-          const code = document.getElementById(editorId).querySelector(".code").innerText;
-          const output = document.getElementById(outputId);
-          const logs = [];
-          const origLog = console.log;
-          console.log = (...args) => logs.push(args.map(String).join(" "));
-          try {
-            new Function("tsb", code)(tsb);
-            output.textContent = logs.join("\n");
-            output.classList.remove("error");
-          } catch (e) {
-            output.textContent = "Error: " + e.message;
-            output.classList.add("error");
-          } finally {
-            console.log = origLog;
-          }
-        });
-      });
-    </script>
-  </body>
+console.log("\nCovariance matrix:");
+for (const col of dataFrameCov(df).columns.values) {
+  const vals = [...dataFrameCov(df).col(col).values].map(v => (v).toFixed(2));
+  console.log(col + ":", vals.join("  "));
+}</pre>
+      <pre class="playground-output">Click ▶ Run to execute</pre>
+      <div class="playground-hint">Ctrl+Enter to run</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+
+  <!-- Playground runtime: loads TypeScript compiler + tsb bundle, sets up editors -->
+  <script type="module" src="playground-runtime.js"></script>
+</body>
 </html>

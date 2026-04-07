@@ -68,8 +68,7 @@ function splitLabel(label: string, sep: string): [string, string] {
   const idx = label.indexOf(sep);
   if (idx === -1) {
     throw new RangeError(
-      `Index label "${label}" does not contain separator "${sep}". ` +
-        `Was this Series produced by stack() with a different sep?`,
+      `Index label "${label}" does not contain separator "${sep}". Was this Series produced by stack() with a different sep?`,
     );
   }
   return [label.slice(0, idx), label.slice(idx + sep.length)];

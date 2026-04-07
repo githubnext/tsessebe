@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tsb — DataFrame Playground</title>
+  <title>tsb — Series Playground</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -190,21 +190,19 @@
   </div>
 
   <a class="back" href="index.html">← Back to roadmap</a>
-  <h1>🗃️ DataFrame — Interactive Playground</h1>
+  <h1>📊 Series — Interactive Playground</h1>
   <p>
-    <code>DataFrame</code> is the heart of <strong style="color: var(--text);">tsb</strong>: a
-    two-dimensional, column-oriented table where every column is a typed
-    <code>Series</code>. It mirrors <code>pandas.DataFrame</code> with a fully
-    strict TypeScript API.<br>
+    <code>Series</code> is a one-dimensional labeled array — the TypeScript
+    equivalent of <code>pandas.Series</code>.  It supports element access,
+    arithmetic, statistics, boolean masking, and missing-value handling.<br>
     <strong style="color: var(--text);">Edit any code block below and press ▶ Run
     (or Ctrl+Enter) to execute it live in your browser.</strong>
   </p>
 
-  <!-- ── 1. Construction ─────────────────────────────────── -->
+  <!-- ── 1. Creating a Series ────────────────────────── -->
   <div class="section">
-    <h2>Construction</h2>
-    <p>Three factory methods cover the most common shapes of input data:
-      <code>fromColumns</code>, <code>fromRecords</code>, and <code>from2D</code>.</p>
+    <h2>Creating a Series</h2>
+    <p>Construct a Series from an options object or use <code>Series.fromObject()</code> for key→value data.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -213,40 +211,32 @@
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-// fromColumns — most common
-const df1 = DataFrame.fromColumns({
-  name:  ["Alice", "Bob", "Carol"],
-  age:   [30, 25, 35],
-  score: [90, 80, 95],
+// From data array with default integer index
+const s1 = new Series({ data: [10, 20, 30] });
+console.log(s1.toString());
+
+// With custom index and name
+const s2 = new Series({
+  data: [100, 200, 300],
+  index: ["a", "b", "c"],
+  name: "revenue",
 });
-console.log("fromColumns:");
-console.log(df1.toString());
+console.log(s2.toString());
 
-// fromRecords — array of objects
-const df2 = DataFrame.fromRecords([
-  { city: "London", pop: 9_000_000 },
-  { city: "Tokyo",  pop: 14_000_000 },
-  { city: "NYC",    pop: 8_300_000 },
-]);
-console.log("\nfromRecords shape:", df2.shape);
-
-// from2D — matrix with column names
-const df3 = DataFrame.from2D(
-  [[1, 4], [2, 5], [3, 6]],
-  ["a", "b"],
-);
-console.log("\nfrom2D col 'a' values:", df3.col("a").values);</textarea>
+// From an object (keys become index labels)
+const s3 = Series.fromObject({ x: 1, y: 2, z: 3 });
+console.log(s3.toString());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 2. Properties ────────────────────────────────────── -->
+  <!-- ── 2. Properties ───────────────────────────────── -->
   <div class="section">
     <h2>Properties</h2>
-    <p>Inspect the shape, dimensionality, size, and axes of a DataFrame.</p>
+    <p>Inspect the size, shape, dtype, and other metadata of a Series.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -255,30 +245,31 @@ console.log("\nfrom2D col 'a' values:", df3.col("a").values);</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  name:  ["Alice", "Bob", "Carol"],
-  age:   [30, 25, 35],
-  score: [90, 80, 95],
+const s = new Series({
+  data: [10, 20, 30, 40],
+  index: ["a", "b", "c", "d"],
+  name: "scores",
 });
 
-console.log("shape:", df.shape);     // [rows, cols]
-console.log("ndim:", df.ndim);       // always 2
-console.log("size:", df.size);       // rows × cols
-console.log("empty:", df.empty);     // false
-console.log("index:", df.index.toString());
-console.log("columns:", df.columns.toString());</textarea>
+console.log("size:  ", s.size);
+console.log("length:", s.length);
+console.log("shape: ", s.shape);
+console.log("ndim:  ", s.ndim);
+console.log("empty: ", s.empty);
+console.log("values:", s.values);
+console.log("dtype: ", s.dtype.toString());
+console.log("name:  ", s.name);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 3. Column Access ─────────────────────────────────── -->
+  <!-- ── 3. Element Access ───────────────────────────── -->
   <div class="section">
-    <h2>Column Access</h2>
-    <p>Retrieve columns with <code>col()</code> (throws if missing),
-      <code>get()</code> (returns undefined), and check existence with <code>has()</code>.</p>
+    <h2>Element Access</h2>
+    <p>Use <code>at()</code> / <code>iat()</code> for single elements, and <code>loc()</code> / <code>iloc()</code> for label-based or positional slicing.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -287,37 +278,37 @@ console.log("columns:", df.columns.toString());</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  name:  ["Alice", "Bob", "Carol"],
-  age:   [30, 25, 35],
-  score: [90, 80, 95],
+const s = new Series({
+  data: [10, 20, 30, 40, 50],
+  index: ["a", "b", "c", "d", "e"],
+  name: "vals",
 });
 
-// col() returns a Series — throws if the column is missing
-console.log("col('age'):", df.col("age").toString());
+// Single element by label
+console.log("at('c'):", s.at("c"));
 
-// get() returns Series | undefined
-console.log("get('score'):", df.get("score")?.values);
-console.log("get('nope'):", df.get("nope"));
+// Single element by position
+console.log("iat(0): ", s.iat(0));
+console.log("iat(-1):", s.iat(-1));
 
-// has() checks existence
-console.log("has('name'):", df.has("name"));
-console.log("has('xyz'):", df.has("xyz"));
+// Multiple labels → sub-Series
+console.log("\nloc(['a', 'c', 'e']):");
+console.log(s.loc(["a", "c", "e"]).toString());
 
-// Chain into Series methods
-console.log("mean age:", df.col("age").mean());</textarea>
+// Multiple positions → sub-Series
+console.log("\niloc([1, 3]):");
+console.log(s.iloc([1, 3]).toString());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 4. Slicing ───────────────────────────────────────── -->
+  <!-- ── 4. Arithmetic ───────────────────────────────── -->
   <div class="section">
-    <h2>Slicing</h2>
-    <p>Select rows by position with <code>head()</code>, <code>tail()</code>,
-      <code>iloc()</code>, or by label with <code>loc()</code>.</p>
+    <h2>Arithmetic</h2>
+    <p>Element-wise operations with a scalar or another Series: <code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code>, <code>mod</code>, <code>pow</code>.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -326,40 +317,26 @@ console.log("mean age:", df.col("age").mean());</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Index } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  name:  ["Alice", "Bob", "Carol", "Dave", "Eve"],
-  score: [90, 80, 95, 70, 85],
-});
+const a = new Series({ data: [10, 20, 30], index: ["x", "y", "z"] });
+const b = new Series({ data: [1, 2, 3],   index: ["x", "y", "z"] });
 
-console.log("head(2):");
-console.log(df.head(2).toString());
-
-console.log("\ntail(2):");
-console.log(df.tail(2).toString());
-
-console.log("\niloc([0, 2, 4]):");
-console.log(df.iloc([0, 2, 4]).toString());
-
-// loc() uses index labels
-const labeled = DataFrame.fromColumns(
-  { val: [10, 20, 30] },
-  { index: new Index(["a", "b", "c"]) },
-);
-console.log("\nloc(['a', 'c']):");
-console.log(labeled.loc(["a", "c"]).toString());</textarea>
+console.log("add(5):", a.add(5).values);
+console.log("sub(b):", a.sub(b).values);
+console.log("mul(2):", a.mul(2).values);
+console.log("div(b):", a.div(b).values);
+console.log("mod(7):", a.mod(7).values);
+console.log("pow(2):", a.pow(2).values);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 5. Column Mutations ──────────────────────────────── -->
+  <!-- ── 5. Comparison ───────────────────────────────── -->
   <div class="section">
-    <h2>Column Mutations</h2>
-    <p>All mutation methods return a <strong style="color: var(--text);">new</strong>
-      DataFrame — tsb is immutable. Use <code>assign()</code>, <code>drop()</code>,
-      <code>select()</code>, and <code>rename()</code>.</p>
+    <h2>Comparison</h2>
+    <p>Element-wise comparison returns a boolean Series: <code>eq</code>, <code>ne</code>, <code>lt</code>, <code>le</code>, <code>gt</code>, <code>ge</code>.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -368,42 +345,58 @@ console.log(labeled.loc(["a", "c"]).toString());</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  name:  ["Alice", "Bob", "Carol"],
-  age:   [30, 25, 35],
-  score: [90, 80, 95],
-});
+const s = new Series({ data: [1, 2, 3, 4, 5] });
 
-// assign — add or replace columns
-const withBonus = df.assign({ bonus: [5, 10, 15] });
-console.log("assign:");
-console.log(withBonus.toString());
-
-// drop — remove columns
-const dropped = df.drop(["score"]);
-console.log("\ndrop(['score']):");
-console.log(dropped.toString());
-
-// select — reorder / subset columns
-const selected = df.select(["score", "name"]);
-console.log("\nselect(['score', 'name']):");
-console.log(selected.toString());
-
-// rename — rename columns
-const renamed = df.rename({ age: "years" });
-console.log("\nrename({ age: 'years' }):");
-console.log(renamed.columns.values);</textarea>
+console.log("eq(3):", s.eq(3).values);
+console.log("ne(3):", s.ne(3).values);
+console.log("lt(3):", s.lt(3).values);
+console.log("le(3):", s.le(3).values);
+console.log("gt(3):", s.gt(3).values);
+console.log("ge(3):", s.ge(3).values);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 6. Missing Values ────────────────────────────────── -->
+  <!-- ── 6. Filtering & Boolean Masking ──────────────── -->
+  <div class="section">
+    <h2>Filtering &amp; Boolean Masking</h2>
+    <p>Use <code>filter()</code> with a boolean array or boolean Series to select elements.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({
+  data: [10, 25, 5, 40, 15],
+  index: ["a", "b", "c", "d", "e"],
+  name: "prices",
+});
+
+// Filter with a boolean array
+const mask = [true, false, true, false, true];
+console.log("Boolean array filter:");
+console.log(s.filter(mask).toString());
+
+// Filter with a comparison result (boolean Series)
+console.log("\nValues > 12:");
+console.log(s.filter(s.gt(12)).toString());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- ── 7. Missing Values ───────────────────────────── -->
   <div class="section">
     <h2>Missing Values</h2>
-    <p>Detect, drop, and fill <code>null</code> values across the entire DataFrame.</p>
+    <p>Detect, drop, and fill <code>null</code> / <code>NaN</code> values.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -412,37 +405,27 @@ console.log(renamed.columns.values);</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  a: [1, null, 3],
-  b: [4, 5, null],
-});
+const s = new Series({ data: [1, null, 3, null, 5], name: "sparse" });
 
-console.log("isna():");
-console.log(df.isna().toString());
+console.log("isna: ", s.isna().values);
+console.log("notna:", s.notna().values);
 
-console.log("\nnotna():");
-console.log(df.notna().toString());
+console.log("\ndropna():");
+console.log(s.dropna().toString());
 
-// dropna — keep only rows with no nulls
-console.log("\ndropna() shape:", df.dropna().shape);
-console.log(df.dropna().toString());
-
-// fillna — replace nulls with a value
 console.log("\nfillna(0):");
-console.log(df.fillna(0).toString());</textarea>
+console.log(s.fillna(0).toString());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 7. Aggregations ──────────────────────────────────── -->
+  <!-- ── 8. Statistics ───────────────────────────────── -->
   <div class="section">
-    <h2>Aggregations</h2>
-    <p>Column-wise aggregates: <code>sum()</code>, <code>mean()</code>,
-      <code>min()</code>, <code>max()</code>, <code>count()</code>, and the
-      all-in-one <code>describe()</code>.</p>
+    <h2>Statistics</h2>
+    <p>Aggregation and descriptive statistics: <code>sum</code>, <code>mean</code>, <code>std</code>, <code>median</code>, <code>unique</code>, <code>valueCounts</code>, and more.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -451,31 +434,32 @@ console.log(df.fillna(0).toString());</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  a: [10, 20, 30],
-  b: [1, 2, 3],
-});
+const s = new Series({ data: [4, 1, 7, 4, 2, 7, 4] });
 
-console.log("sum:  ", df.sum().toString());
-console.log("mean: ", df.mean().toString());
-console.log("min:  ", df.min().toString());
-console.log("max:  ", df.max().toString());
-console.log("count:", df.count().toString());
+console.log("sum:    ", s.sum());
+console.log("mean:   ", s.mean());
+console.log("min:    ", s.min());
+console.log("max:    ", s.max());
+console.log("std:    ", s.std());
+console.log("var:    ", s.var());
+console.log("median: ", s.median());
+console.log("count:  ", s.count());
+console.log("nunique:", s.nunique());
+console.log("unique: ", s.unique());
 
-console.log("\ndescribe():");
-console.log(df.describe().toString());</textarea>
+console.log("\nvalueCounts():");
+console.log(s.valueCounts().toString());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 8. Sorting ───────────────────────────────────────── -->
+  <!-- ── 9. Sorting ──────────────────────────────────── -->
   <div class="section">
     <h2>Sorting</h2>
-    <p>Sort rows by column values with <code>sortValues()</code> or by the
-      index with <code>sortIndex()</code>.</p>
+    <p>Sort by values or by index labels, with control over direction and NA placement.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript</span>
@@ -484,122 +468,31 @@ console.log(df.describe().toString());</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Index } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-const df = DataFrame.fromColumns({
-  name:  ["Alice", "Bob", "Carol"],
-  score: [90, 80, 95],
+const s = new Series({
+  data: [30, 10, null, 20],
+  index: ["c", "a", "d", "b"],
 });
 
-// Sort ascending by score
-console.log("sortValues('score'):");
-console.log(df.sortValues("score").toString());
+console.log("sortValues (ascending):");
+console.log(s.sortValues().toString());
 
-// Sort descending
-console.log("\nsortValues('score', false):");
-console.log(df.sortValues("score", false).toString());
+console.log("\nsortValues (descending, na first):");
+console.log(s.sortValues(false, "first").toString());
 
-// Sort by index
-const labeled = DataFrame.fromColumns(
-  { val: [30, 10, 20] },
-  { index: new Index(["c", "a", "b"]) },
-);
-console.log("\nsortIndex():");
-console.log(labeled.sortIndex().toString());</textarea>
+console.log("\nsortIndex:");
+console.log(s.sortIndex().toString());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
   </div>
 
-  <!-- ── 9. Apply & Iteration ─────────────────────────────── -->
-  <div class="section">
-    <h2>Apply &amp; Iteration</h2>
-    <p>Use <code>apply()</code> to run a function over columns (axis 0) or rows
-      (axis 1). Iterate with <code>items()</code> and <code>iterrows()</code>.</p>
-    <div class="playground-block">
-      <div class="playground-header">
-        <span class="playground-label">TypeScript</span>
-        <div class="playground-actions">
-          <button class="playground-run" disabled>▶ Run</button>
-          <button class="playground-reset">↺ Reset</button>
-        </div>
-      </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
-
-const df = DataFrame.fromColumns({
-  a: [1, 2, 3],
-  b: [4, 5, 6],
-});
-
-// apply axis=0 — aggregate each column
-console.log("apply(sum, axis=0):", df.apply((s) => s.sum(), 0).toString());
-
-// apply axis=1 — aggregate each row
-console.log("apply(sum, axis=1):", df.apply((s) => s.sum(), 1).toString());
-
-// items() — iterate over (colName, Series) pairs
-console.log("\nitems():");
-for (const [name, col] of df.items()) {
-  console.log(`  ${name}: sum = ${col.sum()}`);
-}
-
-// iterrows() — iterate over (label, rowSeries) pairs
-console.log("\niterrows():");
-for (const [label, row] of df.iterrows()) {
-  console.log(`  row ${label}:`, row.values);
-}</textarea>
-      <div class="playground-output">Click ▶ Run to execute</div>
-      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
-    </div>
-  </div>
-
-  <!-- ── 10. Conversion ───────────────────────────────────── -->
-  <div class="section">
-    <h2>Conversion</h2>
-    <p>Convert between DataFrames and plain JavaScript structures.
-      Use <code>setIndex()</code> and <code>resetIndex()</code> to manipulate
-      the row index.</p>
-    <div class="playground-block">
-      <div class="playground-header">
-        <span class="playground-label">TypeScript</span>
-        <div class="playground-actions">
-          <button class="playground-run" disabled>▶ Run</button>
-          <button class="playground-reset">↺ Reset</button>
-        </div>
-      </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
-
-const df = DataFrame.fromColumns({
-  name:  ["Alice", "Bob"],
-  score: [90, 80],
-});
-
-console.log("toRecords():", df.toRecords());
-console.log("toDict():", df.toDict());
-console.log("toArray():", df.toArray());
-
-// setIndex — promote a column to the row index
-const indexed = df.setIndex("name");
-console.log("\nsetIndex('name'):");
-console.log(indexed.toString());
-console.log("index values:", indexed.index.values);
-console.log("columns:", indexed.columns.values);
-
-// resetIndex — restore a numeric index
-const reset = indexed.resetIndex();
-console.log("\nresetIndex():");
-console.log(reset.toString());
-console.log("columns:", reset.columns.values);</textarea>
-      <div class="playground-output">Click ▶ Run to execute</div>
-      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
-    </div>
-  </div>
-
-  <!-- ── 11. Try It Yourself ──────────────────────────────── -->
+  <!-- ── 10. Try It Yourself ─────────────────────────── -->
   <div class="section">
     <h2>🧪 Try It Yourself</h2>
     <p>Write your own tsb code below. All exports from <code>tsb</code> are available:
-      <code>DataFrame</code>, <code>Series</code>, <code>Index</code>, <code>Dtype</code>, and more.</p>
+      <code>Series</code>, <code>Index</code>, <code>RangeIndex</code>, <code>Dtype</code>, and more.</p>
     <div class="playground-block">
       <div class="playground-header">
         <span class="playground-label">TypeScript — Scratch Pad</span>
@@ -608,20 +501,19 @@ console.log("columns:", reset.columns.values);</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Series } from "tsb";
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-// Build a DataFrame, explore, and transform!
-const sales = DataFrame.fromRecords([
-  { product: "Widget", qty: 100, price: 9.99 },
-  { product: "Gadget", qty: 50,  price: 24.99 },
-  { product: "Doohickey", qty: 200, price: 4.99 },
-]);
+// Try it! Build a Series and explore the API.
+const temps = new Series({
+  data: [72, 68, 75, 80, 77],
+  index: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  name: "temperature",
+});
 
-console.log(sales.toString());
-console.log("\nTotal qty:", sales.col("qty").sum());
-console.log("Avg price:", sales.col("price").mean());
-console.log("\nSorted by price (desc):");
-console.log(sales.sortValues("price", false).toString());</textarea>
+console.log(temps.toString());
+console.log("\nMean:", temps.mean());
+console.log("Hot days (>= 75):");
+console.log(temps.filter(temps.ge(75)).toString());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

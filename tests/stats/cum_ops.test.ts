@@ -341,13 +341,19 @@ describe("dataFrameCummin", () => {
 describe("property tests", () => {
   it("cumsum: last value equals sum of all finite values", () => {
     fc.assert(
-      fc.property(fc.array(fc.float({ noNaN: true }), { minLength: 1, maxLength: 20 }), (data) => {
-        const result = cumsum(s(data));
-        const vals = result.values;
-        const last = vals.at(-1) as number;
-        const expected = data.reduce((acc, v) => acc + v, 0);
-        return Math.abs(last - expected) < 1e-6;
-      }),
+      fc.property(
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
+        (data) => {
+          const result = cumsum(s(data));
+          const vals = result.values;
+          const last = vals.at(-1) as number;
+          const expected = data.reduce((acc, v) => acc + v, 0);
+          return Math.abs(last - expected) < 1e-6;
+        },
+      ),
     );
   });
 

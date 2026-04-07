@@ -82,10 +82,7 @@ describe("Series.expanding() — min/max", () => {
 
 describe("Series.expanding() — count", () => {
   test("count ignores minPeriods", () => {
-    const result = s([1, null, 3, null, 5])
-      .expanding({ minPeriods: 3 })
-      .count()
-      .toArray();
+    const result = s([1, null, 3, null, 5]).expanding({ minPeriods: 3 }).count().toArray();
     // count always returns actual count regardless of minPeriods
     expect(result).toEqual([1, 1, 2, 2, 3]);
   });
@@ -106,7 +103,7 @@ describe("Series.expanding() — std/var", () => {
     expect(result[0]).toBe(null);
     // last element: std of [2,4,4,4,5,5,7,9]
     const last = result[7] as number;
-    expect(approx(last, 2.0, 1e-6)).toBe(true);
+    expect(approx(last, 2.138089935, 1e-6)).toBe(true);
   });
 
   test("var with ddof=1", () => {
@@ -120,7 +117,7 @@ describe("Series.expanding() — std/var", () => {
     const result = s([1, 2, 3]).expanding().std(0).toArray();
     expect(result[0]).toBe(0); // single element, pop std = 0
     expect(result[1]).toBeCloseTo(0.5, 9);
-    expect((result[2] as number)).toBeCloseTo(Math.sqrt(2 / 3), 9);
+    expect(result[2] as number).toBeCloseTo(Math.sqrt(2 / 3), 9);
   });
 });
 
@@ -178,7 +175,7 @@ describe("Series.expanding() — minPeriods", () => {
   });
 
   test("minPeriods with NaN values", () => {
-    const result = s([NaN, 2, 3]).expanding({ minPeriods: 2 }).sum().toArray();
+    const result = s([Number.NaN, 2, 3]).expanding({ minPeriods: 2 }).sum().toArray();
     // NaN is treated as missing; [NaN] has 0 valid → null; [NaN,2] has 1 valid < 2 → null; [NaN,2,3] has 2 valid
     expect(result[0]).toBe(null);
     expect(result[1]).toBe(null);
@@ -195,7 +192,7 @@ describe("Series.expanding() — edge cases", () => {
   });
 
   test("NaN treated as missing", () => {
-    const nanSeries = new Series<number>({ data: [1, NaN, 3] });
+    const nanSeries = new Series<number>({ data: [1, Number.NaN, 3] });
     const result = nanSeries.expanding().mean().toArray();
     expect(result[0]).toBe(1);
     expect(result[1]).toBe(1); // NaN skipped
@@ -249,14 +246,14 @@ describe("DataFrame.expanding()", () => {
     const df = DataFrame.fromColumns({ a: [1, 2, 3] });
     const result = df.expanding().std();
     expect(result.col("a").toArray()[0]).toBe(null);
-    expect((result.col("a").toArray()[1] as number)).toBeCloseTo(Math.sqrt(0.5), 9);
+    expect(result.col("a").toArray()[1] as number).toBeCloseTo(Math.sqrt(0.5), 9);
   });
 
   test("var per column", () => {
     const df = DataFrame.fromColumns({ a: [1, 2, 3] });
     const result = df.expanding().var();
     expect(result.col("a").toArray()[0]).toBe(null);
-    expect((result.col("a").toArray()[1] as number)).toBeCloseTo(0.5, 9);
+    expect(result.col("a").toArray()[1] as number).toBeCloseTo(0.5, 9);
   });
 
   test("median per column", () => {
@@ -311,7 +308,7 @@ describe("Expanding — property tests", () => {
               expect(result[i]).toBe(null);
             } else {
               const expected = validSoFar.reduce((a, b) => a + b, 0);
-              expect((result[i] as number)).toBeCloseTo(expected, 6);
+              expect(result[i] as number).toBeCloseTo(expected, 6);
             }
           }
         },
@@ -369,7 +366,7 @@ describe("Expanding — property tests", () => {
           for (let i = 0; i < data.length; i++) {
             const slice = data.slice(0, i + 1);
             const expected = slice.reduce((a, b) => a + b, 0) / slice.length;
-            expect((result[i] as number)).toBeCloseTo(expected, 6);
+            expect(result[i] as number).toBeCloseTo(expected, 6);
           }
         },
       ),

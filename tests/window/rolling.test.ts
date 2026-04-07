@@ -2,12 +2,12 @@
  * Tests for src/window/rolling.ts — Rolling window aggregations.
  */
 
-import fc from "fast-check";
 import { describe, expect, it } from "bun:test";
+import fc from "fast-check";
 import { DataFrame, DataFrameRolling, Series } from "../../src/index.ts";
+import type { Scalar } from "../../src/types.ts";
 import { Rolling } from "../../src/window/index.ts";
 import type { RollingSeriesLike } from "../../src/window/index.ts";
-import type { Scalar } from "../../src/types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -320,11 +320,15 @@ describe("DataFrameRolling", () => {
 
   it("apply() correct", () => {
     const df = DataFrame.fromColumns({ w: [1, 2, 3] });
-    const result = df.rolling(2).apply((v) => {
-      const first = v[0] ?? 0;
-      const last = v[v.length - 1] ?? 0;
-      return first + last;
-    }).col("w").toArray();
+    const result = df
+      .rolling(2)
+      .apply((v) => {
+        const first = v[0] ?? 0;
+        const last = v.at(-1) ?? 0;
+        return first + last;
+      })
+      .col("w")
+      .toArray();
     expect(result[1]).toBe(3); // 1+2
     expect(result[2]).toBe(5); // 2+3
   });
@@ -348,7 +352,10 @@ describe("Rolling property-based tests", () => {
   it("mean with window=1 equals original", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (arr) => {
           const s = numSeries(arr);
           const result = asArray(s.rolling(1, { minPeriods: 1 }).mean());
@@ -412,12 +419,7 @@ describe("Rolling property-based tests", () => {
           for (let i = 0; i < arr.length; i++) {
             const mn = mins[i];
             const mx = maxs[i];
-            if (
-              mn !== null &&
-              mx !== null &&
-              typeof mn === "number" &&
-              typeof mx === "number"
-            ) {
+            if (mn !== null && mx !== null && typeof mn === "number" && typeof mx === "number") {
               expect(mx).toBeGreaterThanOrEqual(mn);
             }
           }
@@ -429,7 +431,10 @@ describe("Rolling property-based tests", () => {
   it("std is always non-negative when defined", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 2, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 2,
+          maxLength: 20,
+        }),
         (arr) => {
           const s = numSeries(arr);
           const stds = asArray(s.rolling(2).std());

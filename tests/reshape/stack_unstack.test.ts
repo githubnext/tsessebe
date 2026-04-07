@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, Index, Series, type Scalar } from "../../src/index.ts";
+import { DataFrame, Index, type Label, type Scalar, Series } from "../../src/index.ts";
 import { STACK_DEFAULT_SEP, stack, unstack } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ describe("stack", () => {
     });
 
     it("uses boolean row-index labels as strings", () => {
-      const boolIdx = new Index<import("../../src/types.ts").Label>([true, false] as import("../../src/types.ts").Label[]);
+      const boolIdx = new Index<Label>([true, false] as Label[]);
       const df = DataFrame.fromColumns({ A: [10, 20] }, { index: boolIdx });
       const s = stack(df, { dropna: false });
       expect([...s.index.values]).toEqual(["true|A", "false|A"]);
@@ -155,10 +155,7 @@ describe("unstack", () => {
     });
 
     it("preserves row order", () => {
-      const df = DataFrame.fromColumns(
-        { A: [1, 2, 3], B: [4, 5, 6] },
-        { index: ["z", "m", "a"] },
-      );
+      const df = DataFrame.fromColumns({ A: [1, 2, 3], B: [4, 5, 6] }, { index: ["z", "m", "a"] });
       const recovered = unstack(stack(df, { dropna: false }));
       expect([...recovered.index.values]).toEqual(["z", "m", "a"]);
     });
@@ -225,7 +222,7 @@ describe("stack / unstack property tests", () => {
         }),
         (rows) => {
           const nCols = rows[0]?.length ?? 0;
-          const colNames = Array.from({ length: nCols }, (_, i) => `c${i}`);
+          const _colNames = Array.from({ length: nCols }, (_, i) => `c${i}`);
           const colData: Record<string, readonly Scalar[]> = {};
           for (let c = 0; c < nCols; c++) {
             colData[`c${c}`] = rows.map((r) => r[c] ?? null);
@@ -275,14 +272,14 @@ describe("stack / unstack property tests", () => {
   it("stack with dropna=true has size <= stack with dropna=false", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.option(fc.integer({ min: 0, max: 99 }), { nil: null }),
-          { minLength: 1, maxLength: 4 },
-        ),
-        fc.array(
-          fc.option(fc.integer({ min: 0, max: 99 }), { nil: null }),
-          { minLength: 1, maxLength: 4 },
-        ),
+        fc.array(fc.option(fc.integer({ min: 0, max: 99 }), { nil: null }), {
+          minLength: 1,
+          maxLength: 4,
+        }),
+        fc.array(fc.option(fc.integer({ min: 0, max: 99 }), { nil: null }), {
+          minLength: 1,
+          maxLength: 4,
+        }),
         (colA, colB) => {
           const len = Math.min(colA.length, colB.length);
           const df = DataFrame.fromColumns({

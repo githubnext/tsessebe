@@ -96,7 +96,10 @@ describe("clip — Series", () => {
   it("property: clipped values are within [lower, upper]", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 50 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
         fc.float({ noNaN: true, noDefaultInfinity: true }),
         fc.float({ noNaN: true, noDefaultInfinity: true }),
         (data, lo, hi) => {
@@ -104,10 +107,8 @@ describe("clip — Series", () => {
           const upper = Math.max(lo, hi);
           const r = clip(new Series({ data }), { lower, upper });
           for (const v of r.values) {
-            if (typeof v === "number" && !Number.isNaN(v)) {
-              if (v < lower || v > upper) {
-                return false;
-              }
+            if (typeof v === "number" && !Number.isNaN(v) && (v < lower || v > upper)) {
+              return false;
             }
           }
           return true;
@@ -177,14 +178,15 @@ describe("seriesAbs", () => {
   it("property: abs result is always >= 0 for finite inputs", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 50 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
         (data) => {
           const r = seriesAbs(new Series({ data }));
           for (const v of r.values) {
-            if (typeof v === "number" && !Number.isNaN(v)) {
-              if (v < 0) {
-                return false;
-              }
+            if (typeof v === "number" && !Number.isNaN(v) && v < 0) {
+              return false;
             }
           }
           return true;
@@ -196,7 +198,10 @@ describe("seriesAbs", () => {
   it("property: abs(abs(x)) === abs(x)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 50 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
         (data) => {
           const ser = new Series({ data });
           const once = seriesAbs(ser);
@@ -230,12 +235,16 @@ describe("dataFrameAbs", () => {
 describe("seriesRound", () => {
   it("rounds to 0 decimals (default)", () => {
     const r = seriesRound(s([1.4, 1.5, 2.5, -0.5]));
-    expect([...r.values]).toEqual([1, 2, 3, 0]);
+    expect([...r.values]).toEqual([1, 2, 3, -0]);
   });
 
   it("rounds to 2 decimals", () => {
     const r = seriesRound(s([1.234, 2.567, 3.001]), { decimals: 2 });
-    for (const [got, want] of [[r.values[0], 1.23], [r.values[1], 2.57], [r.values[2], 3.0]] as [Scalar, number][]) {
+    for (const [got, want] of [
+      [r.values[0], 1.23],
+      [r.values[1], 2.57],
+      [r.values[2], 3.0],
+    ] as [Scalar, number][]) {
       expect(typeof got === "number" && approx(got, want)).toBe(true);
     }
   });
@@ -267,14 +276,20 @@ describe("seriesRound", () => {
   it("property: round(decimals=0) produces integers for finite inputs", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 50 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
         (data) => {
           const r = seriesRound(new Series({ data }), { decimals: 0 });
           for (const v of r.values) {
-            if (typeof v === "number" && !Number.isNaN(v) && Number.isFinite(v)) {
-              if (v !== Math.round(v)) {
-                return false;
-              }
+            if (
+              typeof v === "number" &&
+              !Number.isNaN(v) &&
+              Number.isFinite(v) &&
+              v !== Math.round(v)
+            ) {
+              return false;
             }
           }
           return true;

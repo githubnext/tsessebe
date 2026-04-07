@@ -5,32 +5,53 @@
  *
  * Architecture:
  *   1. Loads the tsb browser bundle (built by CI into playground/dist/)
- *   2. Loads the TypeScript compiler from CDN for in-browser transpilation
+ *   2. Loads the TypeScript compiler (local bundle first, CDN fallback)
  *   3. Converts playground blocks into editable editors with Run/Reset buttons
  *   4. Transforms imports, transpiles TS → JS, and executes with output capture
  *
  * No WASM needed — the TypeScript compiler runs natively in JavaScript.
  */
 
-// ── Load TypeScript compiler from CDN ──────────────────────────────
+// ── Load TypeScript compiler (local bundle → CDN fallback) ─────────
 
-function loadTypeScript() {
+function loadScriptWithTimeout(src, timeoutMs) {
   return new Promise(function (resolve, reject) {
-    if (window.ts) {
-      resolve(window.ts);
-      return;
-    }
     var script = document.createElement("script");
-    script.src =
-      "https://cdn.jsdelivr.net/npm/typescript@5/lib/typescript.js";
+    var timer = setTimeout(function () {
+      reject(new Error("Timeout loading " + src));
+    }, timeoutMs);
+    script.src = src;
     script.onload = function () {
-      resolve(window.ts);
+      clearTimeout(timer);
+      resolve();
     };
     script.onerror = function () {
-      reject(new Error("Failed to load TypeScript compiler from CDN"));
+      clearTimeout(timer);
+      reject(new Error("Failed to load " + src));
     };
     document.head.appendChild(script);
   });
+}
+
+function loadTypeScript() {
+  if (window.ts) return Promise.resolve(window.ts);
+
+  // Try local bundle first (built by CI), then fall back to CDN
+  return loadScriptWithTimeout("./dist/typescript.js", 15000)
+    .catch(function () {
+      return loadScriptWithTimeout(
+        "https://cdn.jsdelivr.net/npm/typescript@5/lib/typescript.js",
+        30000,
+      );
+    })
+    .then(function () {
+      if (!window.ts) {
+        throw new Error(
+          "TypeScript compiler loaded but window.ts is not available",
+        );
+      }
+      return window.ts;
+    });
 }
 
 // ── Load tsb browser bundle ────────────────────────────────────────
@@ -130,6 +151,24 @@ function executeCode(jsCode) {
   return outputs.join("\n");
 }
 
+// ── Editor abstraction (supports both <textarea> and <pre contenteditable>) ──
+
+function isTextarea(el) {
+  return el.tagName === "TEXTAREA";
+}
+
+function getEditorCode(editor) {
+  return isTextarea(editor) ? editor.value : editor.textContent;
+}
+
+function setEditorCode(editor, code) {
+  if (isTextarea(editor)) {
+    editor.value = code;
+  } else {
+    editor.textContent = code;
+  }
+}
+
 // ── Playground block setup ─────────────────────────────────────────
 
 function setupBlock(block, ts) {
@@ -139,10 +178,11 @@ function setupBlock(block, ts) {
   var output = block.querySelector(".playground-output");
   if (!editor || !runBtn || !output) return;
 
-  var originalCode = editor.value;
+  var originalCode = getEditorCode(editor);
 
   // Auto-resize textarea to fit content
   function autoResize() {
+    if (!isTextarea(editor)) return;
     editor.style.height = "auto";
     editor.style.height = editor.scrollHeight + 2 + "px";
   }
@@ -153,11 +193,17 @@ function setupBlock(block, ts) {
   editor.addEventListener("keydown", function (e) {
     if (e.key === "Tab") {
       e.preventDefault();
-      var start = editor.selectionStart;
-      var end = editor.selectionEnd;
-      editor.value =
-        editor.value.substring(0, start) + "  " + editor.value.substring(end);
-      editor.selectionStart = editor.selectionEnd = start + 2;
+      if (isTextarea(editor)) {
+        var start = editor.selectionStart;
+        var end = editor.selectionEnd;
+        editor.value =
+          editor.value.substring(0, start) +
+          "  " +
+          editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+      } else {
+        document.execCommand("insertText", false, "  ");
+      }
     }
     // Ctrl+Enter or Cmd+Enter runs the code
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -171,7 +217,7 @@ function setupBlock(block, ts) {
     output.classList.remove("error");
     output.classList.add("active");
     try {
-      var code = editor.value;
+      var code = getEditorCode(editor);
       var js = transformCode(code, ts);
       var result = executeCode(js);
       output.textContent =
@@ -185,7 +231,7 @@ function setupBlock(block, ts) {
   // Reset button handler
   if (resetBtn) {
     resetBtn.addEventListener("click", function () {
-      editor.value = originalCode;
+      setEditorCode(editor, originalCode);
       output.textContent = "";
       output.classList.remove("error", "active");
       autoResize();
@@ -199,15 +245,19 @@ async function initPlayground() {
   var loadingEl = document.getElementById("playground-loading");
   var statusEl = document.getElementById("playground-status");
 
-  try {
-    if (statusEl)
-      statusEl.textContent = "Loading TypeScript compiler & tsb library\u2026";
+  function setStatus(msg) {
+    if (statusEl) statusEl.textContent = msg;
+  }
 
-    // Load both dependencies in parallel
-    var results = await Promise.all([loadTypeScript(), loadTsb()]);
-    var ts = results[0];
-    var tsb = results[1];
+  try {
+    setStatus("Loading tsb library\u2026");
+    var tsb = await loadTsb();
     window.__tsb = tsb;
+
+    setStatus("Loading TypeScript compiler\u2026");
+    var ts = await loadTypeScript();
+
+    setStatus("Initializing editors\u2026");
 
     // Initialize all playground blocks on the page
     var blocks = document.querySelectorAll(".playground-block");

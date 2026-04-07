@@ -304,13 +304,17 @@ export class DataFrameGroupBy {
     return this._runAgg(colSpecs, asIndex);
   }
 
-  /** Shorthand for `agg("sum")`. */
+  /** Shorthand for `agg("sum")` — numeric columns only, like pandas. */
   sum(): DataFrame {
-    return this.agg("sum");
+    const cols = this._numericValueCols();
+    const colSpecs = this._resolveColSpecs("sum", cols);
+    return this._runAgg(colSpecs, true);
   }
-  /** Shorthand for `agg("mean")`. */
+  /** Shorthand for `agg("mean")` — numeric columns only, like pandas. */
   mean(): DataFrame {
-    return this.agg("mean");
+    const cols = this._numericValueCols();
+    const colSpecs = this._resolveColSpecs("mean", cols);
+    return this._runAgg(colSpecs, true);
   }
   /** Shorthand for `agg("min")`. */
   min(): DataFrame {
@@ -324,9 +328,11 @@ export class DataFrameGroupBy {
   count(): DataFrame {
     return this.agg("count");
   }
-  /** Shorthand for `agg("std")`. */
+  /** Shorthand for `agg("std")` — numeric columns only, like pandas. */
   std(): DataFrame {
-    return this.agg("std");
+    const cols = this._numericValueCols();
+    const colSpecs = this._resolveColSpecs("std", cols);
+    return this._runAgg(colSpecs, true);
   }
   /** Shorthand for `agg("first")`. */
   first(): DataFrame {
@@ -433,6 +439,11 @@ export class DataFrameGroupBy {
   private _valueCols(): readonly string[] {
     const bySet = new Set(this._by);
     return this._df.columns.toArray().filter((c) => !bySet.has(c));
+  }
+
+  /** Return value columns that have a numeric dtype (for sum, mean, std). */
+  private _numericValueCols(): readonly string[] {
+    return this._valueCols().filter((c) => this._df.col(c).dtype.isNumeric);
   }
 
   /**

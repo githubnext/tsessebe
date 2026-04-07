@@ -14,7 +14,7 @@
  * @module
  */
 
-import { DataFrame } from "../core/index.ts";
+import type { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 

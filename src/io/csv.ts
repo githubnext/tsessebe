@@ -85,8 +85,8 @@ const DEFAULT_NA_STRINGS: ReadonlySet<string> = new Set([
 const RE_LINE_SPLIT = /\r\n|\n|\r/;
 const RE_INT = /^-?\d+$/;
 const RE_FLOAT = /^-?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
-const RE_BOOL_TRUE = /^(true|True|TRUE|1)$/;
-const RE_BOOL_FALSE = /^(false|False|FALSE|0)$/;
+const RE_BOOL_TRUE = /^(true|True|TRUE)$/;
+const RE_BOOL_FALSE = /^(false|False|FALSE)$/;
 const RE_DOUBLE_QUOTE = /"/g;
 
 // ─── CSV line parser ──────────────────────────────────────────────────────────
@@ -286,35 +286,82 @@ function emptyDataFrame(colNames: readonly string[]): DataFrame {
  * // DataFrame: a=[1,4], b=[2,5], c=[3,6]
  * ```
  */
+/** Build the NA set from options. */
+function buildNaSet(naValues: readonly string[] | undefined): Set<string> {
+  const naSet: Set<string> = new Set(DEFAULT_NA_STRINGS);
+  if (naValues !== undefined) {
+    for (const v of naValues) {
+      naSet.add(v);
+    }
+  }
+  return naSet;
+}
+
+/** Parse the header row and determine where data rows begin. */
+function parseHeader(
+  lines: readonly string[],
+  headerRow: number | null,
+  sep: string,
+): { colNames: string[]; dataStart: number } | null {
+  if (headerRow === null || headerRow < 0) {
+    return { colNames: [], dataStart: 0 };
+  }
+  if (headerRow >= lines.length) {
+    return null; // signals "return empty DataFrame"
+  }
+  return {
+    colNames: parseLine(lines[headerRow] as string, sep),
+    dataStart: headerRow + 1,
+  };
+}
+
+/** Build columns and an optional index series from parsed rows. */
+function buildColumnsFromRows(
+  colNames: readonly string[],
+  rows: readonly (readonly string[])[],
+  dtypeMap: Readonly<Record<string, DtypeName>>,
+  naSet: ReadonlySet<string>,
+  indexCol: string | number | null,
+): { colMap: Map<string, Series<Scalar>>; indexSeries: Series<Scalar> | null } {
+  const numCols = colNames.length;
+  const rawCols = extractRawColumns(rows, numCols);
+  const colMap = new Map<string, Series<Scalar>>();
+  let indexSeries: Series<Scalar> | null = null;
+
+  for (let ci = 0; ci < numCols; ci++) {
+    const name = colNames[ci] as string;
+    const raws = rawCols[ci] as readonly string[];
+    const forcedName: DtypeName | undefined = dtypeMap[name];
+    const forced = forcedName !== undefined;
+    const dtypeName: DtypeName = forced ? (forcedName as DtypeName) : inferColumnDtype(raws, naSet);
+    const series = buildColumnSeries(name, raws, dtypeName, naSet, forced);
+
+    if (isIndexColumn(name, ci, indexCol)) {
+      indexSeries = series;
+    } else {
+      colMap.set(name, series);
+    }
+  }
+
+  return { colMap, indexSeries };
+}
+
 export function readCsv(text: string, options?: ReadCsvOptions): DataFrame {
   const sep = options?.sep ?? ",";
-  const headerRow = options?.header ?? 0;
+  const headerRow = options?.header === undefined ? 0 : options.header;
   const indexCol = options?.indexCol ?? null;
   const dtypeMap: Readonly<Record<string, DtypeName>> = options?.dtype ?? {};
   const skipRows = options?.skipRows ?? 0;
   const nRows = options?.nRows ?? null;
-
-  const naSet: Set<string> = new Set(DEFAULT_NA_STRINGS);
-  if (options?.naValues !== undefined) {
-    for (const v of options.naValues) {
-      naSet.add(v);
-    }
-  }
+  const naSet = buildNaSet(options?.naValues);
 
   const lines = splitLines(text);
-
-  let colNames: string[];
-  let dataStart: number;
-  if (headerRow === null || headerRow < 0) {
-    colNames = [];
-    dataStart = 0;
-  } else {
-    if (headerRow >= lines.length) {
-      return new DataFrame(new Map(), new Index<Label>([]));
-    }
-    colNames = parseLine(lines[headerRow] as string, sep);
-    dataStart = headerRow + 1;
+  const headerResult = parseHeader(lines, headerRow, sep);
+  if (headerResult === null) {
+    return new DataFrame(new Map(), new Index<Label>([]));
   }
+  let { colNames } = headerResult;
+  const { dataStart } = headerResult;
 
   let dataLines = lines.slice(dataStart + skipRows);
   if (nRows !== null) {
@@ -335,27 +382,7 @@ export function readCsv(text: string, options?: ReadCsvOptions): DataFrame {
     colNames = Array.from({ length: numCols }, (_, i) => String(i));
   }
 
-  const numCols = colNames.length;
-  const rawCols = extractRawColumns(rows, numCols);
-  const colMap = new Map<string, Series<Scalar>>();
-  let indexSeries: Series<Scalar> | null = null;
-
-  for (let ci = 0; ci < numCols; ci++) {
-    const name = colNames[ci] as string;
-    const raws = rawCols[ci] as readonly string[];
-    const forcedName: DtypeName | undefined = dtypeMap[name];
-    const forced = forcedName !== undefined;
-    const dtypeName: DtypeName = forced
-      ? (forcedName as DtypeName)
-      : inferColumnDtype(raws, naSet);
-    const series = buildColumnSeries(name, raws, dtypeName, naSet, forced);
-
-    if (isIndexColumn(name, ci, indexCol)) {
-      indexSeries = series;
-    } else {
-      colMap.set(name, series);
-    }
-  }
+  const { colMap, indexSeries } = buildColumnsFromRows(colNames, rows, dtypeMap, naSet, indexCol);
 
   const rowIndex: Index<Label> =
     indexSeries !== null
@@ -408,6 +435,42 @@ function scalarToStr(v: Scalar, naRep: string): string {
  * // "a,b\n1,3\n2,4\n"
  * ```
  */
+/** Build the CSV header line. */
+function buildHeaderLine(colNames: readonly Label[], sep: string, includeIndex: boolean): string {
+  const headerFields: string[] = [];
+  if (includeIndex) {
+    headerFields.push("");
+  }
+  for (const name of colNames) {
+    headerFields.push(quoteCsvField(String(name), sep));
+  }
+  return headerFields.join(sep);
+}
+
+/** Build a single CSV data row. */
+function buildDataRow(
+  df: DataFrame,
+  ri: number,
+  colNames: readonly Label[],
+  indexVals: readonly (Label | undefined)[],
+  sep: string,
+  naRep: string,
+  includeIndex: boolean,
+): string {
+  const fields: string[] = [];
+  if (includeIndex) {
+    const idxVal = indexVals[ri] ?? null;
+    const idxStr = idxVal !== null ? String(idxVal) : naRep;
+    fields.push(quoteCsvField(idxStr, sep));
+  }
+  for (const name of colNames) {
+    const s = df.col(String(name));
+    const v = s.iloc(ri);
+    fields.push(quoteCsvField(scalarToStr(v, naRep), sep));
+  }
+  return fields.join(sep);
+}
+
 export function toCsv(df: DataFrame, options?: ToCsvOptions): string {
   const sep = options?.sep ?? ",";
   const includeHeader = options?.header ?? true;
@@ -421,29 +484,11 @@ export function toCsv(df: DataFrame, options?: ToCsvOptions): string {
   const lines: string[] = [];
 
   if (includeHeader) {
-    const headerFields: string[] = [];
-    if (includeIndex) {
-      headerFields.push("");
-    }
-    for (const name of colNames) {
-      headerFields.push(quoteCsvField(String(name), sep));
-    }
-    lines.push(headerFields.join(sep));
+    lines.push(buildHeaderLine(colNames, sep, includeIndex));
   }
 
   for (let ri = 0; ri < nRows; ri++) {
-    const fields: string[] = [];
-    if (includeIndex) {
-      const idxVal = indexVals[ri] ?? null;
-      const idxStr = idxVal !== null ? String(idxVal) : naRep;
-      fields.push(quoteCsvField(idxStr, sep));
-    }
-    for (const name of colNames) {
-      const s = df.col(name);
-      const v = s.iloc(ri);
-      fields.push(quoteCsvField(scalarToStr(v, naRep), sep));
-    }
-    lines.push(fields.join(sep));
+    lines.push(buildDataRow(df, ri, colNames, indexVals, sep, naRep, includeIndex));
   }
 
   if (lines.length === 0) {

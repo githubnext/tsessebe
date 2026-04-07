@@ -24,7 +24,8 @@ compiler from CDN and transpiles user code to JavaScript before execution.
 Users can write type annotations, interfaces, and generics — the compiler
 strips them automatically.
 
-- TypeScript compiler: loaded from `https://cdn.jsdelivr.net/npm/typescript@5/lib/typescript.js`
+- TypeScript compiler: bundled locally (`playground/dist/typescript.js`) with
+  CDN fallback (`https://cdn.jsdelivr.net/npm/typescript@5/lib/typescript.js`).
 - No WASM required — the compiler runs natively in JavaScript.
 
 ### 3. Live tsb Library Access
@@ -112,6 +113,7 @@ playground/
 
 ```bash
 bun build ./src/index.ts --outdir ./playground/dist --target browser --minify
+cp node_modules/typescript/lib/typescript.js ./playground/dist/typescript.js
 ```
 
 The CI pipeline (`pages.yml`) runs this automatically during deployment.

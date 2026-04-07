@@ -12,8 +12,8 @@
  * @module
  */
 
-import type { Label, Scalar } from "../types.ts";
 import type { Index } from "../core/base-index.ts";
+import type { Label, Scalar } from "../types.ts";
 
 // ─── public option types ──────────────────────────────────────────────────────
 
@@ -84,12 +84,7 @@ function centeredBounds(i: number, window: number, n: number): [number, number] 
 }
 
 /** Choose trailing or centered bounds. */
-function windowBounds(
-  i: number,
-  window: number,
-  n: number,
-  center: boolean,
-): [number, number] {
+function windowBounds(i: number, window: number, n: number, center: boolean): [number, number] {
   return center ? centeredBounds(i, window, n) : trailingBounds(i, window, n);
 }
 

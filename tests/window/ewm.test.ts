@@ -23,9 +23,11 @@ function s(data: (number | null)[]): Series<import("tsb").Scalar> {
 describe("EwmOptions — alpha resolution", () => {
   test("span=3 → alpha=0.5", () => {
     const ewm = new EWM(s([1, 2, 3]), { span: 3 });
-    // alpha = 2/(3+1) = 0.5; verify via mean result
+    // alpha = 2/(3+1) = 0.5, decay = 0.5
+    // weights for last 2: [(1-a)^1, (1-a)^0] = [0.5, 1]
+    // mean[1] = (0.5*1 + 1*2) / (0.5+1) = 2.5/1.5 = 5/3
     const m = ewm.mean().toArray() as number[];
-    expect(round6(m[1] as number)).toBe(round6((0.5 * 2 + 1) / (0.5 + 1)));
+    expect(round6(m[1] as number)).toBe(round6(5 / 3));
   });
 
   test("com=1 → alpha=0.5", () => {
@@ -35,10 +37,11 @@ describe("EwmOptions — alpha resolution", () => {
   });
 
   test("halflife=1 → alpha ≈ 0.5", () => {
-    // alpha = 1 - exp(-ln2/1) = 1 - 0.5 = 0.5
+    // alpha = 1 - exp(-ln2/1) = 1 - 0.5 = 0.5, decay = 0.5
+    // weights: [0.5, 1]; mean[1] = (0.5*1 + 1*2)/(0.5+1) = 5/3
     const ewm = new EWM(s([1, 2]), { halflife: 1 });
     const m = ewm.mean().toArray() as number[];
-    expect(round6(m[1] as number)).toBe(round6((0.5 * 2 + 1) / 1.5));
+    expect(round6(m[1] as number)).toBe(round6(5 / 3));
   });
 
   test("alpha=0.5 directly", () => {
@@ -196,7 +199,7 @@ describe("EWM.std", () => {
   test("std of constant series = 0", () => {
     const r = new EWM(s([7, 7, 7, 7]), { span: 2 }).std().toArray() as (number | null)[];
     for (let i = 1; i < 4; i++) {
-      expect(r[i]).toBe(0);
+      expect(r[i] as number).toBeCloseTo(0, 5);
     }
   });
 });
@@ -379,8 +382,11 @@ describe("EWM property tests", () => {
   test("mean output length matches input length", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, min: -100, max: 100 }), { minLength: 1, maxLength: 20 }),
-        fc.float({ noNaN: true, min: 0.01, max: 0.99 }),
+        fc.array(fc.float({ noNaN: true, min: Math.fround(-100), max: Math.fround(100) }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
+        fc.float({ noNaN: true, min: Math.fround(0.01), max: Math.fround(0.99) }),
         (data, alpha) => {
           const series = new Series({ data });
           const result = series.ewm({ alpha }).mean().toArray();

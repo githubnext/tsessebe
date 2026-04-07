@@ -4,12 +4,12 @@
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
 import { DataFrame, Series, rankDataFrame, rankSeries } from "../../src/index.ts";
-import type { Scalar } from "../../src/index.ts";
+import type { Label, Scalar } from "../../src/index.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function s(data: readonly Scalar[], index?: readonly (string | number)[]): Series<Scalar> {
-  return new Series({ data: [...data], index });
+  return new Series({ data: [...data], ...(index !== undefined ? { index } : {}) });
 }
 
 function approx(a: number, b: number, eps = 1e-9): boolean {
@@ -118,7 +118,7 @@ describe("rankSeries — method=first", () => {
 describe("rankSeries — method=dense", () => {
   it("no rank gaps for dense", () => {
     const r = rankSeries(s([3, 1, 4, 1, 5]), { method: "dense" });
-    expect([...r.values]).toEqual([3, 1, 4, 1, 5]);
+    expect([...r.values]).toEqual([2, 1, 3, 1, 4]);
   });
 
   it("dense with gap compression", () => {

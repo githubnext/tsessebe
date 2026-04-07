@@ -45,11 +45,11 @@ safe-outputs:
     title-prefix: "[Autoloop] "
     labels: [automation, autoloop]
     protected-files: fallback-to-issue
-    max: 2
+    max: 1
   push-to-pull-request-branch:
     target: "*"
     title-prefix: "[Autoloop] "
-    max: 2
+    max: 1
   create-issue:
     title-prefix: "[Autoloop] "
     labels: [automation, autoloop]
@@ -646,13 +646,24 @@ Examples:
 - `autoloop/signal_processing`
 - `autoloop/coverage`
 
+> ⚠️ **CRITICAL — Branch Name Must Be Exact**
+>
+> The branch name is ALWAYS exactly `autoloop/{program-name}` — **no suffixes, no hashes, no run IDs, no iteration numbers, no random tokens**. Never create branches like:
+> - ❌ `autoloop/coverage-abc123`
+> - ❌ `autoloop/coverage-iter42-deadbeef`
+> - ❌ `autoloop/coverage-1234567890`
+>
+> Always use the exact canonical name, for example `autoloop/coverage`. If you are implementing a program named `build-tsb-pandas-typescript-migration`, the branch is always `autoloop/build-tsb-pandas-typescript-migration` — nothing more.
+>
+> **Never let the gh-aw framework auto-generate a branch name.** You must explicitly name the branch when creating it.
+
 ### How It Works
 
-1. On the **first accepted iteration**, the branch is created from the default branch.
+1. On the **first accepted iteration**, the branch is created from the default branch using `git checkout -b autoloop/{program-name}`.
 2. On **subsequent iterations**, the agent checks out the existing branch and ensures it is up to date with the default branch (by merging the default branch into it).
 3. **Accepted iterations** are committed and pushed to the branch. Each commit message references the GitHub Actions run URL.
 4. **Rejected or errored iterations** do not commit — changes are discarded.
-5. A **single draft PR** is created for the branch on the first accepted iteration. Future accepted iterations push additional commits to the same PR.
+5. A **single draft PR** is created for the branch on the first accepted iteration. Future accepted iterations push additional commits to the same PR — **never create a new PR if one already exists**.
 6. The branch may be **merged into the default branch** at any time (by a maintainer or CI). After merging, the branch continues to be used for future iterations — it is never deleted while the program is active.
 7. A **sync workflow** automatically merges the default branch into all active `autoloop/*` branches whenever the default branch changes, keeping them up to date.
 
@@ -682,6 +693,8 @@ Each run executes **one iteration for the single selected program**:
    
    If the state file does not yet exist, create it in the repo-memory folder using the template defined in the [Repo Memory](#repo-memory) section.
 
+3. Note the `PR` field from the Machine State table. If it contains a PR number (e.g., `#42`), that is the **existing draft PR** for this program — you must update it, not create a new one.
+
 ### Step 2: Analyze and Propose
 
 1. Read the target files and understand the current state.
@@ -696,7 +709,22 @@ Each run executes **one iteration for the single selected program**:
 
 ### Step 3: Implement
 
-1. Check out the program's long-running branch `autoloop/{program-name}`. If the branch does not yet exist, create it from the default branch. If it does exist, ensure it is up to date with the default branch (merge the default branch into it).
+1. Check out the program's long-running branch. The branch name is **exactly** `autoloop/{program-name}` — never with a suffix. For example:
+   - Program `coverage` → branch `autoloop/coverage`
+   - Program `build-tsb-pandas-typescript-migration` → branch `autoloop/build-tsb-pandas-typescript-migration`
+
+   ```bash
+   git fetch origin
+   if git ls-remote --exit-code origin autoloop/{program-name}; then
+     # Branch exists — check it out and merge the default branch
+     git checkout -b autoloop/{program-name} origin/autoloop/{program-name}
+     git merge origin/main --no-edit -m "Merge main into autoloop/{program-name}"
+   else
+     # Branch does not exist — create it from the default branch
+     git checkout -b autoloop/{program-name} origin/main
+   fi
+   ```
+
 2. Make the proposed changes to the target files only.
 3. **Respect the program constraints**: do not modify files outside the target list.
 
@@ -712,11 +740,17 @@ Each run executes **one iteration for the single selected program**:
 1. Commit the changes to the long-running branch `autoloop/{program-name}` with a commit message referencing the actions run:
    - Commit message subject line: `[Autoloop: {program-name}] Iteration <N>: <short description>`
    - Commit message body (after a blank line): `Run: {run_url}` referencing the GitHub Actions run URL.
-2. Push the commit to the long-running branch.
-3. If a draft PR does not already exist for this branch, create one:
-   - Title: `[Autoloop: {program-name}]`
-   - Body includes: a summary of the program goal, link to the steering issue, the current best metric, and AI disclosure: `🤖 *This PR is maintained by Autoloop. Each accepted iteration adds a commit to this branch.*`
-   If a draft PR already exists, update the PR body with the latest metric and a summary of the most recent accepted iteration. Add a comment to the PR summarizing the iteration: what changed, old metric, new metric, improvement delta, and a link to the actions run.
+2. Push the commit to the long-running branch `autoloop/{program-name}`.
+3. **Find the existing PR or create one** — follow these steps in order:
+   a. Check the `PR` field in the state file's **⚙️ Machine State** table. If it contains a PR number (e.g., `#42`), that is the existing draft PR.
+   b. If the state file has no PR number, search GitHub for open PRs with head branch `autoloop/{program-name}`. Use the GitHub API: `GET /repos/{owner}/{repo}/pulls?state=open&head={owner}:autoloop/{program-name}`.
+   c. **If an existing PR is found** (from either step a or b): use `push-to-pull-request-branch` to push additional commits to the existing PR. Update the PR body with the latest metric and a summary of the most recent accepted iteration. Add a comment to the PR summarizing the iteration: what changed, old metric, new metric, improvement delta, and a link to the actions run. **Do NOT call `create-pull-request`.**
+   d. **If NO PR exists** for `autoloop/{program-name}`: create one using `create-pull-request`:
+      - Branch: `autoloop/{program-name}` (the branch you already created in Step 3 — do NOT let the framework auto-generate a branch name)
+      - Title: `[Autoloop: {program-name}]`
+      - Body includes: a summary of the program goal, link to the steering issue, the current best metric, and AI disclosure: `🤖 *This PR is maintained by Autoloop. Each accepted iteration adds a commit to this branch.*`
+
+   > ⚠️ **Never create a new PR if one already exists for `autoloop/{program-name}`.** Each program must have exactly one draft PR at any time. If you are unsure whether a PR exists, check the GitHub API before calling `create-pull-request`.
 4. Ensure the steering issue exists (see [Steering Issue](#steering-issue) below). Add a comment to the steering issue linking to the commit and actions run.
 5. Add an entry to the experiment log issue.
 6. Update the state file `{program-name}.md` in the repo-memory folder:
@@ -1106,3 +1140,20 @@ After each iteration, prepend an entry to the **📊 Iteration History** section
 - **Safety.** Never modify files outside the target list. Never modify the evaluation script. Never modify the program definition (except via `/autoloop` command mode).
 - **Read AGENTS.md first**: before starting work, read the repository's `AGENTS.md` file (if present) to understand project-specific conventions.
 - **Build and test**: run any build/test commands before creating PRs.
+
+## Common Mistakes to Avoid
+
+> ❌ **Do NOT create a new branch with a suffix for each iteration.**
+> Correct: `autoloop/coverage`
+> Wrong: `autoloop/coverage-abc123`, `autoloop/coverage-iter42`, `autoloop/coverage-deadbeef1234`
+
+> ❌ **Do NOT create a new PR if one already exists for `autoloop/{program-name}`.**
+> Always check the state file's `PR` field and the GitHub API before calling `create-pull-request`. If a PR exists, use `push-to-pull-request-branch` instead.
+
+> ❌ **Do NOT let the gh-aw framework auto-generate a branch name when creating a PR.**
+> Always specify the branch explicitly as `autoloop/{program-name}` when calling `create-pull-request`.
+
+> ❌ **Do NOT push to the default branch (e.g., `main`).**
+> All accepted changes go to `autoloop/{program-name}` only.
+
+> ✅ **One program = one long-running branch = one draft PR.** This is the invariant that must hold at all times.
