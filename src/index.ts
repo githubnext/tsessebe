@@ -345,3 +345,6 @@ export type {
   RollingCovCorrOptions,
   RollingCovCorrDataFrameOptions,
 } from "./stats/index.ts";
+
+export { crossCorr, rollingCrossCorr } from "./stats/index.ts";
+export type { CrossCorrOptions, RollingCrossCorrOptions } from "./stats/index.ts";

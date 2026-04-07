@@ -527,6 +527,11 @@
           <p>Rolling sample covariance and Pearson correlation between two Series or DataFrames — <a href="covariance.html" style="color: var(--accent);">interactive tutorial</a>. <code>rollingCov(x, y, window)</code> computes the sliding-window sample covariance (ddof=1); <code>rollingCorr(x, y, window)</code> computes the rolling Pearson correlation in [−1, 1]. Both support <code>minPeriods</code> and DataFrame column-wise variants. Mirrors <code>pandas.Series.rolling(n).cov(other)</code> and <code>.corr(other)</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3>🔁 rolling cross-correlation</h3>
+          <p>Cross-correlation and rolling cross-correlation at multiple lags — <a href="rolling_cross_corr.html" style="color: var(--accent);">interactive tutorial</a>. <code>crossCorr(x, y, {lags})</code> computes the full-series Pearson cross-correlation at each requested lag, returning a Series indexed by lag labels. <code>rollingCrossCorr(x, y, window, {lags})</code> computes windowed cross-correlation at each time position, returning a DataFrame with one column per lag. Mirrors <code>pandas.Series.rolling(w).corr(y.shift(-l))</code> for each lag <code>l</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

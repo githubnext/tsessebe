@@ -244,3 +244,6 @@ export type {
   RollingCovCorrOptions,
   RollingCovCorrDataFrameOptions,
 } from "./covariance.ts";
+
+export { crossCorr, rollingCrossCorr } from "./rolling_cross_corr.ts";
+export type { CrossCorrOptions, RollingCrossCorrOptions } from "./rolling_cross_corr.ts";

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb · Rolling Cross-Correlation</title>
+  <style>
+    :root { --accent: #4f46e5; --bg: #0f172a; --surface: #1e293b; --text: #e2e8f0; --muted: #94a3b8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 2rem; color: #a5b4fc; margin-bottom: .5rem; }
+    h2 { font-size: 1.25rem; color: #818cf8; margin: 1.5rem 0 .75rem; }
+    p, li { color: var(--muted); line-height: 1.7; }
+    ul { padding-left: 1.5rem; }
+    pre { background: var(--surface); border: 1px solid #334155; border-radius: .5rem; padding: 1rem; overflow-x: auto; font-size: .875rem; line-height: 1.6; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .card { background: var(--surface); border: 1px solid #334155; border-radius: .75rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+    label { display: block; color: var(--muted); font-size: .875rem; margin-bottom: .25rem; }
+    input, select { background: #0f172a; border: 1px solid #334155; border-radius: .375rem; color: var(--text); font-size: .9rem; padding: .4rem .75rem; width: 100%; }
+    button { background: var(--accent); color: #fff; border: none; border-radius: .375rem; cursor: pointer; font-size: .9rem; padding: .5rem 1.25rem; margin-top: .75rem; }
+    button:hover { background: #4338ca; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .output { background: #0f172a; border: 1px solid #334155; border-radius: .375rem; font-family: monospace; font-size: .8rem; min-height: 6rem; padding: 1rem; white-space: pre; overflow-x: auto; color: #86efac; margin-top: .75rem; }
+    .tag { background: #312e81; color: #a5b4fc; border-radius: 9999px; font-size: .75rem; padding: .15rem .65rem; display: inline-block; margin-right: .35rem; }
+    a { color: #818cf8; }
+    canvas { width: 100%; height: 200px; background: #0f172a; border: 1px solid #334155; border-radius: .375rem; margin-top: .75rem; }
+  </style>
+</head>
+<body>
+  <h1>🔁 Rolling Cross-Correlation</h1>
+  <p>
+    <span class="tag">crossCorr</span><span class="tag">rollingCrossCorr</span>
+    Measures how similar two signals are when one is shifted relative to the other at various lags.
+  </p>
+
+  <h2>📖 Concept</h2>
+  <div class="card">
+    <p>
+      Cross-correlation at lag <code>l</code> is the Pearson correlation of
+      <code>x[i]</code> with <code>y[i − l]</code> across all valid pairs.
+    </p>
+    <ul style="margin-top:.75rem">
+      <li><strong>lag = 0</strong> — ordinary Pearson correlation</li>
+      <li><strong>lag &gt; 0</strong> — y leads x (positive shift)</li>
+      <li><strong>lag &lt; 0</strong> — x leads y (negative shift)</li>
+    </ul>
+    <p style="margin-top:.75rem">
+      <code>rollingCrossCorr</code> computes this inside a trailing window,
+      returning a DataFrame with one column per lag.
+    </p>
+  </div>
+
+  <h2>💡 crossCorr — full series</h2>
+  <div class="card">
+    <pre><code>import { Series, crossCorr } from "tsb";
+
+const x = new Series({ data: [1, 2, 3, 4, 5] });
+const y = new Series({ data: [0, 1, 2, 3, 4] }); // y = x shifted by 1
+
+const result = crossCorr(x, y, { lags: [-1, 0, 1] });
+// lag_neg1 → ?
+// lag_0    → 1   (x and y are perfectly linearly related)
+// lag_1    → 1   (pairs x[1..4] with y[0..3] = [1..4] with [0..3])</code></pre>
+  </div>
+
+  <h2>🔬 Interactive: crossCorr</h2>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>Series X (comma-separated)</label>
+        <input id="xInput" value="1,2,3,4,5,6,7,8" />
+      </div>
+      <div>
+        <label>Series Y (same length)</label>
+        <input id="yInput" value="0,1,2,3,4,5,6,7" />
+      </div>
+    </div>
+    <div style="margin-top:.75rem">
+      <label>Lags (comma-separated integers, e.g. -2,-1,0,1,2)</label>
+      <input id="lagInput" value="-3,-2,-1,0,1,2,3" />
+    </div>
+    <button onclick="runCrossCorr()">Run crossCorr</button>
+    <div class="output" id="crossCorrOutput">Click "Run crossCorr" to see results.</div>
+    <canvas id="crossCorrChart"></canvas>
+  </div>
+
+  <h2>💡 rollingCrossCorr — windowed</h2>
+  <div class="card">
+    <pre><code>import { Series, rollingCrossCorr } from "tsb";
+
+const x = new Series({ data: [1, 2, 3, 4, 5, 6, 7] });
+const y = new Series({ data: [0, 1, 2, 3, 4, 5, 6] });
+
+const df = rollingCrossCorr(x, y, 4, { lags: [-1, 0, 1] });
+// Returns a DataFrame with 7 rows and columns: lag_neg1, lag_0, lag_1
+// Rows 0..2 are null (window not yet full)
+// Row 3 onward: Pearson corr of x[i-3..i] vs y shifted by each lag</code></pre>
+  </div>
+
+  <h2>🔬 Interactive: rollingCrossCorr</h2>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>Series X</label>
+        <input id="rxInput" value="1,3,2,5,4,6,5,7,6,8" />
+      </div>
+      <div>
+        <label>Series Y</label>
+        <input id="ryInput" value="0,2,1,4,3,5,4,6,5,7" />
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:.75rem">
+      <div>
+        <label>Window size</label>
+        <input id="rWindow" type="number" value="4" min="2" max="20" />
+      </div>
+      <div>
+        <label>Lags</label>
+        <input id="rLags" value="-2,-1,0,1,2" />
+      </div>
+    </div>
+    <button onclick="runRollingCrossCorr()">Run rollingCrossCorr</button>
+    <div class="output" id="rollingOutput">Click "Run rollingCrossCorr" to see results.</div>
+  </div>
+
+  <h2>📚 API Reference</h2>
+  <div class="card">
+    <pre><code>// Full-series cross-correlation
+crossCorr(
+  x: Series&lt;Scalar&gt;,
+  y: Series&lt;Scalar&gt;,
+  options?: {
+    lags?: number[];      // explicit lags (overrides maxLag)
+    maxLag?: number;      // default: min(n-1, 20)
+    minPeriods?: number;  // default: 2
+  }
+): Series&lt;Scalar&gt;  // indexed by lag label (e.g. "lag_0", "lag_neg2")
+
+// Rolling windowed cross-correlation
+rollingCrossCorr(
+  x: Series&lt;Scalar&gt;,
+  y: Series&lt;Scalar&gt;,
+  window: number,
+  options?: {
+    lags?: number[];      // explicit lags
+    maxLag?: number;      // default: min(window-1, 5)
+    minPeriods?: number;  // default: 2
+  }
+): DataFrame  // rows=time, columns=lag labels</code></pre>
+  </div>
+
+  <p style="margin-top:1rem"><a href="index.html">← Back to tsb playground</a></p>
+
+<script type="module">
+// ─── minimal tsb shims for playground ──────────────────────────────────────
+
+class Index {
+  constructor(vals) { this._v = vals; }
+  get values() { return this._v; }
+  get length() { return this._v.length; }
+}
+class RangeIndex extends Index {
+  constructor(n) { super(Array.from({length:n},(_,i)=>i)); }
+}
+class Series {
+  constructor({data, index, name}) {
+    this._data = data;
+    this._index = index ?? new RangeIndex(data.length);
+    this._name = name ?? null;
+  }
+  get values() { return this._data; }
+  get index() { return this._index; }
+  get name() { return this._name; }
+  get length() { return this._data.length; }
+}
+class DataFrame {
+  constructor(colMap, idx) {
+    this._cols = colMap;
+    this._idx = idx;
+  }
+  get columns() { return new Index([...this._cols.keys()]); }
+  col(name) { return this._cols.get(name); }
+  get nrows() { return this._idx.length; }
+  get ncols() { return this._cols.size; }
+}
+
+// ─── cross-corr implementation ──────────────────────────────────────────────
+
+function isMissing(v) { return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v)); }
+
+function resolveLags(n, opts, defaultMax) {
+  if (opts.lags) {
+    const seen = new Set();
+    return opts.lags.map(l=>Math.round(l)).filter(l=>{if(seen.has(l))return false;seen.add(l);return true;}).sort((a,b)=>a-b);
+  }
+  const mx = opts.maxLag !== undefined ? Math.max(0, Math.round(opts.maxLag)) : defaultMax;
+  return Array.from({length:2*mx+1},(_,i)=>i-mx);
+}
+
+function lagLabel(l) { return l<0 ? `lag_neg${Math.abs(l)}` : `lag_${l}`; }
+
+function pearsonCorr(px, py) {
+  const n = px.length;
+  if (n < 2) return null;
+  let sx=0, sy=0;
+  for (let i=0;i<n;i++){sx+=px[i];sy+=py[i];}
+  const mx=sx/n, my=sy/n;
+  let cov=0, vx=0, vy=0;
+  for (let i=0;i<n;i++){const dx=px[i]-mx,dy=py[i]-my;cov+=dx*dy;vx+=dx*dx;vy+=dy*dy;}
+  if(vx===0||vy===0) return NaN;
+  return cov/Math.sqrt(vx*vy);
+}
+
+function collectPairs(xs, ys, start, end, lag) {
+  const n = ys.length;
+  const px=[], py=[];
+  for(let i=start;i<end;i++){
+    const yi=i-lag;
+    if(yi<0||yi>=n) continue;
+    const xv=xs[i], yv=ys[yi];
+    if(!isMissing(xv)&&typeof xv==="number"&&!isMissing(yv)&&typeof yv==="number"){px.push(xv);py.push(yv);}
+  }
+  return {px,py};
+}
+
+function crossCorr(x, y, opts={}) {
+  const n = x.values.length;
+  if(y.values.length!==n) throw new RangeError("crossCorr: x and y must have the same length");
+  const minPeriods = opts.minPeriods??2;
+  const lags = resolveLags(n, opts, Math.min(n>0?n-1:0,20));
+  const xs=x.values, ys=y.values;
+  const data=[], labels=[];
+  for(const l of lags){
+    labels.push(lagLabel(l));
+    const {px,py}=collectPairs(xs,ys,0,n,l);
+    data.push(px.length<minPeriods?null:pearsonCorr(px,py));
+  }
+  return new Series({data, index: new Index(labels)});
+}
+
+function rollingCrossCorr(x, y, window, opts={}) {
+  if(window<1) throw new RangeError("window must be >= 1");
+  const n = x.values.length;
+  if(y.values.length!==n) throw new RangeError("x and y must have the same length");
+  const minPeriods = opts.minPeriods??2;
+  const lags = resolveLags(n, opts, Math.min(window>0?window-1:0,5));
+  const xs=x.values, ys=y.values;
+  const colMap=new Map();
+  for(const l of lags){
+    const col=lagLabel(l);
+    const data=[];
+    for(let i=0;i<n;i++){
+      const start=Math.max(0,i-window+1);
+      const {px,py}=collectPairs(xs,ys,start,i+1,l);
+      data.push(px.length<minPeriods?null:pearsonCorr(px,py));
+    }
+    colMap.set(col, new Series({data, index: x.index}));
+  }
+  return new DataFrame(colMap, x.index);
+}
+
+// ─── UI ─────────────────────────────────────────────────────────────────────
+
+function parseNums(str) { return str.split(",").map(s=>s.trim()).filter(Boolean).map(Number); }
+function fmtVal(v) {
+  if(v===null) return "null ";
+  if(typeof v==="number"&&Number.isNaN(v)) return "NaN  ";
+  if(typeof v==="number") return v.toFixed(4);
+  return String(v);
+}
+
+window.runCrossCorr = function() {
+  try {
+    const xData = parseNums(document.getElementById("xInput").value);
+    const yData = parseNums(document.getElementById("yInput").value);
+    const lags  = parseNums(document.getElementById("lagInput").value).map(Math.round);
+    const x = new Series({data: xData});
+    const y = new Series({data: yData});
+    const result = crossCorr(x, y, {lags});
+    let out = "Lag        Correlation\n" + "─".repeat(26) + "\n";
+    const labels = result.index.values;
+    for(let i=0;i<labels.length;i++){
+      out += `${String(labels[i]).padEnd(12)} ${fmtVal(result.values[i])}\n`;
+    }
+    document.getElementById("crossCorrOutput").textContent = out;
+    drawBarChart("crossCorrChart", labels.map(String), result.values);
+  } catch(e) { document.getElementById("crossCorrOutput").textContent = "Error: " + e.message; }
+};
+
+window.runRollingCrossCorr = function() {
+  try {
+    const xData = parseNums(document.getElementById("rxInput").value);
+    const yData = parseNums(document.getElementById("ryInput").value);
+    const w     = parseInt(document.getElementById("rWindow").value, 10);
+    const lags  = parseNums(document.getElementById("rLags").value).map(Math.round);
+    const x = new Series({data: xData});
+    const y = new Series({data: yData});
+    const df = rollingCrossCorr(x, y, w, {lags});
+    const cols = df.columns.values;
+    const header = "i  " + cols.map(c=>c.padEnd(10)).join(" ");
+    let out = header + "\n" + "─".repeat(header.length) + "\n";
+    for(let i=0;i<df.nrows;i++){
+      let row = String(i).padEnd(3);
+      for(const c of cols){
+        row += fmtVal(df.col(c).values[i]).padEnd(11);
+      }
+      out += row + "\n";
+    }
+    document.getElementById("rollingOutput").textContent = out;
+  } catch(e) { document.getElementById("rollingOutput").textContent = "Error: " + e.message; }
+};
+
+function drawBarChart(canvasId, labels, values) {
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.offsetWidth || 600;
+  canvas.height = 200;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  const n = labels.length;
+  if(n===0) return;
+  const nums = values.map(v=>(typeof v==="number"&&!isNaN(v)?v:0));
+  const max = Math.max(...nums.map(Math.abs), 0.001);
+  const barW = (canvas.width - 40) / n;
+  const midY = canvas.height / 2;
+  ctx.strokeStyle = "#334155";
+  ctx.beginPath(); ctx.moveTo(20,midY); ctx.lineTo(canvas.width-20,midY); ctx.stroke();
+  for(let i=0;i<n;i++){
+    const h = (nums[i] / max) * (canvas.height / 2 - 20);
+    const x = 20 + i * barW + barW * 0.1;
+    const w = barW * 0.8;
+    ctx.fillStyle = nums[i] >= 0 ? "#4f46e5" : "#ef4444";
+    if(h>=0) ctx.fillRect(x, midY-h, w, h);
+    else ctx.fillRect(x, midY, w, -h);
+    ctx.fillStyle = "#94a3b8";
+    ctx.font = "10px monospace";
+    ctx.fillText(labels[i], x, canvas.height - 4);
+  }
+}
+
+// auto-run on load
+window.runCrossCorr();
+</script>
+</body>
+</html>
