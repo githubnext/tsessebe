@@ -312,3 +312,21 @@ export type {
   TransformArg,
   TransformOptions,
 } from "./stats/index.ts";
+
+export {
+  modeSeries,
+  modeDataFrame,
+  skewSeries,
+  skewDataFrame,
+  kurtosisSeries,
+  kurtosisDataFrame,
+  semSeries,
+  semDataFrame,
+} from "./stats/index.ts";
+export type {
+  MomentsOptions,
+  SemOptions,
+  ModeDataFrameOptions,
+  MomentsDataFrameOptions,
+  SemDataFrameOptions,
+} from "./stats/index.ts";

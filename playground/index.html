@@ -501,6 +501,11 @@
           <p>Element-wise value mapping and same-shape DataFrame transformation — <a href="map.html" style="color: var(--accent);">interactive tutorial</a>. <code>seriesMap(series, arg)</code> maps each value through a function, ES <code>Map</code>, plain-object dict, or lookup Series (with optional <code>na_action="ignore"</code>). <code>dataFrameTransform(df, func, {axis})</code> applies a function column-wise or row-wise, returning a same-shaped DataFrame; supports per-column dict of functions. Mirrors <code>pandas.Series.map()</code> and <code>pandas.DataFrame.transform()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature">
+          <h3>📊 moments (mode / skew / kurtosis / sem)</h3>
+          <p>Statistical moment functions for Series and DataFrame — <a href="moments.html" style="color: var(--accent);">interactive tutorial</a>. <code>modeSeries(s)</code> returns all tied-most-frequent values; <code>modeDataFrame(df)</code> column/row-wise. <code>skewSeries(s)</code> computes the adjusted Fisher-Pearson skewness coefficient. <code>kurtosisSeries(s)</code> returns excess kurtosis. <code>semSeries(s)</code> computes standard error of the mean as <code>std(ddof)/√n</code>. All have DataFrame equivalents with axis support. Mirrors <code>pandas.Series.mode()</code>, <code>.skew()</code>, <code>.kurt()</code>, and <code>.sem()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

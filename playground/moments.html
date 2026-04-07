@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Statistical Moments (mode, skew, kurtosis, sem)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>Statistical Moments</h1>
+    <p>
+      <code>modeSeries</code> · <code>skewSeries</code> · <code>kurtosisSeries</code> · <code>semSeries</code>
+      and their DataFrame equivalents — mirrors <code>pandas.Series.mode()</code>,
+      <code>.skew()</code>, <code>.kurt()</code>, and <code>.sem()</code>.
+    </p>
+  </header>
+
+  <main>
+    <!-- ── mode ──────────────────────────────────────────────────── -->
+    <section>
+      <h2>1 · Mode — most frequent value(s)</h2>
+      <p>
+        <code>modeSeries(s)</code> returns a new Series containing all values
+        tied for most frequent, in sorted order.  Ties are broken alphabetically
+        / numerically.  Missing values are excluded by default (<code>dropna=true</code>).
+      </p>
+      <pre class="runnable" id="mode-series">
+import { Series, modeSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 2, 3, 3, 4] });
+const m = modeSeries(s);
+console.log("modes:", m.values);   // [2, 3]
+console.log("size:", m.size);      // 2
+
+// string series
+const words = new Series({ data: ["cat", "dog", "cat", "fish"] });
+console.log("mode:", modeSeries(words).values); // ["cat"]
+
+// with nulls (excluded by default)
+const mixed = new Series({ data: [null, 1, 1, null, null, 2] });
+console.log("dropna=true:", modeSeries(mixed).values);   // [1] — nulls skipped
+console.log("dropna=false:", modeSeries(mixed, false).values); // [null] — null wins
+      </pre>
+
+      <h3>DataFrame.mode()</h3>
+      <pre class="runnable" id="mode-df">
+import { DataFrame, Series, modeDataFrame } from "tsb";
+
+const df = new DataFrame(new Map([
+  ["score", new Series({ data: [85, 90, 85, 70, 90] })],
+  ["grade", new Series({ data: ["B", "A", "B", "C", "A"] })],
+]));
+
+const modes = modeDataFrame(df);
+console.log("score modes:", modes.col("score").values);  // [85, 90]
+console.log("grade modes:", modes.col("grade").values);  // ["A", "B"]
+console.log("shape:", modes.nrows, "×", modes.ncols);    // 2 × 2
+
+// row-wise
+const rw = modeDataFrame(df, { axis: 1 });
+console.log("row modes:", rw.col("0").values);
+      </pre>
+    </section>
+
+    <!-- ── skew ──────────────────────────────────────────────────── -->
+    <section>
+      <h2>2 · Skewness — asymmetry of the distribution</h2>
+      <p>
+        Uses the <strong>adjusted Fisher-Pearson</strong> coefficient (same formula as pandas):
+        <em>skew = n / ((n−1)(n−2)) × Σ((xᵢ−x̄)/s)³</em>.
+        Positive → right tail; negative → left tail; 0 → symmetric.
+        Requires at least 3 non-missing values.
+      </p>
+      <pre class="runnable" id="skew-series">
+import { Series, skewSeries } from "tsb";
+
+const sym   = new Series({ data: [1, 2, 3, 4, 5] });
+const right = new Series({ data: [1, 2, 3, 4, 10] });
+const left  = new Series({ data: [-10, 1, 2, 3, 4] });
+
+console.log("symmetric:", skewSeries(sym).toFixed(4));   // 0.0000
+console.log("right-skewed:", skewSeries(right).toFixed(4));  // > 0
+console.log("left-skewed:", skewSeries(left).toFixed(4));    // < 0
+
+// needs ≥ 3 values
+console.log("n=2:", skewSeries(new Series({ data: [1, 2] }))); // NaN
+      </pre>
+
+      <h3>DataFrame.skew()</h3>
+      <pre class="runnable" id="skew-df">
+import { DataFrame, Series, skewDataFrame } from "tsb";
+
+const df = new DataFrame(new Map([
+  ["a", new Series({ data: [1, 2, 3, 4, 5] })],
+  ["b", new Series({ data: [1, 2, 3, 4, 10] })],
+]));
+
+const sk = skewDataFrame(df);
+console.log("a skew:", Number(sk.at("a")).toFixed(4));  // 0.0000
+console.log("b skew:", Number(sk.at("b")).toFixed(4));  // > 0
+      </pre>
+    </section>
+
+    <!-- ── kurtosis ───────────────────────────────────────────────── -->
+    <section>
+      <h2>3 · Kurtosis — tail heaviness (excess)</h2>
+      <p>
+        Returns <strong>excess kurtosis</strong> (normal distribution = 0).
+        Uses the unbiased estimator matching pandas' <code>Series.kurt()</code>.
+        Requires at least 4 non-missing values.
+        Positive → heavy tails (leptokurtic); negative → light tails (platykurtic).
+      </p>
+      <pre class="runnable" id="kurt-series">
+import { Series, kurtosisSeries } from "tsb";
+
+// uniform 1–5: platykurtic (negative excess kurtosis)
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+console.log("kurtosis [1..5]:", kurtosisSeries(s).toFixed(4));  // -1.3000
+
+// heavy-tailed outlier
+const heavy = new Series({ data: [0, 0, 0, 0, 0, 10] });
+console.log("heavy-tailed:", kurtosisSeries(heavy).toFixed(4)); // positive
+
+// needs ≥ 4 values
+console.log("n=3:", kurtosisSeries(new Series({ data: [1, 2, 3] }))); // NaN
+      </pre>
+
+      <h3>DataFrame.kurt()</h3>
+      <pre class="runnable" id="kurt-df">
+import { DataFrame, Series, kurtosisDataFrame } from "tsb";
+
+const df = new DataFrame(new Map([
+  ["uniform", new Series({ data: [1, 2, 3, 4, 5] })],
+  ["peaked",  new Series({ data: [0, 0, 0, 0, 10] })],
+]));
+
+const k = kurtosisDataFrame(df);
+console.log("uniform:", Number(k.at("uniform")).toFixed(4));  // -1.3000
+console.log("peaked:", Number(k.at("peaked")).toFixed(4));    // positive
+      </pre>
+    </section>
+
+    <!-- ── sem ───────────────────────────────────────────────────── -->
+    <section>
+      <h2>4 · Standard Error of the Mean (SEM)</h2>
+      <p>
+        <em>sem = std(ddof) / √n</em>.  Default <code>ddof=1</code> (sample estimate).
+        Measures how precisely the sample mean estimates the population mean —
+        smaller is better.
+      </p>
+      <pre class="runnable" id="sem-series">
+import { Series, semSeries } from "tsb";
+
+const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9] });
+console.log("sem:", semSeries(s).toFixed(6));   // ≈ 0.750000
+
+// larger sample → smaller SEM
+const big = new Series({ data: Array.from({ length: 100 }, () => Math.random() * 10) });
+const small = new Series({ data: Array.from({ length: 10 }, () => Math.random() * 10) });
+console.log("big n:", semSeries(big).toFixed(4));
+console.log("small n:", semSeries(small).toFixed(4));
+
+// ddof=0 for population SEM
+console.log("ddof=0:", semSeries(s, { ddof: 0 }).toFixed(6));
+      </pre>
+
+      <h3>DataFrame.sem()</h3>
+      <pre class="runnable" id="sem-df">
+import { DataFrame, Series, semDataFrame } from "tsb";
+
+const df = new DataFrame(new Map([
+  ["a", new Series({ data: [1, 2, 3, 4, 5] })],
+  ["b", new Series({ data: [2, 4, 6, 8, 10] })],
+]));
+
+const s = semDataFrame(df);
+console.log("a sem:", Number(s.at("a")).toFixed(6));  // ≈ 0.707107
+console.log("b sem:", Number(s.at("b")).toFixed(6));  // ≈ 1.414214
+// b = 2*a so sem(b) = 2*sem(a)
+      </pre>
+    </section>
+
+    <!-- ── comparison table ──────────────────────────────────────── -->
+    <section>
+      <h2>5 · Pandas API comparison</h2>
+      <table>
+        <thead>
+          <tr><th>pandas</th><th>tsb</th><th>notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>s.mode(dropna=True)</code></td><td><code>modeSeries(s, true)</code></td><td>Returns Series of all modes</td></tr>
+          <tr><td><code>df.mode(axis=0)</code></td><td><code>modeDataFrame(df)</code></td><td>Column-wise, padded with NaN</td></tr>
+          <tr><td><code>s.skew(skipna=True)</code></td><td><code>skewSeries(s)</code></td><td>Adjusted Fisher-Pearson G1</td></tr>
+          <tr><td><code>df.skew(axis=0)</code></td><td><code>skewDataFrame(df)</code></td><td>Returns Series</td></tr>
+          <tr><td><code>s.kurt()</code></td><td><code>kurtosisSeries(s)</code></td><td>Excess kurtosis, n≥4</td></tr>
+          <tr><td><code>df.kurt(axis=0)</code></td><td><code>kurtosisDataFrame(df)</code></td><td>Returns Series</td></tr>
+          <tr><td><code>s.sem(ddof=1)</code></td><td><code>semSeries(s)</code></td><td>std(ddof) / √n</td></tr>
+          <tr><td><code>df.sem(ddof=1, axis=0)</code></td><td><code>semDataFrame(df)</code></td><td>Returns Series</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module" src="runtime.js"></script>
+</body>
+</html>

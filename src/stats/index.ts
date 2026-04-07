@@ -211,3 +211,21 @@ export type {
   TransformArg,
   TransformOptions,
 } from "./map.ts";
+
+export {
+  modeSeries,
+  modeDataFrame,
+  skewSeries,
+  skewDataFrame,
+  kurtosisSeries,
+  kurtosisDataFrame,
+  semSeries,
+  semDataFrame,
+} from "./moments.ts";
+export type {
+  MomentsOptions,
+  SemOptions,
+  ModeDataFrameOptions,
+  MomentsDataFrameOptions,
+  SemDataFrameOptions,
+} from "./moments.ts";
