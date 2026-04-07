@@ -197,3 +197,6 @@ export type { UniqueOptions, NuniqOptions, DataFrameNuniqOptions } from "./uniqu
 
 export { pctChange, dataFramePctChange } from "./pct_change.ts";
 export type { PctChangeOptions } from "./pct_change.ts";
+
+export { replaceSeries, replaceDataFrame } from "./replace.ts";
+export type { ReplaceDict, ReplacePerColumnDict, ReplaceArg } from "./replace.ts";

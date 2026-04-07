@@ -486,6 +486,11 @@
           <p>Percentage change between elements — <a href="pct_change.html" style="color: var(--accent);">interactive tutorial</a>. <code>pctChange(series, periods)</code> computes <code>(x[i] - x[i-p]) / |x[i-p]|</code> for each element. <code>dataFramePctChange(df, periods, {axis})</code> applies the same computation column-wise (<code>axis=0</code>) or row-wise (<code>axis=1</code>). Missing values propagate as <code>NaN</code>; zero prior yields <code>±Infinity</code>; <code>periods=0</code> yields all-<code>NaN</code>. Mirrors <code>pandas.Series.pct_change()</code> and <code>pandas.DataFrame.pct_change()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature">
+          <h3>🔄 replace</h3>
+          <p>Value substitution for Series and DataFrame — <a href="replace.html" style="color: var(--accent);">interactive tutorial</a>. <code>replaceSeries(series, old, new)</code> replaces scalar, list-pair, or dict-form mappings. <code>replaceDataFrame(df, ...)</code> applies global or per-column substitution. Missing values (<code>null</code>, <code>undefined</code>, <code>NaN</code>) are replaceable via string keys in the dict form. Mirrors <code>pandas.Series.replace()</code> and <code>pandas.DataFrame.replace()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

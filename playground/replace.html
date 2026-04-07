@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · replace</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --red: #f85149;
+        --code-bg: #1f2937;
+        font-size: 16px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; }
+      header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+      header a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+      header a:hover { color: var(--accent); }
+      h1 { font-size: 1.4rem; color: var(--accent); }
+      main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+      h2 { font-size: 1.2rem; margin: 2rem 0 0.75rem; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+      p { color: var(--muted); margin-bottom: 0.75rem; }
+      pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.85rem; margin-bottom: 1rem; }
+      .demo { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+      .demo label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.3rem; }
+      .demo input, .demo textarea, .demo select { background: var(--code-bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.9rem; width: 100%; margin-bottom: 0.75rem; font-family: monospace; }
+      .demo textarea { resize: vertical; min-height: 80px; }
+      button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1rem; font-size: 0.9rem; cursor: pointer; font-weight: 600; }
+      button:hover { opacity: 0.85; }
+      .row { display: flex; gap: 1rem; align-items: flex-start; }
+      .row > * { flex: 1; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin-top: 0.5rem; }
+      th { background: var(--code-bg); color: var(--accent); text-align: left; padding: 0.4rem 0.75rem; border: 1px solid var(--border); }
+      td { padding: 0.35rem 0.75rem; border: 1px solid var(--border); font-family: monospace; }
+      td.null { color: var(--muted); font-style: italic; }
+      td.changed { color: var(--green); font-weight: 600; }
+      .output { margin-top: 0.75rem; }
+      .badge { display: inline-block; background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; padding: 0.1rem 0.4rem; font-size: 0.78rem; font-family: monospace; margin: 0 2px; }
+      .note { color: var(--muted); font-size: 0.85rem; }
+      .error { color: var(--red); font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="index.html">← tsb</a>
+      <h1>🔄 replace</h1>
+    </header>
+    <main>
+      <p>
+        <code>replace</code> substitutes one or more values in a Series or DataFrame,
+        mirroring <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.replace.html"
+        style="color:var(--accent)">pandas.Series.replace</a> /
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.replace.html"
+        style="color:var(--accent)">pandas.DataFrame.replace</a>.
+      </p>
+
+      <h2>API</h2>
+      <pre>// Scalar pair
+replaceSeries(series, oldValue, newValue)
+
+// List pair — parallel arrays
+replaceSeries(series, [old1, old2], [new1, new2])
+
+// Dict form — { "encodedOld": newValue }
+replaceSeries(series, { "1": 99, "null": 0 })
+
+// DataFrame — global
+replaceDataFrame(df, 1, 99)
+
+// DataFrame — per-column nested dict
+replaceDataFrame(df, { colA: { "1": 99 }, colB: { "2": 0 } })</pre>
+
+      <h2>Series — interactive demo</h2>
+      <div class="demo">
+        <label>Series values (comma-separated; use "null" or "NaN" for missing):</label>
+        <input id="series-input" type="text" value="1, 2, 3, null, NaN, 2, 1" />
+        <div class="row">
+          <div>
+            <label>Replace (old):</label>
+            <input id="from-val" type="text" value="2" />
+          </div>
+          <div>
+            <label>With (new):</label>
+            <input id="to-val" type="text" value="99" />
+          </div>
+        </div>
+        <button onclick="runSeriesDemo()">Run</button>
+        <div class="output" id="series-output"></div>
+      </div>
+
+      <h2>Series — dict form</h2>
+      <div class="demo">
+        <label>Series values:</label>
+        <input id="dict-series-input" type="text" value="1, 2, 3, null, NaN" />
+        <label>Replacement dict (JSON — keys are string-encoded old values):</label>
+        <textarea id="dict-input">{"1": 10, "null": 0, "NaN": -1}</textarea>
+        <button onclick="runDictDemo()">Run</button>
+        <div class="output" id="dict-output"></div>
+      </div>
+
+      <h2>DataFrame — global replacement</h2>
+      <div class="demo">
+        <label>Column A values:</label>
+        <input id="df-col-a" type="text" value="1, 2, 3" />
+        <label>Column B values:</label>
+        <input id="df-col-b" type="text" value="4, 1, 6" />
+        <div class="row">
+          <div>
+            <label>Replace (old):</label>
+            <input id="df-from" type="text" value="1" />
+          </div>
+          <div>
+            <label>With (new):</label>
+            <input id="df-to" type="text" value="99" />
+          </div>
+        </div>
+        <button onclick="runDfDemo()">Run</button>
+        <div class="output" id="df-output"></div>
+      </div>
+
+      <h2>Key facts</h2>
+      <ul class="note" style="padding-left:1.5rem; line-height:2">
+        <li>Missing values (<span class="badge">null</span>, <span class="badge">undefined</span>, <span class="badge">NaN</span>) can be replaced — use the string keys <span class="badge">"null"</span>, <span class="badge">"undefined"</span>, or <span class="badge">"NaN"</span> in the dict form.</li>
+        <li>The original Series/DataFrame is <strong>never mutated</strong> — a new object is returned.</li>
+        <li>Index and column names are always preserved.</li>
+        <li>Unmatched values pass through unchanged.</li>
+        <li>Per-column replacement (DataFrame) uses a nested dict: <span class="badge">{ colName: { old: new } }</span>.</li>
+      </ul>
+    </main>
+
+    <script type="module">
+      // ── minimal tsb shim (no bundler) ──────────────────────────────────────
+      function encodeKey(v) {
+        if (v === null) return "null";
+        if (v === undefined) return "undefined";
+        if (typeof v === "number" && Number.isNaN(v)) return "NaN";
+        if (v instanceof Date) return "__date__" + v.getTime();
+        return String(v);
+      }
+
+      function parseToken(s) {
+        const t = s.trim();
+        if (t === "null") return null;
+        if (t === "NaN") return Number.NaN;
+        if (t === "") return undefined;
+        const n = Number(t);
+        if (!Number.isNaN(n)) return n;
+        return t;
+      }
+
+      function parseList(str) {
+        return str.split(",").map(parseToken);
+      }
+
+      function applyLookup(data, lookup) {
+        return data.map(v => {
+          const key = encodeKey(v);
+          return lookup.has(key) ? lookup.get(key) : v;
+        });
+      }
+
+      function buildLookupFromScalars(from, to) {
+        const m = new Map();
+        m.set(encodeKey(from), to);
+        return m;
+      }
+
+      function buildLookupFromDict(dict) {
+        const m = new Map();
+        for (const [k, v] of Object.entries(dict)) m.set(k, v);
+        return m;
+      }
+
+      function fmtVal(v) {
+        if (v === null || v === undefined) return '<span class="null">null</span>';
+        if (typeof v === "number" && Number.isNaN(v)) return '<span class="null">NaN</span>';
+        return String(v);
+      }
+
+      function renderTable(before, after, labels = null) {
+        const rows = before.map((bv, i) => {
+          const av = after[i];
+          const changed = bv !== av && !(typeof bv === "number" && Number.isNaN(bv) && typeof av === "number" && Number.isNaN(av));
+          const cls = changed ? ' class="changed"' : '';
+          const lbl = labels ? `<td>${labels[i]}</td>` : `<td>${i}</td>`;
+          return `<tr>${lbl}<td>${fmtVal(bv)}</td><td${cls}>${fmtVal(av)}</td></tr>`;
+        });
+        return `<table><thead><tr><th>idx</th><th>before</th><th>after</th></tr></thead><tbody>${rows.join("")}</tbody></table>`;
+      }
+
+      window.runSeriesDemo = () => {
+        try {
+          const data = parseList(document.getElementById("series-input").value);
+          const from = parseToken(document.getElementById("from-val").value);
+          const to = parseToken(document.getElementById("to-val").value);
+          const lookup = buildLookupFromScalars(from, to);
+          const result = applyLookup(data, lookup);
+          document.getElementById("series-output").innerHTML = renderTable(data, result);
+        } catch (e) {
+          document.getElementById("series-output").innerHTML = `<span class="error">${e.message}</span>`;
+        }
+      };
+
+      window.runDictDemo = () => {
+        try {
+          const data = parseList(document.getElementById("dict-series-input").value);
+          const dict = JSON.parse(document.getElementById("dict-input").value);
+          const lookup = buildLookupFromDict(dict);
+          const result = applyLookup(data, lookup);
+          document.getElementById("dict-output").innerHTML = renderTable(data, result);
+        } catch (e) {
+          document.getElementById("dict-output").innerHTML = `<span class="error">${e.message}</span>`;
+        }
+      };
+
+      window.runDfDemo = () => {
+        try {
+          const colA = parseList(document.getElementById("df-col-a").value);
+          const colB = parseList(document.getElementById("df-col-b").value);
+          const from = parseToken(document.getElementById("df-from").value);
+          const to = parseToken(document.getElementById("df-to").value);
+          const lookup = buildLookupFromScalars(from, to);
+          const ra = applyLookup(colA, lookup);
+          const rb = applyLookup(colB, lookup);
+          const n = Math.max(colA.length, colB.length);
+          const rows = Array.from({ length: n }, (_, i) => {
+            const changed_a = ra[i] !== colA[i];
+            const changed_b = rb[i] !== colB[i];
+            return `<tr>
+              <td>${i}</td>
+              <td>${fmtVal(colA[i])}</td>
+              <td class="${changed_a ? "changed" : ""}">${fmtVal(ra[i])}</td>
+              <td>${fmtVal(colB[i])}</td>
+              <td class="${changed_b ? "changed" : ""}">${fmtVal(rb[i])}</td>
+            </tr>`;
+          });
+          document.getElementById("df-output").innerHTML = `
+            <table>
+              <thead><tr><th>idx</th><th>A (before)</th><th>A (after)</th><th>B (before)</th><th>B (after)</th></tr></thead>
+              <tbody>${rows.join("")}</tbody>
+            </table>`;
+        } catch (e) {
+          document.getElementById("df-output").innerHTML = `<span class="error">${e.message}</span>`;
+        }
+      };
+
+      // Run defaults on load
+      runSeriesDemo();
+      runDictDemo();
+      runDfDemo();
+    </script>
+  </body>
+</html>

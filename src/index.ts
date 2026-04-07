@@ -296,3 +296,6 @@ export type { UniqueOptions, NuniqOptions, DataFrameNuniqOptions } from "./stats
 
 export { pctChange, dataFramePctChange } from "./stats/index.ts";
 export type { PctChangeOptions } from "./stats/index.ts";
+
+export { replaceSeries, replaceDataFrame } from "./stats/index.ts";
+export type { ReplaceDict, ReplacePerColumnDict, ReplaceArg } from "./stats/index.ts";
