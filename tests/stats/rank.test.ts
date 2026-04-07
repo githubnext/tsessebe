@@ -9,7 +9,7 @@ import type { Scalar } from "../../src/index.ts";
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function s(data: readonly Scalar[], index?: readonly (string | number)[]): Series<Scalar> {
-  return new Series({ data: [...data], index });
+  return new Series({ data: [...data], ...(index !== undefined ? { index } : {}) });
 }
 
 function approx(a: number, b: number, eps = 1e-9): boolean {
