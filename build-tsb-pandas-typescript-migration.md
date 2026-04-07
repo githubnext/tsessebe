@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-07T02:19:22Z |
-| Iteration Count | 116 |
-| Best Metric | 71 |
+| Last Run | 2026-04-07T03:35:46Z |
+| Iteration Count | 117 |
+| Best Metric | 72 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #54 |
@@ -22,21 +22,22 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
 **Note**: The main branch was reset to 6 files (earlier branches were not merged). Iter 53 re-establishes the new long-running branch from main (6 files → 8). The branch history in the state file (iters 1–52) reflects previous diverged work.
 
-Now at 71 files (iter 116). Next candidates:
+Now at 72 files (iter 117). Next candidates:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
+- `src/stats/between.ts` — `Series.between(left, right, inclusive)` membership range test
 - `src/stats/wide_to_long_enhanced.ts` — wide_to_long with stubvar / i / j options
-- `src/stats/stack_unstack_enhanced.ts` — enhanced stack/unstack with level selection
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 117 (isin)**: `isIsinDict()` guard distinguishes plain-object `IsinDict` from `Iterable` values by checking `!Array.isArray && !(instanceof Set) && Symbol.iterator not a function`. NaN never matches even if NaN is in the lookup Set (JS Set uses SameValueZero but we guard with `Number.isNaN` before the set lookup). `boolean extends Scalar` so `boolean[]` is directly assignable to `Scalar[]` without casts; keep `data: Scalar[]` for cleanliness.
 - **Iter 116 (explode)**: `Scalar` type does not include arrays, so `Array.isArray(v)` where `v: Scalar` narrows to `never`. Fix: widen to `readonly unknown[]` via implicit assignment (`const w: readonly unknown[] = series.values`) — no cast needed since `readonly Scalar[]` ⊆ `readonly unknown[]` (readonly arrays are covariant). `explodeSeries` accepts `Series<Scalar>` and returns `Series<Scalar>`. `explodeDataFrame` handles both single and multi-column explosion; empty arrays → null row. `Map.get()` returns `T | undefined`, use `!== undefined` guard rather than `as T` cast.
 - **Iter 115 (align)**: `alignSeries` and `alignDataFrame` are thin wrappers over `reindexSeries`/`reindexDataFrame` — the heavy lifting is already done. Key design: `resolveIndex()` switches on the `join` policy using `Index.union()`, `.intersection()`, or the original index. For `alignDataFrame`, normalise `axis` to `0 | 1 | null` before branching; `null` aligns both axes. Column indices are `Index<string>` — casting from `Index<Label>` via `as Index<string>` is safe since `resolveIndex` returns the same element type.
 - **Iter 114 (reindex)**: `Index` constructor takes `(data: readonly T[], name?)` — NOT `{ data }`. The `toIndex()` helper must call `new Index(src)` directly. Property tests need to ensure data/labels lengths match before constructing a Series. Two-pass `leftDist/rightVal` + `rightDist/rightVal` arrays enable O(n) nearest fill. `applyFfill` increments `streak` in both the "fill applied" and "no prior value" branches to correctly enforce `limit`. `applyNearest` prefers right (forward) on equidistant tie — matching pandas.
@@ -65,13 +66,21 @@ Now at 71 files (iter 116). Next candidates:
 
 ## 🔭 Future Directions
 
-**State (iter 116)**: 71 files. Next: io/read_excel (XLSX zero-dep) · stats/wide_to_long_enhanced · stats/stack_unstack_enhanced
+**State (iter 117)**: 72 files. Next: io/read_excel (XLSX zero-dep) · stats/between · stats/wide_to_long_enhanced
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 117 — 2026-04-07 03:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24062941194)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/isin.ts` — `isin(series, values)` and `dataFrameIsin(df, values)` mirroring `pandas.Series.isin` / `pandas.DataFrame.isin`.
+- **Metric**: 72 (previous: 71, delta: +1)
+- **Commit**: 3b29902
+- **Notes**: `isIsinDict()` guard distinguishes plain-object per-column dicts from iterables (array/Set/generator) without unsafe casts. NaN never matches (like pandas). 44 unit tests + 5 property-based tests covering both Series and DataFrame paths.
 
 ### Iteration 116 — 2026-04-07 02:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24061009779)
 
