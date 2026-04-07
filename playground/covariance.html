@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Rolling Covariance &amp; Correlation</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #0f172a; color: #e2e8f0; }
+      h1 { color: #38bdf8; } h2 { color: #7dd3fc; }
+      .card { background: #1e293b; border-radius: 8px; padding: 1.25rem; margin: 1rem 0; }
+      pre { background: #0f172a; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.875rem; line-height: 1.6; color: #a3e635; }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; }
+      .output { color: #34d399; }
+      .comment { color: #64748b; }
+      table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+      th { background: #0f172a; color: #7dd3fc; padding: 0.5rem; text-align: left; }
+      td { padding: 0.4rem 0.5rem; border-bottom: 1px solid #334155; font-size: 0.875rem; font-family: monospace; }
+      .null { color: #64748b; font-style: italic; }
+      a { color: #38bdf8; }
+    </style>
+  </head>
+  <body>
+    <h1>📊 Rolling Covariance &amp; Correlation</h1>
+    <p>
+      <code>rollingCov</code> and <code>rollingCorr</code> compute sliding-window
+      sample covariance and Pearson correlation between two Series, mirroring
+      <code>pandas.Series.rolling(n).cov(other)</code> and <code>.corr(other)</code>.
+    </p>
+
+    <div class="card">
+      <h2>What Are These?</h2>
+      <p>
+        <strong>Covariance</strong> measures the joint variability of two series.
+        Positive → they move together; negative → they move oppositely; zero → no linear relationship.
+        The sample covariance (ddof=1) is: <code>Σ(xᵢ−x̄)(yᵢ−ȳ) / (n−1)</code>.
+      </p>
+      <p>
+        <strong>Pearson Correlation</strong> is the covariance normalized by the product of
+        standard deviations, yielding a value in [−1, 1] that is scale-invariant.
+        A value of <code>1</code> means perfect positive linear co-movement; <code>-1</code> means
+        perfect inverse co-movement.
+      </p>
+      <p>
+        Both functions require at least <code>minPeriods</code> valid paired observations in each
+        window (default 2). Missing values in either series are skipped positionally.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Rolling Covariance — <code>rollingCov(x, y, window)</code></h2>
+      <pre><code><span class="comment">// Mirrors: pd.Series.rolling(window).cov(other)</span>
+import { Series, rollingCov } from "tsb";
+
+<span class="comment">// Asset returns for two stocks</span>
+const stockA = new Series({ data: [1, 3, 2, 5, 4, 7, 6], name: "AAPL" });
+const stockB = new Series({ data: [2, 4, 3, 6, 5, 8, 7], name: "MSFT" });
+
+const cov3 = rollingCov(stockA, stockB, 3);
+<span class="output">// Series [null, null, 1.0, 1.0, 1.0, 1.0, 1.0]</span>
+
+<span class="comment">// Negatively correlated assets</span>
+const bonds = new Series({ data: [7, 5, 6, 3, 4, 1, 2] });
+const negativeCov = rollingCov(stockA, bonds, 3);
+<span class="output">// Series [null, null, -1.0, -1.0, -1.0, -1.0, -1.0]</span>
+
+<span class="comment">// With custom options</span>
+const covPop = rollingCov(stockA, stockB, 3, {
+  ddof: 0,        // population covariance
+  minPeriods: 2,  // need only 2 valid pairs
+});
+</code></pre>
+
+      <table>
+        <tr><th>Position</th><th>Window</th><th>rollingCov(A, B, 3)</th></tr>
+        <tr><td>0</td><td>[1]</td><td class="null">null</td></tr>
+        <tr><td>1</td><td>[1, 3]</td><td class="null">null</td></tr>
+        <tr><td>2</td><td>[1, 3, 2]</td><td>1.0</td></tr>
+        <tr><td>3</td><td>[3, 2, 5]</td><td>1.0</td></tr>
+        <tr><td>4</td><td>[2, 5, 4]</td><td>1.0</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Rolling Correlation — <code>rollingCorr(x, y, window)</code></h2>
+      <pre><code><span class="comment">// Mirrors: pd.Series.rolling(window).corr(other)</span>
+import { Series, rollingCorr } from "tsb";
+
+const x = new Series({ data: [1, 2, 3, 4, 5, 6, 7] });
+const y = new Series({ data: [2, 4, 6, 8, 10, 12, 14] }); <span class="comment">// y = 2x</span>
+
+const corr3 = rollingCorr(x, y, 3);
+<span class="output">// Series [null, null, 1.0, 1.0, 1.0, 1.0, 1.0]</span>
+<span class="comment">// Perfect positive correlation because y is a linear transformation of x</span>
+
+const yNeg = new Series({ data: [14, 12, 10, 8, 6, 4, 2] }); <span class="comment">// y decreases as x increases</span>
+const corrNeg = rollingCorr(x, yNeg, 3);
+<span class="output">// Series [null, null, -1.0, -1.0, -1.0, -1.0, -1.0]</span>
+
+<span class="comment">// Zero-variance window → NaN</span>
+const constant = new Series({ data: [5, 5, 5, 5] });
+const signal   = new Series({ data: [1, 2, 3, 4] });
+const corrConst = rollingCorr(constant, signal, 3);
+<span class="output">// Series [null, null, NaN, NaN]</span>
+<span class="comment">// NaN because constant series has zero variance</span>
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>Handling Missing Values</h2>
+      <pre><code>import { Series, rollingCov, rollingCorr } from "tsb";
+
+<span class="comment">// Missing values are skipped positionally — both must be present to form a pair</span>
+const a = new Series({ data: [1, null, 3, 4, 5] });
+const b = new Series({ data: [2,    4, 6, 8, 10] });
+
+const cov = rollingCov(a, b, 3);
+<span class="comment">// window [1, null, 3] vs [2, 4, 6]:</span>
+<span class="comment">// valid pairs: (1,2) and (3,6) — null position skipped</span>
+<span class="output">// index 2: cov = 4.0  (sample cov of [(1,2),(3,6)])</span>
+
+const corr = rollingCorr(a, b, 3);
+<span class="output">// index 2: corr = 1.0  (perfectly correlated pairs)</span>
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>DataFrame Column-wise — <code>rollingCovDataFrame</code> / <code>rollingCorrDataFrame</code></h2>
+      <pre><code><span class="comment">// Mirrors: df.rolling(window).cov(other) and .corr(other)</span>
+import { DataFrame, rollingCovDataFrame, rollingCorrDataFrame } from "tsb";
+
+const portfolio = new DataFrame({
+  tech:  [100, 102, 98,  105, 103],
+  bonds: [50,  49,  51,  48,  52],
+});
+const benchmark = new DataFrame({
+  tech:  [200, 204, 196, 210, 206],
+  bonds: [100, 98,  102, 96,  104],
+});
+
+<span class="comment">// Rolling covariance between portfolio and benchmark (column by column)</span>
+const cov = rollingCovDataFrame(portfolio, benchmark, 3);
+<span class="output">// DataFrame:
+//   tech:  [null, null, 8.0, 8.0, 8.0]
+//   bonds: [null, null, -2.0, -2.0, -2.0]</span>
+
+<span class="comment">// Rolling correlation (scale-invariant)</span>
+const corr = rollingCorrDataFrame(portfolio, benchmark, 3);
+<span class="output">// DataFrame:
+//   tech:  [null, null, 1.0, 1.0, 1.0]
+//   bonds: [null, null, -1.0, -1.0, -1.0]</span>
+
+<span class="comment">// Restrict to specific columns</span>
+const techOnly = rollingCorrDataFrame(portfolio, benchmark, 3, {
+  columns: ["tech"],
+});
+</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>Key Properties</h2>
+      <ul>
+        <li><strong>Commutativity</strong>: <code>rollingCov(x, y, w) == rollingCov(y, x, w)</code></li>
+        <li><strong>Self-covariance</strong>: <code>rollingCov(x, x, w)</code> equals rolling variance</li>
+        <li><strong>Scale-invariance</strong>: <code>rollingCorr(a·x, b·y, w) == rollingCorr(x, y, w)</code> for a, b &gt; 0</li>
+        <li><strong>Bounds</strong>: Correlation is always in [−1, 1]</li>
+        <li><strong>ddof</strong>: Covariance uses sample covariance (ddof=1) by default; pass <code>ddof: 0</code> for population covariance</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Use Cases in Finance</h2>
+      <pre><code>import { Series, rollingCorr, rollingCov } from "tsb";
+
+<span class="comment">// Detect when two assets become correlated (correlation contagion in crises)</span>
+const asset1Returns = new Series({ data: [0.01, -0.02, 0.03, -0.01, 0.02, -0.04, 0.05] });
+const asset2Returns = new Series({ data: [0.02, -0.01, 0.02, -0.02, 0.03, -0.03, 0.04] });
+
+const rolling30DCorr = rollingCorr(asset1Returns, asset2Returns, 5);
+<span class="comment">// Monitor for correlation spikes that signal systemic risk</span>
+
+<span class="comment">// Compute rolling beta (cov(asset, market) / var(market))</span>
+const market = new Series({ data: [1, 2, 3, 4, 5, 6, 7] });
+const covAM = rollingCov(asset1Returns, market, 4);
+const varM  = rollingCov(market, market, 4); <span class="comment">// self-cov = variance</span>
+<span class="comment">// beta[i] = covAM[i] / varM[i]</span>
+</code></pre>
+    </div>
+
+    <p>← <a href="index.html">Back to feature index</a></p>
+  </body>
+</html>

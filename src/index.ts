@@ -339,3 +339,9 @@ export type { RoundDecimals } from "./stats/index.ts";
 
 export { rollingSkew, rollingKurtosis, rollingSkewDataFrame, rollingKurtosisDataFrame } from "./stats/index.ts";
 export type { RollingMomentsOptions, RollingMomentsDataFrameOptions } from "./stats/index.ts";
+
+export { rollingCov, rollingCorr, rollingCovDataFrame, rollingCorrDataFrame } from "./stats/index.ts";
+export type {
+  RollingCovCorrOptions,
+  RollingCovCorrDataFrameOptions,
+} from "./stats/index.ts";

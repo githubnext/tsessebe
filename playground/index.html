@@ -521,6 +521,12 @@
           <p>Rolling Fisher-Pearson skewness and bias-corrected excess kurtosis for Series and DataFrame — <a href="rolling_moments.html" style="color: var(--accent);">interactive tutorial</a>. <code>rollingSkew(series, window)</code> computes the sliding-window adjusted skewness (≥ 3 valid values required); <code>rollingKurtosis(series, window)</code> computes excess kurtosis (≥ 4 required). Both support <code>minPeriods</code>, <code>center</code>, and DataFrame column-wise variants. Mirrors <code>pandas.Series.rolling(n).skew()</code> and <code>.kurt()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+
+        <div class="feature-card">
+          <h3>📊 rolling covariance &amp; correlation</h3>
+          <p>Rolling sample covariance and Pearson correlation between two Series or DataFrames — <a href="covariance.html" style="color: var(--accent);">interactive tutorial</a>. <code>rollingCov(x, y, window)</code> computes the sliding-window sample covariance (ddof=1); <code>rollingCorr(x, y, window)</code> computes the rolling Pearson correlation in [−1, 1]. Both support <code>minPeriods</code> and DataFrame column-wise variants. Mirrors <code>pandas.Series.rolling(n).cov(other)</code> and <code>.corr(other)</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

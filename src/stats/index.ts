@@ -238,3 +238,9 @@ export type { RoundDecimals } from "./abs_round.ts";
 
 export { rollingSkew, rollingKurtosis, rollingSkewDataFrame, rollingKurtosisDataFrame } from "./rolling_moments.ts";
 export type { RollingMomentsOptions, RollingMomentsDataFrameOptions } from "./rolling_moments.ts";
+
+export { rollingCov, rollingCorr, rollingCovDataFrame, rollingCorrDataFrame } from "./covariance.ts";
+export type {
+  RollingCovCorrOptions,
+  RollingCovCorrDataFrameOptions,
+} from "./covariance.ts";
