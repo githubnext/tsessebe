@@ -153,7 +153,7 @@ describe("DataFrame", () => {
     it("tail(1) returns last row", () => {
       const df = makeSimple().tail(1);
       expect(df.shape).toEqual([1, 3]);
-      expect(df.col("name").at(0)).toBe("Carol");
+      expect(df.col("name").iat(0)).toBe("Carol");
     });
   });
 
@@ -161,8 +161,8 @@ describe("DataFrame", () => {
     it("selects rows by integer positions", () => {
       const df = makeSimple().iloc([0, 2]);
       expect(df.shape).toEqual([2, 3]);
-      expect(df.col("name").at(0)).toBe("Alice");
-      expect(df.col("name").at(1)).toBe("Carol");
+      expect(df.col("name").iat(0)).toBe("Alice");
+      expect(df.col("name").iat(1)).toBe("Carol");
     });
   });
 
@@ -171,8 +171,8 @@ describe("DataFrame", () => {
       const df = DataFrame.fromColumns({ v: [10, 20, 30] }, { index: ["a", "b", "c"] });
       const sliced = df.loc(["a", "c"]);
       expect(sliced.shape).toEqual([2, 1]);
-      expect(sliced.col("v").at(0)).toBe(10);
-      expect(sliced.col("v").at(1)).toBe(30);
+      expect(sliced.col("v").iat(0)).toBe(10);
+      expect(sliced.col("v").iat(1)).toBe(30);
     });
   });
 
@@ -245,7 +245,7 @@ describe("DataFrame", () => {
     it("drops rows with any null", () => {
       const df = makeWithNulls().dropna();
       expect(df.shape[0]).toBe(1);
-      expect(df.col("a").at(0)).toBe(3);
+      expect(df.col("a").iat(0)).toBe(3);
     });
   });
 
@@ -263,8 +263,8 @@ describe("DataFrame", () => {
     it("filters rows by boolean array", () => {
       const df = makeSimple().filter([true, false, true]);
       expect(df.shape[0]).toBe(2);
-      expect(df.col("name").at(0)).toBe("Alice");
-      expect(df.col("name").at(1)).toBe("Carol");
+      expect(df.col("name").iat(0)).toBe("Alice");
+      expect(df.col("name").iat(1)).toBe("Carol");
     });
   });
 
@@ -314,13 +314,13 @@ describe("DataFrame", () => {
   describe("sortValues", () => {
     it("sorts ascending by a column", () => {
       const df = makeSimple().sortValues("age");
-      expect(df.col("name").at(0)).toBe("Bob");
-      expect(df.col("name").at(2)).toBe("Carol");
+      expect(df.col("name").iat(0)).toBe("Bob");
+      expect(df.col("name").iat(2)).toBe("Carol");
     });
 
     it("sorts descending by a column", () => {
       const df = makeSimple().sortValues("age", false);
-      expect(df.col("name").at(0)).toBe("Carol");
+      expect(df.col("name").iat(0)).toBe("Carol");
     });
 
     it("sorts by multiple columns", () => {
@@ -329,8 +329,8 @@ describe("DataFrame", () => {
         v: [2, 1, 4, 3],
       });
       const sorted = df.sortValues(["g", "v"]);
-      expect(sorted.col("v").at(0)).toBe(1);
-      expect(sorted.col("v").at(1)).toBe(2);
+      expect(sorted.col("v").iat(0)).toBe(1);
+      expect(sorted.col("v").iat(1)).toBe(2);
     });
   });
 
@@ -339,7 +339,7 @@ describe("DataFrame", () => {
       const df = DataFrame.fromColumns({ v: [10, 20, 30] }, { index: ["c", "a", "b"] });
       const sorted = df.sortIndex();
       expect(sorted.index.at(0)).toBe("a");
-      expect(sorted.col("v").at(0)).toBe(20);
+      expect(sorted.col("v").iat(0)).toBe(20);
     });
   });
 
