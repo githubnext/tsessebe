@@ -287,4 +287,4 @@ export type { ExplodeOptions, ExplodeDataFrameOptions } from "./stats/index.ts";
 
 export { isin, dataFrameIsin } from "./stats/index.ts";
 export type { IsinValues, IsinDict, DataFrameIsinValues } from "./stats/index.ts";
-// Resolved merge conflict with main (2026-04-08): kept PR branch exports (superset of main)
+// Re-merged main (2026-04-08T22:24Z): PR branch exports are superset of main; no features lost
