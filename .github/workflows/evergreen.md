@@ -279,7 +279,11 @@ A pre-flight step has already identified a PR that needs attention. Read the sel
    - `selected.base_branch` — the target branch (usually `main`)
    - `selected.attempts` — how many times we've already tried on this SHA
 
-2. **Check out the PR branch** and investigate the issues.
+2. **Check out the PR branch** as a local tracking branch so the push tool can find it:
+   ```bash
+   git checkout -b <head_branch> origin/<head_branch>
+   ```
+   where `<head_branch>` is `selected.head_branch` from the selection file. **Do not** use a detached HEAD checkout — the `push-to-pull-request-branch` tool requires a named local branch.
 
 3. **Fix the issues**:
 
