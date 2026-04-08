@@ -26,6 +26,7 @@ safe-outputs:
   push-to-pull-request-branch:
     target: "*"
     max: 3
+    protected-files: allowed
   add-comment:
     max: 3
     target: "*"
