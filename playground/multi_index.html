@@ -4,31 +4,200 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tsb — MultiIndex</title>
-  <script src="playground-runtime.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-    h1   { font-size: 2rem; margin-bottom: .25rem; }
-    .subtitle { color: #555; margin-bottom: 2rem; }
-    section  { margin-bottom: 2.5rem; }
-    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
-    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
-    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
-    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
-    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
-    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
-    nav a { color: #0366d6; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
-<nav><a href="index.html">← tsb playground</a></nav>
-<h1>MultiIndex</h1>
-<p class="subtitle">Hierarchical multi-level index — mirrors <code>pandas.MultiIndex</code>.</p>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>🗂️ MultiIndex — Interactive Playground</h1>
+  <p>Hierarchical multi-level index — mirrors
+    <code>pandas.MultiIndex</code>. Build composite keys from tuples, arrays,
+    or Cartesian products and use them for advanced label-based look-ups.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
 
-<section>
-  <h2>1 — Create from tuples</h2>
-  <p>The most common way: pass an array of label-tuples.</p>
-  <pre><code id="ex1-code">import { MultiIndex } from "tsb";
+  <!-- 1 · Create from tuples -->
+  <div class="section">
+    <h2>1 · Create from tuples</h2>
+    <p>The most common way: pass an array of label-tuples.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromTuples([
   ["bar", "one"],
@@ -37,19 +206,30 @@ const mi = MultiIndex.fromTuples([
   ["baz", "two"],
 ], { names: ["first", "second"] });
 
-console.log(mi.nlevels);   // 2
-console.log(mi.size);      // 4
-console.log(mi.names);     // ["first", "second"]
-console.log(mi.at(0));     // ["bar", "one"]
-console.log(mi.at(-1));    // ["baz", "two"]
-</code></pre>
-  <div class="output" id="ex1-out">▶ run</div>
-</section>
+console.log("nlevels:", mi.nlevels);
+console.log("size:", mi.size);
+console.log("names:", mi.names);
+console.log("at(0):", mi.at(0));
+console.log("at(-1):", mi.at(-1));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>2 — Create from arrays</h2>
-  <p>Supply one array per level — a column-oriented alternative to fromTuples.</p>
-  <pre><code id="ex2-code">import { MultiIndex } from "tsb";
+  <!-- 2 · Create from arrays -->
+  <div class="section">
+    <h2>2 · Create from arrays</h2>
+    <p>Supply one array per level — a column-oriented alternative to
+      <code>fromTuples</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromArrays(
   [
@@ -59,53 +239,84 @@ const mi = MultiIndex.fromArrays(
   { names: ["letter", "number"] },
 );
 
-console.log(mi.toArray());
-// [["a",1], ["a",2], ["b",1], ["b",2]]
-</code></pre>
-  <div class="output" id="ex2-out">▶ run</div>
-</section>
+console.log("toArray:", mi.toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>3 — Create from Cartesian product</h2>
-  <p><code>fromProduct</code> generates every combination from a list of iterables — very handy for experiment grids.</p>
-  <pre><code id="ex3-code">import { MultiIndex } from "tsb";
+  <!-- 3 · Create from Cartesian product -->
+  <div class="section">
+    <h2>3 · Create from Cartesian product</h2>
+    <p><code>fromProduct</code> generates every combination from a list of
+      iterables — very handy for experiment grids.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromProduct(
   [["control", "treatment"], ["pre", "post"]],
   { names: ["group", "period"] },
 );
 
-console.log(mi.size);      // 4
+console.log("size:", mi.size);
 for (const t of mi) {
   console.log(t.join(" / "));
-}
-</code></pre>
-  <div class="output" id="ex3-out">▶ run</div>
-</section>
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>4 — Look-up by label</h2>
-  <p>Use <code>getLoc</code> to find the position of a tuple.  <code>contains</code> for a quick existence check.</p>
-  <pre><code id="ex4-code">import { MultiIndex } from "tsb";
+  <!-- 4 · Look-up by label -->
+  <div class="section">
+    <h2>4 · Look-up by label</h2>
+    <p>Use <code>getLoc</code> to find the position of a tuple.
+      <code>contains</code> for a quick existence check.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromTuples([
   ["a", 1], ["a", 2], ["b", 1], ["b", 2],
 ]);
 
-console.log(mi.getLoc(["a", 2]));   // 1
-console.log(mi.contains(["b", 3])); // false
+console.log("getLoc(['a', 2]):", mi.getLoc(["a", 2]));
+console.log("contains(['b', 3]):", mi.contains(["b", 3]));
 
 // Duplicate tuples return an array of positions
 const dup = MultiIndex.fromTuples([["a", 1], ["b", 2], ["a", 1]]);
-console.log(dup.getLoc(["a", 1]));  // [0, 2]
-</code></pre>
-  <div class="output" id="ex4-out">▶ run</div>
-</section>
+console.log("dup getLoc(['a', 1]):", dup.getLoc(["a", 1]));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>5 — Level operations: droplevel and swaplevel</h2>
-  <p>Restructure the level hierarchy without touching the data.</p>
-  <pre><code id="ex5-code">import { MultiIndex } from "tsb";
+  <!-- 5 · Level operations: droplevel and swaplevel -->
+  <div class="section">
+    <h2>5 · Level operations: droplevel &amp; swaplevel</h2>
+    <p>Restructure the level hierarchy without touching the data.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromTuples([
   ["a", 1, "x"],
@@ -113,64 +324,88 @@ const mi = MultiIndex.fromTuples([
 ], { names: ["letter", "num", "code"] });
 
 // Drop the first level — returns a 2-level MultiIndex
-const two = mi.droplevel(0) as MultiIndex;
-console.log(two.nlevels);    // 2
-console.log(two.at(0));      // [1, "x"]
+const two = mi.droplevel(0);
+console.log("after droplevel(0) nlevels:", two.nlevels);
+console.log("after droplevel(0) at(0):", two.at(0));
 
 // Swap levels 0 and 1
 const swapped = mi.swaplevel(0, 1);
-console.log(swapped.at(0));  // [1, "a", "x"]
+console.log("after swaplevel(0,1) at(0):", swapped.at(0));
 
 // Drop to a single level → plain Index
 const idx = mi.droplevel([0, 1]);
-console.log(idx.constructor.name); // Index
-</code></pre>
-  <div class="output" id="ex5-out">▶ run</div>
-</section>
+console.log("droplevel([0,1]) type:", idx.constructor.name);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>6 — Set operations</h2>
-  <p><code>union</code>, <code>intersection</code>, <code>difference</code> — same semantics as <code>pandas.MultiIndex</code>.</p>
-  <pre><code id="ex6-code">import { MultiIndex } from "tsb";
+  <!-- 6 · Set operations -->
+  <div class="section">
+    <h2>6 · Set operations</h2>
+    <p><code>union</code>, <code>intersection</code>, <code>difference</code> —
+      same semantics as <code>pandas.MultiIndex</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi1 = MultiIndex.fromTuples([["a", 1], ["b", 2], ["c", 3]]);
 const mi2 = MultiIndex.fromTuples([["b", 2], ["d", 4]]);
 
-console.log(mi1.union(mi2).toArray());
-// [["a",1],["b",2],["c",3],["d",4]]
+console.log("union:", mi1.union(mi2).toArray());
+console.log("intersection:", mi1.intersection(mi2).toArray());
+console.log("difference:", mi1.difference(mi2).toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-console.log(mi1.intersection(mi2).toArray());
-// [["b",2]]
-
-console.log(mi1.difference(mi2).toArray());
-// [["a",1],["c",3]]
-</code></pre>
-  <div class="output" id="ex6-out">▶ run</div>
-</section>
-
-<section>
-  <h2>7 — Sorting and deduplication</h2>
-  <pre><code id="ex7-code">import { MultiIndex } from "tsb";
+  <!-- 7 · Sorting and deduplication -->
+  <div class="section">
+    <h2>7 · Sorting and deduplication</h2>
+    <p>Sort tuples lexicographically and detect or remove duplicates.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromTuples([
   ["b", 2], ["a", 1], ["b", 1], ["a", 2], ["a", 1],
 ]);
 
-console.log(mi.sortValues().toArray());
-// [["a",1],["a",1],["a",2],["b",1],["b",2]]
+console.log("sortValues:", mi.sortValues().toArray());
+console.log("dropDuplicates:", mi.dropDuplicates().toArray());
+console.log("duplicated('first'):", mi.duplicated("first"));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-console.log(mi.dropDuplicates().toArray());
-// [["b",2],["a",1],["b",1],["a",2]]
-
-console.log(mi.duplicated("first"));
-// [false, false, false, false, true]
-</code></pre>
-  <div class="output" id="ex7-out">▶ run</div>
-</section>
-
-<section>
-  <h2>8 — Missing values</h2>
-  <pre><code id="ex8-code">import { MultiIndex } from "tsb";
+  <!-- 8 · Missing values -->
+  <div class="section">
+    <h2>8 · Missing values</h2>
+    <p>Detect and remove tuples that contain <code>null</code> or
+      <code>undefined</code> in any level.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { MultiIndex } from "tsb";
 
 const mi = MultiIndex.fromTuples([
   [null, 1],
@@ -179,13 +414,60 @@ const mi = MultiIndex.fromTuples([
   ["c",  3],
 ]);
 
-console.log(mi.isna());   // [true, false, true, false]
+console.log("isna:", mi.isna());
 const clean = mi.dropna();
-console.log(clean.size);  // 2
-console.log(clean.toArray()); // [["a",2], ["c",3]]
-</code></pre>
-  <div class="output" id="ex8-out">▶ run</div>
-</section>
+console.log("after dropna size:", clean.size);
+console.log("after dropna toArray:", clean.toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
+  <!-- API Reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p>Key static constructors and instance methods on
+      <code>MultiIndex</code>.</p>
+    <pre class="api-reference-code"><code>// Static constructors
+MultiIndex.fromTuples(tuples, { names? }): MultiIndex
+MultiIndex.fromArrays(arrays, { names? }): MultiIndex
+MultiIndex.fromProduct(iterables, { names? }): MultiIndex
+
+// Properties
+mi.nlevels: number        // number of levels
+mi.size: number           // number of entries
+mi.names: string[]        // level names
+
+// Look-up
+mi.at(i): unknown[]                  // tuple at position
+mi.getLoc(tuple): number | number[]   // position(s) of tuple
+mi.contains(tuple): boolean          // existence check
+
+// Restructure
+mi.droplevel(level): MultiIndex | Index
+mi.swaplevel(i, j): MultiIndex
+
+// Set operations
+mi.union(other): MultiIndex
+mi.intersection(other): MultiIndex
+mi.difference(other): MultiIndex
+
+// Sorting &amp; deduplication
+mi.sortValues(): MultiIndex
+mi.dropDuplicates(): MultiIndex
+mi.duplicated(keep?): boolean[]
+
+// Missing values
+mi.isna(): boolean[]
+mi.dropna(): MultiIndex</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
 </body>
 </html>
