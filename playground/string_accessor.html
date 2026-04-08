@@ -1,238 +1,364 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — Series.str Accessor</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <nav class="breadcrumb">
-      <a href="index.html">tsb playground</a> › Series.str accessor
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Series.str Accessor</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border); border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem; cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) { background: rgba(88,166,255,0.1); border-color: var(--accent); }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border); border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none; tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border); border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono); font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem; word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint { font-size: 0.75rem; color: #484f58; margin-top: 0.35rem; text-align: right; }
+    footer {
+      text-align: center; padding: 2rem 0; color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border); margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
 
-    <h1>Series.str — Vectorised String Operations</h1>
-    <p class="intro">
-      <code>Series.str</code> gives you element-wise string operations on a
-      <code>Series</code>, mirroring
-      <a href="https://pandas.pydata.org/docs/reference/series.html#string-handling"
-        >pandas <code>StringMethods</code></a
-      >.  Every method propagates <code>null</code> / <code>NaN</code> unchanged.
-    </p>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
 
-    <section class="tutorial">
-      <h2>1 — Case operations</h2>
-      <p>
-        Convert strings to lower, upper, title, or capitalized form.  Also
-        available: <code>swapcase()</code>.
-      </p>
-      <div class="editor" id="case-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["hello", "WORLD", "foo BAR", null] });
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>🔡 Series.str — Interactive Playground</h1>
+  <p>
+    <code>Series.str</code> gives you element-wise string operations on a
+    <code>Series</code>, mirroring pandas <code>StringMethods</code>.
+    Every method propagates <code>null</code> / <code>NaN</code> unchanged.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
+
+  <div class="section">
+    <h2>Case Operations</h2>
+    <p>Convert strings to lower, upper, title, or capitalized form.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: ["hello", "WORLD", "foo BAR", null] });
 
 console.log("lower :", s.str.lower().toArray());
 console.log("upper :", s.str.upper().toArray());
 console.log("title :", s.str.title().toArray());
 console.log("capitalize:", s.str.capitalize().toArray());
-console.log("swapcase  :", s.str.swapcase().toArray());
-</pre>
-      </div>
-      <button class="run-btn" data-editor="case-editor">▶ Run</button>
-      <pre class="output" id="case-output"></pre>
-    </section>
+console.log("swapcase  :", s.str.swapcase().toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>2 — Length &amp; slicing</h2>
-      <p>
-        Get string length, extract substrings with <code>slice()</code>, or
-        access individual characters with <code>get()</code>.
-      </p>
-      <div class="editor" id="slice-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["hello", "world", "pandas"] });
+  <div class="section">
+    <h2>Length &amp; Slicing</h2>
+    <p>Get string length, extract substrings with <code>slice()</code>, or access individual characters with <code>get()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: ["hello", "world", "pandas"] });
 
 console.log("len        :", s.str.len().toArray());
 console.log("slice(1,4) :", s.str.slice(1, 4).toArray());
-console.log("get(0)     :", s.str.get(0).toArray());   // first char
-console.log("get(-1)    :", s.str.get(-1).toArray());  // last char
-console.log("slice step :", s.str.slice(0, undefined, 2).toArray()); // every 2nd char
-</pre>
+console.log("get(0)     :", s.str.get(0).toArray());
+console.log("get(-1)    :", s.str.get(-1).toArray());
+console.log("slice step :", s.str.slice(0, undefined, 2).toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Strip &amp; Pad</h2>
+    <p>Remove whitespace (or specific characters) with <code>strip()</code>. Pad strings with <code>ljust()</code>, <code>rjust()</code>, <code>center()</code>, or <code>zfill()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="slice-editor">▶ Run</button>
-      <pre class="output" id="slice-output"></pre>
-    </section>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <section class="tutorial">
-      <h2>3 — Strip &amp; pad</h2>
-      <p>
-        Remove whitespace (or specific characters) with <code>strip()</code>,
-        <code>lstrip()</code>, <code>rstrip()</code>.  Pad strings with
-        <code>pad()</code>, <code>ljust()</code>, <code>rjust()</code>,
-        <code>center()</code>, or <code>zfill()</code>.
-      </p>
-      <div class="editor" id="pad-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["  hello  ", "***world***", "42"] });
+const s = new Series({ data: ["  hello  ", "***world***", "42"] });
 
-console.log("strip()        :", s.str.strip().toArray());
-console.log("strip('*')     :", s.str.strip("*").toArray());
-console.log("ljust(10)      :", s.str.ljust(10).toArray());
-console.log("rjust(10)      :", s.str.rjust(10).toArray());
-console.log("center(10)     :", s.str.center(10).toArray());
-console.log("zfill(5)       :",
-  new tsb.Series({ data: ["42", "-7", "3"] }).str.zfill(5).toArray());
-</pre>
+console.log("strip()    :", s.str.strip().toArray());
+console.log("strip('*') :", s.str.strip("*").toArray());
+console.log("ljust(10)  :", s.str.ljust(10).toArray());
+console.log("rjust(10)  :", s.str.rjust(10).toArray());
+console.log("center(10) :", s.str.center(10).toArray());
+console.log("zfill(5)   :",
+  new Series({ data: ["42", "-7", "3"] }).str.zfill(5).toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Search &amp; Match</h2>
+    <p>Test membership with <code>contains()</code>, <code>startswith()</code>, <code>endswith()</code>. Use <code>match()</code> or <code>fullmatch()</code> for regex matching.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="pad-editor">▶ Run</button>
-      <pre class="output" id="pad-output"></pre>
-    </section>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <section class="tutorial">
-      <h2>4 — Search &amp; match</h2>
-      <p>
-        Test membership with <code>contains()</code>, <code>startswith()</code>,
-        <code>endswith()</code>.  Use <code>match()</code> for anchored-start
-        matching or <code>fullmatch()</code> for whole-string matching.
-      </p>
-      <div class="editor" id="search-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["foo123", "bar456", "foo_bar", null] });
+const s = new Series({ data: ["foo123", "bar456", "foo_bar", null] });
 
 console.log("contains('foo')   :", s.str.contains("foo").toArray());
-console.log("contains('foo', false):", // literal, not regex
-  s.str.contains("foo", false).toArray());
+console.log("contains (literal):", s.str.contains("foo", false).toArray());
 console.log("startswith('foo') :", s.str.startswith("foo").toArray());
 console.log("endswith('3')     :", s.str.endswith("3").toArray());
-console.log("match('\\\\d+')    :", s.str.match("\\d+").toArray());
-console.log("fullmatch('\\\\w+') :", s.str.fullmatch("\\w+").toArray());
-</pre>
+console.log("match('\\d+')      :", s.str.match("\\d+").toArray());
+console.log("fullmatch('\\w+')  :", s.str.fullmatch("\\w+").toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Count, Find &amp; Replace</h2>
+    <p>Count pattern occurrences, find positions, and replace substrings.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="search-editor">▶ Run</button>
-      <pre class="output" id="search-output"></pre>
-    </section>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <section class="tutorial">
-      <h2>5 — Count, find &amp; replace</h2>
-      <p>
-        Count pattern occurrences with <code>count()</code>, find positions with
-        <code>find()</code> / <code>rfind()</code>, and replace with
-        <code>replace()</code>.
-      </p>
-      <div class="editor" id="replace-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["banana", "apple", "abracadabra"] });
+const s = new Series({ data: ["banana", "apple", "abracadabra"] });
 
-console.log("count('a')     :", s.str.count("a").toArray());
-console.log("find('a')      :", s.str.find("a").toArray()); // first index
-console.log("rfind('a')     :", s.str.rfind("a").toArray()); // last index
-console.log("replace('a','X'):", s.str.replace("a", "X").toArray()); // all
-console.log("replace n=1   :", s.str.replace("a", "X", 1).toArray()); // first only
-</pre>
+console.log("count('a')      :", s.str.count("a").toArray());
+console.log("find('a')       :", s.str.find("a").toArray());
+console.log("rfind('a')      :", s.str.rfind("a").toArray());
+console.log("replace('a','X'):", s.str.replace("a", "X").toArray());
+console.log("replace n=1     :", s.str.replace("a", "X", 1).toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Extract</h2>
+    <p>Extract the first regex capture group with <code>extract()</code>. Returns <code>null</code> when there is no match.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="replace-editor">▶ Run</button>
-      <pre class="output" id="replace-output"></pre>
-    </section>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <section class="tutorial">
-      <h2>6 — Extract</h2>
-      <p>
-        Extract the first regex capture group with <code>extract()</code>.
-        Returns <code>null</code> when there is no match.
-      </p>
-      <div class="editor" id="extract-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["price: 42", "cost: 99.5", "free"] });
+const s = new Series({ data: ["price: 42", "cost: 99.5", "free"] });
 
-// Extract numeric part after ": "
 const prices = s.str.extract(":\\s*([\\d.]+)");
-console.log("extracted:", prices.toArray());
-</pre>
+console.log("extracted:", prices.toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Split &amp; Join</h2>
+    <p>Split strings with <code>split()</code> and reassemble with <code>join()</code>. Use <code>cat()</code> to concatenate element-wise.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="extract-editor">▶ Run</button>
-      <pre class="output" id="extract-output"></pre>
-    </section>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <section class="tutorial">
-      <h2>7 — Split &amp; join</h2>
-      <p>
-        Split strings with <code>split()</code> (returns JSON array or the nth
-        segment), and reassemble with <code>join()</code>.  Use
-        <code>cat()</code> to concatenate element-wise.
-      </p>
-      <div class="editor" id="split-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["a,b,c", "x,y,z"] });
+const s = new Series({ data: ["a,b,c", "x,y,z"] });
 
-// Get the nth segment (0-based)
 console.log("split n=0:", s.str.split(",", 0).toArray());
 console.log("split n=1:", s.str.split(",", 1).toArray());
 
-// Full split → JSON array → rejoin
 const joined = s.str.split(",").str.join(" | ");
 console.log("rejoin   :", joined.toArray());
 
-// Concatenate two series element-wise
-const a = new tsb.Series({ data: ["foo", "bar"] });
-const b = new tsb.Series({ data: ["1", "2"] });
-console.log("cat      :", a.str.cat([b.toArray()], "-").toArray());
-</pre>
-      </div>
-      <button class="run-btn" data-editor="split-editor">▶ Run</button>
-      <pre class="output" id="split-output"></pre>
-    </section>
+const a = new Series({ data: ["foo", "bar"] });
+const b = new Series({ data: ["1", "2"] });
+console.log("cat      :", a.str.cat([b.toArray()], "-").toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>8 — Predicates</h2>
-      <p>
-        Test character classes with <code>isalpha()</code>,
-        <code>isdigit()</code>, <code>isalnum()</code>, <code>islower()</code>,
-        <code>isupper()</code>, <code>istitle()</code>, <code>isspace()</code>.
-      </p>
-      <div class="editor" id="pred-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["abc", "123", "abc123", "ABC", "Hello World", "   "] });
+  <div class="section">
+    <h2>Predicates</h2>
+    <p>Test character classes with <code>isalpha()</code>, <code>isdigit()</code>, <code>isalnum()</code>, <code>islower()</code>, <code>isupper()</code>, <code>istitle()</code>, <code>isspace()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: ["abc", "123", "abc123", "ABC", "Hello World", "   "] });
 
 console.log("isalpha :", s.str.isalpha().toArray());
 console.log("isdigit :", s.str.isdigit().toArray());
 console.log("isalnum :", s.str.isalnum().toArray());
 console.log("isupper :", s.str.isupper().toArray());
 console.log("istitle :", s.str.istitle().toArray());
-console.log("isspace :", s.str.isspace().toArray());
-</pre>
-      </div>
-      <button class="run-btn" data-editor="pred-editor">▶ Run</button>
-      <pre class="output" id="pred-output"></pre>
-    </section>
+console.log("isspace :", s.str.isspace().toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>9 — Null propagation</h2>
-      <p>
-        All methods pass <code>null</code> / <code>NaN</code> through unchanged,
-        just like pandas.
-      </p>
-      <div class="editor" id="null-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: ["hello", null, "world"] });
+  <div class="section">
+    <h2>Null Propagation</h2>
+    <p>All methods pass <code>null</code> / <code>NaN</code> through unchanged, just like pandas.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: ["hello", null, "world"] });
 
 console.log("upper:", s.str.upper().toArray());
 console.log("len  :", s.str.len().toArray());
-console.log("contains:", s.str.contains("o").toArray());
-</pre>
-      </div>
-      <button class="run-btn" data-editor="null-editor">▶ Run</button>
-      <pre class="output" id="null-output"></pre>
-    </section>
+console.log("contains:", s.str.contains("o").toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <script src="runtime.js"></script>
-    <script>
-      document.querySelectorAll(".run-btn").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const editorId = btn.getAttribute("data-editor");
-          const outputId = editorId.replace("-editor", "-output");
-          const code = document.querySelector(`#${editorId} .code`).textContent;
-          const output = document.getElementById(outputId);
-          output.textContent = "Running…";
-          try {
-            const result = await runCode(code);
-            output.textContent = result || "(no output)";
-            output.classList.remove("error");
-          } catch (err) {
-            output.textContent = String(err);
-            output.classList.add("error");
-          }
-        });
-      });
-    </script>
-  </body>
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+
+  <script type="module" src="playground-runtime.js"></script>
+</body>
 </html>

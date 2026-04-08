@@ -1,314 +1,508 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — EWM (Exponentially Weighted Moving)</title>
-    <style>
-      body {
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 2rem;
-        background: #0d1117;
-        color: #e6edf3;
-      }
-      h1 {
-        color: #58a6ff;
-        border-bottom: 1px solid #21262d;
-        padding-bottom: 0.5rem;
-      }
-      h2 {
-        color: #79c0ff;
-        margin-top: 2rem;
-      }
-      pre {
-        background: #161b22;
-        border: 1px solid #21262d;
-        border-radius: 6px;
-        padding: 1rem;
-        overflow-x: auto;
-        font-size: 0.9rem;
-        line-height: 1.5;
-      }
-      code {
-        font-family: "Fira Code", "Cascadia Code", monospace;
-        color: #e6edf3;
-      }
-      .keyword {
-        color: #ff7b72;
-      }
-      .string {
-        color: #a5d6ff;
-      }
-      .comment {
-        color: #8b949e;
-        font-style: italic;
-      }
-      .number {
-        color: #79c0ff;
-      }
-      .output {
-        background: #0d1117;
-        border-left: 3px solid #238636;
-        padding: 0.75rem 1rem;
-        margin-top: 0.5rem;
-        border-radius: 0 6px 6px 0;
-        font-family: "Fira Code", monospace;
-        font-size: 0.85rem;
-        white-space: pre;
-      }
-      .pill {
-        display: inline-block;
-        background: #21262d;
-        color: #79c0ff;
-        border-radius: 12px;
-        padding: 0.1rem 0.6rem;
-        font-size: 0.8rem;
-        font-family: monospace;
-        margin: 0 0.1rem;
-      }
-      p {
-        line-height: 1.6;
-        color: #c9d1d9;
-      }
-      a {
-        color: #58a6ff;
-      }
-      .formula {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 6px;
-        padding: 0.5rem 1rem;
-        font-family: monospace;
-        margin: 1rem 0;
-        color: #ffa657;
-      }
-    </style>
-  </head>
-  <body>
-    <p><a href="index.html">← tsb playground index</a></p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — EWM (Exponentially Weighted Moving)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .formula {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--orange);
+      margin-bottom: 1rem;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📉 EWM — Interactive Playground</h1>
+  <p><strong style="color: var(--text);">Series.ewm()</strong> and
+    <strong style="color: var(--text);">DataFrame.ewm()</strong> provide
+    <strong style="color: var(--text);">Exponentially Weighted Moving</strong> aggregations,
+    mirroring <code>pandas.Series.ewm()</code>. Unlike rolling windows (fixed size)
+    or expanding windows (all past data equally), EWM weights recent observations more
+    heavily using an exponential decay.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
 
-    <h1>📉 EWM — Exponentially Weighted Moving</h1>
-
-    <p>
-      <code>Series.ewm()</code> and <code>DataFrame.ewm()</code> provide
-      <strong>Exponentially Weighted Moving</strong> aggregations, mirroring
-      <code>pandas.Series.ewm()</code>. Unlike rolling windows (fixed size) or
-      expanding windows (all past data equally), EWM weights recent observations
-      more heavily using an exponential decay.
-    </p>
-
-    <h2>1. Decay Parameters</h2>
-
-    <p>
-      Specify the decay via exactly one of
-      <span class="pill">span</span>, <span class="pill">com</span>,
-      <span class="pill">halflife</span>, or <span class="pill">alpha</span>:
-    </p>
-
+  <!-- 1 · Decay Parameters -->
+  <div class="section">
+    <h2>1 · Decay Parameters</h2>
+    <p>Specify the decay via exactly one of <code>span</code>, <code>com</code>,
+      <code>halflife</code>, or <code>alpha</code>:</p>
     <div class="formula">
-      span → alpha = 2 / (span + 1)<br />
-      com → alpha = 1 / (1 + com)<br />
-      halflife → alpha = 1 − exp(−ln(2) / halflife)<br />
+      span → alpha = 2 / (span + 1)<br>
+      com → alpha = 1 / (1 + com)<br>
+      halflife → alpha = 1 − exp(−ln(2) / halflife)<br>
       alpha → used directly (must be in (0, 1])
     </div>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <pre><code><span class="keyword">import</span> { Series, EWM } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+const s = new Series({ data: [1, 2, 3, 4, 5] });
 
-<span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
+// All four are equivalent (alpha ≈ 0.5):
+const a = s.ewm({ span: 3 }).mean();       // alpha = 2/(3+1) = 0.5
+const b = s.ewm({ com: 1 }).mean();        // alpha = 1/(1+1) = 0.5
+const c = s.ewm({ halflife: 1 }).mean();   // alpha = 1 − 2^(−1/1) = 0.5
+const d = s.ewm({ alpha: 0.5 }).mean();    // alpha = 0.5 directly
 
-<span class="comment">// All four are equivalent (alpha ≈ 0.5):</span>
-s.ewm({ span: <span class="number">3</span> }).mean()        <span class="comment">// alpha = 2/(3+1) = 0.5</span>
-s.ewm({ com: <span class="number">1</span> }).mean()         <span class="comment">// alpha = 1/(1+1) = 0.5</span>
-s.ewm({ halflife: <span class="number">1</span> }).mean()    <span class="comment">// alpha = 1 − 2^(−1/1) = 0.5</span>
-s.ewm({ alpha: <span class="number">0.5</span> }).mean()     <span class="comment">// alpha = 0.5 directly</span></code></pre>
+console.log("span=3:    ", a.values);
+console.log("com=1:     ", b.values);
+console.log("halflife=1:", c.values);
+console.log("alpha=0.5: ", d.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <h2>2. EWM Mean</h2>
-
-    <p>
-      With <code>adjust=true</code> (default), the mean at position <em>t</em>
-      is the weighted average of all past values, where weight for
-      <em>x<sub>i</sub></em> is <em>(1−α)<sup>t−i</sup></em>:
-    </p>
-
+  <!-- 2 · EWM Mean -->
+  <div class="section">
+    <h2>2 · EWM Mean</h2>
+    <p>With <code>adjust=true</code> (default), the mean at position <em>t</em>
+      is the weighted average of all past values, where the weight for
+      x<sub>i</sub> is (1−α)<sup>t−i</sup>.</p>
     <div class="formula">
-      S<sub>t</sub> = x<sub>t</sub> + (1−α)·S<sub>t−1</sub><br />
-      W<sub>t</sub> = 1 + (1−α)·W<sub>t−1</sub><br />
+      S<sub>t</sub> = x<sub>t</sub> + (1−α)·S<sub>t−1</sub><br>
+      W<sub>t</sub> = 1 + (1−α)·W<sub>t−1</sub><br>
       mean<sub>t</sub> = S<sub>t</sub> / W<sub>t</sub>
     </div>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">10</span>, <span class="number">20</span>, <span class="number">15</span>, <span class="number">30</span>, <span class="number">25</span>] });
+const s = new Series({ data: [10, 20, 15, 30, 25] });
 
-<span class="comment">// EWM mean with span=3 (alpha=0.5)</span>
-<span class="keyword">const</span> ewmMean = s.ewm({ span: <span class="number">3</span> }).mean();
-console.log(ewmMean.toArray());
-<span class="comment">// [10, 16.667, 15.714, 23.636, 24.324]</span></code></pre>
-
-    <div class="output">[ 10, 16.666..., 15.714..., 23.636..., 24.324... ]</div>
-
-    <h2>3. adjust=false: Simple IIR Filter</h2>
-
-    <p>
-      With <code>adjust=false</code>, EWM uses a simple Infinite Impulse
-      Response formula — the same as an exponential smoothing filter:
-    </p>
-
-    <div class="formula">y<sub>t</sub> = α · x<sub>t</sub> + (1−α) · y<sub>t−1</sub></div>
-
-    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
-
-<span class="comment">// Simple exponential smoothing (alpha=0.3)</span>
-<span class="keyword">const</span> smooth = s.ewm({ alpha: <span class="number">0.3</span>, adjust: <span class="keyword">false</span> }).mean();
-console.log(smooth.toArray());
-<span class="comment">// [1, 1.3, 1.91, 2.737, 3.616]</span></code></pre>
-
-    <div class="output">[ 1, 1.3, 1.91, 2.737, 3.616... ]</div>
-
-    <h2>4. EWM Variance and Standard Deviation</h2>
-
-    <p>
-      EWM variance uses reliability-weights Bessel correction (bias=false by
-      default, matching pandas):
-    </p>
-
-    <pre><code><span class="keyword">const</span> prices = <span class="keyword">new</span> Series({ data: [<span class="number">100</span>, <span class="number">102</span>, <span class="number">98</span>, <span class="number">105</span>, <span class="number">103</span>, <span class="number">99</span>] });
-
-<span class="comment">// EWM standard deviation (span=5)</span>
-<span class="keyword">const</span> ewmStd = prices.ewm({ span: <span class="number">5</span> }).std();
-console.log(ewmStd.toArray().map(v => v?.toFixed(<span class="number">3</span>)));
-<span class="comment">// [null, "1.414", "2.530", "2.927", "2.510", "2.736"]</span>
-
-<span class="comment">// Biased (population) variance</span>
-<span class="keyword">const</span> ewmVarBiased = prices.ewm({ span: <span class="number">5</span> }).var(<span class="keyword">true</span>);
-console.log(ewmVarBiased.toArray().map(v => v?.toFixed(<span class="number">3</span>)));
-<span class="comment">// [0.000, ...]</span></code></pre>
-
-    <div class="output">std: [null, "1.414", "2.530", "2.927", "2.510", "2.736"]</div>
-
-    <h2>5. EWM Covariance</h2>
-
-    <p>Compute pairwise exponentially weighted covariance between two Series:</p>
-
-    <pre><code><span class="keyword">const</span> x = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
-<span class="keyword">const</span> y = <span class="keyword">new</span> Series({ data: [<span class="number">5</span>, <span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>] });
-
-<span class="keyword">const</span> ewmCov = x.ewm({ alpha: <span class="number">0.4</span> }).cov(y);
-console.log(ewmCov.toArray().map(v => v?.toFixed(<span class="number">4</span>)));
-<span class="comment">// [null, "-0.5", "-1.1429", ...]  (negative: x and y move opposite)</span></code></pre>
-
-    <div class="output">[null, "-0.5000", "-1.1429", "-1.8000", "-2.2500"]</div>
-
-    <h2>6. EWM Correlation</h2>
-
-    <pre><code><span class="keyword">const</span> s1 = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
-<span class="keyword">const</span> s2 = <span class="keyword">new</span> Series({ data: [<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">8</span>, <span class="number">10</span>] }); <span class="comment">// perfect linear</span>
-
-<span class="keyword">const</span> ewmCorr = s1.ewm({ span: <span class="number">3</span> }).corr(s2);
-console.log(ewmCorr.toArray().map(v => v?.toFixed(<span class="number">4</span>)));
-<span class="comment">// [null, "1.0000", "1.0000", "1.0000", "1.0000"]  (perfect +1)</span></code></pre>
-
-    <div class="output">[null, "1.0000", "1.0000", "1.0000", "1.0000"]</div>
-
-    <h2>7. Missing Values (ignoreNa)</h2>
-
-    <p>
-      The <code>ignoreNa</code> option controls how missing values affect the
-      exponential weights:
-    </p>
-
-    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="keyword">null</span>, <span class="number">3</span>, <span class="keyword">null</span>, <span class="number">5</span>] });
-
-<span class="comment">// ignoreNa=false (default): NaN positions advance time (decay occurs)</span>
-<span class="keyword">const</span> r1 = s.ewm({ alpha: <span class="number">0.5</span>, ignoreNa: <span class="keyword">false</span> }).mean();
-console.log(r1.toArray());
-<span class="comment">// [1, null, 2.6, null, 4.314...]</span>
-<span class="comment">// x[2]=3 has extra decay: w[0]=0.25, w[2]=1 → mean = (0.25+3)/1.25 = 2.6</span>
-
-<span class="comment">// ignoreNa=true: missing values completely skipped</span>
-<span class="keyword">const</span> r2 = s.ewm({ alpha: <span class="number">0.5</span>, ignoreNa: <span class="keyword">true</span> }).mean();
-console.log(r2.toArray());
-<span class="comment">// [1, null, 1.667, null, 3.286]</span>
-<span class="comment">// x[2]=3 treated as adjacent to x[0]: w[0]=0.5, w[2]=1</span></code></pre>
-
-    <div class="output">
-ignoreNa=false: [1, null, 2.6, null, 4.314...]
-ignoreNa=true:  [1, null, 1.667, null, 3.286...]
+// EWM mean with span=3 (alpha=0.5)
+const ewmMean = s.ewm({ span: 3 }).mean();
+console.log("ewm mean:", ewmMean.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
+  </div>
 
-    <h2>8. DataFrame EWM</h2>
+  <!-- 3 · adjust=false: Simple IIR Filter -->
+  <div class="section">
+    <h2>3 · adjust=false: Simple IIR Filter</h2>
+    <p>With <code>adjust=false</code>, EWM uses a simple Infinite Impulse Response
+      formula — the same as an exponential smoothing filter:
+      <span style="color: var(--orange); font-family: var(--font-mono);">y<sub>t</sub> = α·x<sub>t</sub> + (1−α)·y<sub>t−1</sub></span></p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <pre><code><span class="keyword">import</span> { DataFrame } <span class="keyword">from</span> <span class="string">"tsb"</span>;
+const s = new Series({ data: [1, 2, 3, 4, 5] });
 
-<span class="keyword">const</span> df = DataFrame.fromColumns({
-  open:  [<span class="number">10</span>, <span class="number">11</span>, <span class="number">10.5</span>, <span class="number">12</span>, <span class="number">11.8</span>],
-  close: [<span class="number">11</span>, <span class="number">10.5</span>, <span class="number">12</span>, <span class="number">11.8</span>, <span class="number">13</span>],
+// Simple exponential smoothing (alpha=0.3)
+const smooth = s.ewm({ alpha: 0.3, adjust: false }).mean();
+console.log("smoothed:", smooth.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 4 · EWM Variance and Standard Deviation -->
+  <div class="section">
+    <h2>4 · EWM Variance and Standard Deviation</h2>
+    <p>EWM variance uses reliability-weights Bessel correction
+      (<code>bias=false</code> by default, matching pandas).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const prices = new Series({ data: [100, 102, 98, 105, 103, 99] });
+
+// EWM standard deviation (span=5)
+const ewmStd = prices.ewm({ span: 5 }).std();
+console.log("std:", ewmStd.values);
+
+// Biased (population) variance
+const ewmVarBiased = prices.ewm({ span: 5 }).var(true);
+console.log("var (biased):", ewmVarBiased.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 5 · EWM Covariance -->
+  <div class="section">
+    <h2>5 · EWM Covariance</h2>
+    <p>Compute pairwise exponentially weighted covariance between two Series.
+      Negative covariance means the series move in opposite directions.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const x = new Series({ data: [1, 2, 3, 4, 5] });
+const y = new Series({ data: [5, 4, 3, 2, 1] });
+
+// x goes up, y goes down → negative covariance
+const ewmCov = x.ewm({ alpha: 0.4 }).cov(y);
+console.log("cov(x, y):", ewmCov.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 6 · EWM Correlation -->
+  <div class="section">
+    <h2>6 · EWM Correlation</h2>
+    <p>EWM Pearson correlation between two Series. Perfectly correlated series
+      produce values of +1 or −1.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s1 = new Series({ data: [1, 2, 3, 4, 5] });
+const s2 = new Series({ data: [2, 4, 6, 8, 10] }); // perfect linear
+
+const ewmCorr = s1.ewm({ span: 3 }).corr(s2);
+console.log("corr(s1, s2):", ewmCorr.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 7 · Missing Values (ignoreNa) -->
+  <div class="section">
+    <h2>7 · Missing Values (ignoreNa)</h2>
+    <p>The <code>ignoreNa</code> option controls how missing values affect the
+      exponential weights. With <code>ignoreNa=false</code> (default), null
+      positions still advance time and cause extra decay. With
+      <code>ignoreNa=true</code>, nulls are completely skipped.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: [1, null, 3, null, 5] });
+
+// ignoreNa=false (default): null positions advance time (extra decay)
+const r1 = s.ewm({ alpha: 0.5, ignoreNa: false }).mean();
+console.log("ignoreNa=false:", r1.values);
+
+// ignoreNa=true: missing values completely skipped
+const r2 = s.ewm({ alpha: 0.5, ignoreNa: true }).mean();
+console.log("ignoreNa=true: ", r2.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 8 · DataFrame EWM -->
+  <div class="section">
+    <h2>8 · DataFrame EWM</h2>
+    <p>Apply EWM to every numeric column of a DataFrame independently.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  open:  [10, 11, 10.5, 12, 11.8],
+  close: [11, 10.5, 12, 11.8, 13],
 });
 
-<span class="comment">// EWM mean for each column independently</span>
-<span class="keyword">const</span> dfMean = df.ewm({ span: <span class="number">3</span> }).mean();
+// EWM mean for each column independently
+const dfMean = df.ewm({ span: 3 }).mean();
+console.log("EWM mean:");
 dfMean.print();
-<span class="comment">/*
-  open   close
-0 10     11
-1 10.667 10.667
-2 10.619 11.429
-3 11.381 11.619
-4 11.605 12.238
-*/</span>
 
-<span class="comment">// EWM std for each column</span>
-<span class="keyword">const</span> dfStd = df.ewm({ span: <span class="number">3</span> }).std();
-dfStd.print();</code></pre>
+// EWM std for each column
+const dfStd = df.ewm({ span: 3 }).std();
+console.log("\nEWM std:");
+dfStd.print();</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <h2>9. Custom apply</h2>
+  <!-- 9 · Custom apply -->
+  <div class="section">
+    <h2>9 · Custom apply</h2>
+    <p>Use <code>apply(fn)</code> to implement custom EWM aggregations. The
+      function receives the accumulated values and their EW weights.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
 
-    <p>
-      Use <code>apply(fn)</code> to implement custom EWM aggregations. The
-      function receives the accumulated values and their EW weights:
-    </p>
+const s = new Series({ data: [1, 2, 3, 4, 5] });
 
-    <pre><code><span class="keyword">const</span> s = <span class="keyword">new</span> Series({ data: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] });
-
-<span class="comment">// EWM weighted sum (equivalent to unadjusted numerator)</span>
-<span class="keyword">const</span> ewmWeightedSum = s.ewm({ alpha: <span class="number">0.5</span> }).apply((vals, weights) =>
-  vals.reduce((acc, v, i) => acc + v * weights[i], <span class="number">0</span>)
+// EWM weighted sum (equivalent to unadjusted numerator)
+const ewmWeightedSum = s.ewm({ alpha: 0.5 }).apply((vals, weights) =>
+  vals.reduce((acc, v, i) => acc + v * weights[i], 0)
 );
-console.log(ewmWeightedSum.toArray().map(v => (v <span class="keyword">as</span> number).toFixed(<span class="number">3</span>)));
-<span class="comment">// ["1.000", "2.500", "4.750", "8.375", "13.688"]</span></code></pre>
+console.log("weighted sum:", ewmWeightedSum.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <div class="output">["1.000", "2.500", "4.750", "8.375", "13.688"]</div>
-
+  <!-- API reference (non-interactive) -->
+  <div class="section">
     <h2>API Reference</h2>
+    <p>Specify exactly one decay parameter. All methods return Series-like objects
+      with <code>.values</code> for inspection.</p>
+    <pre class="api-reference-code"><code>// Series.ewm(options) → EWM
+// DataFrame.ewm(options) → DataFrameEwm
 
-    <pre><code><span class="comment">// Series.ewm(options) → EWM</span>
-<span class="comment">// DataFrame.ewm(options) → DataFrameEwm</span>
-
-<span class="comment">// EwmOptions (exactly one decay parameter required):</span>
+// EwmOptions (exactly one decay parameter required):
 {
-  span?: number,      <span class="comment">// ≥ 1, alpha = 2/(span+1)</span>
-  com?: number,       <span class="comment">// ≥ 0, alpha = 1/(1+com)</span>
-  halflife?: number,  <span class="comment">// > 0, alpha = 1 − exp(−ln2/halflife)</span>
-  alpha?: number,     <span class="comment">// (0, 1]</span>
-  adjust?: boolean,   <span class="comment">// default: true</span>
-  ignoreNa?: boolean, <span class="comment">// default: false</span>
-  minPeriods?: number <span class="comment">// default: 0</span>
+  span?: number,      // ≥ 1, alpha = 2/(span+1)
+  com?: number,       // ≥ 0, alpha = 1/(1+com)
+  halflife?: number,  // > 0, alpha = 1 − exp(−ln2/halflife)
+  alpha?: number,     // (0, 1]
+  adjust?: boolean,   // default: true
+  ignoreNa?: boolean, // default: false
+  minPeriods?: number // default: 0
 }
 
-<span class="comment">// EWM methods:</span>
+// EWM methods:
 ewm.mean()              → Series (EwmSeriesLike)
 ewm.std(bias?)          → Series
 ewm.var(bias?)          → Series
 ewm.cov(other, bias?)   → Series
 ewm.corr(other)         → Series
-ewm.apply(fn)           → Series   <span class="comment">// fn: (values, weights) => number</span>
+ewm.apply(fn)           → Series   // fn: (values, weights) => number
 
-<span class="comment">// DataFrameEwm methods:</span>
+// DataFrameEwm methods:
 dfEwm.mean()     → DataFrame
 dfEwm.std(bias?) → DataFrame
 dfEwm.var(bias?) → DataFrame</code></pre>
-  </body>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
 </html>

@@ -1,40 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — describe &amp; quantile</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <nav class="breadcrumb">
-      <a href="index.html">tsb playground</a> › describe &amp; quantile
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — describe &amp; quantile</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📈 describe &amp; quantile — Interactive Playground</h1>
+  <p><code>describe()</code> and <code>Series.quantile()</code> give you the
+    same concise statistical summary that
+    <code>pandas.DataFrame.describe()</code> produces. For numeric data you get
+    <em>count</em>, <em>mean</em>, <em>std</em>, <em>min</em>, percentiles, and
+    <em>max</em>. For categorical data you get <em>count</em>, <em>unique</em>,
+    <em>top</em>, and <em>freq</em>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
 
-    <h1>describe &amp; quantile — Summary Statistics</h1>
-    <p class="intro">
-      <code>describe()</code> and <code>Series.quantile()</code> give you the
-      same concise statistical summary that
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.describe.html"
-        >pandas <code>DataFrame.describe()</code></a
-      >
-      produces.  For numeric data you get <em>count</em>, <em>mean</em>,
-      <em>std</em>, <em>min</em>, user-defined percentiles, and <em>max</em>.
-      For categorical / string data you get <em>count</em>, <em>unique</em>,
-      <em>top</em>, and <em>freq</em>.
-    </p>
+  <!-- 1 · Describe a numeric Series -->
+  <div class="section">
+    <h2>1 · Describe a numeric Series</h2>
+    <p>Pass any <code>Series</code> with numeric data and get back a labeled
+      <code>Series</code> of statistics. Percentiles default to 25%, 50%, and
+      75% — just like pandas.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, describe } from "tsb";
 
-    <section class="tutorial">
-      <h2>1 — Describe a numeric Series</h2>
-      <p>
-        Pass any <code>Series</code> with numeric data and get back a labeled
-        <code>Series</code> of statistics.  Percentiles default to 25&nbsp;%, 50&nbsp;%,
-        and 75&nbsp;% — just like pandas.
-      </p>
-      <div class="editor" id="series-numeric-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: [4, 7, 13, 16, 21, 3, 9, 12], name: "scores" });
+const s = new Series({ data: [4, 7, 13, 16, 21, 3, 9, 12], name: "scores" });
 
-const stats = tsb.describe(s);
+const stats = describe(s);
 console.log("count :", stats.at("count"));
 console.log("mean  :", stats.at("mean").toFixed(2));
 console.log("std   :", stats.at("std").toFixed(2));
@@ -42,78 +214,99 @@ console.log("min   :", stats.at("min"));
 console.log("25%   :", stats.at("25%"));
 console.log("50%   :", stats.at("50%"));
 console.log("75%   :", stats.at("75%"));
-console.log("max   :", stats.at("max"));
-</pre>
-      </div>
-      <button class="run-btn" data-editor="series-numeric-editor">▶ Run</button>
-      <pre class="output" id="series-numeric-output"></pre>
-    </section>
+console.log("max   :", stats.at("max"));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>2 — Custom percentiles</h2>
-      <p>
-        Override the default percentile set with the <code>percentiles</code>
-        option.  Pass any array of values in [0, 1].
-      </p>
-      <div class="editor" id="custom-pct-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const prices = new tsb.Series({
+  <!-- 2 · Custom percentiles -->
+  <div class="section">
+    <h2>2 · Custom percentiles</h2>
+    <p>Override the default percentile set with the <code>percentiles</code>
+      option. Pass any array of values in [0, 1].</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, describe } from "tsb";
+
+const prices = new Series({
   data: [100, 200, 150, 300, 250, 180, 90, 400, 210, 175],
   name: "price",
 });
 
 // Get deciles: 10th through 90th percentile
-const stats = tsb.describe(prices, {
+const stats = describe(prices, {
   percentiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
 });
 console.log(stats.index.values);
 for (const label of stats.index.values) {
   console.log(`${label.toString().padEnd(5)}: ${Number(stats.at(label)).toFixed(2)}`);
-}
-</pre>
-      </div>
-      <button class="run-btn" data-editor="custom-pct-editor">▶ Run</button>
-      <pre class="output" id="custom-pct-output"></pre>
-    </section>
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>3 — Describe a categorical Series</h2>
-      <p>
-        For non-numeric Series, <code>describe()</code> switches to categorical
-        mode: <em>count</em>, <em>unique</em>, <em>top</em> (most frequent
-        value), and <em>freq</em> (its count).  Nulls are silently excluded.
-      </p>
-      <div class="editor" id="series-cat-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const dept = new tsb.Series({
+  <!-- 3 · Describe a categorical Series -->
+  <div class="section">
+    <h2>3 · Describe a categorical Series</h2>
+    <p>For non-numeric Series, <code>describe()</code> switches to categorical
+      mode: <em>count</em>, <em>unique</em>, <em>top</em> (most frequent
+      value), and <em>freq</em> (its count). Nulls are silently excluded.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, describe } from "tsb";
+
+const dept = new Series({
   data: ["Engineering", "Marketing", "Engineering", "HR", "Engineering", null, "Marketing"],
   name: "department",
 });
 
-const stats = tsb.describe(dept);
+const stats = describe(dept);
 console.log("count :", stats.at("count"));
 console.log("unique:", stats.at("unique"));
 console.log("top   :", stats.at("top"));
-console.log("freq  :", stats.at("freq"));
-</pre>
-      </div>
-      <button class="run-btn" data-editor="series-cat-editor">▶ Run</button>
-      <pre class="output" id="series-cat-output"></pre>
-    </section>
+console.log("freq  :", stats.at("freq"));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>4 — Describe a DataFrame</h2>
-      <p>
-        When passed a <code>DataFrame</code>, <code>describe()</code> returns a
-        new <code>DataFrame</code> where each column is a stat Series.  By
-        default only numeric columns are included (<code>include: "number"</code>).
-      </p>
-      <div class="editor" id="df-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  <!-- 4 · Describe a DataFrame -->
+  <div class="section">
+    <h2>4 · Describe a DataFrame</h2>
+    <p>When passed a <code>DataFrame</code>, <code>describe()</code> returns a
+      new <code>DataFrame</code> where each column is a stat Series. By default
+      only numeric columns are included (<code>include: "number"</code>).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, describe } from "tsb";
+
+const df = DataFrame.fromColumns({
   age:    [25, 30, 35, 28, 45, 22, 31, 40],
   salary: [50000, 70000, 90000, 62000, 110000, 45000, 75000, 95000],
   score:  [82, 90, 88, 76, 95, 70, 85, 92],
 });
 
-const summary = tsb.describe(df);
+const summary = describe(df);
 
 // Print row by row
 for (const label of summary.index.values) {
@@ -121,27 +314,34 @@ for (const label of summary.index.values) {
     .map(col => `${col}: ${Number(summary.col(col).at(label)).toFixed(1)}`)
     .join("   ");
   console.log(`${String(label).padEnd(8)} ${row}`);
-}
-</pre>
-      </div>
-      <button class="run-btn" data-editor="df-editor">▶ Run</button>
-      <pre class="output" id="df-output"></pre>
-    </section>
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>5 — include="all" for mixed DataFrames</h2>
-      <p>
-        Set <code>include: "all"</code> to describe both numeric and
-        categorical columns in a single call.  Numeric stats get
-        <code>null</code> for categorical-only rows and vice-versa.
-      </p>
-      <div class="editor" id="df-all-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  <!-- 5 · include="all" for mixed DataFrames -->
+  <div class="section">
+    <h2>5 · include="all" for mixed DataFrames</h2>
+    <p>Set <code>include: "all"</code> to describe both numeric and categorical
+      columns in a single call. Numeric stats get <code>null</code> for
+      categorical-only rows and vice-versa.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, describe } from "tsb";
+
+const df = DataFrame.fromColumns({
   name:  ["Alice", "Bob", "Alice", "Carol", "Bob"],
   score: [88, 92, 75, 95, 83],
 });
 
-const summary = tsb.describe(df, { include: "all" });
+const summary = describe(df, { include: "all" });
 console.log("rows :", summary.index.values);
 console.log("cols :", summary.columns.values);
 
@@ -157,22 +357,29 @@ console.log("\n--- score column ---");
 for (const lbl of summary.index.values) {
   const v = summary.col("score").at(lbl);
   if (v !== null) console.log(`${String(lbl).padEnd(8)}: ${Number(v).toFixed(2)}`);
-}
-</pre>
-      </div>
-      <button class="run-btn" data-editor="df-all-editor">▶ Run</button>
-      <pre class="output" id="df-all-output"></pre>
-    </section>
+}</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>6 — Series.quantile()</h2>
-      <p>
-        <code>Series.quantile(q)</code> computes a single quantile via linear
-        interpolation — the same algorithm pandas uses as its default
-        (<code>method="linear"</code>).  <code>q=0.5</code> is the median.
-      </p>
-      <div class="editor" id="quantile-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const s = new tsb.Series({ data: [3, 7, 1, 9, 5, 11, 2, 8, 4, 6] });
+  <!-- 6 · Series.quantile() -->
+  <div class="section">
+    <h2>6 · Series.quantile()</h2>
+    <p><code>Series.quantile(q)</code> computes a single quantile via linear
+      interpolation — the same algorithm pandas uses as its default
+      (<code>method="linear"</code>). <code>q=0.5</code> is the median.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series } from "tsb";
+
+const s = new Series({ data: [3, 7, 1, 9, 5, 11, 2, 8, 4, 6] });
 
 console.log("Q0   (min)   :", s.quantile(0));
 console.log("Q0.25 (Q1)   :", s.quantile(0.25));
@@ -183,26 +390,33 @@ console.log("Q1   (max)   :", s.quantile(1));
 // Compare with median()
 console.log("\nmedian()     :", s.median());
 console.log("quantile(0.5):", s.quantile(0.5));
-console.log("Equal?       :", s.quantile(0.5) === s.median());
-</pre>
-      </div>
-      <button class="run-btn" data-editor="quantile-editor">▶ Run</button>
-      <pre class="output" id="quantile-output"></pre>
-    </section>
+console.log("Equal?       :", s.quantile(0.5) === s.median());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>7 — Standalone quantile() utility</h2>
-      <p>
-        The low-level <code>quantile(sorted, q)</code> function works on any
-        sorted plain array and is useful when you have pre-filtered data.
-      </p>
-      <div class="editor" id="standalone-editor">
-<pre class="code" contenteditable="true" spellcheck="false">// Pre-sorted exam scores
+  <!-- 7 · Standalone quantile() utility -->
+  <div class="section">
+    <h2>7 · Standalone quantile() utility</h2>
+    <p>The low-level <code>quantile(sorted, q)</code> function works on any
+      sorted plain array and is useful when you have pre-filtered data.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { quantile } from "tsb";
+
+// Pre-sorted exam scores
 const sorted = [42, 55, 61, 67, 72, 78, 81, 85, 90, 95];
 
 // IQR = Q3 - Q1
-const q1 = tsb.quantile(sorted, 0.25);
-const q3 = tsb.quantile(sorted, 0.75);
+const q1 = quantile(sorted, 0.25);
+const q3 = quantile(sorted, 0.75);
 const iqr = q3 - q1;
 
 console.log("Q1  :", q1);
@@ -218,13 +432,42 @@ console.log(`Fence: [${lower.toFixed(1)}, ${upper.toFixed(1)}]`);
 for (const v of sorted) {
   if (v < lower || v > upper) console.log(`  OUTLIER: ${v}`);
 }
-console.log("No outliers found in this dataset.");
-</pre>
-      </div>
-      <button class="run-btn" data-editor="standalone-editor">▶ Run</button>
-      <pre class="output" id="standalone-output"></pre>
-    </section>
+console.log("No outliers found in this dataset.");</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <script src="runtime.js"></script>
-  </body>
+  <!-- API reference (non-interactive) -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p><code>describe()</code> returns a summary <code>Series</code> (for Series
+      input) or <code>DataFrame</code> (for DataFrame input). <code>quantile()</code>
+      computes a single quantile from a sorted array or Series.</p>
+    <pre class="api-reference-code"><code>// Series describe
+describe(series, {
+  percentiles?: number[],  // default [0.25, 0.5, 0.75]
+}): Series
+
+// DataFrame describe
+describe(df, {
+  percentiles?: number[],
+  include?: "number" | "all",  // default "number"
+}): DataFrame
+
+// Series quantile
+series.quantile(q: number): number
+
+// Standalone quantile
+quantile(sorted: number[], q: number): number</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
 </html>

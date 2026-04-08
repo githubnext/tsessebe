@@ -4,87 +4,292 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tsb — nlargest / nsmallest</title>
-  <script src="playground-runtime.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-    h1   { font-size: 2rem; margin-bottom: .25rem; }
-    .subtitle { color: #555; margin-bottom: 2rem; }
-    section  { margin-bottom: 2.5rem; }
-    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
-    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
-    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
-    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
-    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
-    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
-    nav a { color: #0366d6; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
-<nav><a href="index.html">← tsb playground</a></nav>
-<h1>nlargest / nsmallest</h1>
-<p class="subtitle">Return the <em>n</em> largest or smallest values — mirrors <code>pandas.Series.nlargest()</code>, <code>Series.nsmallest()</code>, <code>DataFrame.nlargest()</code>, <code>DataFrame.nsmallest()</code>.</p>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>🔢 nlargest / nsmallest — Interactive Playground</h1>
+  <p>Return the <em>n</em> largest or smallest values — mirrors
+    <code>pandas.Series.nlargest()</code>, <code>Series.nsmallest()</code>,
+    <code>DataFrame.nlargest()</code>, and <code>DataFrame.nsmallest()</code>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
 
-<section>
-  <h2>1 — Series.nlargest basics</h2>
-  <p><code>nlargestSeries(s, n)</code> returns a new Series containing the <em>n</em> largest values, sorted in descending order. NaN / null values are always excluded.</p>
-  <pre><code id="ex1-code">import { Series, nlargestSeries } from "tsb";
+  <!-- 1 · Series.nlargest basics -->
+  <div class="section">
+    <h2>1 · Series.nlargest basics</h2>
+    <p><code>nlargestSeries(s, n)</code> returns a new Series containing the <em>n</em>
+      largest values, sorted in descending order. NaN / null values are always excluded.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, nlargestSeries } from "tsb";
 
 const s = new Series({ data: [3, 1, 4, 1, 5, 9, 2, 6] });
 
 // 3 largest values, sorted descending
 const top3 = nlargestSeries(s, 3);
-console.log([...top3.values]);    // [9, 6, 5]
-console.log([...top3.index.values]); // original positions: [5, 7, 4]
-</code></pre>
-  <div class="output" id="ex1-output">Loading…</div>
-</section>
+console.log("values:", [...top3.values]);
+console.log("indices:", [...top3.index.values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>2 — Series.nsmallest basics</h2>
-  <p><code>nsmallestSeries(s, n)</code> returns the <em>n</em> smallest values sorted in ascending order.</p>
-  <pre><code id="ex2-code">import { Series, nsmallestSeries } from "tsb";
+  <!-- 2 · Series.nsmallest basics -->
+  <div class="section">
+    <h2>2 · Series.nsmallest basics</h2>
+    <p><code>nsmallestSeries(s, n)</code> returns the <em>n</em> smallest values sorted
+      in ascending order.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, nsmallestSeries } from "tsb";
 
 const s = new Series({ data: [3, 1, 4, 1, 5, 9, 2, 6] });
 
 const bottom3 = nsmallestSeries(s, 3);
-console.log([...bottom3.values]);    // [1, 1, 2]
-console.log([...bottom3.index.values]); // [1, 3, 6]
-</code></pre>
-  <div class="output" id="ex2-output">Loading…</div>
-</section>
+console.log("values:", [...bottom3.values]);
+console.log("indices:", [...bottom3.index.values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>3 — The <code>keep</code> parameter</h2>
-  <p>When there are ties at the selection boundary, <code>keep</code> controls which ones survive:</p>
-  <ul>
-    <li><strong>first</strong> (default): keep the first occurrence in the original index order.</li>
-    <li><strong>last</strong>: keep the last occurrence.</li>
-    <li><strong>all</strong>: include every tie (may return more than <em>n</em> rows).</li>
-  </ul>
-  <pre><code id="ex3-code">import { Series, nlargestSeries } from "tsb";
+  <!-- 3 · The keep parameter -->
+  <div class="section">
+    <h2>3 · The <code>keep</code> parameter</h2>
+    <p>When there are ties at the selection boundary, <code>keep</code> controls which
+      ones survive: <strong style="color: var(--text);">first</strong> (default),
+      <strong style="color: var(--text);">last</strong>, or
+      <strong style="color: var(--text);">all</strong> (may return more than <em>n</em> rows).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, nlargestSeries } from "tsb";
 
 const s = new Series({
   data:  [1, 3, 3, 5],
   index: ["a", "b", "c", "d"],
 });
 
-// n=2: top two are 5 (d) and one of the 3s
-nlargestSeries(s, 2, { keep: "first" }).values; // [5, 3] — keeps "b" (first 3)
-nlargestSeries(s, 2, { keep: "last"  }).values; // [5, 3] — keeps "c" (last 3)
+// keep="first" — keeps "b" (first 3)
+const first = nlargestSeries(s, 2, { keep: "first" });
+console.log("first values:", [...first.values]);
+console.log("first index:", [...first.index.values]);
 
-// keep="all" includes both 3s even though n=2
+// keep="last" — keeps "c" (last 3)
+const last = nlargestSeries(s, 2, { keep: "last" });
+console.log("last values:", [...last.values]);
+console.log("last index:", [...last.index.values]);
+
+// keep="all" — includes both 3s even though n=2
 const all = nlargestSeries(s, 2, { keep: "all" });
-console.log([...all.values]);       // [5, 3, 3]
-console.log([...all.index.values]); // ["d", "b", "c"]
-</code></pre>
-  <div class="output" id="ex3-output">Loading…</div>
-</section>
+console.log("all values:", [...all.values]);
+console.log("all index:", [...all.index.values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>4 — Labeled index preservation</h2>
-  <p>The result preserves the original labels, not a reset 0-based index.</p>
-  <pre><code id="ex4-code">import { Series, nlargestSeries, nsmallestSeries } from "tsb";
+  <!-- 4 · Labeled index preservation -->
+  <div class="section">
+    <h2>4 · Labeled index preservation</h2>
+    <p>The result preserves the original labels, not a reset 0-based index.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, nlargestSeries, nsmallestSeries } from "tsb";
 
 const prices = new Series({
   data:  [42.5, 18.0, 93.1, 67.8, 55.4],
@@ -92,33 +297,56 @@ const prices = new Series({
 });
 
 const topStocks = nlargestSeries(prices, 3);
-console.log([...topStocks.values]);       // [93.1, 67.8, 55.4]
-console.log([...topStocks.index.values]); // ["NVDA", "MSFT", "AMZN"]
+console.log("top values:", [...topStocks.values]);
+console.log("top labels:", [...topStocks.index.values]);
 
 const cheapest = nsmallestSeries(prices, 2);
-console.log([...cheapest.values]);        // [18.0, 42.5]
-console.log([...cheapest.index.values]);  // ["META", "AAPL"]
-</code></pre>
-  <div class="output" id="ex4-output">Loading…</div>
-</section>
+console.log("cheapest values:", [...cheapest.values]);
+console.log("cheapest labels:", [...cheapest.index.values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>5 — NaN / null handling</h2>
-  <p>Missing values are silently excluded from both the selection and the result.</p>
-  <pre><code id="ex5-code">import { Series, nlargestSeries } from "tsb";
+  <!-- 5 · NaN / null handling -->
+  <div class="section">
+    <h2>5 · NaN / null handling</h2>
+    <p>Missing values are silently excluded from both the selection and the result.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, nlargestSeries } from "tsb";
 
 const s = new Series({ data: [3, NaN, 9, null, 1, NaN, 5] });
 const top3 = nlargestSeries(s, 3);
-console.log([...top3.values]); // [9, 5, 3]  — NaN/null are gone
-console.log(top3.size);        // 3
-</code></pre>
-  <div class="output" id="ex5-output">Loading…</div>
-</section>
 
-<section>
-  <h2>6 — DataFrame.nlargest</h2>
-  <p><code>nlargestDataFrame(df, n, { columns })</code> returns the <em>n</em> rows with the largest values in the given column(s), sorted descending. Multiple columns provide a lexicographic tie-breaker.</p>
-  <pre><code id="ex6-code">import { DataFrame, nlargestDataFrame } from "tsb";
+console.log("values:", [...top3.values]);
+console.log("size:", top3.size);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 6 · DataFrame.nlargest -->
+  <div class="section">
+    <h2>6 · DataFrame.nlargest</h2>
+    <p><code>nlargestDataFrame(df, n, { columns })</code> returns the <em>n</em> rows with
+      the largest values in the given column(s), sorted descending. Multiple columns
+      provide a lexicographic tie-breaker.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, nlargestDataFrame } from "tsb";
 
 const df = DataFrame.fromColumns({
   name:  ["Alice", "Bob", "Carol", "Dave", "Eve"],
@@ -128,20 +356,31 @@ const df = DataFrame.fromColumns({
 
 // Top 3 scorers
 const top3 = nlargestDataFrame(df, 3, { columns: "score" });
-console.log([...top3.col("name").values]);  // ["Bob", "Dave", "Carol" or "Eve"]
-console.log([...top3.col("score").values]); // [95, 95, 88]
+console.log("names:", [...top3.col("name").values]);
+console.log("scores:", [...top3.col("score").values]);
 
 // Break ties on "score" using "age" (secondary sort descending)
 const top2ByAge = nlargestDataFrame(df, 2, { columns: ["score", "age"] });
-console.log([...top2ByAge.col("name").values]);  // ["Bob", "Dave"]  (both 95; Bob is 25 < Dave 28)
-</code></pre>
-  <div class="output" id="ex6-output">Loading…</div>
-</section>
+console.log("tie-break names:", [...top2ByAge.col("name").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>7 — DataFrame.nsmallest</h2>
-  <p><code>nsmallestDataFrame(df, n, { columns })</code> returns the rows with the smallest values, sorted ascending.</p>
-  <pre><code id="ex7-code">import { DataFrame, nsmallestDataFrame } from "tsb";
+  <!-- 7 · DataFrame.nsmallest -->
+  <div class="section">
+    <h2>7 · DataFrame.nsmallest</h2>
+    <p><code>nsmallestDataFrame(df, n, { columns })</code> returns the rows with the
+      smallest values, sorted ascending.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, nsmallestDataFrame } from "tsb";
 
 const df = DataFrame.fromColumns({
   product: ["A", "B", "C", "D", "E"],
@@ -151,47 +390,81 @@ const df = DataFrame.fromColumns({
 
 // 2 cheapest products
 const cheapest2 = nsmallestDataFrame(df, 2, { columns: "price" });
-console.log([...cheapest2.col("product").values]); // ["D", "B"]
-console.log([...cheapest2.col("price").values]);   // [7.0, 9.9]
-</code></pre>
-  <div class="output" id="ex7-output">Loading…</div>
-</section>
+console.log("products:", [...cheapest2.col("product").values]);
+console.log("prices:", [...cheapest2.col("price").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>8 — Edge cases</h2>
-  <pre><code id="ex8-code">import { Series, nlargestSeries, nsmallestSeries } from "tsb";
+  <!-- 8 · Edge cases -->
+  <div class="section">
+    <h2>8 · Edge cases</h2>
+    <p>Behavior when <em>n</em> exceeds the series length, <em>n</em> is zero,
+      all values are NaN, or values are strings.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, nlargestSeries, nsmallestSeries } from "tsb";
 
 // n > series length → return all (sorted)
 const s = new Series({ data: [2, 1, 3] });
-console.log([...nlargestSeries(s, 100).values]);  // [3, 2, 1]
-console.log([...nsmallestSeries(s, 100).values]); // [1, 2, 3]
+console.log("nlargest(100):", [...nlargestSeries(s, 100).values]);
+console.log("nsmallest(100):", [...nsmallestSeries(s, 100).values]);
 
 // n = 0 → empty
-console.log(nlargestSeries(s, 0).size); // 0
+console.log("nlargest(0) size:", nlargestSeries(s, 0).size);
 
 // all-NaN → empty
 const allNaN = new Series({ data: [NaN, NaN] });
-console.log(nlargestSeries(allNaN, 2).size); // 0
+console.log("all-NaN size:", nlargestSeries(allNaN, 2).size);
 
 // string values — lexicographic order
 const words = new Series({ data: ["banana", "apple", "cherry"] });
-console.log([...nlargestSeries(words, 2).values]);  // ["cherry", "banana"]
-console.log([...nsmallestSeries(words, 2).values]); // ["apple", "banana"]
-</code></pre>
-  <div class="output" id="ex8-output">Loading…</div>
-</section>
+console.log("largest strings:", [...nlargestSeries(words, 2).values]);
+console.log("smallest strings:", [...nsmallestSeries(words, 2).values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<script>
-window.__tsb_examples__ = [
-  { id: "ex1", code: document.getElementById("ex1-code").textContent },
-  { id: "ex2", code: document.getElementById("ex2-code").textContent },
-  { id: "ex3", code: document.getElementById("ex3-code").textContent },
-  { id: "ex4", code: document.getElementById("ex4-code").textContent },
-  { id: "ex5", code: document.getElementById("ex5-code").textContent },
-  { id: "ex6", code: document.getElementById("ex6-code").textContent },
-  { id: "ex7", code: document.getElementById("ex7-code").textContent },
-  { id: "ex8", code: document.getElementById("ex8-code").textContent },
-];
-</script>
+  <!-- API reference (non-interactive) -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p>Both Series and DataFrame variants accept an options object for tie-breaking
+      and column selection.</p>
+    <pre class="api-reference-code"><code>// Series
+nlargestSeries(series, n, {
+  keep?: "first" | "last" | "all",  // default "first"
+}): Series
+
+nsmallestSeries(series, n, {
+  keep?: "first" | "last" | "all",  // default "first"
+}): Series
+
+// DataFrame
+nlargestDataFrame(df, n, {
+  columns: string | string[],       // column(s) to sort by
+  keep?:   "first" | "last" | "all",
+}): DataFrame
+
+nsmallestDataFrame(df, n, {
+  columns: string | string[],
+  keep?:   "first" | "last" | "all",
+}): DataFrame</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
 </body>
 </html>

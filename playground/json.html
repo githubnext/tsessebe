@@ -1,199 +1,436 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — readJson &amp; toJson</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <nav class="breadcrumb">
-      <a href="index.html">tsb playground</a> › readJson &amp; toJson
-    </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — readJson &amp; toJson</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📄 readJson &amp; toJson — Interactive Playground</h1>
+  <p>Parse JSON text into a <strong style="color: var(--text);">DataFrame</strong> with
+    <code>readJson()</code> and serialize back with <code>toJson()</code>. Mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_json.html">pandas
+    <code>read_json()</code></a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_json.html">pandas
+    <code>DataFrame.to_json()</code></a>, supporting five orient formats.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
 
-    <h1>readJson &amp; toJson — JSON I/O</h1>
-    <p class="intro">
-      <code>readJson()</code> and <code>toJson()</code> mirror
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_json.html"
-        >pandas <code>read_json()</code></a
-      >
-      and
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_json.html"
-        >pandas <code>DataFrame.to_json()</code></a
-      >.
-      Parse JSON text into a <code>DataFrame</code> and serialize any
-      <code>DataFrame</code> back to JSON, supporting five orient formats.
-    </p>
+  <!-- 1 · Parse records JSON (default) -->
+  <div class="section">
+    <h2>1 · Parse records JSON (default)</h2>
+    <p>The <code>"records"</code> orient is an array of row objects — the most
+      natural JSON format for tabular data. Auto-detected when the input is a
+      JSON array.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readJson } from "tsb";
 
-    <section class="tutorial">
-      <h2>1 — Parse records JSON (default)</h2>
-      <p>
-        The <code>"records"</code> orient is an array of row objects — the most
-        natural JSON format for tabular data.  It is also the auto-detected
-        default when the input is a JSON array.
-      </p>
-      <div class="editor" id="records-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const json = `[
+const json = `[
   {"name": "alice", "age": 30, "score": 88.5},
   {"name": "bob",   "age": 25, "score": 92.0},
   {"name": "carol", "age": 35, "score": 75.3}
 ]`;
 
-const df = tsb.readJson(json);
+const df = readJson(json);
 console.log("shape:", df.shape);
 console.log("columns:", [...df.columns.values]);
 console.log("names:", [...df.col("name").values]);
-console.log("ages :", [...df.col("age").values]);
-</pre>
-      </div>
-      <button class="run-btn" data-editor="records-editor">▶ Run</button>
-      <pre class="output" id="records-output"></pre>
-    </section>
+console.log("ages:", [...df.col("age").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>2 — Split orient</h2>
-      <p>
-        The <code>"split"</code> orient stores columns, index, and data
-        separately — compact and lossless.  It is auto-detected when the root
-        object contains <code>"columns"</code> and <code>"data"</code> keys.
-      </p>
-      <div class="editor" id="split-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const json = JSON.stringify({
+  <!-- 2 · Split orient -->
+  <div class="section">
+    <h2>2 · Split orient</h2>
+    <p>The <code>"split"</code> orient stores columns, index, and data
+      separately — compact and lossless. Auto-detected when the root object
+      contains <code>"columns"</code> and <code>"data"</code> keys.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readJson } from "tsb";
+
+const json = JSON.stringify({
   columns: ["x", "y"],
   index: [10, 20, 30],
   data: [[1, 4], [2, 5], [3, 6]],
 });
 
-const df = tsb.readJson(json);
-console.log("orient auto-detected:", "split");
+const df = readJson(json);
+console.log("orient auto-detected: split");
 console.log("shape:", df.shape);
 console.log("index:", [...df.index.values]);
 console.log("x:", [...df.col("x").values]);
-console.log("y:", [...df.col("y").values]);
-</pre>
-      </div>
-      <button class="run-btn" data-editor="split-editor">▶ Run</button>
-      <pre class="output" id="split-output"></pre>
-    </section>
+console.log("y:", [...df.col("y").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>3 — Index orient</h2>
-      <p>
-        The <code>"index"</code> orient uses row-index labels as keys, each
-        mapping to a record of column values.
-      </p>
-      <div class="editor" id="index-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const json = JSON.stringify({
+  <!-- 3 · Index orient -->
+  <div class="section">
+    <h2>3 · Index orient</h2>
+    <p>The <code>"index"</code> orient uses row-index labels as keys, each
+      mapping to a record of column values.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readJson } from "tsb";
+
+const json = JSON.stringify({
   "r0": { a: 1, b: "foo" },
   "r1": { a: 2, b: "bar" },
   "r2": { a: 3, b: "baz" },
 });
 
-const df = tsb.readJson(json, { orient: "index" });
+const df = readJson(json, { orient: "index" });
 console.log("shape:", df.shape);
 console.log("index:", [...df.index.values]);
 console.log("a:", [...df.col("a").values]);
-console.log("b:", [...df.col("b").values]);
-</pre>
-      </div>
-      <button class="run-btn" data-editor="index-editor">▶ Run</button>
-      <pre class="output" id="index-output"></pre>
-    </section>
+console.log("b:", [...df.col("b").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>4 — Columns orient</h2>
-      <p>
-        The <code>"columns"</code> orient uses column names as keys, each
-        mapping to an object of index-label → value pairs.  Useful for
-        column-major storage.
-      </p>
-      <div class="editor" id="columns-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const json = JSON.stringify({
+  <!-- 4 · Columns orient -->
+  <div class="section">
+    <h2>4 · Columns orient</h2>
+    <p>The <code>"columns"</code> orient uses column names as keys, each
+      mapping to an object of index-label → value pairs. Useful for
+      column-major storage.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readJson } from "tsb";
+
+const json = JSON.stringify({
   x: { "0": 10, "1": 20, "2": 30 },
   y: { "0": 1.1, "1": 2.2, "2": 3.3 },
 });
 
-const df = tsb.readJson(json, { orient: "columns" });
+const df = readJson(json, { orient: "columns" });
 console.log("shape:", df.shape);
 console.log("index:", [...df.index.values]);
 console.log("x:", [...df.col("x").values]);
-console.log("y:", [...df.col("y").values]);
-</pre>
+console.log("y:", [...df.col("y").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 5 · Values orient -->
+  <div class="section">
+    <h2>5 · Values orient</h2>
+    <p>The <code>"values"</code> orient is a plain 2-D array — no index or
+      column labels. Columns are auto-named <code>"0"</code>,
+      <code>"1"</code>, etc.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
       </div>
-      <button class="run-btn" data-editor="columns-editor">▶ Run</button>
-      <pre class="output" id="columns-output"></pre>
-    </section>
+      <textarea class="playground-editor" spellcheck="false">import { readJson } from "tsb";
 
-    <section class="tutorial">
-      <h2>5 — Values orient</h2>
-      <p>
-        The <code>"values"</code> orient is a plain 2-D array — no index or
-        column labels.  Columns are auto-named <code>"0"</code>,
-        <code>"1"</code>, etc.
-      </p>
-      <div class="editor" id="values-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const json = "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]";
+const json = "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]";
 
-const df = tsb.readJson(json, { orient: "values" });
+const df = readJson(json, { orient: "values" });
 console.log("shape:", df.shape);
 console.log("columns:", [...df.columns.values]);
-console.log("col 0:", [...df.col("0").values]);
-</pre>
-      </div>
-      <button class="run-btn" data-editor="values-editor">▶ Run</button>
-      <pre class="output" id="values-output"></pre>
-    </section>
+console.log("col 0:", [...df.col("0").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>6 — Serialize with toJson()</h2>
-      <p>
-        <code>toJson(df, options)</code> serializes a <code>DataFrame</code>
-        to a JSON string.  Choose any orient and optionally pretty-print with
-        <code>indent</code>.
-      </p>
-      <div class="editor" id="tojson-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const df = tsb.DataFrame.fromColumns({
+  <!-- 6 · Serialize with toJson() -->
+  <div class="section">
+    <h2>6 · Serialize with toJson()</h2>
+    <p><code>toJson(df, options)</code> serializes a <code>DataFrame</code>
+      to a JSON string. Choose any orient and optionally pretty-print with
+      <code>indent</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, toJson } from "tsb";
+
+const df = DataFrame.fromColumns({
   city:  ["New York", "London", "Tokyo"],
   pop:   [8_336_817, 8_982_000, 13_960_000],
   gdp:   [1.6, 0.6, 1.0],
 });
 
 console.log("--- records (compact) ---");
-console.log(tsb.toJson(df));
+console.log(toJson(df));
 
 console.log("--- split (indented) ---");
-console.log(tsb.toJson(df, { orient: "split", indent: 2 }));
-</pre>
-      </div>
-      <button class="run-btn" data-editor="tojson-editor">▶ Run</button>
-      <pre class="output" id="tojson-output"></pre>
-    </section>
+console.log(toJson(df, { orient: "split", indent: 2 }));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <section class="tutorial">
-      <h2>7 — Round-trip</h2>
-      <p>
-        A <code>DataFrame</code> serialized with <code>toJson</code> can be
-        reconstructed with <code>readJson</code> without data loss.
-      </p>
-      <div class="editor" id="roundtrip-editor">
-<pre class="code" contenteditable="true" spellcheck="false">const original = tsb.DataFrame.fromColumns({
+  <!-- 7 · Round-trip -->
+  <div class="section">
+    <h2>7 · Round-trip</h2>
+    <p>A <code>DataFrame</code> serialized with <code>toJson</code> can be
+      reconstructed with <code>readJson</code> without data loss.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, readJson, toJson } from "tsb";
+
+const original = DataFrame.fromColumns({
   x: [1, 2, 3, 4, 5],
   label: ["a", "b", "c", "d", "e"],
 });
 
-const json = tsb.toJson(original, { orient: "split" });
-const restored = tsb.readJson(json);
+const json = toJson(original, { orient: "split" });
+const restored = readJson(json);
 
 console.log("JSON:", json);
 console.log("x restored:", [...restored.col("x").values]);
 console.log("label restored:", [...restored.col("label").values]);
-console.log("shapes match:", JSON.stringify(original.shape) === JSON.stringify(restored.shape));
-</pre>
-      </div>
-      <button class="run-btn" data-editor="roundtrip-editor">▶ Run</button>
-      <pre class="output" id="roundtrip-output"></pre>
-    </section>
+console.log("shapes match:", JSON.stringify(original.shape) === JSON.stringify(restored.shape));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-    <script src="playground-runtime.js"></script>
-  </body>
+  <!-- API reference (non-interactive) -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p>Parse JSON into a DataFrame or serialize a DataFrame back to JSON.
+      Five orient formats are supported: <code>records</code>,
+      <code>split</code>, <code>index</code>, <code>columns</code>, and
+      <code>values</code>.</p>
+    <pre class="api-reference-code"><code>// Parse JSON → DataFrame
+readJson(json: string, options?: {
+  orient?: "records" | "split" | "index" | "columns" | "values",
+}): DataFrame
+
+// Serialize DataFrame → JSON
+toJson(df: DataFrame, options?: {
+  orient?: "records" | "split" | "index" | "columns" | "values",
+  indent?: number,
+}): string</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
 </html>

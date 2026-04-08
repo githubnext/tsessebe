@@ -1,99 +1,317 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — value_counts</title>
-    <style>
-      body {
-        font-family: system-ui, sans-serif;
-        max-width: 860px;
-        margin: 0 auto;
-        padding: 2rem;
-        line-height: 1.6;
-        color: #1a1a1a;
-      }
-      h1 { color: #2563eb; }
-      h2 { color: #1e40af; margin-top: 2rem; }
-      pre {
-        background: #f1f5f9;
-        border-left: 4px solid #2563eb;
-        padding: 1rem;
-        overflow-x: auto;
-        border-radius: 4px;
-      }
-      code { font-family: "Fira Code", monospace; font-size: 0.9em; }
-      .output {
-        background: #f0fdf4;
-        border-left: 4px solid #16a34a;
-        padding: 1rem;
-        margin-top: 0.5rem;
-        border-radius: 4px;
-        white-space: pre;
-        font-family: monospace;
-      }
-      .note {
-        background: #eff6ff;
-        border-left: 4px solid #3b82f6;
-        padding: 0.75rem 1rem;
-        margin: 1rem 0;
-        border-radius: 4px;
-      }
-      a { color: #2563eb; }
-    </style>
-  </head>
-  <body>
-    <h1>tsb — <code>value_counts</code></h1>
-    <p>
-      Count unique values in a <strong>Series</strong> or unique row combinations in a
-      <strong>DataFrame</strong>. Mirrors
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.value_counts.html"
-        ><code>pandas.Series.value_counts()</code></a
-      >
-      and
-      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.value_counts.html"
-        ><code>pandas.DataFrame.value_counts()</code></a
-      >.
-    </p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — value_counts</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📊 value_counts — Interactive Playground</h1>
+  <p>Count unique values in a <strong style="color: var(--text);">Series</strong> or unique row
+    combinations in a <strong style="color: var(--text);">DataFrame</strong>. Mirrors
+    <code>pandas.Series.value_counts()</code> and
+    <code>pandas.DataFrame.value_counts()</code>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
 
+  <!-- 1 · Basic usage (Series) -->
+  <div class="section">
     <h2>1 · Basic usage (Series)</h2>
-    <pre><code>import { Series } from "tsb";
-import { valueCounts } from "tsb";
+    <p>Create a Series and count how often each unique value appears. Results are sorted
+      descending by frequency by default.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, valueCounts } from "tsb";
 
 const s = new Series({ data: ["apple", "banana", "apple", "cherry", "banana", "apple"] });
 const vc = valueCounts(s);
-// index  → ["apple", "banana", "cherry"]
-// values → [3, 2, 1]   (sorted descending by default)</code></pre>
-    <div class="output">index  → apple=3  banana=2  cherry=1</div>
 
+console.log("index:", vc.index.values);
+console.log("values:", vc.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 2 · Normalize — return proportions -->
+  <div class="section">
     <h2>2 · Normalize — return proportions</h2>
-    <pre><code>const pct = valueCounts(s, { normalize: true });
-// values → [0.5, 0.333…, 0.167…]   (must sum to 1)</code></pre>
-    <div class="output">apple=0.50  banana=0.33  cherry=0.17</div>
+    <p>Pass <code>normalize: true</code> to get relative frequencies that sum to 1
+      instead of raw counts.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, valueCounts } from "tsb";
 
+const s = new Series({ data: ["apple", "banana", "apple", "cherry", "banana", "apple"] });
+const pct = valueCounts(s, { normalize: true });
+
+console.log("index:", pct.index.values);
+console.log("proportions:", pct.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 3 · Sort order -->
+  <div class="section">
     <h2>3 · Sort order</h2>
-    <pre><code>// Ascending order (least frequent first)
+    <p>Control sorting: <code>ascending: true</code> for least-frequent first, or
+      <code>sort: false</code> to preserve insertion order.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, valueCounts } from "tsb";
+
+const s = new Series({ data: ["apple", "banana", "apple", "cherry", "banana", "apple"] });
+
+// Ascending order (least frequent first)
 const asc = valueCounts(s, { ascending: true });
+console.log("ascending index:", asc.index.values);
+console.log("ascending values:", asc.values);
 
 // Preserve insertion order (no sort)
-const ins = valueCounts(s, { sort: false });</code></pre>
+const ins = valueCounts(s, { sort: false });
+console.log("unsorted index:", ins.index.values);
+console.log("unsorted values:", ins.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
+  <!-- 4 · Missing-value handling -->
+  <div class="section">
     <h2>4 · Missing-value handling</h2>
-    <pre><code>const sWithNull = new Series({ data: ["a", null, "b", null, "a"] });
+    <p>By default nulls are excluded (<code>dropna: true</code>). Set
+      <code>dropna: false</code> to include them in the count.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, valueCounts } from "tsb";
+
+const s = new Series({ data: ["a", null, "b", null, "a"] });
 
 // dropna=true (default) — exclude nulls
-const dropNull = valueCounts(sWithNull);
-// index → ["a", "b"], values → [2, 1]
+const dropNull = valueCounts(s);
+console.log("dropna=true  index:", dropNull.index.values);
+console.log("dropna=true  values:", dropNull.values);
 
 // dropna=false — include nulls
-const keepNull = valueCounts(sWithNull, { dropna: false });
-// index → ["a", "b", null], values → [2, 1, 2]</code></pre>
-    <div class="output">dropna=true : a=2  b=1
-dropna=false: a=2  b=1  null=2</div>
+const keepNull = valueCounts(s, { dropna: false });
+console.log("dropna=false index:", keepNull.index.values);
+console.log("dropna=false values:", keepNull.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
+  <!-- 5 · DataFrame value_counts -->
+  <div class="section">
     <h2>5 · DataFrame value_counts</h2>
-    <pre><code>import { DataFrame } from "tsb";
-import { dataFrameValueCounts } from "tsb";
+    <p>Count unique row combinations across all columns. Each unique
+      <code>(city, temp)</code> pair becomes an index label.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, dataFrameValueCounts } from "tsb";
 
 const df = DataFrame.fromRecords([
   { city: "NYC", temp: "hot" },
@@ -103,24 +321,53 @@ const df = DataFrame.fromRecords([
 ]);
 
 const vc = dataFrameValueCounts(df);
-// Counts each unique (city, temp) combination
-// "NYC|hot"  → 2
-// "NYC|cold" → 1
-// "LA|hot"   → 1</code></pre>
-    <div class="output">NYC|hot=2   NYC|cold=1   LA|hot=1</div>
+console.log("index:", vc.index.values);
+console.log("counts:", vc.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
+  <!-- 6 · DataFrame subset -->
+  <div class="section">
     <h2>6 · DataFrame subset</h2>
-    <pre><code>// Restrict to a subset of columns
-const vc2 = dataFrameValueCounts(df, { subset: ["city"] });
-// Only counts by city: NYC=3, LA=1</code></pre>
-    <div class="output">NYC=3   LA=1</div>
+    <p>Restrict counting to a subset of columns with the <code>subset</code> option.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, dataFrameValueCounts } from "tsb";
 
-    <h2>7 · API reference</h2>
-    <pre><code>// Series
+const df = DataFrame.fromRecords([
+  { city: "NYC", temp: "hot" },
+  { city: "NYC", temp: "cold" },
+  { city: "LA",  temp: "hot" },
+  { city: "NYC", temp: "hot" },
+]);
+
+const vc = dataFrameValueCounts(df, { subset: ["city"] });
+console.log("index:", vc.index.values);
+console.log("counts:", vc.values);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- API reference (non-interactive) -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p>The result Series is indexed by the unique values (or composite
+      <code>"v1|v2|…"</code> strings for DataFrames). Use <code>.index.values</code> and
+      <code>.values</code> to inspect the labels and counts respectively.</p>
+    <pre class="api-reference-code"><code>// Series
 valueCounts(series, {
-  normalize?: boolean,   // default false — return proportions instead of counts
+  normalize?: boolean,   // default false — return proportions
   sort?:      boolean,   // default true  — sort by frequency
-  ascending?: boolean,   // default false — highest count first when sort=true
+  ascending?: boolean,   // default false — highest count first
   dropna?:    boolean,   // default true  — exclude missing values
 }): Series&lt;number&gt;
 
@@ -132,13 +379,14 @@ dataFrameValueCounts(df, {
   ascending?: boolean,
   dropna?:    boolean,
 }): Series&lt;number&gt;</code></pre>
+  </div>
 
-    <div class="note">
-      <strong>Note:</strong> The result Series is indexed by the unique values (or composite
-      <code>"v1|v2|…"</code> strings for DataFrames). Use <code>.index.values</code> and
-      <code>.values</code> to inspect the labels and counts respectively.
-    </div>
-
-    <p>← <a href="index.html">Back to feature list</a></p>
-  </body>
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
 </html>

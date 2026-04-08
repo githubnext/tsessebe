@@ -4,179 +4,411 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tsb — element-wise operations</title>
-  <script src="playground-runtime.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
-    h1   { font-size: 2rem; margin-bottom: .25rem; }
-    .subtitle { color: #555; margin-bottom: 2rem; }
-    section  { margin-bottom: 2.5rem; }
-    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
-    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
-    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
-    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
-    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
-    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
-    nav a { color: #0366d6; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
-<nav><a href="index.html">← tsb playground</a></nav>
-<h1>element-wise operations</h1>
-<p class="subtitle">
-  Scalar transforms applied independently to each element —
-  mirrors <code>pandas.Series.clip()</code>, <code>.abs()</code>, and <code>.round()</code>.
-</p>
-
-<section>
-  <h2>1 — clip: bound values to a range</h2>
-  <p>
-    <code>clip(series, { lower, upper })</code> replaces any value below <code>lower</code>
-    with <code>lower</code>, and any value above <code>upper</code> with <code>upper</code>.
-    Pass only one bound to clip from one side only.
-    Mirrors <code>pandas.Series.clip()</code>.
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>✂️ element-wise operations — Interactive Playground</h1>
+  <p>Scalar transforms applied independently to each element —
+    mirrors <code>pandas.Series.clip()</code>, <code>.abs()</code>, and
+    <code>.round()</code>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
   </p>
-  <pre><code id="ex1-code">import { Series, clip } from "tsb";
+
+  <!-- 1 · clip: bound values to a range -->
+  <div class="section">
+    <h2>1 · clip: bound values to a range</h2>
+    <p><code>clip(series, { lower, upper })</code> replaces any value below
+      <code>lower</code> with <code>lower</code>, and any value above
+      <code>upper</code> with <code>upper</code>. Pass only one bound to clip
+      from one side only. Mirrors <code>pandas.Series.clip()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, clip } from "tsb";
 
 const s = new Series({ data: [-3, 0, 1, 5, 10] });
 const clipped = clip(s, { lower: 0, upper: 6 });
-console.log([...clipped.values]); // [0, 0, 1, 5, 6]
+console.log("clipped:", [...clipped.values]);
 
 // One-sided: only lower bound
 const pos = clip(s, { lower: 0 });
-console.log([...pos.values]); // [0, 0, 1, 5, 10]
-</code></pre>
-  <div class="output" id="ex1-output">Loading…</div>
-</section>
+console.log("lower only:", [...pos.values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>2 — clip on a DataFrame</h2>
-  <p>
-    <code>dataFrameClip(df, { lower, upper })</code> applies the same clipping to every
-    numeric column.  Mirrors <code>pandas.DataFrame.clip()</code>.
-  </p>
-  <pre><code id="ex2-code">import { DataFrame, dataFrameClip } from "tsb";
+  <!-- 2 · clip on a DataFrame -->
+  <div class="section">
+    <h2>2 · clip on a DataFrame</h2>
+    <p><code>dataFrameClip(df, { lower, upper })</code> applies the same clipping
+      to every numeric column. Mirrors <code>pandas.DataFrame.clip()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, dataFrameClip } from "tsb";
 
 const df = DataFrame.fromColumns({
   temperature: [-10, 5, 20, 45],
   humidity:    [  0, 30, 80, 110],
 });
 const safe = dataFrameClip(df, { lower: 0, upper: 100 });
-console.log([...safe.col("temperature").values]); // [0, 5, 20, 45]
-console.log([...safe.col("humidity").values]);     // [0, 30, 80, 100]
-</code></pre>
-  <div class="output" id="ex2-output">Loading…</div>
-</section>
+console.log("temperature:", [...safe.col("temperature").values]);
+console.log("humidity:", [...safe.col("humidity").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>3 — seriesAbs: absolute value</h2>
-  <p>
-    <code>seriesAbs(series)</code> returns a new Series where every element is replaced
-    by its absolute value.  Mirrors <code>pandas.Series.abs()</code>.
-  </p>
-  <pre><code id="ex3-code">import { Series, seriesAbs } from "tsb";
+  <!-- 3 · seriesAbs: absolute value -->
+  <div class="section">
+    <h2>3 · seriesAbs: absolute value</h2>
+    <p><code>seriesAbs(series)</code> returns a new Series where every element is
+      replaced by its absolute value. Mirrors
+      <code>pandas.Series.abs()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, seriesAbs } from "tsb";
 
 const returns = new Series({ data: [-0.05, 0.12, -0.08, 0.03] });
 const magnitude = seriesAbs(returns);
-console.log([...magnitude.values]); // [0.05, 0.12, 0.08, 0.03]
-</code></pre>
-  <div class="output" id="ex3-output">Loading…</div>
-</section>
+console.log("magnitude:", [...magnitude.values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>4 — dataFrameAbs: absolute values for all columns</h2>
-  <p>
-    <code>dataFrameAbs(df)</code> applies <code>abs()</code> column-by-column.
-    Mirrors <code>pandas.DataFrame.abs()</code>.
-  </p>
-  <pre><code id="ex4-code">import { DataFrame, dataFrameAbs } from "tsb";
+  <!-- 4 · dataFrameAbs: absolute values for all columns -->
+  <div class="section">
+    <h2>4 · dataFrameAbs: absolute values for all columns</h2>
+    <p><code>dataFrameAbs(df)</code> applies <code>abs()</code> column-by-column.
+      Mirrors <code>pandas.DataFrame.abs()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, dataFrameAbs } from "tsb";
 
 const df = DataFrame.fromColumns({
   x: [-1, 2, -3],
   y: [ 4, -5, 6],
 });
-const abs = dataFrameAbs(df);
-console.log([...abs.col("x").values]); // [1, 2, 3]
-console.log([...abs.col("y").values]); // [4, 5, 6]
-</code></pre>
-  <div class="output" id="ex4-output">Loading…</div>
-</section>
+const result = dataFrameAbs(df);
+console.log("x:", [...result.col("x").values]);
+console.log("y:", [...result.col("y").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>5 — seriesRound: round to N decimal places</h2>
-  <p>
-    <code>seriesRound(series, { decimals })</code> rounds each value to the given number
-    of decimal places (default 0).  Negative <code>decimals</code> rounds to the left of
-    the decimal point (e.g. <code>-1</code> rounds to the nearest 10).
-    Mirrors <code>pandas.Series.round()</code>.
-  </p>
-  <pre><code id="ex5-code">import { Series, seriesRound } from "tsb";
+  <!-- 5 · seriesRound: round to N decimal places -->
+  <div class="section">
+    <h2>5 · seriesRound: round to N decimal places</h2>
+    <p><code>seriesRound(series, { decimals })</code> rounds each value to the given
+      number of decimal places (default 0). Negative <code>decimals</code> rounds
+      to the left of the decimal point (e.g. <code>-1</code> rounds to the nearest
+      10). Mirrors <code>pandas.Series.round()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, seriesRound } from "tsb";
 
 const prices = new Series({ data: [1.2349, 9.9999, 3.14159] });
 const r2 = seriesRound(prices, { decimals: 2 });
-console.log([...r2.values]); // [1.23, 10.0, 3.14]
+console.log("rounded to 2:", [...r2.values]);
 
 // Round to nearest 10
 const big = new Series({ data: [14, 25, 36] });
-console.log([...seriesRound(big, { decimals: -1 }).values]); // [10, 30, 40]
-</code></pre>
-  <div class="output" id="ex5-output">Loading…</div>
-</section>
+console.log("nearest 10:", [...seriesRound(big, { decimals: -1 }).values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>6 — dataFrameRound: round all columns</h2>
-  <p>
-    <code>dataFrameRound(df, { decimals })</code> rounds every numeric column of a DataFrame.
-    Mirrors <code>pandas.DataFrame.round()</code>.
-  </p>
-  <pre><code id="ex6-code">import { DataFrame, dataFrameRound } from "tsb";
+  <!-- 6 · dataFrameRound: round all columns -->
+  <div class="section">
+    <h2>6 · dataFrameRound: round all columns</h2>
+    <p><code>dataFrameRound(df, { decimals })</code> rounds every numeric column of
+      a DataFrame. Mirrors <code>pandas.DataFrame.round()</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, dataFrameRound } from "tsb";
 
 const df = DataFrame.fromColumns({
   lat: [51.5074,  48.8566, 40.7128],
   lon: [-0.1278,   2.3522, -74.006],
 });
 const r2 = dataFrameRound(df, { decimals: 2 });
-console.log([...r2.col("lat").values]); // [51.51, 48.86, 40.71]
-console.log([...r2.col("lon").values]); // [-0.13, 2.35, -74.01]
-</code></pre>
-  <div class="output" id="ex6-output">Loading…</div>
-</section>
+console.log("lat:", [...r2.col("lat").values]);
+console.log("lon:", [...r2.col("lon").values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-<section>
-  <h2>7 — missing values pass through</h2>
-  <p>
-    All three operations propagate <code>null</code> and <code>NaN</code> unchanged —
-    consistent with pandas' behaviour.
-  </p>
-  <pre><code id="ex7-code">import { Series, clip, seriesAbs, seriesRound } from "tsb";
+  <!-- 7 · Missing values pass through -->
+  <div class="section">
+    <h2>7 · Missing values pass through</h2>
+    <p>All three operations propagate <code>null</code> and <code>NaN</code>
+      unchanged — consistent with pandas' behaviour.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, clip, seriesAbs, seriesRound } from "tsb";
 
 const s = new Series({ data: [null, -5, NaN, 7] });
 
-console.log([...clip(s, { lower: 0, upper: 5 }).values]);
-// [null, 0, NaN, 5]
+console.log("clip:", [...clip(s, { lower: 0, upper: 5 }).values]);
+console.log("abs:", [...seriesAbs(s).values]);
+console.log("round:", [...seriesRound(s, { decimals: 0 }).values]);</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
 
-console.log([...seriesAbs(s).values]);
-// [null, 5, NaN, 7]
+  <!-- API Reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p>All element-wise operations return new Series/DataFrame instances — the
+      originals are never mutated. Missing values (<code>null</code>,
+      <code>NaN</code>) pass through unchanged.</p>
+    <pre class="api-reference-code"><code>// Series clip
+clip(series, {
+  lower?: number,   // minimum bound (default: -Infinity)
+  upper?: number,   // maximum bound (default: +Infinity)
+}): Series&lt;number&gt;
 
-console.log([...seriesRound(s, { decimals: 0 }).values]);
-// [null, -5, NaN, 7]
-</code></pre>
-  <div class="output" id="ex7-output">Loading…</div>
-</section>
+// DataFrame clip
+dataFrameClip(df, { lower?, upper? }): DataFrame
 
-<script>
-const examples = [
-  { id: "ex1", imports: ["Series", "clip"] },
-  { id: "ex2", imports: ["DataFrame", "dataFrameClip"] },
-  { id: "ex3", imports: ["Series", "seriesAbs"] },
-  { id: "ex4", imports: ["DataFrame", "dataFrameAbs"] },
-  { id: "ex5", imports: ["Series", "seriesRound"] },
-  { id: "ex6", imports: ["DataFrame", "dataFrameRound"] },
-  { id: "ex7", imports: ["Series", "clip", "seriesAbs", "seriesRound"] },
-];
-for (const ex of examples) {
-  runExample(ex.id + "-code", ex.id + "-output", ex.imports);
-}
-</script>
+// Series absolute value
+seriesAbs(series): Series&lt;number&gt;
+
+// DataFrame absolute value
+dataFrameAbs(df): DataFrame
+
+// Series round
+seriesRound(series, {
+  decimals?: number,  // default 0 — negative rounds left of decimal
+}): Series&lt;number&gt;
+
+// DataFrame round
+dataFrameRound(df, { decimals? }): DataFrame</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
 </body>
 </html>
