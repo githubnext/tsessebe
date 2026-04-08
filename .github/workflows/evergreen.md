@@ -26,6 +26,12 @@ safe-outputs:
   push-to-pull-request-branch:
     target: "*"
     max: 3
+    allowed-files:
+      - ".github/workflows/autoloop.lock.yml"
+      - ".github/workflows/autoloop.md"
+      - ".github/workflows/evergreen.lock.yml"
+      - ".github/workflows/evergreen.md"
+      - ".github/workflows/pages.yml"
   add-comment:
     max: 3
     target: "*"
