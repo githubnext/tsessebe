@@ -58,7 +58,7 @@ describe("valueCounts — options", () => {
   it("ascending=true sorts lowest count first", () => {
     const s = new Series({ data: ["a", "b", "a", "c", "b", "a"] });
     const vc = valueCounts(s, { ascending: true });
-    expect(vc.values[0]).toBeLessThanOrEqual(vc.values[vc.values.length - 1] as number);
+    expect(vc.values[0]).toBeLessThanOrEqual(vc.values.at(-1) as number);
     expect(vc.index.values[0]).toBe("c");
     expect(vc.index.values[2]).toBe("a");
   });

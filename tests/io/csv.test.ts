@@ -234,7 +234,7 @@ describe("toCsv — basic serialization", () => {
     const df = DataFrame.fromColumns({ x: [1, null, 3] });
     const csv = toCsv(df, { index: false, naRep: "NA" });
     const lines = csv.split("\n").filter((l) => l.length > 0);
-    expect(lines[1]).toBe("NA");
+    expect(lines[2]).toBe("NA");
   });
 
   it("quotes fields that contain the separator", () => {
@@ -310,13 +310,10 @@ describe("readCsv — property tests", () => {
   it("shape rows matches number of data lines", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.tuple(
-            fc.integer({ min: 0, max: 999 }),
-            fc.integer({ min: 0, max: 999 }),
-          ),
-          { minLength: 1, maxLength: 20 },
-        ),
+        fc.array(fc.tuple(fc.integer({ min: 0, max: 999 }), fc.integer({ min: 0, max: 999 })), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (dataRows) => {
           const lines = dataRows.map(([a, b]) => `${a},${b}`).join("\n");
           const csv = `col1,col2\n${lines}`;

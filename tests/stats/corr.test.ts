@@ -4,13 +4,7 @@
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  dataFrameCorr,
-  dataFrameCov,
-  pearsonCorr,
-} from "../../src/index.ts";
+import { DataFrame, Series, dataFrameCorr, dataFrameCov, pearsonCorr } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────

@@ -21,7 +21,6 @@ import { RangeIndex } from "../core/index.ts";
 import { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
-import type { NamedAggSpec } from "./named_agg.ts";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -305,34 +304,17 @@ export class DataFrameGroupBy {
     return this._runAgg(colSpecs, asIndex);
   }
 
-  /**
-   * Aggregate each group using named aggregation specs.
-   *
-   * Each key in `spec` becomes the output column name; the `NamedAgg` value
-   * specifies which source column to aggregate and how.
-   *
-   * Mirrors `pandas.DataFrame.groupby().agg(output=pd.NamedAgg(column=..., aggfunc=...))`.
-   *
-   * @example
-   * ```ts
-   * df.groupby("dept").aggNamed({
-   *   total_salary: namedAgg("salary", "sum"),
-   *   avg_salary:   namedAgg("salary", "mean"),
-   * });
-   * ```
-   */
-  aggNamed(spec: NamedAggSpec, asIndex = true): DataFrame {
-    const colSpecs = this._resolveNamedColSpecs(spec);
-    return this._runAgg(colSpecs, asIndex);
-  }
-
-  /** Shorthand for `agg("sum")`. */
+  /** Shorthand for `agg("sum")` — numeric columns only, like pandas. */
   sum(): DataFrame {
-    return this.agg("sum");
+    const cols = this._numericValueCols();
+    const colSpecs = this._resolveColSpecs("sum", cols);
+    return this._runAgg(colSpecs, true);
   }
-  /** Shorthand for `agg("mean")`. */
+  /** Shorthand for `agg("mean")` — numeric columns only, like pandas. */
   mean(): DataFrame {
-    return this.agg("mean");
+    const cols = this._numericValueCols();
+    const colSpecs = this._resolveColSpecs("mean", cols);
+    return this._runAgg(colSpecs, true);
   }
   /** Shorthand for `agg("min")`. */
   min(): DataFrame {
@@ -346,9 +328,11 @@ export class DataFrameGroupBy {
   count(): DataFrame {
     return this.agg("count");
   }
-  /** Shorthand for `agg("std")`. */
+  /** Shorthand for `agg("std")` — numeric columns only, like pandas. */
   std(): DataFrame {
-    return this.agg("std");
+    const cols = this._numericValueCols();
+    const colSpecs = this._resolveColSpecs("std", cols);
+    return this._runAgg(colSpecs, true);
   }
   /** Shorthand for `agg("first")`. */
   first(): DataFrame {
@@ -457,39 +441,29 @@ export class DataFrameGroupBy {
     return this._df.columns.toArray().filter((c) => !bySet.has(c));
   }
 
+  /** Return value columns that have a numeric dtype (for sum, mean, std). */
+  private _numericValueCols(): readonly string[] {
+    return this._valueCols().filter((c) => this._df.col(c).dtype.isNumeric);
+  }
+
   /**
-   * Resolve `AggSpec` into a per-column map of `{ srcCol, fn }`.
-   * For plain specs the output column name equals the source column name.
+   * Resolve `AggSpec` into a per-column map of `AggFn`.
    */
   private _resolveColSpecs(
     spec: AggSpec,
     valueCols: readonly string[],
-  ): ReadonlyMap<string, { srcCol: string; fn: AggFn }> {
-    const m = new Map<string, { srcCol: string; fn: AggFn }>();
+  ): ReadonlyMap<string, AggFn> {
+    const m = new Map<string, AggFn>();
     if (typeof spec === "string" || typeof spec === "function") {
       const fn = resolveAgg(spec as AggName | AggFn);
       for (const col of valueCols) {
-        m.set(col, { srcCol: col, fn });
+        m.set(col, fn);
       }
     } else {
       // Record<string, AggName | AggFn>
       for (const [col, colSpec] of Object.entries(spec)) {
-        m.set(col, { srcCol: col, fn: resolveAgg(colSpec) });
+        m.set(col, resolveAgg(colSpec));
       }
-    }
-    return m;
-  }
-
-  /**
-   * Resolve a `NamedAggSpec` into a per-output-column map of `{ srcCol, fn }`.
-   * The output column name is the dict key; the source column comes from each `NamedAgg`.
-   */
-  private _resolveNamedColSpecs(
-    spec: NamedAggSpec,
-  ): ReadonlyMap<string, { srcCol: string; fn: AggFn }> {
-    const m = new Map<string, { srcCol: string; fn: AggFn }>();
-    for (const [outCol, namedAggEntry] of Object.entries(spec)) {
-      m.set(outCol, { srcCol: namedAggEntry.column, fn: resolveAgg(namedAggEntry.aggfunc) });
     }
     return m;
   }
@@ -499,10 +473,7 @@ export class DataFrameGroupBy {
    * If `asIndex` is true the group keys form the row index;
    * otherwise they appear as regular columns.
    */
-  private _runAgg(
-    colSpecs: ReadonlyMap<string, { srcCol: string; fn: AggFn }>,
-    asIndex: boolean,
-  ): DataFrame {
+  private _runAgg(colSpecs: ReadonlyMap<string, AggFn>, asIndex: boolean): DataFrame {
     const groupKeys = this._groups.map((g) => g.key);
     const resultCols: Record<string, Scalar[]> = {};
 
@@ -528,11 +499,9 @@ export class DataFrameGroupBy {
       }
     }
 
-    for (const [outCol, { srcCol, fn }] of colSpecs) {
-      const srcVals = this._df.col(srcCol).values as readonly Scalar[];
-      resultCols[outCol] = this._groups.map((g) =>
-        fn(g.positions.map((p) => srcVals[p] as Scalar)),
-      );
+    for (const [col, fn] of colSpecs) {
+      const srcVals = this._df.col(col).values as readonly Scalar[];
+      resultCols[col] = this._groups.map((g) => fn(g.positions.map((p) => srcVals[p] as Scalar)));
     }
 
     const rowIdx: Index<Label> = asIndex

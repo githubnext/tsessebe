@@ -76,6 +76,35 @@ function buildCodeMap(categories: readonly Scalar[]): Map<string, number> {
   return m;
 }
 
+/**
+ * Lightweight CatSeriesLike that avoids circular-importing the real Series.
+ * Used only by CategoricalAccessor.valueCounts to emit a result whose length
+ * differs from the original series.
+ */
+class PlainSeries implements CatSeriesLike {
+  readonly values: readonly Scalar[];
+  readonly index: Index<Label>;
+  readonly name: string | null;
+
+  constructor(values: readonly Scalar[], index: Index<Label>, name: string | null) {
+    this.values = values;
+    this.index = index;
+    this.name = name;
+  }
+
+  get cat(): CategoricalAccessor {
+    return new CategoricalAccessor(this);
+  }
+
+  withValues(data: readonly Scalar[], name?: string | null): CatSeriesLike {
+    return new PlainSeries(data, this.index, name === undefined ? this.name : name);
+  }
+
+  toArray(): readonly Scalar[] {
+    return [...this.values];
+  }
+}
+
 // ─── CategoricalAccessor ─────────────────────────────────────────────────────
 
 /**
@@ -302,8 +331,11 @@ export class CategoricalAccessor {
         }
       }
     }
+    const catLabels: Label[] = this._cats.map((c) => c as Label);
     const countVals: Scalar[] = this._cats.map((c) => counts.get(String(c)) ?? 0);
-    return this._series.withValues(countVals, "count");
+    const idx = new Index<Label>(catLabels);
+    const inner = new PlainSeries(countVals, idx, "count");
+    return new CatHolder(inner, this._cats, this._ordered);
   }
 
   // ─── private helpers ──────────────────────────────────────────────────────
