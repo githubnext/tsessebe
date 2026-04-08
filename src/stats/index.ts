@@ -26,6 +26,19 @@ export {
 export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./elem_ops.ts";
 export { valueCounts, dataFrameValueCounts } from "./value_counts.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./value_counts.ts";
+export { describe, quantile } from "./describe.ts";
+export type { DescribeOptions } from "./describe.ts";
+export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./corr.ts";
+export type { CorrMethod, CorrOptions, CovOptions } from "./corr.ts";
+export { rankSeries, rankDataFrame } from "./rank.ts";
+export type { RankMethod, NaOption, RankOptions } from "./rank.ts";
+export {
+  nlargestSeries,
+  nsmallestSeries,
+  nlargestDataFrame,
+  nsmallestDataFrame,
+} from "./nlargest.ts";
+export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
 export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./where_mask.ts";
 export type {
   WherePredicate,
@@ -70,19 +83,6 @@ export { sampleSeries, sampleDataFrame } from "./sample.ts";
 export type { SampleSeriesOptions, SampleDataFrameOptions } from "./sample.ts";
 export { applySeries, applymap, dataFrameApply } from "./apply.ts";
 export type { DataFrameApplyOptions } from "./apply.ts";
-export { describe, quantile } from "./describe.ts";
-export type { DescribeOptions } from "./describe.ts";
-export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./corr.ts";
-export type { CorrMethod, CorrOptions, CovOptions } from "./corr.ts";
-export { rankSeries, rankDataFrame } from "./rank.ts";
-export type { RankMethod, NaOption, RankOptions } from "./rank.ts";
-export {
-  nlargestSeries,
-  nsmallestSeries,
-  nlargestDataFrame,
-  nsmallestDataFrame,
-} from "./nlargest.ts";
-export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
 
 export {
   pipeSeries,
