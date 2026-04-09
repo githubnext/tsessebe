@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-09T05:17:00Z |
-| Iteration Count | 140 |
-| Best Metric | 33 |
+| Last Run | 2026-04-09T07:01:40Z |
+| Iteration Count | 141 |
+| Best Metric | 34 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #81 |
@@ -22,19 +22,20 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 140)**: 33 files on PR #81 branch. window_extended added (sem/skew/kurt/quantile). Next priorities:
+**State (iter 141)**: 34 files on PR #81 branch. where_mask added (seriesWhere/seriesMask/dataFrameWhere/dataFrameMask with callable conditions). Next priorities:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/core/attrs.ts` — DataFrame/Series `.attrs` dict (user-defined metadata)
-- `src/stats/sparse_ops.ts` — sparse/masked operations (where/mask with callable conditions)
+- `src/stats/notna_isna.ts` — notna/isna/fillna/dropna standalone functions
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 141 (where_mask)**: `resolveSeriesCond()` handles three cond types: `boolean[]` (positional), `Series<boolean>` (label-aligned via `.indexOf()`), callable (returns either). `resolveDataFrameCond()` aligns boolean DataFrame by column name + row label, missing entries → false. `dataFrameWhere/Mask` iterate `df.columns.values` (string[]) not `df.columns` (Index) to get typed string keys. `Map<string, boolean[]>` in resolveDataFrameCond to avoid Label cast issues.
 - **Iter 140 (window_extended)**: `rollingSem` = `std(ddof=1)/sqrt(n)`, requires n≥2. `rollingSkew` Fisher-Pearson formula, constant window→0, requires n≥3. `rollingKurt` Fisher excess kurtosis, constant→0, requires n≥4. `rollingQuantile` supports 5 interpolation methods; linear is pandas default. All share `applyWindow()` helper with configurable `minN`. Standalone module pattern (no modification to existing rolling.ts).
 - **Iter 139 (cut/qcut)**: `assignBins()` binary search: for right=true, find smallest i where v <= edges[i+1]; validate with v > binLo check. For right=false, find smallest i where edges[i+1] > v; last bin includes right edge. `qcut` always uses right=true/include_lowest=true. Integer bins: edges[0] slightly below min (mn - step*0.001) to include minimum value. `deduplicateEdges()` needed for uniform data with qcut.
 - **Iter 138 (to_from_dict + wide_to_long)**: PR #81 branch had only 29 files despite state claiming 30 — to_from_dict was never actually pushed. Fixed by adding both. `wideToLong`: `collectSuffixes()` scans all column names, matches `{stub}{sep}{suffix}` against anchored regex. Suffixes sorted numerically (integers) else lexicographically. Missing wide columns → null. Output column order: id cols, j, stub cols.
@@ -60,13 +61,21 @@
 
 ## 🔭 Future Directions
 
-**State (iter 126)**: 81 files. Next: stats/cut_extended (ordered dtype + per-bin labels) · stats/wide_to_long_enhanced · io/read_excel (zero-dep XLSX)
+**State (iter 141)**: 34 files. Next: io/read_excel (zero-dep XLSX) · core/attrs (metadata dict) · stats/notna_isna standalone
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 141 — 2026-04-09 07:01 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24177038823)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/where_mask.ts` — `seriesWhere`, `seriesMask`, `dataFrameWhere`, `dataFrameMask`. Supports boolean arrays, label-aligned Series/DataFrame, and callables. 37 unit tests + 3 property-based tests. Playground page `where_mask.html`.
+- **Metric**: 34 (previous best: 33, delta: +1)
+- **Commit**: `8ef2d4e`
+- **Notes**: `where` keeps values where cond=true; `mask` is exact inverse. All four functions are pure. Label alignment via `.indexOf()` on index.values. DataFrame ops use `df.columns.values` (string[]) for type safety.
 
 ### Iteration 140 — 2026-04-09 05:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24173724265)
 
@@ -84,44 +93,8 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: `7210f1f`
 - **Notes**: Binary search in `assignBins()` correctly handles all edge cases (include_lowest, right=false last bin). qcut always uses right=true with left-closed first bin (pandas semantics).
 
-### Iteration 138 — 2026-04-09 03:06 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24170164603)
+### Iters 135–140 — ✅ (metrics 29→33): insert_pop (29), to_from_dict/wide_to_long (31), cut_qcut (32), window_extended (33)
 
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/to_from_dict.ts` (7-orient `toDictOriented` + 4-orient `fromDictOriented`) and `src/reshape/wide_to_long.ts` (`wideToLong` — mirrors `pandas.wide_to_long`). 44 tests (unit + property-based). Playground pages for both.
-- **Metric**: 31 (previous best: 30, delta: +1)
-- **Commit**: `962efb5`
-- **Notes**: PR #81 branch previously only had 29 files (to_from_dict was never actually committed despite state claiming 30). Added both missing to_from_dict and new wide_to_long to get 31 files.
-
-### Iteration 137 — 2026-04-09 01:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24167810966)
-
-- **Status**: ✅ Accepted
-- **Change**: Added `src/core/to_from_dict.ts` — `toDictOriented` (7 orientations) + `fromDictOriented` (5 orientations). Committed to PR #81 branch (iter136 base + to_from_dict). Note: canonical branch with 90 files couldn't be pushed due to auth constraints.
-- **Metric**: 30 (previous best: 30, delta: 0 on PR#81 branch; accumulated branch would be 90)
-
-### Iteration 136 — 2026-04-09 01:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24166615896)
-
-- **Status**: ✅ Accepted
-- **Change**: `src/core/to_from_dict.ts` — `toDictOriented` (7 orientations) + `fromDictOriented` (4 orientations). 30 unit + 3 property tests. PR created for iter136 branch.
-- **Metric**: 30 (on iter136 branch based on iter135 29-file base, delta: +1)
-
-### Iteration 135 — 2026-04-09 00:24 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24165728899)
-
-- **Status**: ✅ Accepted (on iter135 branch, not accumulated)
-- **Change**: Added `src/core/insert_pop.ts` — `insertColumn`, `popColumn`, `reorderColumns`, `moveColumn`.
-- **Metric**: 89 on iter135 branch (29 files base + insert_pop); 88 on accumulated c9103f2f branch
-
-### Iters 132–134 — ✅ (metrics 87→89 on various branches): idxminmax (88), convert_dtypes (87), to_from_dict (89)
-
-### Iters 127–131 — ✅ (metrics 82→86): rolling_moments, covariance, rolling_cross_corr, cut_extended, astype
-
-### Iteration 126 — ✅ abs/round (81) · Iteration 125 — ✅ autocorr (80)
-
-### Iteration 124 — ✅ mode (79) · Iteration 123 — ✅ read_fwf (78)
-
-### Iteration 122 — ✅ map/transform (77) · Iteration 121 — ✅ replace (76) · Iteration 120 — ✅ pct_change (75)
-
-### Iters 116–119 — ✅ (metrics 71→74): explode, isin, between, unique/nunique
-
-### Iters 103–115 — ✅ (metrics 58→70): assign, clip_with_bounds, pivotTableFull, infer_dtype, notna/isna, dropna, combine_first, natsort, searchsorted, valueCountsBinned, duplicated, reindex, align
+### Iters 103–134 — ✅ (metrics 58→88): assign, clip_with_bounds, pivotTableFull, infer_dtype, notna/isna, dropna, combine_first, natsort, searchsorted, valueCountsBinned, duplicated, reindex, align, explode, isin, between, unique/nunique, pct_change, replace, map/transform, read_fwf, mode, autocorr, abs/round, rolling_moments, covariance, rolling_cross_corr, cut_extended, astype, idxminmax, convert_dtypes, idxminmax
 ### Iters 53–102 — ✅ (metrics 8→57): named_agg, select_dtypes, memory_usage, Timestamp, to_numeric, json_normalize, wide_to_long, crosstab, get_dummies, factorize, datetime_tz, numeric_ops, DateOffset, date_range, where_mask, compare, shift_diff, interpolate, fillna, Interval, cut/qcut, sample, apply, CategoricalIndex, pipe, Period, Timedelta, Foundation+GroupBy+merge+str+dt+describe+csv/json+corr+rolling+expanding+ewm+stack/unstack+melt/pivot+value_counts+MultiIndex
 ### Iterations 1–52 — ✅ Earlier work on diverged branches
