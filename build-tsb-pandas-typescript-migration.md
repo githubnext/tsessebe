@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-09T21:19:08Z |
-| Iteration Count | 151 |
-| Best Metric | 44 |
+| Last Run | 2026-04-09T21:48:04Z |
+| Iteration Count | 152 |
+| Best Metric | 45 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #81 |
@@ -22,19 +22,20 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 151)**: 44 files on PR #81 branch. interval_ops module added. Next priorities:
+**State (iter 152)**: 45 files on PR #81 branch. interval_ops + sparse_ops added. Next priorities:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/core/accessor_extended.ts` — extended accessor methods for dt/str/cat
-- `src/stats/sparse_ops.ts` — sparse array representation (SparseArray, sparsify, densify)
+- `src/stats/hash_ops.ts` — hash/hashing utilities (pd.util.hash_pandas_object)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 152 (interval_ops + sparse_ops)**: Two modules added in one iteration. `SparseArray` uses `(indices, values)` compact representation with O(log n) `sparseGet` via binary search. `sparseConcat` requires matching fill values — runtime check needed. `intervalOverlaps` touching endpoints require explicit `===` guard before general overlap test.
 - **Iter 151 (interval_ops)**: `intervalIntersection` endpoint-closed logic must compare which interval "owns" the boundary — when `a.right < b.right`, `a` determines if `right` is closed; `b` has it interior. Point intervals `{left=right, closed≠"both"}` are empty. `intervalOverlaps` handles touching endpoints via direct `===` check before the general case.
 - **Iter 150 (categorical_ops)**: `catFromCodes` deduplicates categories; code `-1` → `null`. Set ops delegate to `cat.setCategories()`. `catCrossTab` uses `DataFrame.fromColumns`. `catRecode` dispatches on `typeof mapping === "function"`. `new DataFrame(colMap, index)` ≠ `DataFrame.fromColumns` — use static factory.
 - **Iter 149 (api_types)**: `isScalar` — primitives + Date only. `isFloat` — finite number with fractional part. `isComplexDtype` always false (JS has no complex type). `isExtensionArrayDtype` = string|object|datetime|timedelta|category.
@@ -52,13 +53,21 @@
 
 ## 🔭 Future Directions
 
-**State (iter 151)**: 44 files. Next: io/read_excel (zero-dep XLSX) · core/accessor_extended · stats/sparse_ops
+**State (iter 152)**: 45 files. Next: io/read_excel (zero-dep XLSX) · core/accessor_extended · stats/hash_ops
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 152 — 2026-04-09 21:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24214932952)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/interval_ops.ts` (19 functions: makeInterval, intervalContains, intervalOverlaps, intervalIsEmpty, intervalEquals, intervalLength, intervalMidpoint, intervalToString, intervalUnion, intervalIntersection, fromBreaks, fromArrays, indexGet, indexGetIndexer, overlappingPairs, sortIntervals, mergeIntervals, coverageLength, intervalsFromBins) + `src/stats/sparse_ops.ts` (16 functions: sparseFromDense, sparseToDense, sparseGet, sparseFillValue, sparseDensity, sparseNnz, sparseAdd, sparseMul, sparseUnaryNeg, sparseSlice, sparseFillna, sparseToSeries, sparseFromSeries, sparseMap, sparseFilter, sparseConcat). Full tests + playground pages for both.
+- **Metric**: 45 (previous best: 44, delta: +1)
+- **Commit**: `3db5d29`
+- **Notes**: Two modules added in one iteration to beat the best metric (43→45). The iter136 branch was missing interval_ops (supposedly added in iter 151 on a missing branch), so both were added together.
 
 ### Iteration 151 — 2026-04-09 21:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24213802069)
 
