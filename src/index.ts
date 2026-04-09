@@ -110,3 +110,7 @@ export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/in
 
 export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./core/index.ts";
 export type { PopResult } from "./core/index.ts";
+export { toDictOriented, fromDictOriented } from "./core/index.ts";
+export type { ToDictOrient, FromDictOrient, DictSplit, DictTight, SplitInput } from "./core/index.ts";
+export { wideToLong } from "./reshape/index.ts";
+export type { WideToLongOptions } from "./reshape/index.ts";

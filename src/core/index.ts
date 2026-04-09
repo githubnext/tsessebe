@@ -17,3 +17,11 @@ export { MultiIndex } from "./multi_index.ts";
 export type { MultiIndexOptions } from "./multi_index.ts";
 export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./insert_pop.ts";
 export type { PopResult } from "./insert_pop.ts";
+export { toDictOriented, fromDictOriented } from "./to_from_dict.ts";
+export type {
+  ToDictOrient,
+  FromDictOrient,
+  DictSplit,
+  DictTight,
+  SplitInput,
+} from "./to_from_dict.ts";
