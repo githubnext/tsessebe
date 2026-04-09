@@ -187,3 +187,21 @@ export type {
   ReplacePair,
   IndentOptions,
 } from "./stats/index.ts";
+export {
+  digitize,
+  histogram,
+  linspace,
+  arange,
+  percentileOfScore,
+  zscore,
+  minMaxNormalize,
+  coefficientOfVariation,
+  seriesDigitize,
+} from "./stats/index.ts";
+export type {
+  HistogramOptions,
+  HistogramResult,
+  ZscoreOptions,
+  MinMaxOptions,
+  CvOptions,
+} from "./stats/index.ts";

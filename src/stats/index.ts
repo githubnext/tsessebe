@@ -93,3 +93,21 @@ export type {
   ReplacePair,
   IndentOptions,
 } from "./string_ops_extended.ts";
+export {
+  digitize,
+  histogram,
+  linspace,
+  arange,
+  percentileOfScore,
+  zscore,
+  minMaxNormalize,
+  coefficientOfVariation,
+  seriesDigitize,
+} from "./numeric_extended.ts";
+export type {
+  HistogramOptions,
+  HistogramResult,
+  ZscoreOptions,
+  MinMaxOptions,
+  CvOptions,
+} from "./numeric_extended.ts";
