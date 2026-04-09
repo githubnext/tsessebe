@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — where / mask: Conditional Selection</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 860px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.6;
+        color: #1a1a1a;
+      }
+      h1 { color: #0d47a1; }
+      h2 { color: #1565c0; border-bottom: 2px solid #e3f2fd; padding-bottom: 0.25rem; }
+      pre {
+        background: #f5f5f5;
+        border-left: 4px solid #0d47a1;
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 4px;
+      }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.9em; }
+      .demo {
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      .demo h3 { margin-top: 0; color: #2e7d32; }
+      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+      th, td { border: 1px solid #ccc; padding: 0.4rem 0.75rem; text-align: left; }
+      th { background: #e3f2fd; }
+      .note { background: #fff9c4; border: 1px solid #f9a825; border-radius: 4px; padding: 0.75rem 1rem; }
+      a { color: #0d47a1; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>where</code> / <code>mask</code>: Conditional Selection</h1>
+    <p>
+      <code>seriesWhere</code> / <code>seriesMask</code> and their DataFrame equivalents
+      allow element-wise conditional replacement — the TypeScript equivalents of
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.where.html"><code>pandas.Series.where</code></a>
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.mask.html"><code>pandas.Series.mask</code></a>.
+    </p>
+
+    <div class="note">
+      <strong>Quick rule:</strong><br />
+      <code>where(cond)</code> — <em>keep</em> where <code>cond</code> is <strong>true</strong>, replace elsewhere.<br />
+      <code>mask(cond)</code> — <em>keep</em> where <code>cond</code> is <strong>false</strong>, replace elsewhere.<br />
+      They are exact inverses of each other.
+    </div>
+
+    <h2>1. <code>seriesWhere</code> — Boolean Array Condition</h2>
+    <p>
+      Pass a <code>boolean[]</code> to keep values at <code>true</code> positions, replace
+      the rest with <code>null</code> (or a custom <code>other</code> value).
+    </p>
+    <pre><code>import { Series, seriesWhere } from "tsb";
+
+const scores = new Series({ data: [42, 91, 67, 55, 88] });
+const highScores = seriesWhere(scores, [false, true, false, false, true]);
+// Series [null, 91, null, null, 88]
+
+// Custom replacement value
+const clamped = seriesWhere(scores, [false, true, false, false, true], { other: 0 });
+// Series [0, 91, 0, 0, 88]</code></pre>
+
+    <h2>2. <code>seriesWhere</code> — Callable Condition</h2>
+    <p>
+      Pass a function that receives the Series and returns a <code>boolean[]</code> or
+      <code>Series&lt;boolean&gt;</code>. This avoids computing the condition array manually.
+    </p>
+    <pre><code>import { Series, seriesWhere } from "tsb";
+
+const temps = new Series({ data: [-5, 12, 23, -3, 8] });
+
+// Keep only values above freezing
+const aboveFreezing = seriesWhere(
+  temps,
+  (s) =&gt; s.values.map((v) =&gt; (v as number) &gt; 0),
+);
+// Series [null, 12, 23, null, 8]
+
+// Replace with 0 instead of null
+const noFreeze = seriesWhere(
+  temps,
+  (s) =&gt; s.values.map((v) =&gt; (v as number) &gt; 0),
+  { other: 0 },
+);
+// Series [0, 12, 23, 0, 8]</code></pre>
+
+    <h2>3. <code>seriesMask</code> — The Inverse</h2>
+    <p>
+      <code>mask</code> replaces positions where the condition is <strong>true</strong>
+      (the opposite of <code>where</code>). Use it to "blank out" outliers or invalid values.
+    </p>
+    <pre><code>import { Series, seriesMask } from "tsb";
+
+const data = new Series({ data: [1, 2, 3, 4, 5] });
+
+// Mask out values greater than 3
+const masked = seriesMask(
+  data,
+  (s) =&gt; s.values.map((v) =&gt; (v as number) &gt; 3),
+  { other: null },
+);
+// Series [1, 2, 3, null, null]</code></pre>
+
+    <h2>4. <code>dataFrameWhere</code> — Element-Wise on DataFrames</h2>
+    <p>
+      Pass a boolean <code>DataFrame</code> or a callable that returns one.
+      Columns and row labels are aligned by name.
+    </p>
+    <pre><code>import { DataFrame, dataFrameWhere } from "tsb";
+
+const df = DataFrame.fromColumns({
+  temp_c:   [22, -3, 18, -7, 30],
+  humidity: [55, 80, 62, 75, 45],
+});
+
+// Keep only valid summer readings (temp &gt; 0)
+const condDf = DataFrame.fromColumns({
+  temp_c:   [true, false, true, false, true],
+  humidity: [true, false, true, false, true],
+});
+
+const summer = dataFrameWhere(df, condDf);
+// DataFrame:
+//   temp_c   [22,   null, 18,   null, 30  ]
+//   humidity [55,   null, 62,   null, 45  ]</code></pre>
+
+    <h2>5. <code>dataFrameWhere</code> — Callable Condition</h2>
+    <pre><code>import { DataFrame, dataFrameWhere } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3, 4, 5],
+  b: [10, 20, 30, 40, 50],
+});
+
+// Keep only values &gt; 2 (column-wise threshold)
+const result = dataFrameWhere(df, (d) =&gt; {
+  const condCols: Record&lt;string, boolean[]&gt; = {};
+  for (const col of d.columns) {
+    condCols[col as string] = d.col(col as string).values.map(
+      (v) =&gt; (v as number) &gt; 2
+    );
+  }
+  return DataFrame.fromColumns(condCols);
+});
+// DataFrame:
+//   a: [null, null, 3, 4, 5]
+//   b: [10,   20,   30, 40, 50]</code></pre>
+
+    <h2>6. <code>dataFrameMask</code> — DataFrame Mask</h2>
+    <pre><code>import { DataFrame, dataFrameMask } from "tsb";
+
+const df = DataFrame.fromColumns({
+  sales:  [100, 200, 50,  300, 80],
+  profit: [10,  40,  -5,  60,  -2],
+});
+
+// Mask out (replace) rows with negative profit
+const cleaned = dataFrameMask(
+  df,
+  (d) =&gt; {
+    const condCols: Record&lt;string, boolean[]&gt; = {};
+    for (const col of d.columns) {
+      condCols[col as string] = d.col(col as string).values.map(
+        (v) =&gt; (v as number) &lt; 0
+      );
+    }
+    return DataFrame.fromColumns(condCols);
+  },
+  { other: 0 },
+);
+// DataFrame:
+//   sales:  [100, 200, 50,  300, 80]
+//   profit: [10,  40,  0,   60,  0 ]</code></pre>
+
+    <h2>Label-Aligned Series Condition</h2>
+    <p>
+      When you pass a <code>Series&lt;boolean&gt;</code> as the condition, values are aligned
+      by <strong>label</strong>, not position. Labels absent from the condition series are treated
+      as <code>false</code>.
+    </p>
+    <pre><code>import { Series, seriesWhere } from "tsb";
+
+const prices = new Series({ data: [10, 20, 30], index: ["a", "b", "c"] });
+const valid  = new Series&lt;boolean&gt;({ data: [false, true], index: ["a", "b"] });
+
+// Only "b" is in the condition with value=true; "a"=false, "c" missing→false
+const result = seriesWhere(prices, valid, { other: -1 });
+// Series { a: -1, b: 20, c: -1 }</code></pre>
+
+    <h2>API Reference</h2>
+    <table>
+      <tr><th>Function</th><th>Keeps when cond is…</th><th>Replaces with</th></tr>
+      <tr><td><code>seriesWhere(s, cond, {other})</code></td><td><code>true</code></td><td><code>other</code> (default <code>null</code>)</td></tr>
+      <tr><td><code>seriesMask(s, cond, {other})</code></td><td><code>false</code></td><td><code>other</code> (default <code>null</code>)</td></tr>
+      <tr><td><code>dataFrameWhere(df, cond, {other})</code></td><td><code>true</code></td><td><code>other</code> (default <code>null</code>)</td></tr>
+      <tr><td><code>dataFrameMask(df, cond, {other})</code></td><td><code>false</code></td><td><code>other</code> (default <code>null</code>)</td></tr>
+    </table>
+
+    <h3>Condition types</h3>
+    <table>
+      <tr><th>Type</th><th>Series ops</th><th>DataFrame ops</th></tr>
+      <tr><td>Boolean array</td><td>✅ positional</td><td>—</td></tr>
+      <tr><td><code>Series&lt;boolean&gt;</code></td><td>✅ label-aligned</td><td>—</td></tr>
+      <tr><td><code>DataFrame</code> (boolean)</td><td>—</td><td>✅ label-aligned</td></tr>
+      <tr><td>Callable</td><td>✅ receives Series</td><td>✅ receives DataFrame</td></tr>
+    </table>
+
+    <p><a href="index.html">← Back to tsb playground index</a></p>
+  </body>
+</html>

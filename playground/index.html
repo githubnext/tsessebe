@@ -279,6 +279,11 @@
           <p>Higher-order rolling window statistics: <code>rollingSem</code> (standard error of mean), <code>rollingSkew</code> (Fisher-Pearson skewness), <code>rollingKurt</code> (excess kurtosis), and <code>rollingQuantile</code> (arbitrary percentile with 5 interpolation methods). Mirrors <code>pandas.Series.rolling().sem/skew/kurt/quantile()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3><a href="where_mask.html" style="color: var(--accent); text-decoration: none;">🎭 where / mask</a></h3>
+          <p>Element-wise conditional selection: <code>seriesWhere</code> / <code>seriesMask</code> and <code>dataFrameWhere</code> / <code>dataFrameMask</code>. Accepts boolean arrays, label-aligned boolean Series/DataFrame, or callables. Mirrors <code>pandas.Series.where</code>, <code>pandas.DataFrame.where</code>, and their <code>.mask()</code> inverses.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

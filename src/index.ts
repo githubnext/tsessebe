@@ -118,3 +118,10 @@ export { cut, qcut } from "./stats/index.ts";
 export type { BinResult, CutOptions, QCutOptions } from "./stats/index.ts";
 export { rollingSem, rollingSkew, rollingKurt, rollingQuantile } from "./stats/index.ts";
 export type { WindowExtOptions, RollingQuantileOptions } from "./stats/index.ts";
+export { seriesWhere, seriesMask, dataFrameWhere, dataFrameMask } from "./stats/index.ts";
+export type {
+  SeriesCond,
+  DataFrameCond,
+  SeriesWhereOptions,
+  DataFrameWhereOptions,
+} from "./stats/index.ts";

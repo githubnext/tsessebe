@@ -43,3 +43,10 @@ export { cut, qcut } from "./cut_qcut.ts";
 export type { BinResult, CutOptions, QCutOptions } from "./cut_qcut.ts";
 export { rollingSem, rollingSkew, rollingKurt, rollingQuantile } from "./window_extended.ts";
 export type { WindowExtOptions, RollingQuantileOptions } from "./window_extended.ts";
+export { seriesWhere, seriesMask, dataFrameWhere, dataFrameMask } from "./where_mask.ts";
+export type {
+  SeriesCond,
+  DataFrameCond,
+  SeriesWhereOptions,
+  DataFrameWhereOptions,
+} from "./where_mask.ts";
