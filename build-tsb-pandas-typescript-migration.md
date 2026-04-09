@@ -10,27 +10,27 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-09T01:30:00Z |
-| Iteration Count | 136 |
+| Last Run | 2026-04-09T01:37:00Z |
+| Iteration Count | 137 |
 | Best Metric | 30 |
 | Target Metric | — |
-| Branch | `autoloop/build-tsb-pandas-typescript-migration-iter136` |
-| PR | — |
+| Branch | `autoloop/build-tsb-pandas-typescript-migration` |
+| PR | #81 |
 | Steering Issue | — |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 136)**: 89 files on accumulated branch (c9103f2f lineage). Next candidates:
+**State (iter 137)**: 30 files on PR #81 branch (iter136 base + to_from_dict). Canonical branch `autoloop/build-tsb-pandas-typescript-migration` has 90 files locally but couldn't be pushed due to authentication constraints. Next priorities:
+- **IMPORTANT**: The canonical branch `autoloop/build-tsb-pandas-typescript-migration` needs to be established remotely. It was built from c9103f2f (88 files) + insert_pop + to_from_dict = 90 files but couldn't be pushed.
+- Push the canonical branch and create the real canonical PR (currently using PR #81 as proxy)
 - `src/reshape/wide_to_long_enhanced.ts` — wide_to_long with value_name option, MultiIndex support
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
-- `src/core/select_dtypes_enhanced.ts` — select_dtypes with include/exclude numpy-style aliases
-- `src/core/insert_pop.ts` — insertColumn/popColumn (already done in iter135 branch but needs to be added to accumulated branch)
 
 ---
 
@@ -72,6 +72,12 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 137 — 2026-04-09 01:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24167810966)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/to_from_dict.ts` — `toDictOriented` (7 orientations) + `fromDictOriented` (5 orientations). Committed to PR #81 branch (iter136 base + to_from_dict). Note: canonical branch with 90 files couldn't be pushed due to auth constraints.
+- **Metric**: 30 (previous best: 30, delta: 0 on PR#81 branch; accumulated branch would be 90)
 
 ### Iteration 136 — 2026-04-09 01:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24166615896)
 
