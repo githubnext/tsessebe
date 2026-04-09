@@ -3,7 +3,7 @@
  *
  * @packageDocumentation
  */
-// merged: 2026-04-09T18:38Z (main merged in, barrel-export conflicts resolved)
+// merged: 2026-04-09T19:37Z (re-merge main into PR branch, barrel-export conflicts resolved by keeping PR superset)
 
 // Core exports will be added here as features are implemented.
 // Each module is imported and re-exported from its feature file in src/.
