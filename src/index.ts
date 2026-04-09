@@ -61,6 +61,13 @@ export type { ExpandingOptions, ExpandingSeriesLike } from "./window/index.ts";
 export { DataFrameExpanding } from "./core/index.ts";
 export { EWM } from "./window/index.ts";
 export type { EwmOptions, EwmSeriesLike } from "./window/index.ts";
+export {
+  rollingApply,
+  rollingAgg,
+  dataFrameRollingApply,
+  dataFrameRollingAgg,
+} from "./window/index.ts";
+export type { RollingApplyOptions, RollingAggOptions, AggFunctions } from "./window/index.ts";
 export { DataFrameEwm } from "./core/index.ts";
 export { CategoricalAccessor } from "./core/index.ts";
 export type { CatSeriesLike } from "./core/index.ts";
