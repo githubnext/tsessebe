@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-09T01:37:00Z |
-| Iteration Count | 137 |
-| Best Metric | 30 |
+| Last Run | 2026-04-09T03:06:39Z |
+| Iteration Count | 138 |
+| Best Metric | 31 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #81 |
@@ -22,38 +22,31 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 137)**: 30 files on PR #81 branch (iter136 base + to_from_dict). Canonical branch `autoloop/build-tsb-pandas-typescript-migration` has 90 files locally but couldn't be pushed due to authentication constraints. Next priorities:
-- **IMPORTANT**: The canonical branch `autoloop/build-tsb-pandas-typescript-migration` needs to be established remotely. It was built from c9103f2f (88 files) + insert_pop + to_from_dict = 90 files but couldn't be pushed.
-- Push the canonical branch and create the real canonical PR (currently using PR #81 as proxy)
-- `src/reshape/wide_to_long_enhanced.ts` — wide_to_long with value_name option, MultiIndex support
+**State (iter 138)**: 31 files on PR #81 branch. to_from_dict.ts and wide_to_long.ts both committed successfully. Next priorities:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
+- `src/stats/cut_qcut_extended.ts` — ordered categorical cut/qcut with retbins, custom labels
+- `src/core/attrs.ts` — DataFrame/Series `.attrs` dict (user-defined metadata)
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 136 (to_from_dict on accumulated branch)**: `toDictOriented(df, orient)` dispatches via switch — "dict"/"columns": column→rowLabel→value map using `labelKey()` helper; "list": plain arrays; "series": direct col refs; "split"/"tight": build rows with column-at-a-time iteration; "records": delegates to `df.toRecords()`; "index": rowLabel→col→value. `fromDictOriented`: "columns" → `DataFrame.fromColumns`; "index" collects colSet insertion order from all rows (missing fields → null); "split"/"tight" share same logic via `buildIndex()` helper that detects default range. Property tests: split round-trip preserves shape, records column count stable, index row count preserved. **Key**: Accumulated c9103f2f branch has 88 source files; adding to_from_dict gives 89.
-- **Iter 135 (insert_pop)**: `insertColumn(df, loc, col, values)` rebuilds the ordered column Map by iterating `df.columns.values` and inserting the new column when `idx === loc` (handles end-of-columns via post-loop insert). Uses `df.get(col)` (returns undefined) for existence checks. `popColumn` iterates columns skipping the target, returns `{series, df}`. `reorderColumns` selects columns in the given order (can subset). `moveColumn` wraps pop+insert. All non-mutating. Key: `new DataFrame(map, df.index)` constructor works with regular Map (satisfies ReadonlyMap).
-- **Iter 134 (to_dict/from_dict)**: `toDictOriented(df, orient)` dispatches via switch — "dict"/"columns": column→rowLabel→value map; "list"/"series": column→array; "split": {index,columns,data}; "tight": split + index_names/column_names; "records": row array; "index": rowLabel→column→value. `fromDictOriented(data, orient)`: "columns" validates each value is array; "index" collects colSet from all row objects in insertion order; "split"/"tight" delegate to shared `buildFromRowsAndCols(rows,cols,index?)`. `labelsToIndex` promotes 0…n-1 integer labels to RangeIndex.
-- **Iter 133 (idxmin/idxmax)**: `findExtremumLabel(series, mode, skipna)` scans values comparing with `lessThan`/`greaterThan` helpers that handle number, string, boolean, Date. First occurrence wins for ties. skipna=false returns label of first missing value (null/undefined/NaN). DataFrame axis 0: per-column result indexed by column names. Axis 1: per-row result indexed by row labels with column name values.
-- **Iter 132 (convert_dtypes)**: `inferBestDtype()` checks allBool→bool, allInt (whole numbers)→int64, allFloat→float64, allStr→string, else object. Bool checked before int (booleans are typeof "number"=false, safe). Idempotent by construction. `castValue()` dispatches by dtype. `dataFrameConvertDtypes` wraps per-column. Options: convertBoolean, convertInteger, convertFloating, convertString all default true.
-- **Iter 131 (astype)**: `castOne(v, dt)` by dtype kind. null/undefined always preserved as null. `errors='raise'|'ignore'` — on ignore, failed casts → null. `dataFrameAstype` accepts single dtype (applies to all cols) or `Record<col, dtype>` (per-column). Raises `RangeError` for unknown columns in spec. Single dtype path uses `Dtype.from(name)` singleton.
-- **Iter 130 (cut_extended)**: `cutWithBins`/`qcutWithBins` return `{result, bins}` for retbins. `cutOrdered`/`qcutOrdered` return `{result, categories, ordered:true, bins}`. `compareCategories(a,b,cats)` → neg/zero/pos; null < any. `sortByCategory`. Property: antisymmetric, non-decreasing.
-- **Iter 129 (rolling_cross_corr)**: `crossCorr(x,y,{lags})` — pairs (x[i],y[i-l]). Lag fmt: `l<0→"lag_neg{|l|}"`. Symmetry: crossCorr(x,y,l)==crossCorr(y,x,-l).
-- **Iter 128 (covariance)**: `pairedNums()` per window + `sampleCov(ddof=1)`. Zero var → NaN. Scale-invariant.
-- **Iter 127 (rolling_moments)**: `rollingSkew` Fisher-Pearson (n≥3), `rollingKurtosis` bias-corrected (n≥4). `new Series<Scalar>({data,index,name})`.
-- **Iter 126 (abs/round)**: only transform `typeof v==="number"&&!isNaN(v)`. `Number(n.toFixed(d))`. `df.columns.values as string[]` + `df.col(name)`.
-- **Iter 125 (autocorr)**: Pearson of `s[lag:]` vs `s[:-lag]`. Lag 0 → 1, zero var → NaN, |lag|≥n → NaN. No bun in sandbox.
+- **Iter 138 (to_from_dict + wide_to_long)**: PR #81 branch had only 29 files despite state claiming 30 — to_from_dict was never actually pushed. Fixed by adding both. `wideToLong`: `collectSuffixes()` scans all column names, matches `{stub}{sep}{suffix}` against anchored regex. Suffixes sorted numerically (integers) else lexicographically. Missing wide columns → null. Output column order: id cols, j, stub cols.
+- **Iter 135 (insert_pop)**: `insertColumn(df, loc, col, values)` rebuilds the ordered column Map inserting when `idx === loc`. `popColumn` iterates columns skipping the target, returns `{series, df}`. `reorderColumns` subsets. `moveColumn` wraps pop+insert. All non-mutating.
+- **Iter 133 (idxmin/idxmax)**: `findExtremumLabel(series, mode, skipna)` scans values with `lessThan`/`greaterThan` helpers (number, string, boolean, Date). First occurrence wins ties. skipna=false returns label of first missing. DataFrame axis 0: per-column; axis 1: per-row.
+- **Iter 132 (convert_dtypes)**: `inferBestDtype()` checks allBool→bool, allInt→int64, allFloat→float64, allStr→string, else object. Bool checked before int. `castValue()` dispatches by dtype.
+- **Iter 131 (astype)**: `castOne(v, dt)`. `errors='raise'|'ignore'`. `dataFrameAstype` accepts single dtype or per-column `Record<col,dtype>`.
+- **Iter 130 (cut_extended)**: `cutWithBins`/`qcutWithBins` return `{result, bins}` for retbins. `cutOrdered`/`qcutOrdered` return `{result, categories, ordered:true, bins}`.
+- **Iters 127–129**: `rollingSkew` Fisher-Pearson (n≥3), `rollingKurtosis` (n≥4). `sampleCov(ddof=1)`. `crossCorr(x,y,lags)`. No bun in sandbox.
+- **Iter 126 (abs/round)**: only transform `typeof v==="number"&&!isNaN(v)`. `Number(n.toFixed(d))`.
 - **Iter 124 (mode)**: freq-map → maxCount → sorted. `scalarKey()` distinct prefixed keys for missing.
-- **Iters 119–123**: `__MISSING__` sentinel. `resolveMapper()` coerces fn/Map/dict. `encodeKey` missing→"null/undefined/NaN". `pctChange`: `(x[i]-x[i-p])/|x[i-p]|`.
-- **Iters 114–118**: `Index(data,name?)`. duplicated: `df.has(col)`. isin: `!Array.isArray&&!Set&&!Symbol.iterator`. explode: `unknown[]`.
-- **Iters 101–113**: `new DataFrame(new Map(...), rowIndex)`. `_addOrReplaceColumn`. `resolveBound()`. notna: `===null||===undefined||isNaN`.
-- **Iters 89–100**: `fc.double`. `_mod = a-floor(a/b)*b`. `RawTimestamp`. `tryConvert→{ok,value}`.
-- **Iters 53–88**: GroupBy/merge/str/dt, describe, csv/json, corr, rolling/expanding/ewm, reshape, MultiIndex, datetime/timedelta/period, cut/qcut, sample, apply, pipe, factorize, get_dummies, crosstab.
+- **Iters 119–123**: `__MISSING__` sentinel. `resolveMapper()`. `pctChange`: `(x[i]-x[i-p])/|x[i-p]|`.
+- **Iters 101–118**: `Index(data,name?)`. isin/explode/duplicated. `new DataFrame(new Map(...), rowIndex)`. `resolveBound()`. notna: `===null||===undefined||isNaN`.
+- **Iters 53–100**: GroupBy/merge/str/dt, describe, csv/json, corr, rolling/expanding/ewm, reshape, MultiIndex, datetime/timedelta/period, cut/qcut, sample, apply, pipe, factorize, crosstab. `fc.double`. `RawTimestamp`.
 
 ---
 
@@ -72,6 +65,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 138 — 2026-04-09 03:06 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24170164603)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/core/to_from_dict.ts` (7-orient `toDictOriented` + 4-orient `fromDictOriented`) and `src/reshape/wide_to_long.ts` (`wideToLong` — mirrors `pandas.wide_to_long`). 44 tests (unit + property-based). Playground pages for both.
+- **Metric**: 31 (previous best: 30, delta: +1)
+- **Commit**: `962efb5`
+- **Notes**: PR #81 branch previously only had 29 files (to_from_dict was never actually committed despite state claiming 30). Added both missing to_from_dict and new wide_to_long to get 31 files.
 
 ### Iteration 137 — 2026-04-09 01:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24167810966)
 
