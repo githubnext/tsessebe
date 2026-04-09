@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — attrs: user-defined metadata</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .note { background: #fffbea; border-left: 4px solid #f5a623; padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f0f4f8; }
+    a { color: #0066cc; }
+    .api-table td:first-child { font-family: monospace; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+
+  <h1><code>attrs</code> — User-Defined Metadata</h1>
+  <p>
+    Attach arbitrary key→value metadata to any <code>Series</code> or <code>DataFrame</code>
+    — mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.attrs.html" target="_blank">
+    <code>pandas.DataFrame.attrs</code></a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.attrs.html" target="_blank">
+    <code>pandas.Series.attrs</code></a>.
+  </p>
+
+  <div class="note">
+    <strong>Design note:</strong> Because <code>tsb</code> objects are immutable (their data, index,
+    and dtype are frozen), attrs are stored in a <strong>WeakMap registry</strong> rather than as
+    instance properties.  This means attrs are attached &amp; detached without touching the object
+    itself, and garbage-collected automatically when the object is collected.
+  </div>
+
+  <h2>Basic usage</h2>
+
+  <pre><code>import {
+  getAttrs, setAttrs, updateAttrs, copyAttrs, withAttrs,
+  clearAttrs, hasAttrs, getAttr, setAttr, deleteAttr,
+  attrsCount, attrsKeys, mergeAttrs,
+} from "tsb";
+import { DataFrame, Series } from "tsb";
+
+// ─── annotate a DataFrame ─────────────────────────────────────────────────
+const df = DataFrame.fromColumns({
+  temperature: [22.1, 23.5, 21.8],
+  humidity:    [55, 60, 58],
+});
+
+setAttrs(df, {
+  source: "weather_station_42",
+  unit:   "Celsius",
+  notes: "Morning readings",
+});
+
+getAttrs(df);
+// → { source: "weather_station_42", unit: "Celsius", notes: "Morning readings" }
+
+getAttr(df, "unit");     // → "Celsius"
+getAttr(df, "missing");  // → undefined
+attrsCount(df);          // → 3
+attrsKeys(df);           // → ["source", "unit", "notes"]
+hasAttrs(df);            // → true
+</code></pre>
+
+  <h2>Merging and updating</h2>
+
+  <pre><code>// updateAttrs merges new keys, preserves existing
+updateAttrs(df, { version: 2, notes: "Updated notes" });
+getAttrs(df);
+// → { source: "weather_station_42", unit: "Celsius", notes: "Updated notes", version: 2 }
+
+// setAttr / deleteAttr for single keys
+setAttr(df, "sensor_id", "WS-042");
+deleteAttr(df, "notes");
+getAttrs(df);
+// → { source: "weather_station_42", unit: "Celsius", version: 2, sensor_id: "WS-042" }
+</code></pre>
+
+  <h2>Propagating metadata to derived objects</h2>
+
+  <pre><code>// copyAttrs: copy all attrs from one object to another
+const s = new Series({ data: [22.1, 23.5, 21.8], name: "temperature" });
+setAttrs(s, { unit: "Celsius", source: "sensor_A" });
+
+const derived = new Series({ data: [71.8, 74.3, 71.2], name: "fahrenheit" });
+copyAttrs(s, derived);
+getAttrs(derived);
+// → { unit: "Celsius", source: "sensor_A" }
+
+// Then update the copy
+setAttr(derived, "unit", "Fahrenheit");
+getAttrs(derived);  // → { unit: "Fahrenheit", source: "sensor_A" }
+getAttrs(s);        // → { unit: "Celsius", source: "sensor_A" }  ← unchanged
+</code></pre>
+
+  <h2>Fluent helper — <code>withAttrs</code></h2>
+
+  <pre><code>// withAttrs sets attrs and returns the same object reference
+// Handy for inline annotation
+const annotated = withAttrs(
+  DataFrame.fromColumns({ x: [1, 2, 3] }),
+  { source: "lab_experiment", date: "2026-04-09" },
+);
+
+annotated === annotated;  // true — same reference, not a copy
+getAttrs(annotated);
+// → { source: "lab_experiment", date: "2026-04-09" }
+</code></pre>
+
+  <h2>Merging from multiple sources</h2>
+
+  <pre><code>// mergeAttrs: combine attrs from multiple objects into a target
+const s1 = new Series({ data: [1, 2, 3], name: "a" });
+const s2 = new Series({ data: [4, 5, 6], name: "b" });
+setAttrs(s1, { source: "sensor_A", unit: "kg" });
+setAttrs(s2, { source: "sensor_B", scale: 2.5 });
+
+const combined = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+mergeAttrs([s1, s2], combined);
+// Later sources win on conflicts: source="sensor_B"
+getAttrs(combined);
+// → { source: "sensor_B", unit: "kg", scale: 2.5 }
+</code></pre>
+
+  <h2>Clearing metadata</h2>
+
+  <pre><code>setAttrs(df, { x: 1, y: 2 });
+hasAttrs(df);   // → true
+attrsCount(df); // → 2
+
+clearAttrs(df);
+hasAttrs(df);   // → false
+getAttrs(df);   // → {}
+</code></pre>
+
+  <h2>API reference</h2>
+
+  <table class="api-table">
+    <thead>
+      <tr><th>Function</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>getAttrs(obj)</td><td>Return a shallow copy of all stored attrs (empty {} if none)</td></tr>
+      <tr><td>setAttrs(obj, attrs)</td><td>Overwrite attrs completely with the given record</td></tr>
+      <tr><td>updateAttrs(obj, updates)</td><td>Merge updates into existing attrs (existing keys preserved)</td></tr>
+      <tr><td>withAttrs(obj, attrs)</td><td>Fluent: set attrs and return the same object</td></tr>
+      <tr><td>copyAttrs(source, target)</td><td>Copy all attrs from source to target</td></tr>
+      <tr><td>mergeAttrs(sources[], target)</td><td>Merge attrs from multiple sources; later sources win</td></tr>
+      <tr><td>clearAttrs(obj)</td><td>Remove all attrs from obj</td></tr>
+      <tr><td>hasAttrs(obj)</td><td>Return true if any attrs are set</td></tr>
+      <tr><td>getAttr(obj, key)</td><td>Get a single attr value (undefined if missing)</td></tr>
+      <tr><td>setAttr(obj, key, value)</td><td>Set a single attr, preserving other keys</td></tr>
+      <tr><td>deleteAttr(obj, key)</td><td>Delete a single attr key</td></tr>
+      <tr><td>attrsCount(obj)</td><td>Number of stored attr keys</td></tr>
+      <tr><td>attrsKeys(obj)</td><td>Array of stored attr key names</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Comparison with pandas</h2>
+
+  <table>
+    <thead>
+      <tr><th>pandas</th><th>tsb</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>df.attrs</code></td><td><code>getAttrs(df)</code></td></tr>
+      <tr><td><code>df.attrs = {"k": "v"}</code></td><td><code>setAttrs(df, { k: "v" })</code></td></tr>
+      <tr><td><code>df.attrs["k"] = "v"</code></td><td><code>setAttr(df, "k", "v")</code></td></tr>
+      <tr><td><code>df.attrs["k"]</code></td><td><code>getAttr(df, "k")</code></td></tr>
+      <tr><td><code>del df.attrs["k"]</code></td><td><code>deleteAttr(df, "k")</code></td></tr>
+      <tr><td><code>df.attrs.update(d)</code></td><td><code>updateAttrs(df, d)</code></td></tr>
+      <tr><td><code>df.attrs.clear()</code></td><td><code>clearAttrs(df)</code></td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

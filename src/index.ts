@@ -134,3 +134,19 @@ export type {
 } from "./stats/index.ts";
 export { isna, notna, isnull, notnull, fillna, dropna, countna, countValid } from "./stats/index.ts";
 export type { IsnaInput, FillnaOptions, DropnaOptions } from "./stats/index.ts";
+export {
+  getAttrs,
+  setAttrs,
+  updateAttrs,
+  copyAttrs,
+  withAttrs,
+  clearAttrs,
+  hasAttrs,
+  getAttr,
+  setAttr,
+  deleteAttr,
+  attrsCount,
+  attrsKeys,
+  mergeAttrs,
+} from "./core/index.ts";
+export type { Attrs } from "./core/index.ts";

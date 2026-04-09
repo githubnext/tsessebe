@@ -25,3 +25,19 @@ export type {
   DictTight,
   SplitInput,
 } from "./to_from_dict.ts";
+export {
+  getAttrs,
+  setAttrs,
+  updateAttrs,
+  copyAttrs,
+  withAttrs,
+  clearAttrs,
+  hasAttrs,
+  getAttr,
+  setAttr,
+  deleteAttr,
+  attrsCount,
+  attrsKeys,
+  mergeAttrs,
+} from "./attrs.ts";
+export type { Attrs } from "./attrs.ts";
