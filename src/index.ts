@@ -3,7 +3,7 @@
  *
  * @packageDocumentation
  */
-// merged: 2026-04-09T16:28Z (main merged in, barrel-export conflicts resolved)
+// merged: 2026-04-09T17:01Z (main merged in, barrel-export conflicts resolved)
 
 // Core exports will be added here as features are implemented.
 // Each module is imported and re-exported from its feature file in src/.
@@ -288,4 +288,4 @@ export type { ExplodeOptions, ExplodeDataFrameOptions } from "./stats/index.ts";
 
 export { isin, dataFrameIsin } from "./stats/index.ts";
 export type { IsinValues, IsinDict, DataFrameIsinValues } from "./stats/index.ts";
-// Re-merged main (2026-04-09T16:28Z): resolved barrel-export conflicts, PR branch is superset of main
+// Re-merged main (2026-04-09T17:01Z): resolved barrel-export conflicts, PR branch is superset of main
