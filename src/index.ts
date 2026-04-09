@@ -116,3 +116,5 @@ export { wideToLong } from "./reshape/index.ts";
 export type { WideToLongOptions } from "./reshape/index.ts";
 export { cut, qcut } from "./stats/index.ts";
 export type { BinResult, CutOptions, QCutOptions } from "./stats/index.ts";
+export { rollingSem, rollingSkew, rollingKurt, rollingQuantile } from "./stats/index.ts";
+export type { WindowExtOptions, RollingQuantileOptions } from "./stats/index.ts";

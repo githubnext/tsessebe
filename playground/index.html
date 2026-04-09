@@ -274,6 +274,11 @@
           <p>Bin continuous numeric data into discrete intervals. <code>cut()</code> uses fixed-width or explicit bin edges; <code>qcut()</code> uses quantile-based bins of equal population. Both return codes, labels, and bin edges. Mirrors <code>pandas.cut</code> and <code>pandas.qcut</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3><a href="window_extended.html" style="color: var(--accent); text-decoration: none;">📊 Rolling Extended Stats</a></h3>
+          <p>Higher-order rolling window statistics: <code>rollingSem</code> (standard error of mean), <code>rollingSkew</code> (Fisher-Pearson skewness), <code>rollingKurt</code> (excess kurtosis), and <code>rollingQuantile</code> (arbitrary percentile with 5 interpolation methods). Mirrors <code>pandas.Series.rolling().sem/skew/kurt/quantile()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Rolling Extended Stats: sem, skew, kurt, quantile</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 860px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.6;
+        color: #1a1a1a;
+      }
+      h1 { color: #0d47a1; }
+      h2 { color: #1565c0; border-bottom: 2px solid #e3f2fd; padding-bottom: 0.25rem; }
+      pre {
+        background: #f5f5f5;
+        border-left: 4px solid #0d47a1;
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 4px;
+      }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.9em; }
+      .demo {
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      .demo h3 { margin-top: 0; color: #2e7d32; }
+      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+      th, td { border: 1px solid #ccc; padding: 0.4rem 0.75rem; text-align: left; }
+      th { background: #e3f2fd; }
+      .note { background: #fff9c4; border: 1px solid #f9a825; border-radius: 4px; padding: 0.75rem 1rem; }
+      a { color: #0d47a1; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — Rolling Extended Statistics</h1>
+    <p>
+      Higher-order rolling window statistics extending the core
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.core.window.rolling.Rolling.html">
+        <code>pandas.Series.rolling()</code>
+      </a>
+      API:
+      <strong>sem</strong>, <strong>skew</strong>, <strong>kurt</strong>, and
+      <strong>quantile</strong>.
+    </p>
+
+    <h2>1. <code>rollingSem</code> — Standard Error of the Mean</h2>
+    <p>
+      The <em>standard error of the mean</em> measures how much the sample mean
+      would vary across repeated samples. For a window of <em>n</em> values:
+    </p>
+    <pre><code>sem = std(ddof=1) / √n</code></pre>
+    <p>Requires at least 2 valid observations per window.</p>
+
+    <pre><code>import { rollingSem, Series } from "tsb";
+
+const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9], name: "x" });
+const sem3 = rollingSem(s, 3);
+// [null, null, 0.667, 0, 0.577, 0.577, 1.155, 2.082]
+</code></pre>
+
+    <div class="demo">
+      <h3>Live demo — sem with window=3</h3>
+      <p>Comma-separated numbers (nulls accepted):</p>
+      <input id="sem-input" type="text" value="2, 4, 4, 4, 5, 5, 7, 9" style="width:100%">
+      <label>Window: <input id="sem-win" type="number" value="3" min="2" max="20" style="width:60px"></label>
+      <label>minPeriods: <input id="sem-mp" type="number" value="" min="1" max="20" placeholder="= window" style="width:80px"></label>
+      <button onclick="runSem()">Run</button>
+      <pre id="sem-out" style="margin-top:0.5rem"></pre>
+    </div>
+
+    <h2>2. <code>rollingSkew</code> — Fisher-Pearson Skewness</h2>
+    <p>
+      Skewness measures asymmetry of the distribution in each window.
+      Positive = right tail heavier; negative = left tail heavier.
+      Uses the unbiased Fisher-Pearson formula (same as pandas):
+    </p>
+    <pre><code>skew = [n/((n-1)(n-2))] × Σ[(xᵢ−x̄)/s]³</code></pre>
+    <p>Requires ≥ 3 valid observations.</p>
+
+    <pre><code>import { rollingSkew, Series } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+rollingSkew(s, 3);
+// [null, null, 0, 0, 0]   ← symmetric windows → zero skew
+</code></pre>
+
+    <div class="demo">
+      <h3>Live demo — skewness with window=4</h3>
+      <input id="skew-input" type="text" value="1, 2, 3, 10, 1, 2, 3" style="width:100%">
+      <label>Window: <input id="skew-win" type="number" value="4" min="3" max="20" style="width:60px"></label>
+      <button onclick="runSkew()">Run</button>
+      <pre id="skew-out" style="margin-top:0.5rem"></pre>
+    </div>
+
+    <h2>3. <code>rollingKurt</code> — Excess Kurtosis</h2>
+    <p>
+      Kurtosis measures how heavy the tails are relative to a normal distribution.
+      The <em>excess</em> kurtosis subtracts 3, so a normal distribution gives 0.
+      Uses the Fisher (1930) unbiased formula:
+    </p>
+    <pre><code>kurt = [n(n+1)/((n-1)(n-2)(n-3))] × Σ[(xᵢ−x̄)/s]⁴ − 3(n-1)²/((n-2)(n-3))</code></pre>
+    <p>Requires ≥ 4 valid observations.</p>
+
+    <pre><code>import { rollingKurt, Series } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4] });
+rollingKurt(s, 4);
+// [null, null, null, -1.2]   ← uniform distribution has kurt = -1.2
+</code></pre>
+
+    <div class="demo">
+      <h3>Live demo — excess kurtosis with window=5</h3>
+      <input id="kurt-input" type="text" value="1, 2, 3, 4, 5, 6, 7, 8, 9, 10" style="width:100%">
+      <label>Window: <input id="kurt-win" type="number" value="5" min="4" max="20" style="width:60px"></label>
+      <button onclick="runKurt()">Run</button>
+      <pre id="kurt-out" style="margin-top:0.5rem"></pre>
+    </div>
+
+    <h2>4. <code>rollingQuantile</code> — Rolling Quantile</h2>
+    <p>
+      Computes any quantile within each sliding window using configurable
+      interpolation. When <code>q = 0.5</code> this is identical to
+      <code>rolling.median()</code>.
+    </p>
+
+    <pre><code>import { rollingQuantile, Series } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+rollingQuantile(s, 0.5, 3);  // rolling median: [null, null, 2, 3, 4]
+rollingQuantile(s, 0.25, 3); // [null, null, 1.5, 2.5, 3.5]
+rollingQuantile(s, 0.75, 3); // [null, null, 2.5, 3.5, 4.5]
+</code></pre>
+
+    <h3>Interpolation methods</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Behaviour when q falls between two values</th></tr></thead>
+      <tbody>
+        <tr><td><code>linear</code> (default)</td><td>Linear interpolation — same as NumPy / pandas default</td></tr>
+        <tr><td><code>lower</code></td><td>Take the lower of the two surrounding values</td></tr>
+        <tr><td><code>higher</code></td><td>Take the higher of the two surrounding values</td></tr>
+        <tr><td><code>midpoint</code></td><td>Arithmetic mean of the two surrounding values</td></tr>
+        <tr><td><code>nearest</code></td><td>Whichever surrounding value is closest</td></tr>
+      </tbody>
+    </table>
+
+    <div class="demo">
+      <h3>Live demo — rolling quantile</h3>
+      <input id="quant-input" type="text" value="3, 1, 4, 1, 5, 9, 2, 6" style="width:100%">
+      <label>q (0–1): <input id="quant-q" type="number" value="0.5" min="0" max="1" step="0.05" style="width:70px"></label>
+      <label>Window: <input id="quant-win" type="number" value="3" min="1" max="20" style="width:60px"></label>
+      <label>Interpolation:
+        <select id="quant-interp">
+          <option value="linear" selected>linear</option>
+          <option value="lower">lower</option>
+          <option value="higher">higher</option>
+          <option value="midpoint">midpoint</option>
+          <option value="nearest">nearest</option>
+        </select>
+      </label>
+      <button onclick="runQuantile()">Run</button>
+      <pre id="quant-out" style="margin-top:0.5rem"></pre>
+    </div>
+
+    <h2>Common Options</h2>
+    <table>
+      <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>minPeriods</code></td><td><code>number</code></td><td>= window</td><td>Minimum valid obs required per window</td></tr>
+        <tr><td><code>center</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Centre the window around each position</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>Note:</strong> Functions are <em>pure</em> — they return new Series objects
+      without modifying the input. Missing values (<code>null</code>, <code>NaN</code>)
+      are excluded from each window calculation.
+    </div>
+
+    <script type="module">
+      import { Series } from "https://esm.sh/tsb@0.0.1";
+
+      function parseData(str) {
+        return str.split(",").map(v => {
+          const t = v.trim();
+          if (t === "" || t === "null" || t === "NaN") return null;
+          const n = parseFloat(t);
+          return isNaN(n) ? null : n;
+        });
+      }
+
+      function fmt(v) {
+        if (v === null || v === undefined) return "null";
+        if (typeof v === "number") return v.toFixed(4);
+        return String(v);
+      }
+
+      // Minimal rolling implementations for the playground (no bundler)
+      function isMissing(v) { return v === null || v === undefined || (typeof v === "number" && isNaN(v)); }
+      function validNums(arr) { return arr.filter(v => !isMissing(v) && typeof v === "number"); }
+
+      function windowSlice(data, i, window, center) {
+        if (center) {
+          const half = Math.floor((window - 1) / 2);
+          const lo = Math.max(0, i - half);
+          const hi = Math.min(data.length, i + (window - half));
+          return data.slice(lo, hi);
+        }
+        return data.slice(Math.max(0, i - window + 1), i + 1);
+      }
+
+      function rollingApply(data, window, minPeriods, center, minN, fn) {
+        const mp = minPeriods ?? window;
+        return data.map((_, i) => {
+          const nums = validNums(windowSlice(data, i, window, center));
+          if (nums.length < Math.max(minN, mp)) return null;
+          return fn(nums);
+        });
+      }
+
+      function computeSem(nums) {
+        const n = nums.length;
+        const m = nums.reduce((a, v) => a + v, 0) / n;
+        const s = Math.sqrt(nums.reduce((a, v) => a + (v - m) ** 2, 0) / (n - 1));
+        return s / Math.sqrt(n);
+      }
+
+      function computeSkew(nums) {
+        const n = nums.length;
+        const m = nums.reduce((a, v) => a + v, 0) / n;
+        const s = Math.sqrt(nums.reduce((a, v) => a + (v - m) ** 2, 0) / (n - 1));
+        if (s === 0) return 0;
+        const sum3 = nums.reduce((a, v) => a + ((v - m) / s) ** 3, 0);
+        return (n / ((n - 1) * (n - 2))) * sum3;
+      }
+
+      function computeKurt(nums) {
+        const n = nums.length;
+        const m = nums.reduce((a, v) => a + v, 0) / n;
+        const s = Math.sqrt(nums.reduce((a, v) => a + (v - m) ** 2, 0) / (n - 1));
+        if (s === 0) return 0;
+        const sum4 = nums.reduce((a, v) => a + ((v - m) / s) ** 4, 0);
+        return (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * sum4 - 3 * (n - 1) ** 2 / ((n - 2) * (n - 3));
+      }
+
+      function computeQuantile(sorted, q, method) {
+        const n = sorted.length;
+        if (n === 1) return sorted[0];
+        const virt = q * (n - 1);
+        const lo = Math.floor(virt), hi = Math.ceil(virt);
+        const lv = sorted[lo], hv = sorted[hi];
+        if (method === "lower") return lv;
+        if (method === "higher") return hv;
+        if (method === "midpoint") return (lv + hv) / 2;
+        if (method === "nearest") return (virt - lo < 0.5) ? lv : hv;
+        return lv + (virt - lo) * (hv - lv);
+      }
+
+      window.runSem = function() {
+        const data = parseData(document.getElementById("sem-input").value);
+        const win = +document.getElementById("sem-win").value;
+        const mp = document.getElementById("sem-mp").value ? +document.getElementById("sem-mp").value : undefined;
+        const result = rollingApply(data, win, mp, false, 2, computeSem);
+        document.getElementById("sem-out").textContent = "[" + result.map(fmt).join(", ") + "]";
+      };
+
+      window.runSkew = function() {
+        const data = parseData(document.getElementById("skew-input").value);
+        const win = +document.getElementById("skew-win").value;
+        const result = rollingApply(data, win, win, false, 3, computeSkew);
+        document.getElementById("skew-out").textContent = "[" + result.map(fmt).join(", ") + "]";
+      };
+
+      window.runKurt = function() {
+        const data = parseData(document.getElementById("kurt-input").value);
+        const win = +document.getElementById("kurt-win").value;
+        const result = rollingApply(data, win, win, false, 4, computeKurt);
+        document.getElementById("kurt-out").textContent = "[" + result.map(fmt).join(", ") + "]";
+      };
+
+      window.runQuantile = function() {
+        const data = parseData(document.getElementById("quant-input").value);
+        const q = +document.getElementById("quant-q").value;
+        const win = +document.getElementById("quant-win").value;
+        const interp = document.getElementById("quant-interp").value;
+        const result = rollingApply(data, win, win, false, 1, nums => {
+          const sorted = [...nums].sort((a, b) => a - b);
+          return computeQuantile(sorted, q, interp);
+        });
+        document.getElementById("quant-out").textContent = "[" + result.map(fmt).join(", ") + "]";
+      };
+
+      // auto-run demos on load
+      window.runSem(); window.runSkew(); window.runKurt(); window.runQuantile();
+    </script>
+  </body>
+</html>
