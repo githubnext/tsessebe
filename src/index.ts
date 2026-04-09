@@ -238,3 +238,20 @@ export type {
   MinMaxOptions,
   CvOptions,
 } from "./stats/index.ts";
+export {
+  catFromCodes,
+  catUnionCategories,
+  catIntersectCategories,
+  catDiffCategories,
+  catEqualCategories,
+  catSortByFreq,
+  catToOrdinal,
+  catFreqTable,
+  catCrossTab,
+  catRecode,
+} from "./stats/index.ts";
+export type {
+  CatFromCodesOptions,
+  CatSortByFreqOptions,
+  CatCrossTabOptions,
+} from "./stats/index.ts";

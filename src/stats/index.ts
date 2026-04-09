@@ -111,3 +111,20 @@ export type {
   MinMaxOptions,
   CvOptions,
 } from "./numeric_extended.ts";
+export {
+  catFromCodes,
+  catUnionCategories,
+  catIntersectCategories,
+  catDiffCategories,
+  catEqualCategories,
+  catSortByFreq,
+  catToOrdinal,
+  catFreqTable,
+  catCrossTab,
+  catRecode,
+} from "./categorical_ops.ts";
+export type {
+  CatFromCodesOptions,
+  CatSortByFreqOptions,
+  CatCrossTabOptions,
+} from "./categorical_ops.ts";
