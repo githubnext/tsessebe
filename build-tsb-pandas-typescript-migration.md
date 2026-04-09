@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-09T07:01:40Z |
-| Iteration Count | 141 |
-| Best Metric | 34 |
+| Last Run | 2026-04-09T07:43:03Z |
+| Iteration Count | 142 |
+| Best Metric | 35 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #81 |
@@ -22,19 +22,20 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 141)**: 34 files on PR #81 branch. where_mask added (seriesWhere/seriesMask/dataFrameWhere/dataFrameMask with callable conditions). Next priorities:
+**State (iter 142)**: 35 files on PR #81 branch. standalone isna/notna/fillna/dropna module added. Next priorities:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/core/attrs.ts` — DataFrame/Series `.attrs` dict (user-defined metadata)
-- `src/stats/notna_isna.ts` — notna/isna/fillna/dropna standalone functions
+- `src/window/rolling_apply.ts` — rolling apply with custom functions
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 142 (notna_isna)**: Module-level `isna`/`notna`/`isnull`/`notnull` work on scalars, arrays, Series, DataFrame via TypeScript overloads. Standalone `fillna(obj, {value})` and `dropna(obj, {how, axis})` dispatch by `instanceof DataFrame/Series/Array.isArray`. `_dropnaRows`/`_dropnaColumns` rebuild DataFrames using `series.iat(i)` for positional access and `df.col(name)` (which throws on missing). `countna`/`countValid` avoid intermediate Series allocation. All pure functions.
 - **Iter 141 (where_mask)**: `resolveSeriesCond()` handles three cond types: `boolean[]` (positional), `Series<boolean>` (label-aligned via `.indexOf()`), callable (returns either). `resolveDataFrameCond()` aligns boolean DataFrame by column name + row label, missing entries → false. `dataFrameWhere/Mask` iterate `df.columns.values` (string[]) not `df.columns` (Index) to get typed string keys. `Map<string, boolean[]>` in resolveDataFrameCond to avoid Label cast issues.
 - **Iter 140 (window_extended)**: `rollingSem` = `std(ddof=1)/sqrt(n)`, requires n≥2. `rollingSkew` Fisher-Pearson formula, constant window→0, requires n≥3. `rollingKurt` Fisher excess kurtosis, constant→0, requires n≥4. `rollingQuantile` supports 5 interpolation methods; linear is pandas default. All share `applyWindow()` helper with configurable `minN`. Standalone module pattern (no modification to existing rolling.ts).
 - **Iter 139 (cut/qcut)**: `assignBins()` binary search: for right=true, find smallest i where v <= edges[i+1]; validate with v > binLo check. For right=false, find smallest i where edges[i+1] > v; last bin includes right edge. `qcut` always uses right=true/include_lowest=true. Integer bins: edges[0] slightly below min (mn - step*0.001) to include minimum value. `deduplicateEdges()` needed for uniform data with qcut.
@@ -68,6 +69,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 142 — 2026-04-09 07:43 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24178594390)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `src/stats/notna_isna.ts` — `isna`, `notna`, `isnull`, `notnull`, `fillna`, `dropna`, `countna`, `countValid`. All overloaded for scalar/array/Series/DataFrame. DataFrame `dropna` supports `how="any"|"all"` and `axis=0|1`. 50+ unit tests + 3 property-based tests. Playground page `notna_isna.html`.
+- **Metric**: 35 (previous best: 34, delta: +1)
+- **Commit**: `731c81a`
+- **Notes**: Standalone module mirrors pandas' `pd.isna()`/`pd.notna()` top-level API. TypeScript overloads dispatch cleanly on instanceof checks. `_dropnaRows` uses `series.iat(i)` for positional access and rebuilds index from kept positions.
 
 ### Iteration 141 — 2026-04-09 07:01 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24177038823)
 
