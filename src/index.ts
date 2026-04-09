@@ -150,3 +150,19 @@ export {
   mergeAttrs,
 } from "./core/index.ts";
 export type { Attrs } from "./core/index.ts";
+export {
+  strNormalize,
+  strGetDummies,
+  strExtractAll,
+  strRemovePrefix,
+  strRemoveSuffix,
+  strTranslate,
+  strCharWidth,
+  strByteLength,
+} from "./stats/index.ts";
+export type {
+  NormalizeForm,
+  StrInput,
+  GetDummiesOptions,
+  ExtractAllOptions,
+} from "./stats/index.ts";

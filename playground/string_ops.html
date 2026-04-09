@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — String Operations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.6; }
+    header { background: #161b22; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header .badge { background: #388bfd22; color: #58a6ff; border: 1px solid #388bfd55; border-radius: 2rem; padding: 0.2rem 0.8rem; font-size: 0.75rem; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+    h2 { font-size: 1.1rem; color: #58a6ff; margin: 2rem 0 0.5rem; }
+    p { color: #8b949e; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .section h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+    label { display: block; font-size: 0.8rem; color: #8b949e; margin-bottom: 0.25rem; }
+    input, select, textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.5rem 0.75rem; color: #e6edf3; font-size: 0.9rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    textarea { resize: vertical; min-height: 80px; }
+    button { background: #238636; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.9rem; padding: 0.5rem 1.25rem; margin-top: 0.75rem; }
+    button:hover { background: #2ea043; }
+    pre { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; margin-top: 0.5rem; color: #7ee787; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .error { color: #f85149; }
+    .info { font-size: 0.82rem; color: #8b949e; margin-top: 0.4rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+    th, td { border: 1px solid #30363d; padding: 0.35rem 0.75rem; text-align: left; }
+    th { background: #21262d; color: #8b949e; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>tsb</h1>
+  <span class="badge">string_ops</span>
+  <span style="color:#8b949e; font-size:0.9rem;">Standalone string operations for Series and arrays</span>
+</header>
+<main>
+  <p>
+    <strong>string_ops</strong> provides module-level string functions that complement the
+    <code>Series.str</code> accessor. All functions accept a <code>Series</code>, a
+    <code>string[]</code>, or a scalar <code>string</code>.
+  </p>
+
+  <!-- strNormalize -->
+  <div class="section">
+    <h3>strNormalize — Unicode normalisation</h3>
+    <p>Normalise every element to NFC, NFD, NFKC, or NFKD. Useful when mixing text
+       from different sources (e.g. macOS NFD vs Windows NFC).</p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="norm-input">e&#x0301;
+cafe&#x0301;
+ﬁle</textarea>
+      </div>
+      <div>
+        <label>Normalization form</label>
+        <select id="norm-form">
+          <option value="NFC">NFC (compose)</option>
+          <option value="NFD">NFD (decompose)</option>
+          <option value="NFKC">NFKC (compat compose)</option>
+          <option value="NFKD">NFKD (compat decompose)</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="runNormalize()">Run</button>
+    <pre id="norm-out"></pre>
+  </div>
+
+  <!-- strGetDummies -->
+  <div class="section">
+    <h3>strGetDummies — one-hot encode by delimiter</h3>
+    <p>Split each string by a delimiter and produce a binary indicator DataFrame —
+       one column per unique token. Equivalent to <code>pandas.Series.str.get_dummies()</code>.</p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="dum-input">a|b
+b|c
+a
+a|b|c</textarea>
+      </div>
+      <div>
+        <label>Separator</label>
+        <input id="dum-sep" value="|" />
+        <label style="margin-top:0.75rem">Column prefix (optional)</label>
+        <input id="dum-prefix" value="" placeholder="e.g. tag" />
+      </div>
+    </div>
+    <button onclick="runGetDummies()">Run</button>
+    <pre id="dum-out"></pre>
+  </div>
+
+  <!-- strExtractAll -->
+  <div class="section">
+    <h3>strExtractAll — extract all regex matches</h3>
+    <p>Find every non-overlapping regex match in each element. Returns a JSON-encoded
+       array of match arrays per element — parse with <code>JSON.parse</code>.</p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="ext-input">abc 123 def 456
+foo bar
+hello 99 world 42</textarea>
+      </div>
+      <div>
+        <label>Pattern (regex, no slashes)</label>
+        <input id="ext-pat" value="\d+" />
+        <label style="margin-top:0.75rem">Flags</label>
+        <input id="ext-flags" value="" placeholder="e.g. i" />
+      </div>
+    </div>
+    <button onclick="runExtractAll()">Run</button>
+    <pre id="ext-out"></pre>
+  </div>
+
+  <!-- strRemovePrefix / strRemoveSuffix -->
+  <div class="section">
+    <h3>strRemovePrefix / strRemoveSuffix</h3>
+    <p>Strip a leading or trailing string from elements only when it is present.</p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="affix-input">pre_alpha
+pre_beta
+gamma</textarea>
+      </div>
+      <div>
+        <label>Prefix to remove</label>
+        <input id="affix-prefix" value="pre_" />
+        <label style="margin-top:0.75rem">Suffix to remove</label>
+        <input id="affix-suffix" value="" placeholder="_end" />
+      </div>
+    </div>
+    <button onclick="runAffix()">Run</button>
+    <pre id="affix-out"></pre>
+  </div>
+
+  <!-- strTranslate -->
+  <div class="section">
+    <h3>strTranslate — character-level substitution</h3>
+    <p>Replace or delete individual characters using a lookup table.
+       Format: one mapping per line as <code>from=to</code> or <code>from=</code>
+       to delete.</p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="tr-input">hello world
+aeiou</textarea>
+      </div>
+      <div>
+        <label>Translation table (from=to, one per line)</label>
+        <textarea id="tr-table">a=A
+e=E
+o=0</textarea>
+      </div>
+    </div>
+    <button onclick="runTranslate()">Run</button>
+    <pre id="tr-out"></pre>
+  </div>
+
+  <!-- strCharWidth / strByteLength -->
+  <div class="section">
+    <h3>strCharWidth &amp; strByteLength — display &amp; byte widths</h3>
+    <p>
+      <strong>strCharWidth</strong> counts columns for terminal display (CJK chars count as 2).<br>
+      <strong>strByteLength</strong> counts UTF-8 bytes (useful for byte-limited APIs).
+    </p>
+    <label>Input strings (one per line)</label>
+    <textarea id="width-input">hello
+こんにちは
+café
+😀🎉</textarea>
+    <button onclick="runWidths()">Run</button>
+    <pre id="width-out"></pre>
+  </div>
+</main>
+
+<script type="module">
+import {
+  strNormalize, strGetDummies, strExtractAll,
+  strRemovePrefix, strRemoveSuffix,
+  strTranslate, strCharWidth, strByteLength,
+} from "/src/stats/string_ops.ts";
+import { Series } from "/src/index.ts";
+
+function makeSeriesFromTextarea(id) {
+  const lines = document.getElementById(id).value.split("\n").filter(l => l.length > 0);
+  return new Series({ data: lines });
+}
+
+window.runNormalize = function() {
+  try {
+    const ser = makeSeriesFromTextarea("norm-input");
+    const form = document.getElementById("norm-form").value;
+    const out = strNormalize(ser, form);
+    const rows = [...out.toArray()].map((v, i) => `${i}: ${JSON.stringify(v)}`).join("\n");
+    document.getElementById("norm-out").textContent = rows;
+  } catch (e) { document.getElementById("norm-out").textContent = "Error: " + e.message; }
+};
+
+window.runGetDummies = function() {
+  try {
+    const ser = makeSeriesFromTextarea("dum-input");
+    const sep = document.getElementById("dum-sep").value || "|";
+    const prefix = document.getElementById("dum-prefix").value;
+    const opts = prefix ? { sep, prefix, prefixSep: "_" } : { sep };
+    const df = strGetDummies(ser, opts);
+    const cols = df.columns.values;
+    // Build ASCII table
+    let lines = cols.join("\t");
+    for (let r = 0; r < df.shape[0]; r++) {
+      lines += "\n" + cols.map(c => df.col(c).values[r]).join("\t");
+    }
+    document.getElementById("dum-out").textContent =
+      `Shape: ${df.shape[0]}×${df.shape[1]}\n\n` + lines;
+  } catch (e) { document.getElementById("dum-out").textContent = "Error: " + e.message; }
+};
+
+window.runExtractAll = function() {
+  try {
+    const ser = makeSeriesFromTextarea("ext-input");
+    const pat = document.getElementById("ext-pat").value;
+    const flags = document.getElementById("ext-flags").value;
+    const out = strExtractAll(ser, pat, { flags });
+    const rows = [...out.toArray()].map((v, i) => {
+      const m = JSON.parse(v);
+      return `${i}: ${m.length} match(es) — ${JSON.stringify(m)}`;
+    }).join("\n");
+    document.getElementById("ext-out").textContent = rows;
+  } catch (e) { document.getElementById("ext-out").textContent = "Error: " + e.message; }
+};
+
+window.runAffix = function() {
+  try {
+    const ser = makeSeriesFromTextarea("affix-input");
+    const prefix = document.getElementById("affix-prefix").value;
+    const suffix = document.getElementById("affix-suffix").value;
+    let out = ser;
+    if (prefix) out = strRemovePrefix(out, prefix);
+    if (suffix) out = strRemoveSuffix(out, suffix);
+    const rows = [...out.toArray()].map((v, i) => `${i}: ${v}`).join("\n");
+    document.getElementById("affix-out").textContent = rows;
+  } catch (e) { document.getElementById("affix-out").textContent = "Error: " + e.message; }
+};
+
+window.runTranslate = function() {
+  try {
+    const ser = makeSeriesFromTextarea("tr-input");
+    const tableLines = document.getElementById("tr-table").value.split("\n").filter(l => l.trim());
+    const table = new Map();
+    for (const line of tableLines) {
+      const eq = line.indexOf("=");
+      if (eq === -1) continue;
+      const from = line.slice(0, eq);
+      const to = line.slice(eq + 1);
+      table.set(from, to === "" ? null : to);
+    }
+    const out = strTranslate(ser, table);
+    const rows = [...out.toArray()].map((v, i) => `${i}: ${v}`).join("\n");
+    document.getElementById("tr-out").textContent = rows;
+  } catch (e) { document.getElementById("tr-out").textContent = "Error: " + e.message; }
+};
+
+window.runWidths = function() {
+  try {
+    const ser = makeSeriesFromTextarea("width-input");
+    const charW = strCharWidth(ser);
+    const byteL = strByteLength(ser);
+    const strs = [...ser.toArray()];
+    let lines = "str\t\t\tchars\tdisplay-cols\tbytes";
+    for (let i = 0; i < strs.length; i++) {
+      const str = strs[i];
+      lines += `\n${JSON.stringify(str)}\t\t${str.length}\t${charW.values[i]}\t\t${byteL.values[i]}`;
+    }
+    document.getElementById("width-out").textContent = lines;
+  } catch (e) { document.getElementById("width-out").textContent = "Error: " + e.message; }
+};
+</script>
+</body>
+</html>

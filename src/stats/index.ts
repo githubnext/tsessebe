@@ -61,3 +61,19 @@ export {
   countValid,
 } from "./notna_isna.ts";
 export type { IsnaInput, FillnaOptions, DropnaOptions } from "./notna_isna.ts";
+export {
+  strNormalize,
+  strGetDummies,
+  strExtractAll,
+  strRemovePrefix,
+  strRemoveSuffix,
+  strTranslate,
+  strCharWidth,
+  strByteLength,
+} from "./string_ops.ts";
+export type {
+  NormalizeForm,
+  StrInput,
+  GetDummiesOptions,
+  ExtractAllOptions,
+} from "./string_ops.ts";
