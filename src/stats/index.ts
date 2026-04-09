@@ -50,3 +50,14 @@ export type {
   SeriesWhereOptions,
   DataFrameWhereOptions,
 } from "./where_mask.ts";
+export {
+  isna,
+  notna,
+  isnull,
+  notnull,
+  fillna,
+  dropna,
+  countna,
+  countValid,
+} from "./notna_isna.ts";
+export type { IsnaInput, FillnaOptions, DropnaOptions } from "./notna_isna.ts";

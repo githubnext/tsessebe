@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb · isna / notna — Missing Value Detection</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; line-height: 1.6; }
+    h1 { font-size: 1.8rem; margin-bottom: .25rem; }
+    .subtitle { color: #666; margin-bottom: 2rem; }
+    h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: .3rem; }
+    .demo { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.2rem; margin: 1rem 0; }
+    .demo label { font-size: .85rem; font-weight: 600; color: #475569; display: block; margin-bottom: .4rem; }
+    textarea, input[type=text] { width: 100%; padding: .5rem .7rem; font-family: monospace; font-size: .9rem; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; }
+    textarea { resize: vertical; min-height: 80px; }
+    button { margin-top: .6rem; padding: .45rem 1rem; background: #3b82f6; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: .9rem; }
+    button:hover { background: #2563eb; }
+    .output { font-family: monospace; font-size: .88rem; background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 6px; margin-top: .7rem; min-height: 40px; white-space: pre-wrap; }
+    .tag { display: inline-block; background: #dbeafe; color: #1e40af; padding: .15rem .5rem; border-radius: 999px; font-size: .75rem; font-weight: 600; margin-right: .3rem; }
+    nav { margin-bottom: 1.5rem; font-size: .9rem; } nav a { color: #3b82f6; text-decoration: none; } nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin-top: .5rem; }
+    th, td { border: 1px solid #e2e8f0; padding: .4rem .7rem; font-size: .88rem; }
+    th { background: #f1f5f9; font-weight: 600; text-align: left; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .api-row td:first-child { font-family: monospace; font-size: .82rem; }
+    code { background: #f1f5f9; padding: .1rem .3rem; border-radius: 3px; font-size: .88rem; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← Back to tsb playground</a></nav>
+
+<h1>isna / notna</h1>
+<p class="subtitle">Module-level missing-value detection — mirrors <code>pd.isna()</code>, <code>pd.notna()</code>, <code>pd.isnull()</code>, <code>pd.notnull()</code> from pandas.</p>
+
+<h2>What is "missing"?</h2>
+<p>In tsb, the following values are considered missing:</p>
+<ul>
+  <li><code>null</code></li>
+  <li><code>undefined</code></li>
+  <li><code>NaN</code> (IEEE 754 not-a-number)</li>
+</ul>
+<p>Everything else — <code>0</code>, <code>false</code>, <code>""</code>, <code>new Date(...)</code> — is <em>not</em> missing.</p>
+
+<h2>API Overview</h2>
+<table>
+  <tr><th>Function</th><th>Input</th><th>Output</th><th>Pandas equivalent</th></tr>
+  <tr class="api-row"><td>isna(v)</td><td>Scalar</td><td>boolean</td><td>pd.isna(v)</td></tr>
+  <tr class="api-row"><td>isna(arr)</td><td>Scalar[]</td><td>boolean[]</td><td>pd.isna(arr)</td></tr>
+  <tr class="api-row"><td>isna(series)</td><td>Series</td><td>Series&lt;boolean&gt;</td><td>pd.isna(series)</td></tr>
+  <tr class="api-row"><td>isna(df)</td><td>DataFrame</td><td>DataFrame</td><td>pd.isna(df)</td></tr>
+  <tr class="api-row"><td>notna(v)</td><td>any of above</td><td>same shape, inverted</td><td>pd.notna(v)</td></tr>
+  <tr class="api-row"><td>isnull / notnull</td><td>any of above</td><td>same as isna/notna</td><td>aliases</td></tr>
+  <tr class="api-row"><td>fillna(obj, {value})</td><td>Scalar/array/Series/DataFrame</td><td>same type, no missing</td><td>pd.Series.fillna()</td></tr>
+  <tr class="api-row"><td>dropna(obj, opts?)</td><td>array/Series/DataFrame</td><td>missing entries removed</td><td>pd.Series.dropna()</td></tr>
+  <tr class="api-row"><td>countna(obj)</td><td>array or Series</td><td>number</td><td>series.isna().sum()</td></tr>
+  <tr class="api-row"><td>countValid(obj)</td><td>array or Series</td><td>number</td><td>series.count()</td></tr>
+</table>
+
+<h2>🔬 Try it: isna on scalars</h2>
+<div class="demo">
+  <label>Test values (comma-separated, use "null", "NaN", "undefined")</label>
+  <input type="text" id="scalar-input" value="1, null, NaN, 0, false, undefined, &quot;hello&quot;" />
+  <button onclick="runScalar()">Run isna</button>
+  <div class="output" id="scalar-output">Click "Run isna" to see results.</div>
+</div>
+
+<h2>🔬 Try it: isna on arrays</h2>
+<div class="demo">
+  <label>Array values (JSON array, use null for missing, "NaN" string for NaN)</label>
+  <textarea id="array-input">[1, null, null, 42, "NaN", "hello", 0, false]</textarea>
+  <button onclick="runArray()">Run isna</button>
+  <div class="output" id="array-output">Click "Run isna" to see results.</div>
+</div>
+
+<h2>🔬 Try it: fillna on arrays</h2>
+<div class="demo">
+  <label>Array (JSON, use null for missing)</label>
+  <textarea id="fillna-input">[1, null, null, 4, 5]</textarea>
+  <label>Fill value</label>
+  <input type="text" id="fillna-value" value="0" style="width:80px; display:inline-block; margin-left:.5rem" />
+  <button onclick="runFillna()">Run fillna</button>
+  <div class="output" id="fillna-output">Click "Run fillna" to see results.</div>
+</div>
+
+<h2>🔬 Try it: dropna on arrays</h2>
+<div class="demo">
+  <label>Array (JSON, use null for missing)</label>
+  <textarea id="dropna-input">[10, null, 20, null, 30]</textarea>
+  <button onclick="runDropna()">Run dropna</button>
+  <div class="output" id="dropna-output">Click "Run dropna" to see results.</div>
+</div>
+
+<h2>📝 Code examples</h2>
+<div class="demo">
+<pre style="margin:0;font-size:.87rem;overflow-x:auto">
+import { isna, notna, isnull, notnull, fillna, dropna, countna, countValid } from "tsb";
+import { Series, DataFrame } from "tsb";
+
+// ── scalar ──────────────────────────────────────────────────
+isna(null);          // true
+isna(undefined);     // true
+isna(NaN);           // true
+isna(0);             // false  — zero is not missing
+isna(false);         // false  — false is not missing
+isna("");            // false  — empty string is not missing
+
+// ── array ───────────────────────────────────────────────────
+isna([1, null, NaN, 3]);     // [false, true, true, false]
+notna([1, null, NaN, 3]);    // [true, false, false, true]
+
+// ── Series ──────────────────────────────────────────────────
+const s = new Series({ data: [1, null, NaN, 4] });
+isna(s).values;   // [false, true, true, false]
+notna(s).values;  // [true, false, false, true]
+
+// ── DataFrame ───────────────────────────────────────────────
+const df = new DataFrame(new Map([
+  ["a", new Series({ data: [1, null, 3] })],
+  ["b", new Series({ data: [NaN, 5, 6] })],
+]));
+isna(df).col("a").values;  // [false, true, false]
+isna(df).col("b").values;  // [true, false, false]
+
+// ── aliases ─────────────────────────────────────────────────
+isnull(null);   // true  (same as isna)
+notnull(42);    // true  (same as notna)
+
+// ── fillna ──────────────────────────────────────────────────
+fillna([1, null, NaN, 4], { value: 0 });   // [1, 0, 0, 4]
+fillna(s, { value: -1 }).values;           // [1, -1, -1, 4]
+fillna(df, { value: 0 }).col("b").values;  // [0, 5, 6]
+
+// ── dropna ──────────────────────────────────────────────────
+dropna([1, null, NaN, 3]);   // [1, 3]
+dropna(s).values;            // [1, 4]
+dropna(df).shape;            // [2, 2]  (row 0 dropped because b[0]=NaN, row 1 dropped because a[1]=null)
+dropna(df, { how: "all" }).shape;         // drops only rows where ALL values are missing
+dropna(df, { axis: 1 }).columns.values;  // drops columns that contain any missing value
+
+// ── countna / countValid ─────────────────────────────────────
+countna([1, null, NaN, 3]);    // 2
+countValid([1, null, NaN, 3]); // 2
+</pre>
+</div>
+
+<script type="module">
+  // Minimal inline implementations for the playground (no bundler)
+
+  function scalarIsna(v) {
+    return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+  }
+
+  function isna(obj) {
+    if (Array.isArray(obj)) return obj.map(scalarIsna);
+    return scalarIsna(obj);
+  }
+
+  function notna(obj) {
+    if (Array.isArray(obj)) return obj.map(v => !scalarIsna(v));
+    return !scalarIsna(obj);
+  }
+
+  function fillna(arr, { value }) {
+    return arr.map(v => scalarIsna(v) ? value : v);
+  }
+
+  function dropna(arr) {
+    return arr.filter(v => !scalarIsna(v));
+  }
+
+  function parseVal(s) {
+    s = s.trim();
+    if (s === "null") return null;
+    if (s === "undefined") return undefined;
+    if (s === "NaN" || s === '"NaN"') return NaN;
+    if (s === "true") return true;
+    if (s === "false") return false;
+    if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) return s.slice(1,-1);
+    const n = Number(s);
+    return isNaN(n) ? s : n;
+  }
+
+  window.runScalar = function() {
+    try {
+      const raw = document.getElementById("scalar-input").value;
+      const vals = raw.split(",").map(parseVal);
+      const lines = vals.map(v => {
+        const display = v === null ? "null" : v === undefined ? "undefined" : typeof v === "number" && isNaN(v) ? "NaN" : JSON.stringify(v);
+        const r = isna(v);
+        return `isna(${display.padEnd(12)}) → ${r}`;
+      });
+      document.getElementById("scalar-output").textContent = lines.join("\n");
+    } catch(e) { document.getElementById("scalar-output").textContent = "Error: " + e.message; }
+  };
+
+  window.runArray = function() {
+    try {
+      let raw = document.getElementById("array-input").value;
+      // Replace "NaN" strings with actual NaN placeholder
+      const arr = JSON.parse(raw.replace(/"NaN"/g, "null")).map((v, i) => {
+        // Check if original had "NaN"
+        return v;
+      });
+      // Re-parse to handle "NaN" strings
+      const arr2 = JSON.parse(raw).map(v => v === "NaN" ? NaN : v);
+      const naFlags = isna(arr2);
+      const notnaFlags = notna(arr2);
+      const lines = arr2.map((v, i) => {
+        const disp = v === null ? "null" : typeof v === "number" && isNaN(v) ? "NaN" : JSON.stringify(v);
+        return `[${i}] value=${String(disp).padEnd(10)} isna=${String(naFlags[i]).padEnd(6)} notna=${notnaFlags[i]}`;
+      });
+      document.getElementById("array-output").textContent = lines.join("\n") || "(empty)";
+    } catch(e) { document.getElementById("array-output").textContent = "Error: " + e.message; }
+  };
+
+  window.runFillna = function() {
+    try {
+      const raw = document.getElementById("fillna-input").value;
+      const arr = JSON.parse(raw);
+      const valRaw = document.getElementById("fillna-value").value.trim();
+      const value = parseVal(valRaw);
+      const result = fillna(arr, { value });
+      const before = `Before: ${JSON.stringify(arr)}`;
+      const after  = `After:  ${JSON.stringify(result)}`;
+      document.getElementById("fillna-output").textContent = before + "\n" + after;
+    } catch(e) { document.getElementById("fillna-output").textContent = "Error: " + e.message; }
+  };
+
+  window.runDropna = function() {
+    try {
+      const raw = document.getElementById("dropna-input").value;
+      const arr = JSON.parse(raw);
+      const result = dropna(arr);
+      const before = `Before: ${JSON.stringify(arr)}  (${arr.length} elements, ${arr.filter(scalarIsna).length} missing)`;
+      const after  = `After:  ${JSON.stringify(result)}  (${result.length} elements)`;
+      document.getElementById("dropna-output").textContent = before + "\n" + after;
+    } catch(e) { document.getElementById("dropna-output").textContent = "Error: " + e.message; }
+  };
+</script>
+</body>
+</html>

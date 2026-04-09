@@ -125,3 +125,5 @@ export type {
   SeriesWhereOptions,
   DataFrameWhereOptions,
 } from "./stats/index.ts";
+export { isna, notna, isnull, notnull, fillna, dropna, countna, countValid } from "./stats/index.ts";
+export type { IsnaInput, FillnaOptions, DropnaOptions } from "./stats/index.ts";
