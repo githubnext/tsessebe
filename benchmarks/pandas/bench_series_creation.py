@@ -15,7 +15,7 @@ WARMUP = 5
 ITERATIONS = 50
 
 
-def generate_data(n: int) -> list[float]:
+def generate_data(n: int) -> "list[float]":
     """Generate a deterministic numeric array of the given size."""
     return [i * 1.1 + 0.5 for i in range(n)]
 
@@ -27,7 +27,7 @@ for _ in range(WARMUP):
     pd.Series(list(data))
 
 # Measured runs
-times: list[float] = []
+times: "list[float]" = []
 for _ in range(ITERATIONS):
     start = time.perf_counter()
     pd.Series(list(data))

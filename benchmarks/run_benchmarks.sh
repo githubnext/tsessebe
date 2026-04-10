@@ -65,11 +65,27 @@ for ts_bench in "$SCRIPT_DIR"/tsb/bench_*.ts; do
   echo "  pandas result: $py_result"
 
   # Extract mean_ms from both
-  ts_mean=$(echo "$ts_result" | python3 -c "import sys, json; print(json.load(sys.stdin)['mean_ms'])")
-  py_mean=$(echo "$py_result" | python3 -c "import sys, json; print(json.load(sys.stdin)['mean_ms'])")
+  ts_mean=$(echo "$ts_result" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['mean_ms'])" 2>/dev/null) || {
+    echo "  ERROR: could not parse tsb benchmark result"
+    continue
+  }
+  py_mean=$(echo "$py_result" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d['mean_ms'])" 2>/dev/null) || {
+    echo "  ERROR: could not parse pandas benchmark result"
+    continue
+  }
 
   # Calculate ratio (tsb / pandas) — < 1.0 means tsb is faster
-  ratio=$(python3 -c "print(round($ts_mean / $py_mean if $py_mean > 0 else 0, 3))")
+  ratio=$(python3 -c "
+ts, py = $ts_mean, $py_mean
+if py <= 0:
+    print('null')
+else:
+    print(round(ts / py, 3))
+")
+  if [ "$ratio" = "null" ]; then
+    echo "  ERROR: pandas mean_ms is zero, cannot compute ratio"
+    continue
+  fi
 
   echo "  Ratio (tsb/pandas): ${ratio}x"
   echo ""
