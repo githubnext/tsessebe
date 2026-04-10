@@ -231,6 +231,27 @@ const all = [
 ];
 console.log("All dtypes:", all.map(d => d.name).join(", "));
 console.log("Total count:", all.length);</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+# Factory method — returns dtype object
+dt = np.dtype("int64")
+print("dtype('int64'):", dt)
+
+# Dtype comparison — same object identity
+print("np.dtype('int64') == dtype('int64'):", np.dtype("int64") == dt)
+
+# Common NumPy/pandas dtypes
+all_dtypes = [
+    np.dtype("int8"), np.dtype("int16"), np.dtype("int32"), np.dtype("int64"),
+    np.dtype("uint8"), np.dtype("uint16"), np.dtype("uint32"), np.dtype("uint64"),
+    np.dtype("float32"), np.dtype("float64"),
+    np.dtype("bool"), np.dtype("U"),    # string
+    np.dtype("O"),                       # object
+    np.dtype("datetime64[ns]"), np.dtype("timedelta64[ns]"),
+    # category is pd.CategoricalDtype(), not a numpy dtype
+]
+print("All dtypes:", ", ".join(d.name for d in all_dtypes))
+print("Total count:", len(all_dtypes))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -264,6 +285,28 @@ const checks = [Dtype.bool, Dtype.string, Dtype.datetime, Dtype.timedelta, Dtype
 for (const d of checks) {
   console.log(`${d.name}: isBool=${d.isBool}, isString=${d.isString}, isDatetime=${d.isDatetime}, isTimedelta=${d.isTimedelta}, isCategory=${d.isCategory}, isObject=${d.isObject}`);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+dt = np.dtype("int32")
+print("dtype:", dt.name, "  kind:", dt.kind)
+print("isNumeric:", np.issubdtype(dt, np.number))
+print("isInteger:", np.issubdtype(dt, np.integer))
+print("isSignedInteger:", np.issubdtype(dt, np.signedinteger))
+print("isUnsignedInteger:", np.issubdtype(dt, np.unsignedinteger))
+print("isFloat:", np.issubdtype(dt, np.floating))
+
+print("\n--- Non-numeric types ---")
+checks = {
+    "bool": np.dtype("bool"),
+    "string": np.dtype("U"),
+    "datetime64[ns]": np.dtype("datetime64[ns]"),
+    "timedelta64[ns]": np.dtype("timedelta64[ns]"),
+    "object": np.dtype("O"),
+}
+for name, d in checks.items():
+    print(f"{name}: is_bool={d.kind == 'b'}, is_string={d.kind == 'U'}, "
+          f"is_datetime={d.kind == 'M'}, is_timedelta={d.kind == 'm'}, "
+          f"is_object={d.kind == 'O'}")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -298,6 +341,20 @@ for (const d of dtypes) {
   const pad = d.name.padEnd(13);
   console.log(`${pad}${d.itemsize}`);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+dtypes = [
+    np.dtype("int8"), np.dtype("int16"), np.dtype("int32"), np.dtype("int64"),
+    np.dtype("uint8"), np.dtype("uint16"), np.dtype("uint32"), np.dtype("uint64"),
+    np.dtype("float32"), np.dtype("float64"),
+    np.dtype("bool"), np.dtype("U1"), np.dtype("O"),
+    np.dtype("datetime64[ns]"), np.dtype("timedelta64[ns]"),
+]
+
+print("Dtype        Itemsize (bytes)")
+print("─────────────────────────────")
+for d in dtypes:
+    print(f"{d.name:<13}{d.itemsize}")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -337,6 +394,29 @@ console.log("string → object:", Dtype.string.canCastTo(Dtype.object));
 
 // Cross-family: int → float
 console.log("int32 → float64:", Dtype.int32.canCastTo(Dtype.float64));</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+# numpy.can_cast checks safe type promotion
+
+# Widening: smaller int → larger int is safe
+print("int8 → int32:", np.can_cast("int8", "int32"))
+print("int32 → int64:", np.can_cast("int32", "int64"))
+
+# Narrowing: larger → smaller is NOT safe
+print("int64 → int8:", np.can_cast("int64", "int8"))
+
+# Unsigned → signed needs extra headroom
+print("uint8 → int16:", np.can_cast("uint8", "int16"))
+print("uint8 → int8:", np.can_cast("uint8", "int8"))
+
+# Bool → numeric is safe
+print("bool → float64:", np.can_cast("bool", "float64"))
+
+# String → object
+print("string → object:", np.can_cast("U10", "O"))
+
+# Cross-family: int → float
+print("int32 → float64:", np.can_cast("int32", "float64"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -374,6 +454,26 @@ console.log("bool + int64:", Dtype.commonType(Dtype.bool, Dtype.int64).name);
 // Incompatible → object
 console.log("string + int32:", Dtype.commonType(Dtype.string, Dtype.int32).name);
 console.log("datetime + float64:", Dtype.commonType(Dtype.datetime, Dtype.float64).name);</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+# np.result_type finds the common type for two dtypes
+
+# Same type → same type
+print("int32 + int32:", np.result_type("int32", "int32"))
+
+# Promotion within family
+print("int8 + int64:", np.result_type("int8", "int64"))
+print("float32 + float64:", np.result_type("float32", "float64"))
+
+# Mixed int + float → float64
+print("int32 + float32:", np.result_type("int32", "float32"))
+
+# Bool + numeric → numeric
+print("bool + int64:", np.result_type("bool", "int64"))
+
+# Incompatible → object (pandas falls back to object)
+print("string + int32: object  # pandas falls back to object")
+print("datetime + float64: object  # pandas falls back to object")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -418,6 +518,36 @@ console.log("empty:", Dtype.inferFrom([]).name);
 
 // Nulls are ignored during inference
 console.log("with nulls:", Dtype.inferFrom([null, 42, null]).name);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+from pandas.api.types import infer_dtype
+from datetime import datetime
+
+# pandas infer_dtype detects the type from values
+
+# All booleans → boolean
+print("booleans:", infer_dtype([True, False, True], skipna=True))
+
+# All integers → integer
+print("integers:", infer_dtype([1, 2, 3, 100], skipna=True))
+
+# Floats or NaN → floating
+print("floats:", infer_dtype([1.5, 2.7, 3.14], skipna=True))
+print("with NaN:", infer_dtype([1, float("nan"), 3], skipna=True))
+
+# Dates → datetime
+print("dates:", infer_dtype([datetime.now(), datetime(2024, 1, 1)], skipna=True))
+
+# Strings → string
+print("strings:", infer_dtype(["hello", "world"], skipna=True))
+
+# Mixed types → mixed
+print("mixed:", infer_dtype([1, "hello", True], skipna=True))
+
+# Empty → empty
+print("empty:", infer_dtype([], skipna=True))
+
+# Nulls are ignored during inference
+print("with nulls:", infer_dtype([None, 42, None], skipna=True))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -452,6 +582,24 @@ for (const from of numericTypes) {
   const row = numericTypes.map(to => (from.canCastTo(to) ? "✓" : "✗").padEnd(8)).join("");
   console.log(`${from.name.padEnd(10)}${row}`);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+# Explore dtype relationships
+numeric_types = [
+    np.dtype("int8"), np.dtype("int16"), np.dtype("int32"),
+    np.dtype("int64"), np.dtype("float32"), np.dtype("float64"),
+]
+
+# Build a casting compatibility matrix
+print("Casting matrix (row → col):")
+header = "          " + "".join(d.name.ljust(8) for d in numeric_types)
+print(header)
+for src in numeric_types:
+    row = "".join(
+        ("✓" if np.can_cast(src, dst) else "✗").ljust(8)
+        for dst in numeric_types
+    )
+    print(f"{src.name:<10}{row}")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

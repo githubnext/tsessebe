@@ -208,6 +208,17 @@ const df = DataFrame.fromColumns({
 const wide = pivot(df, { index: "date", columns: "city", values: "temp" });
 console.log("records:", wide.toRecords());
 console.log("index:", [...wide.index.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "date": ["2020-01", "2020-01", "2020-02", "2020-02"],
+    "city": ["NYC", "LA", "NYC", "LA"],
+    "temp": [50, 60, 55, 65],
+})
+
+wide = df.pivot(index="date", columns="city", values="temp")
+print("records:", wide.reset_index().to_dict("records"))
+print("index:", list(wide.index))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -238,6 +249,18 @@ const df = DataFrame.fromColumns({
 const wide = pivot(df, { index: "row", columns: "col" });
 console.log("columns:", wide.columns.values);
 console.log("records:", wide.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "row": ["A", "A", "B", "B"],
+    "col": ["x", "y", "x", "y"],
+    "val1": [1, 2, 3, 4],
+    "val2": [10, 20, 30, 40],
+})
+
+wide = df.pivot(index="row", columns="col")
+print("columns:", list(wide.columns))
+print("records:", wide.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -271,6 +294,21 @@ const table = pivotTable(df, {
   aggfunc: "mean",
 });
 console.log("records:", table.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "region": ["East", "East", "East", "West", "West", "West"],
+    "product": ["A", "A", "B", "A", "B", "B"],
+    "sales": [100, 120, 80, 150, 90, 110],
+})
+
+table = pd.pivot_table(df,
+    index="region",
+    columns="product",
+    values="sales",
+    aggfunc="mean",
+)
+print("records:", table.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -305,6 +343,22 @@ const table = pivotTable(df, {
   fill_value: 0,
 });
 console.log("records:", table.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "dept": ["eng", "eng", "mktg", "mktg"],
+    "quarter": ["Q1", "Q2", "Q1", "Q2"],
+    "budget": [500, 600, 300, 350],
+})
+
+table = pd.pivot_table(df,
+    index="dept",
+    columns="quarter",
+    values="budget",
+    aggfunc="sum",
+    fill_value=0,
+)
+print("records:", table.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -337,6 +391,21 @@ const counts = pivotTable(df, {
   aggfunc: "count",
 });
 console.log("records:", counts.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "gender": ["M", "F", "M", "F", "M", "F"],
+    "category": ["A", "A", "B", "B", "A", "B"],
+    "value": [1, 2, 3, 4, 5, 6],
+})
+
+counts = pd.pivot_table(df,
+    index="gender",
+    columns="category",
+    values="value",
+    aggfunc="count",
+)
+print("records:", counts.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

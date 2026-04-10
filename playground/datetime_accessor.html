@@ -215,6 +215,20 @@ console.log("day   :", dates.dt.day().toArray());
 console.log("hour  :", dates.dt.hour().toArray());
 console.log("minute:", dates.dt.minute().toArray());
 console.log("second:", dates.dt.second().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dates = pd.Series([
+    pd.Timestamp("2024-01-15T09:30:00"),
+    pd.Timestamp("2024-07-04T18:00:00"),
+    pd.Timestamp("2024-12-31T23:59:59"),
+], name="events")
+
+print("year  :", dates.dt.year.tolist())
+print("month :", dates.dt.month.tolist())
+print("day   :", dates.dt.day.tolist())
+print("hour  :", dates.dt.hour.tolist())
+print("minute:", dates.dt.minute.tolist())
+print("second:", dates.dt.second.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -247,6 +261,18 @@ const dates = new Series({
 console.log("dayofweek:", dates.dt.dayofweek().toArray());
 console.log("quarter  :", dates.dt.quarter().toArray());
 console.log("dayofyear:", dates.dt.dayofyear().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dates = pd.Series([
+    pd.Timestamp("2024-07-15"),  # Monday
+    pd.Timestamp("2024-07-14"),  # Sunday
+    pd.Timestamp("2024-04-01"),  # Q2 start
+    pd.Timestamp("2024-10-15"),  # Q4
+])
+
+print("dayofweek:", dates.dt.dayofweek.tolist())
+print("quarter  :", dates.dt.quarter.tolist())
+print("dayofyear:", dates.dt.dayofyear.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -282,6 +308,22 @@ console.log("is_month_end  :", dates.dt.is_month_end().toArray());
 console.log("is_year_end   :", dates.dt.is_year_end().toArray());
 console.log("is_leap_year  :", dates.dt.is_leap_year().toArray());
 console.log("days_in_month :", dates.dt.days_in_month().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dates = pd.Series([
+    pd.Timestamp("2024-01-01"),  # year start
+    pd.Timestamp("2024-03-31"),  # Q1 end, month end
+    pd.Timestamp("2024-02-29"),  # month end (leap year)
+    pd.Timestamp("2024-12-31"),  # year end
+    pd.Timestamp("2024-07-15"),  # ordinary day
+])
+
+print("is_year_start :", dates.dt.is_year_start.tolist())
+print("is_quarter_end:", dates.dt.is_quarter_end.tolist())
+print("is_month_end  :", dates.dt.is_month_end.tolist())
+print("is_year_end   :", dates.dt.is_year_end.tolist())
+print("is_leap_year  :", dates.dt.is_leap_year.tolist())
+print("days_in_month :", dates.dt.days_in_month.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -313,6 +355,18 @@ console.log("US date    :", dates.dt.strftime("%m/%d/%Y").toArray());
 console.log("Datetime   :", dates.dt.strftime("%Y-%m-%d %H:%M:%S").toArray());
 console.log("Friendly   :", dates.dt.strftime("%A, %B %d %Y").toArray());
 console.log("Short month:", dates.dt.strftime("%b %d, %Y").toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dates = pd.Series([
+    pd.Timestamp("2024-03-15T09:05:03"),
+    pd.Timestamp("2024-12-31T23:59:59"),
+])
+
+print("ISO date   :", dates.dt.strftime("%Y-%m-%d").tolist())
+print("US date    :", dates.dt.strftime("%m/%d/%Y").tolist())
+print("Datetime   :", dates.dt.strftime("%Y-%m-%d %H:%M:%S").tolist())
+print("Friendly   :", dates.dt.strftime("%A, %B %d %Y").tolist())
+print("Short month:", dates.dt.strftime("%b %d, %Y").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -347,6 +401,15 @@ console.log("normalize:", ts.dt.normalize().toArray().map(fmt));
 console.log("floor(H) :", ts.dt.floor("H").toArray().map(fmt));
 console.log("ceil(H)  :", ts.dt.ceil("H").toArray().map(fmt));
 console.log("round(T) :", ts.dt.round("T").toArray().map(fmt));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+ts = pd.Series([pd.Timestamp("2024-03-15T14:37:28.750")])
+
+print("original :", ts.dt.strftime("%H:%M:%S").tolist())
+print("normalize:", ts.dt.normalize().tolist())
+print("floor(H) :", ts.dt.floor("h").tolist())
+print("ceil(H)  :", ts.dt.ceil("h").tolist())
+print("round(T) :", ts.dt.round("min").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -373,6 +436,17 @@ const mixed = new Series({
 console.log("year  :", mixed.dt.year().toArray());
 console.log("month :", mixed.dt.month().toArray());
 console.log("fmt   :", mixed.dt.strftime("%Y-%m-%d").toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mixed = pd.Series([
+    pd.Timestamp("2024-01-15"),
+    None,
+    pd.Timestamp("2024-07-04"),
+])
+
+print("year  :", mixed.dt.year.tolist())
+print("month :", mixed.dt.month.tolist())
+print("fmt   :", mixed.dt.strftime("%Y-%m-%d").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -399,6 +473,13 @@ const dates = new Series({
 
 console.log("total_seconds:", dates.dt.total_seconds().toArray());
 console.log("date         :", dates.dt.date().toArray().map(d => d.toISOString()));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dates = pd.Series([pd.Timestamp("2024-01-01T12:30:00", tz="UTC")])
+
+epoch = pd.Timestamp("1970-01-01", tz="UTC")
+print("total_seconds:", (dates - epoch).dt.total_seconds().tolist())
+print("date         :", dates.dt.date.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -441,6 +522,29 @@ console.log("Day of week    :", dow.toArray());
 // Month names via strftime
 const monthNames = dates.dt.strftime("%B");
 console.log("Month names    :", monthNames.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dates = pd.Series([
+    pd.Timestamp("2024-01-15"),
+    pd.Timestamp("2024-06-20"),
+    pd.Timestamp("2024-11-07"),
+])
+
+# Format as ISO strings
+formatted = dates.dt.strftime("%Y-%m-%d")
+print("Formatted dates:", formatted.tolist())
+
+# Group by quarter
+quarters = dates.dt.quarter
+print("Quarters       :", quarters.tolist())
+
+# Day of week (Mon=0 … Sun=6)
+dow = dates.dt.dayofweek
+print("Day of week    :", dow.tolist())
+
+# Month names via strftime
+month_names = dates.dt.strftime("%B")
+print("Month names    :", month_names.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

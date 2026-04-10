@@ -215,6 +215,19 @@ console.log("25%   :", stats.at("25%"));
 console.log("50%   :", stats.at("50%"));
 console.log("75%   :", stats.at("75%"));
 console.log("max   :", stats.at("max"));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([4, 7, 13, 16, 21, 3, 9, 12], name="scores")
+
+stats = s.describe()
+print("count :", stats["count"])
+print("mean  :", f"{stats['mean']:.2f}")
+print("std   :", f"{stats['std']:.2f}")
+print("min   :", stats["min"])
+print("25%   :", stats["25%"])
+print("50%   :", stats["50%"])
+print("75%   :", stats["75%"])
+print("max   :", stats["max"])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -248,6 +261,20 @@ console.log(stats.index.values);
 for (const label of stats.index.values) {
   console.log(`${label.toString().padEnd(5)}: ${Number(stats.at(label)).toFixed(2)}`);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+prices = pd.Series(
+    [100, 200, 150, 300, 250, 180, 90, 400, 210, 175],
+    name="price",
+)
+
+# Get deciles: 10th through 90th percentile
+stats = prices.describe(
+    percentiles=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+)
+print(stats.index.tolist())
+for label in stats.index:
+    print(f"{str(label).ljust(5)}: {stats[label]:.2f}")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -279,6 +306,18 @@ console.log("count :", stats.at("count"));
 console.log("unique:", stats.at("unique"));
 console.log("top   :", stats.at("top"));
 console.log("freq  :", stats.at("freq"));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+dept = pd.Series(
+    ["Engineering", "Marketing", "Engineering", "HR", "Engineering", None, "Marketing"],
+    name="department",
+)
+
+stats = dept.describe()
+print("count :", stats["count"])
+print("unique:", stats["unique"])
+print("top   :", stats["top"])
+print("freq  :", stats["freq"])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -315,6 +354,22 @@ for (const label of summary.index.values) {
     .join("   ");
   console.log(`${String(label).padEnd(8)} ${row}`);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "age":    [25, 30, 35, 28, 45, 22, 31, 40],
+    "salary": [50000, 70000, 90000, 62000, 110000, 45000, 75000, 95000],
+    "score":  [82, 90, 88, 76, 95, 70, 85, 92],
+})
+
+summary = df.describe()
+
+# Print row by row
+for label in summary.index:
+    row = "   ".join(
+        f"{col}: {summary[col][label]:.1f}" for col in summary.columns
+    )
+    print(f"{str(label).ljust(8)} {row}")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -358,6 +413,30 @@ for (const lbl of summary.index.values) {
   const v = summary.col("score").at(lbl);
   if (v !== null) console.log(`${String(lbl).padEnd(8)}: ${Number(v).toFixed(2)}`);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Alice", "Carol", "Bob"],
+    "score": [88, 92, 75, 95, 83],
+})
+
+summary = df.describe(include="all")
+print("rows :", summary.index.tolist())
+print("cols :", summary.columns.tolist())
+
+# Show the name (categorical) stats
+print("\n--- name column ---")
+for lbl in summary.index:
+    v = summary["name"][lbl]
+    if pd.notna(v):
+        print(f"{str(lbl).ljust(8)}: {v}")
+
+# Show the score (numeric) stats
+print("\n--- score column ---")
+for lbl in summary.index:
+    v = summary["score"][lbl]
+    if pd.notna(v):
+        print(f"{str(lbl).ljust(8)}: {float(v):.2f}")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -391,6 +470,20 @@ console.log("Q1   (max)   :", s.quantile(1));
 console.log("\nmedian()     :", s.median());
 console.log("quantile(0.5):", s.quantile(0.5));
 console.log("Equal?       :", s.quantile(0.5) === s.median());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([3, 7, 1, 9, 5, 11, 2, 8, 4, 6])
+
+print("Q0   (min)   :", s.quantile(0))
+print("Q0.25 (Q1)   :", s.quantile(0.25))
+print("Q0.5  (med)  :", s.quantile(0.5))
+print("Q0.75 (Q3)   :", s.quantile(0.75))
+print("Q1   (max)   :", s.quantile(1))
+
+# Compare with median()
+print("\nmedian()     :", s.median())
+print("quantile(0.5):", s.quantile(0.5))
+print("Equal?       :", s.quantile(0.5) == s.median())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -433,6 +526,30 @@ for (const v of sorted) {
   if (v < lower || v > upper) console.log(`  OUTLIER: ${v}`);
 }
 console.log("No outliers found in this dataset.");</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+
+# Pre-sorted exam scores
+sorted_scores = [42, 55, 61, 67, 72, 78, 81, 85, 90, 95]
+
+# IQR = Q3 - Q1
+q1 = np.quantile(sorted_scores, 0.25)
+q3 = np.quantile(sorted_scores, 0.75)
+iqr = q3 - q1
+
+print("Q1  :", q1)
+print("Q3  :", q3)
+print("IQR :", iqr)
+
+# Detect outliers: values outside [Q1 - 1.5·IQR, Q3 + 1.5·IQR]
+lower = q1 - 1.5 * iqr
+upper = q3 + 1.5 * iqr
+print(f"Fence: [{lower:.1f}, {upper:.1f}]")
+
+# Check each value
+for v in sorted_scores:
+    if v < lower or v > upper:
+        print(f"  OUTLIER: {v}")
+print("No outliers found in this dataset.")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

@@ -226,6 +226,21 @@ const customers = DataFrame.fromColumns({
 // Default how="inner" — customers 30 and 40 have no match → excluded
 const result = merge(orders, customers, { on: "customerId" });
 console.log(result.toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+orders = pd.DataFrame({
+    "orderId": [1, 2, 3, 4],
+    "customerId": [10, 20, 10, 30],
+    "amount": [100, 200, 150, 80],
+})
+customers = pd.DataFrame({
+    "customerId": [10, 20, 40],
+    "name": ["Alice", "Bob", "Dave"],
+})
+
+# Default how="inner" — customers 30 and 40 have no match → excluded
+result = pd.merge(orders, customers, on="customerId")
+print(result.to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -260,6 +275,19 @@ console.log(merge(left, right, { on: "k", how: "right" }).toString());
 
 console.log("\n=== OUTER JOIN ===");
 console.log(merge(left, right, { on: "k", how: "outer" }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+left = pd.DataFrame({"k": [1, 2], "v": [10, 20]})
+right = pd.DataFrame({"k": [2, 3], "w": [200, 300]})
+
+print("=== LEFT JOIN ===")
+print(pd.merge(left, right, on="k", how="left").to_string())
+
+print("\n=== RIGHT JOIN ===")
+print(pd.merge(left, right, on="k", how="right").to_string())
+
+print("\n=== OUTER JOIN ===")
+print(pd.merge(left, right, on="k", how="outer").to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -298,6 +326,23 @@ const result = merge(employees, departments, {
   right_on: "id",
 });
 console.log(result.toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+employees = pd.DataFrame({
+    "empId": [1, 2, 3],
+    "salary": [50000, 60000, 70000],
+})
+departments = pd.DataFrame({
+    "id": [2, 3, 4],
+    "dept": ["Eng", "HR", "Fin"],
+})
+
+# empId in left matches id in right
+result = pd.merge(employees, departments,
+    left_on="empId",
+    right_on="id",
+)
+print(result.to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -334,6 +379,21 @@ console.log(merge(left, right, {
   on:       "id",
   suffixes: ["_pre", "_post"],
 }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+left = pd.DataFrame({"id": [1, 2], "score": [80, 90]})
+right = pd.DataFrame({"id": [1, 2], "score": [75, 95]})
+
+# Default suffixes: _x and _y
+print("=== Default suffixes ===")
+print(pd.merge(left, right, on="id").to_string())
+
+# Custom suffixes
+print("\n=== Custom suffixes (_pre, _post) ===")
+print(pd.merge(left, right,
+    on="id",
+    suffixes=("_pre", "_post"),
+).to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -375,6 +435,29 @@ console.log(merge(products, sales, {
   on: "productId",
   how: "left",
 }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Try it! Build two DataFrames and explore the merge API.
+products = pd.DataFrame({
+    "productId": [1, 2, 3],
+    "name": ["Widget", "Gadget", "Gizmo"],
+    "price": [9.99, 24.99, 14.99],
+})
+
+sales = pd.DataFrame({
+    "productId": [1, 1, 2, 3, 3],
+    "qty": [10, 5, 8, 3, 7],
+    "region": ["East", "West", "East", "East", "West"],
+})
+
+print("Products joined with sales (inner):")
+print(pd.merge(products, sales, on="productId").to_string())
+
+print("\nAll products, even with no sales (left join):")
+print(pd.merge(products, sales,
+    on="productId",
+    how="left",
+).to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>

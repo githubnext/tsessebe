@@ -77,6 +77,7 @@ tools:
   repo-memory:
     branch-name: memory/autoloop
     file-glob: ["*.md"]
+    max-file-size: 30720
 
 imports:
   - shared/reporting.md
@@ -1122,6 +1123,7 @@ After each iteration, prepend an entry to the **📊 Iteration History** section
 - **Always** update the state file after each iteration, regardless of outcome.
 - **Update the Machine State table first** — the scheduling pre-step depends on it.
 - **Prepend** iteration history entries (newest first).
+- **Keep the state file compact.** The state file must stay under 30 KB. When prepending a new iteration entry, collapse older iteration entries (beyond the most recent 10) into compressed summary lines (e.g. `### Iters 50–100 — ✅ (metrics 20→55): brief summary`). Also prune Lessons Learned to only the most recent and relevant entries.
 - **Accumulate** Lessons Learned — add new insights, don't overwrite existing ones.
 - **Add to Foreclosed Avenues** only when an approach is conclusively ruled out (not just rejected once).
 - **Respect Current Priorities** — if a maintainer has written priorities, follow them in your next proposal.

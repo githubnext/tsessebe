@@ -144,6 +144,15 @@ console.log("upper :", s.str.upper().toArray());
 console.log("title :", s.str.title().toArray());
 console.log("capitalize:", s.str.capitalize().toArray());
 console.log("swapcase  :", s.str.swapcase().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["hello", "WORLD", "foo BAR", None])
+
+print("lower :", s.str.lower().tolist())
+print("upper :", s.str.upper().tolist())
+print("title :", s.str.title().tolist())
+print("capitalize:", s.str.capitalize().tolist())
+print("swapcase  :", s.str.swapcase().tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -169,6 +178,15 @@ console.log("slice(1,4) :", s.str.slice(1, 4).toArray());
 console.log("get(0)     :", s.str.get(0).toArray());
 console.log("get(-1)    :", s.str.get(-1).toArray());
 console.log("slice step :", s.str.slice(0, undefined, 2).toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["hello", "world", "pandas"])
+
+print("len        :", s.str.len().tolist())
+print("slice(1,4) :", s.str.slice(1, 4).tolist())
+print("get(0)     :", s.str.get(0).tolist())
+print("get(-1)    :", s.str.get(-1).tolist())
+print("slice step :", s.str.slice(0, None, 2).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -196,6 +214,17 @@ console.log("rjust(10)  :", s.str.rjust(10).toArray());
 console.log("center(10) :", s.str.center(10).toArray());
 console.log("zfill(5)   :",
   new Series({ data: ["42", "-7", "3"] }).str.zfill(5).toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["  hello  ", "***world***", "42"])
+
+print("strip()    :", s.str.strip().tolist())
+print("strip('*') :", s.str.strip("*").tolist())
+print("ljust(10)  :", s.str.ljust(10).tolist())
+print("rjust(10)  :", s.str.rjust(10).tolist())
+print("center(10) :", s.str.center(10).tolist())
+print("zfill(5)   :",
+  pd.Series(["42", "-7", "3"]).str.zfill(5).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -222,6 +251,16 @@ console.log("startswith('foo') :", s.str.startswith("foo").toArray());
 console.log("endswith('3')     :", s.str.endswith("3").toArray());
 console.log("match('\\d+')      :", s.str.match("\\d+").toArray());
 console.log("fullmatch('\\w+')  :", s.str.fullmatch("\\w+").toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["foo123", "bar456", "foo_bar", None])
+
+print("contains('foo')   :", s.str.contains("foo").tolist())
+print("contains (literal):", s.str.contains("foo", regex=False).tolist())
+print("startswith('foo') :", s.str.startswith("foo").tolist())
+print("endswith('3')     :", s.str.endswith("3").tolist())
+print("match('\\d+')      :", s.str.match("\\d+").tolist())
+print("fullmatch('\\w+')  :", s.str.fullmatch("\\w+").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -247,6 +286,15 @@ console.log("find('a')       :", s.str.find("a").toArray());
 console.log("rfind('a')      :", s.str.rfind("a").toArray());
 console.log("replace('a','X'):", s.str.replace("a", "X").toArray());
 console.log("replace n=1     :", s.str.replace("a", "X", 1).toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["banana", "apple", "abracadabra"])
+
+print("count('a')      :", s.str.count("a").tolist())
+print("find('a')       :", s.str.find("a").tolist())
+print("rfind('a')      :", s.str.rfind("a").tolist())
+print("replace('a','X'):", s.str.replace("a", "X").tolist())
+print("replace n=1     :", s.str.replace("a", "X", n=1).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -269,6 +317,12 @@ const s = new Series({ data: ["price: 42", "cost: 99.5", "free"] });
 
 const prices = s.str.extract(":\\s*([\\d.]+)");
 console.log("extracted:", prices.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["price: 42", "cost: 99.5", "free"])
+
+prices = s.str.extract(r":\s*([\d.]+)")
+print("extracted:", prices[0].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -298,6 +352,19 @@ console.log("rejoin   :", joined.toArray());
 const a = new Series({ data: ["foo", "bar"] });
 const b = new Series({ data: ["1", "2"] });
 console.log("cat      :", a.str.cat([b.toArray()], "-").toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["a,b,c", "x,y,z"])
+
+print("split n=0:", s.str.split(",", n=0).tolist())
+print("split n=1:", s.str.split(",", n=1).tolist())
+
+joined = s.str.split(",").str.join(" | ")
+print("rejoin   :", joined.tolist())
+
+a = pd.Series(["foo", "bar"])
+b = pd.Series(["1", "2"])
+print("cat      :", a.str.cat([b], sep="-").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -324,6 +391,16 @@ console.log("isalnum :", s.str.isalnum().toArray());
 console.log("isupper :", s.str.isupper().toArray());
 console.log("istitle :", s.str.istitle().toArray());
 console.log("isspace :", s.str.isspace().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["abc", "123", "abc123", "ABC", "Hello World", "   "])
+
+print("isalpha :", s.str.isalpha().tolist())
+print("isdigit :", s.str.isdigit().tolist())
+print("isalnum :", s.str.isalnum().tolist())
+print("isupper :", s.str.isupper().tolist())
+print("istitle :", s.str.istitle().tolist())
+print("isspace :", s.str.isspace().tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -347,6 +424,13 @@ const s = new Series({ data: ["hello", null, "world"] });
 console.log("upper:", s.str.upper().toArray());
 console.log("len  :", s.str.len().toArray());
 console.log("contains:", s.str.contains("o").toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["hello", None, "world"])
+
+print("upper:", s.str.upper().tolist())
+print("len  :", s.str.len().tolist())
+print("contains:", s.str.contains("o").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

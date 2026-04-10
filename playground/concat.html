@@ -217,6 +217,13 @@ const s2 = new Series({ data: [30, 40], index: ["c", "d"] });
 
 const result = concat([s1, s2]);
 console.log(result.toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s1 = pd.Series([10, 20], index=["a", "b"])
+s2 = pd.Series([30, 40], index=["c", "d"])
+
+result = pd.concat([s1, s2])
+print(result.to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -242,6 +249,14 @@ const df2 = DataFrame.fromColumns({ b: [5], c: [6] });
 // join="outer" by default — fills missing columns with null
 const result = concat([df1, df2]);
 console.log(result.toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df1 = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+df2 = pd.DataFrame({"b": [5], "c": [6]})
+
+# join="outer" by default — fills missing columns with NaN
+result = pd.concat([df1, df2])
+print(result.to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -276,6 +291,21 @@ const right = DataFrame.fromColumns({ c: [5, 6], d: [7, 8] });
 
 console.log("\n=== DataFrame axis=1 ===");
 console.log(concat([left, right], { axis: 1 }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Series → DataFrame (each Series becomes a column)
+age = pd.Series([25, 30, 35], name="age")
+score = pd.Series([88, 92, 79], name="score")
+
+print("=== Series axis=1 ===")
+print(pd.concat([age, score], axis=1).to_string())
+
+# DataFrame side-by-side
+left = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+right = pd.DataFrame({"c": [5, 6], "d": [7, 8]})
+
+print("\n=== DataFrame axis=1 ===")
+print(pd.concat([left, right], axis=1).to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -317,6 +347,27 @@ console.log(concat([s1, s2], { axis: 1 }).toString());
 
 console.log("\n=== axis=1, join='inner' (only shared row 'b') ===");
 console.log(concat([s1, s2], { axis: 1, join: "inner" }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# axis=0: outer vs inner columns
+df1 = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+df2 = pd.DataFrame({"b": [5], "c": [6]})
+
+print("=== axis=0, join='outer' (default) ===")
+print(pd.concat([df1, df2]).to_string())
+
+print("\n=== axis=0, join='inner' (only shared col 'b') ===")
+print(pd.concat([df1, df2], join="inner").to_string())
+
+# axis=1: outer vs inner row indexes
+s1 = pd.Series([1, 2], index=["a", "b"], name="s1")
+s2 = pd.Series([3, 4], index=["b", "c"], name="s2")
+
+print("\n=== axis=1, join='outer' (union of row indexes) ===")
+print(pd.concat([s1, s2], axis=1).to_string())
+
+print("\n=== axis=1, join='inner' (only shared row 'b') ===")
+print(pd.concat([s1, s2], axis=1, join="inner").to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -349,6 +400,21 @@ const df2 = DataFrame.fromColumns({ v: [30, 40] });
 
 console.log("\n=== DataFrame ignoreIndex ===");
 console.log(concat([df1, df2], { ignoreIndex: true }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Series with string indexes → reset to 0, 1, 2
+a = pd.Series([1, 2], index=["x", "y"])
+b = pd.Series([3], index=["z"])
+
+print("=== Series ignore_index ===")
+print(pd.concat([a, b], ignore_index=True).to_string())
+
+# DataFrame ignore_index
+df1 = pd.DataFrame({"v": [10, 20]})
+df2 = pd.DataFrame({"v": [30, 40]})
+
+print("\n=== DataFrame ignore_index ===")
+print(pd.concat([df1, df2], ignore_index=True).to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -390,6 +456,29 @@ const q2rev = new Series({ data: [1200, 1800], name: "q2_rev" });
 
 console.log("\n=== Side-by-side columns ===");
 console.log(concat([names, q1rev, q2rev], { axis: 1 }).toString());</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Try it! Combine DataFrames in creative ways.
+q1 = pd.DataFrame({
+    "product": ["Widget", "Gadget"],
+    "revenue": [1000, 1500],
+})
+
+q2 = pd.DataFrame({
+    "product": ["Widget", "Gadget"],
+    "revenue": [1200, 1800],
+})
+
+print("=== Q1 + Q2 stacked ===")
+print(pd.concat([q1, q2], ignore_index=True).to_string())
+
+# Side-by-side with axis=1
+names = pd.Series(["Widget", "Gadget"], name="product")
+q1_rev = pd.Series([1000, 1500], name="q1_rev")
+q2_rev = pd.Series([1200, 1800], name="q2_rev")
+
+print("\n=== Side-by-side columns ===")
+print(pd.concat([names, q1_rev, q2_rev], axis=1).to_string())</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
