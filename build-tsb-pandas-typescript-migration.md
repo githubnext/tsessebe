@@ -10,8 +10,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-10T21:47:00Z |
-| Iteration Count | 173 |
+| Last Run | 2026-04-10T22:13:57Z |
+| Iteration Count | 174 |
 | Best Metric | 29 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -21,8 +21,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | error, accepted, accepted, error, error, error, error, accepted, accepted, accepted |
+| Consecutive Errors | 2 |
+| Recent Statuses | error, error, accepted, accepted, error, error, error, error, accepted, accepted |
 
 ## 📋 Program Info
 
@@ -57,7 +57,8 @@ Next features to implement (prioritized by impact):
 - **Import style**: Use `import fc from "fast-check"` (default), not `import * as fc`. Use `src/index.ts` for imports in tests, not deep file imports.
 - **Implementation notes for to_datetime**: Use `DatetimeIndex.fromDates()` (not `new DatetimeIndex()`). Use `new Timestamp(d)` (pass Date object, not string directly).
 - **Iter 164 lesson**: use `iat()` not `at()` for integer position access on label-indexed result DataFrames.
-- **Iter 173 push failure**: safeoutputs MCP tools (create_pull_request, push_to_pull_request_branch, add_comment, noop) were NOT available in run 24265606546, neither in main context nor in background general-purpose agents. This contradicts iter 172 lesson. The pct_change code is complete (commit 5b77e5b locally) — next iteration should re-implement this feature so it can be pushed.
+- **Iter 174 push failure**: safeoutputs tools again not available. Both direct call and sub-agent call confirmed unavailable. Commit `a1b6e27` on branch `autoloop/build-tsb-pandas-typescript-migration` (local only). pct_change code is ready — next iteration should re-implement.
+- **Pattern**: Runs 24265606546 and 24266545401 both lack safeoutputs tools. Run 24263385922 (iter 172) had them. The tools seem intermittently available based on workflow configuration.
 
 ---
 
@@ -69,22 +70,27 @@ Next features to implement (prioritized by impact):
 
 ## 🔭 Future Directions
 
-The program is now unpaused and making progress again.
-
 **Next priorities**:
-- `pct_change` — ready to re-push (code written in run 24265606546, commit 5b77e5b, just needs push)
+- `pct_change` — ready to re-push (AGAIN). Commits: 5b77e5b (run 24265606546), a1b6e27 (run 24266545401, branch `autoloop/build-tsb-pandas-typescript-migration`). Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Next iteration should re-implement from scratch as `main` hasn't changed.
 - `where`/`mask` — conditional operations very common in pandas
 - `idxmin`/`idxmax` — frequently used in data analysis
 - `replace` — value substitution
 - `astype` — explicit dtype casting
 
-**Infrastructure note**: Confirmed that Copilot CLI environment (run `24263385922` onward) CAN use safeoutputs MCP tools via background general-purpose task agents.
+**Infrastructure note**: safeoutputs MCP tools were available in run 24263385922 (iter 172) but NOT in runs 24265606546 (iter 173) or 24266545401 (iter 174). The tools seem tied to specific workflow configurations. Each iteration must attempt to push and accept failure gracefully.
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 174 — 2026-04-10 22:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24266545401)
+
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools unavailable)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods, fillMethod (pad/bfill/null), limit, and axis support. Commit `a1b6e27` exists locally but could not be pushed.
+- **Metric**: 29 (would have been +1 vs main's 28)
+- **Notes**: safeoutputs MCP tools again not registered in this workflow run. Code complete and TypeScript-clean. Next iteration should re-implement this feature.
 
 ### Iteration 173 — 2026-04-10 21:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24265606546)
 
