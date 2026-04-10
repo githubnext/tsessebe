@@ -107,3 +107,14 @@ export {
 export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./stats/index.ts";
 export { valueCounts, dataFrameValueCounts } from "./stats/index.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/index.ts";
+export {
+  isna,
+  notna,
+  isnull,
+  notnull,
+  ffillSeries,
+  bfillSeries,
+  dataFrameFfill,
+  dataFrameBfill,
+} from "./stats/index.ts";
+export type { FillDirectionOptions, DataFrameFillOptions } from "./stats/index.ts";
