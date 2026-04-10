@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-10T00:30:00Z |
-| Iteration Count | 155 |
-| Best Metric | 48 |
+| Last Run | 2026-04-10T01:37:58Z |
+| Iteration Count | 156 |
+| Best Metric | 53 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #81 |
@@ -22,19 +22,20 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ## 🎯 Current Priorities
 
-**State (iter 155)**: 48 files on PR #81 branch. sample_stats + boolean_ops + datetime_ops + missing_ops + string_search added. Next priorities:
+**State (iter 156)**: 53 files. 10 modules added in one iteration (43→53) from canonical branch. Next priorities:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/core/accessor_extended.ts` — extended accessor methods for dt/str/cat
-- `src/stats/rank_ops.ts` — rank, argsort, nsmallest, nlargest
+- `src/stats/format_ops.ts` — number/string formatting utilities (pd.options, format_float, etc.)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 156 (10 modules — interval_ops+sparse_ops+hash_ops+clip_ops+sample_stats+boolean_ops+datetime_ops+missing_ops+string_search+rank_ops)**: 10 modules added (43→53). When creating canonical branch from iter136, prior accepted commits are not accessible — must re-implement. `npx bun` works when bun not in PATH. New modules 295 tests all pass. Pre-existing 37 failures are unrelated to new code.
 - **Iter 155 (sample_stats + boolean_ops + datetime_ops + missing_ops + string_search)**: Five modules added (43→48). `df.columns` is `Index<string>` not array → use `.values` for array methods. `DataFrame.fromColumns(data, { index: df.index })` takes `DataFrameOptions` not bare index. `new Index<Label>(arr)` takes `T[]` not `Index<T>`. Generic helpers returning `Series<T>` need `T extends Scalar`. Business day range correctly skips Sat/Sun. Linear interpolation handles leading/trailing NaN correctly.
 - **Iter 153 (interval_ops + sparse_ops + hash_ops)**: Three modules in one iteration (43→46). `intervalIntersection` endpoint-closure logic derived from which interval "owns" each endpoint. `SparseArray.sparseGet` uses O(log n) binary search over sorted indices. `hashScalar` uses FNV-1a 32-bit; `hashCombine` uses boost-style mixing. The iter136 branch had 43 files (not 45 as claimed by state), so three new modules were needed to beat best_metric=45.
 - **Iter 152 (interval_ops + sparse_ops)**: Two modules added in one iteration. `SparseArray` uses `(indices, values)` compact representation with O(log n) `sparseGet` via binary search. `sparseConcat` requires matching fill values — runtime check needed. `intervalOverlaps` touching endpoints require explicit `===` guard before general overlap test.
@@ -55,13 +56,21 @@
 
 ## 🔭 Future Directions
 
-**State (iter 155)**: 48 files. Next: io/read_excel (zero-dep XLSX) · core/accessor_extended · stats/rank_ops (rank, argsort, nsmallest, nlargest)
+**State (iter 156)**: 53 files. Next: io/read_excel (zero-dep XLSX) · core/accessor_extended · stats/format_ops
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 156 — 2026-04-10 01:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24221970104)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 10 modules: interval_ops (19 fns), sparse_ops (16 fns), hash_ops (9 fns), clip_ops (7 fns), sample_stats (9 fns), boolean_ops (11 fns), datetime_ops (11 fns), missing_ops (10 fns), string_search (11 fns), rank_ops (7 fns). 295 tests all pass.
+- **Metric**: 53 (previous best: 48, delta: +5)
+- **Commit**: `751f3c4`
+- **Notes**: Re-implemented modules from iters 151–155 (commits not accessible on local branch) plus new rank_ops. `npx bun` works when bun not in PATH. Canonical branch created from iter136 (43 files); best_metric was 48 on remote but 10 modules added = 53.
 
 ### Iteration 155 — 2026-04-10 00:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24218902630)
 
@@ -95,7 +104,6 @@ All iterations in reverse chronological order (newest first).
 - **Commit**: `3db5d29`
 - **Notes**: Two modules added in one iteration to beat the best metric (43→45). The iter136 branch was missing interval_ops (supposedly added in iter 151 on a missing branch), so both were added together.
 
-### Iters 149–154 — ✅ (metrics 42→47): api_types (31 predicates), categorical_ops (10 fns), interval_ops (19 fns), sparse_ops (16 fns), hash_ops (9 fns), clip_ops (7 fns)
-### Iters 103–148 — ✅ (metrics 25→41): numeric_extended, string_ops_extended, pipe_apply, string_ops, attrs, rolling_apply, notna_isna, where_mask, window_extended, cut_qcut + more
-### Iters 53–102 — ✅ (metrics 8→24): Foundation, GroupBy, merge, str/dt, csv/json, corr, rolling/expanding/ewm, reshape, MultiIndex, datetime/timedelta/period, cut/qcut
+### Iters 149–154 — ✅ (metrics 42→47): api_types, categorical_ops, interval_ops, sparse_ops, hash_ops, clip_ops
+### Iters 53–148 — ✅ (metrics 8→41): Foundation through numeric_extended, string/dt/window/rolling ops
 ### Iterations 1–52 — ✅ Earlier work on diverged branches
