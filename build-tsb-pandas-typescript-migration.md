@@ -10,8 +10,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-10T06:40:00Z |
-| Iteration Count | 157 |
+| Last Run | 2026-04-10T07:35:00Z |
+| Iteration Count | 158 |
 | Best Metric | 89 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -26,15 +26,16 @@
 
 ## 🎯 Current Priorities
 
-**State (iter 157)**: 89 files (branch rebased on c9103f2f32e44258 with 88 files, added format_ops = 89). The canonical branch now has far more content than state_file indicated (53). Next priorities:
+**State (iter 158)**: 89 files on canonical branch. format_ops re-added on top of c9103f2f32e44258 (88 files). Next priorities:
 - `src/io/read_excel.ts` — Excel file reader (XLSX parsing, zero-dep)
 - `src/core/accessor_extended.ts` — extended accessor methods for dt/str/cat
-- `src/stats/str_ops.ts` — additional string operations (split, expand, etc.)
+- `src/stats/window_extra.ts` — additional window operations (EWMA variance, etc.)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 158 (format_ops re-impl)**: `FormattableDataFrameLike` interface must use `col(name)` access (matching real DataFrame API) not `values: Scalar[][]`. `Series` constructor on c9103f2f branch takes `SeriesOptions<T>` (`{ data: T[] }`) not a plain array — test helpers must use `new Series({ data: values })`. `fc.array` minLength must be ≥ 1 when constructing Series to avoid empty-array spread error. `applyDataFrameFormatter` returns `Record<string, string[]>` rather than a DataFrame-like (avoids needing `withValues` on DataFrame).
 - **Iter 157 (format_ops)**: `exactOptionalPropertyTypes: true` means you can't pass `name: undefined` for an optional field — must build options object conditionally. `fc.float` in fast-check requires 32-bit float bounds (use `fc.double` instead for general floats). Canonical branch had 88 files (iter133) despite state showing 53 — state file was severely out of sync across iterations. Branch `c9103f2f32e44258` is the canonical one with the most content. 10 modules added (43→53). When creating canonical branch from iter136, prior accepted commits are not accessible — must re-implement. `npx bun` works when bun not in PATH. New modules 295 tests all pass. Pre-existing 37 failures are unrelated to new code.
 - **Iter 155 (sample_stats + boolean_ops + datetime_ops + missing_ops + string_search)**: Five modules added (43→48). `df.columns` is `Index<string>` not array → use `.values` for array methods. `DataFrame.fromColumns(data, { index: df.index })` takes `DataFrameOptions` not bare index. `new Index<Label>(arr)` takes `T[]` not `Index<T>`. Generic helpers returning `Series<T>` need `T extends Scalar`. Business day range correctly skips Sat/Sun. Linear interpolation handles leading/trailing NaN correctly.
 - **Iter 153 (interval_ops + sparse_ops + hash_ops)**: Three modules in one iteration (43→46). `intervalIntersection` endpoint-closure logic derived from which interval "owns" each endpoint. `SparseArray.sparseGet` uses O(log n) binary search over sorted indices. `hashScalar` uses FNV-1a 32-bit; `hashCombine` uses boost-style mixing. The iter136 branch had 43 files (not 45 as claimed by state), so three new modules were needed to beat best_metric=45.
@@ -64,19 +65,21 @@
 
 All iterations in reverse chronological order (newest first).
 
+### Iteration 158 — 2026-04-10 07:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24232000777)
+
+- **Status**: ✅ Accepted (commit `e1693ee` created; push_to_pull_request_branch tool unavailable in session)
+- **Change**: Re-implemented `src/stats/format_ops.ts` with 14 formatting functions: formatFloat, formatPercent, formatScientific, formatEngineering, formatThousands, formatCurrency, formatCompact, makeFloatFormatter, makePercentFormatter, makeCurrencyFormatter, applySeriesFormatter, applyDataFrameFormatter, seriesToString, dataFrameToString. 54 tests pass. Playground page added.
+- **Metric**: 89 (previous best: 88 on branch / 89 per state, delta: +1 from actual branch state)
+- **Commit**: `e1693ee`
+- **Notes**: Iter 157's format_ops commit wasn't on the c9103f2f32e44258 branch. Re-implemented with corrected DataFrame interface (col(name) access pattern) and proper Series constructor usage ({ data: values }). `applyDataFrameFormatter` returns `Record<string, string[]>`. safeoutputs MCP tools unavailable — push must happen via next iteration.
+
 ### Iteration 157 — 2026-04-10 06:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24230080526)
 
 - **Status**: ✅ Accepted
-- **Change**: Added `src/stats/format_ops.ts` with 10 formatting functions: formatFloat, formatPercent, formatScientific, formatEngineering, formatThousands, formatCurrency, applySeriesFormatter, applyDataFrameFormatter, seriesToString, dataFrameToString. 64 tests all pass. Playground page added.
+- **Change**: Added `src/stats/format_ops.ts` with 10 formatting functions. 64 tests all pass. Playground page added.
 - **Metric**: 89 (previous best: 53 per state file, actual was 88 on branch, delta: +1)
-- **Commit**: `7b47398`
-- **Notes**: Discovered canonical branch (`c9103f2f32e44258`) had 88 files — far more than state file's claimed 53. State file was severely out of sync. Branch rebased on the 88-file branch. `exactOptionalPropertyTypes: true` requires building options object without explicit `undefined` for optional fields. `fc.float` requires 32-bit float bounds — use `fc.double` instead.
-
-- **Status**: ✅ Accepted
-- **Change**: Added 10 modules: interval_ops (19 fns), sparse_ops (16 fns), hash_ops (9 fns), clip_ops (7 fns), sample_stats (9 fns), boolean_ops (11 fns), datetime_ops (11 fns), missing_ops (10 fns), string_search (11 fns), rank_ops (7 fns). 295 tests all pass.
-- **Metric**: 53 (previous best: 48, delta: +5)
-- **Commit**: `751f3c4`
-- **Notes**: Re-implemented modules from iters 151–155 (commits not accessible on local branch) plus new rank_ops. `npx bun` works when bun not in PATH. Canonical branch created from iter136 (43 files); best_metric was 48 on remote but 10 modules added = 53.
+- **Commit**: `7b47398` (not reachable — re-done in iter 158)
+- **Notes**: Discovered canonical branch (`c9103f2f32e44258`) had 88 files. Branch rebased on the 88-file branch.
 
 ### Iters 149–156 — ✅ (metrics 42→53): api_types, categorical_ops, interval_ops, sparse_ops, hash_ops, clip_ops, sample_stats, boolean_ops, datetime_ops, missing_ops, string_search, rank_ops
 ### Iters 53–148 — ✅ (metrics 8→41): Foundation through numeric_extended, string/dt/window/rolling ops
