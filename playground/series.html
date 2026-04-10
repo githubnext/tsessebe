@@ -228,6 +228,19 @@ console.log(s2.toString());
 // From an object (keys become index labels)
 const s3 = Series.fromObject({ x: 1, y: 2, z: 3 });
 console.log(s3.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# From data array with default integer index
+s1 = pd.Series([10, 20, 30])
+print(s1.to_string())
+
+# With custom index and name
+s2 = pd.Series([100, 200, 300], index=["a", "b", "c"], name="revenue")
+print(s2.to_string())
+
+# From a dict (keys become index labels)
+s3 = pd.Series({"x": 1, "y": 2, "z": 3})
+print(s3.to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -261,6 +274,18 @@ console.log("empty: ", s.empty);
 console.log("values:", s.values);
 console.log("dtype: ", s.dtype.toString());
 console.log("name:  ", s.name);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 20, 30, 40], index=["a", "b", "c", "d"], name="scores")
+
+print("size:  ", s.size)
+print("length:", len(s))
+print("shape: ", s.shape)
+print("ndim:  ", s.ndim)
+print("empty: ", s.empty)
+print("values:", s.values)
+print("dtype: ", s.dtype)
+print("name:  ", s.name)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -300,6 +325,24 @@ console.log(s.loc(["a", "c", "e"]).toString());
 // Multiple positions → sub-Series
 console.log("\niloc([1, 3]):");
 console.log(s.iloc([1, 3]).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50], index=["a", "b", "c", "d", "e"], name="vals")
+
+# Single element by label
+print("at('c'):", s.at["c"])
+
+# Single element by position
+print("iat(0): ", s.iat[0])
+print("iat(-1):", s.iat[-1])
+
+# Multiple labels → sub-Series
+print("\nloc(['a', 'c', 'e']):")
+print(s.loc[["a", "c", "e"]].to_string())
+
+# Multiple positions → sub-Series
+print("\niloc([1, 3]):")
+print(s.iloc[[1, 3]].to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -328,6 +371,17 @@ console.log("mul(2):", a.mul(2).values);
 console.log("div(b):", a.div(b).values);
 console.log("mod(7):", a.mod(7).values);
 console.log("pow(2):", a.pow(2).values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+a = pd.Series([10, 20, 30], index=["x", "y", "z"])
+b = pd.Series([1, 2, 3], index=["x", "y", "z"])
+
+print("add(5):", a.add(5).values)
+print("sub(b):", a.sub(b).values)
+print("mul(2):", a.mul(2).values)
+print("div(b):", a.div(b).values)
+print("mod(7):", a.mod(7).values)
+print("pow(2):", a.pow(2).values)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -355,6 +409,16 @@ console.log("lt(3):", s.lt(3).values);
 console.log("le(3):", s.le(3).values);
 console.log("gt(3):", s.gt(3).values);
 console.log("ge(3):", s.ge(3).values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+print("eq(3):", s.eq(3).values)
+print("ne(3):", s.ne(3).values)
+print("lt(3):", s.lt(3).values)
+print("le(3):", s.le(3).values)
+print("gt(3):", s.gt(3).values)
+print("ge(3):", s.ge(3).values)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -388,6 +452,18 @@ console.log(s.filter(mask).toString());
 // Filter with a comparison result (boolean Series)
 console.log("\nValues > 12:");
 console.log(s.filter(s.gt(12)).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 25, 5, 40, 15], index=["a", "b", "c", "d", "e"], name="prices")
+
+# Filter with a boolean array
+mask = [True, False, True, False, True]
+print("Boolean array filter:")
+print(s[mask].to_string())
+
+# Filter with a comparison result (boolean Series)
+print("\nValues > 12:")
+print(s[s.gt(12)].to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -417,6 +493,19 @@ console.log(s.dropna().toString());
 
 console.log("\nfillna(0):");
 console.log(s.fillna(0).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([1, np.nan, 3, np.nan, 5], name="sparse")
+
+print("isna: ", s.isna().values)
+print("notna:", s.notna().values)
+
+print("\ndropna():")
+print(s.dropna().to_string())
+
+print("\nfillna(0):")
+print(s.fillna(0).to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -451,6 +540,23 @@ console.log("unique: ", s.unique());
 
 console.log("\nvalueCounts():");
 console.log(s.valueCounts().toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([4, 1, 7, 4, 2, 7, 4])
+
+print("sum:    ", s.sum())
+print("mean:   ", s.mean())
+print("min:    ", s.min())
+print("max:    ", s.max())
+print("std:    ", s.std())
+print("var:    ", s.var())
+print("median: ", s.median())
+print("count:  ", s.count())
+print("nunique:", s.nunique())
+print("unique: ", s.unique())
+
+print("\nvalueCounts():")
+print(s.value_counts().to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -483,6 +589,19 @@ console.log(s.sortValues(false, "first").toString());
 
 console.log("\nsortIndex:");
 console.log(s.sortIndex().toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([30, 10, np.nan, 20], index=["c", "a", "d", "b"])
+
+print("sortValues (ascending):")
+print(s.sort_values().to_string())
+
+print("\nsortValues (descending, na first):")
+print(s.sort_values(ascending=False, na_position="first").to_string())
+
+print("\nsortIndex:")
+print(s.sort_index().to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -514,6 +633,19 @@ console.log(temps.toString());
 console.log("\nMean:", temps.mean());
 console.log("Hot days (>= 75):");
 console.log(temps.filter(temps.ge(75)).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Try it! Build a Series and explore the API.
+temps = pd.Series(
+    [72, 68, 75, 80, 77],
+    index=["Mon", "Tue", "Wed", "Thu", "Fri"],
+    name="temperature",
+)
+
+print(temps.to_string())
+print("\nMean:", temps.mean())
+print("Hot days (>= 75):")
+print(temps[temps.ge(75)].to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

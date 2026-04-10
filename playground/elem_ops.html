@@ -209,6 +209,15 @@ console.log("clipped:", [...clipped.values]);
 // One-sided: only lower bound
 const pos = clip(s, { lower: 0 });
 console.log("lower only:", [...pos.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([-3, 0, 1, 5, 10])
+clipped = s.clip(lower=0, upper=6)
+print("clipped:", clipped.tolist())
+
+# One-sided: only lower bound
+pos = s.clip(lower=0)
+print("lower only:", pos.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -236,6 +245,15 @@ const df = DataFrame.fromColumns({
 const safe = dataFrameClip(df, { lower: 0, upper: 100 });
 console.log("temperature:", [...safe.col("temperature").values]);
 console.log("humidity:", [...safe.col("humidity").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "temperature": [-10, 5, 20, 45],
+    "humidity": [0, 30, 80, 110],
+})
+safe = df.clip(lower=0, upper=100)
+print("temperature:", safe["temperature"].tolist())
+print("humidity:", safe["humidity"].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -260,6 +278,11 @@ console.log("humidity:", [...safe.col("humidity").values]);</textarea>
 const returns = new Series({ data: [-0.05, 0.12, -0.08, 0.03] });
 const magnitude = seriesAbs(returns);
 console.log("magnitude:", [...magnitude.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+returns = pd.Series([-0.05, 0.12, -0.08, 0.03])
+magnitude = returns.abs()
+print("magnitude:", magnitude.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -287,6 +310,15 @@ const df = DataFrame.fromColumns({
 const result = dataFrameAbs(df);
 console.log("x:", [...result.col("x").values]);
 console.log("y:", [...result.col("y").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "x": [-1, 2, -3],
+    "y": [4, -5, 6],
+})
+result = df.abs()
+print("x:", result["x"].tolist())
+print("y:", result["y"].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -316,6 +348,15 @@ console.log("rounded to 2:", [...r2.values]);
 // Round to nearest 10
 const big = new Series({ data: [14, 25, 36] });
 console.log("nearest 10:", [...seriesRound(big, { decimals: -1 }).values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+prices = pd.Series([1.2349, 9.9999, 3.14159])
+r2 = prices.round(decimals=2)
+print("rounded to 2:", r2.tolist())
+
+# Round to nearest 10
+big = pd.Series([14, 25, 36])
+print("nearest 10:", big.round(decimals=-1).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -343,6 +384,15 @@ const df = DataFrame.fromColumns({
 const r2 = dataFrameRound(df, { decimals: 2 });
 console.log("lat:", [...r2.col("lat").values]);
 console.log("lon:", [...r2.col("lon").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "lat": [51.5074, 48.8566, 40.7128],
+    "lon": [-0.1278, 2.3522, -74.006],
+})
+r2 = df.round(decimals=2)
+print("lat:", r2["lat"].tolist())
+print("lon:", r2["lon"].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -368,6 +418,14 @@ const s = new Series({ data: [null, -5, NaN, 7] });
 console.log("clip:", [...clip(s, { lower: 0, upper: 5 }).values]);
 console.log("abs:", [...seriesAbs(s).values]);
 console.log("round:", [...seriesRound(s, { decimals: 0 }).values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([None, -5, np.nan, 7])
+
+print("clip:", s.clip(lower=0, upper=5).tolist())
+print("abs:", s.abs().tolist())
+print("round:", s.round(decimals=0).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

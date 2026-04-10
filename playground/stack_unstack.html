@@ -208,6 +208,16 @@ const df = DataFrame.fromColumns(
 const s = stack(df, { dropna: false });
 console.log("index:", [...s.index.values]);
 console.log("values:", [...s.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame(
+    {"A": [1, 2, 3], "B": [4, 5, 6]},
+    index=["x", "y", "z"],
+)
+
+s = df.stack()
+print("index:", list(s.index))
+print("values:", list(s.values))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -243,6 +253,23 @@ console.log("dropna=true  values:", [...s.values]);
 const sFull = stack(df, { dropna: false });
 console.log("dropna=false index:", [...sFull.index.values]);
 console.log("dropna=false values:", [...sFull.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+df = pd.DataFrame(
+    {"score": [10, None, 30], "bonus": [None, 2, 3]},
+    index=["a", "b", "c"],
+)
+
+# default: stack preserves NaN, chain dropna() to remove
+s = df.stack().dropna()
+print("dropna=True  index:", list(s.index))
+print("dropna=True  values:", list(s.values))
+
+# keep nulls (default in pandas 3.0)
+s_full = df.stack()
+print("dropna=False index:", list(s_full.index))
+print("dropna=False values:", list(s_full.values))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -274,6 +301,19 @@ const recovered = unstack(s);
 console.log("index:", [...recovered.index.values]);
 console.log("columns:", [...recovered.columns.values]);
 console.log("records:", recovered.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame(
+    {"A": [1, 2], "B": [3, 4]},
+    index=["x", "y"],
+)
+
+s = df.stack()
+recovered = s.unstack()
+
+print("index:", list(recovered.index))
+print("columns:", list(recovered.columns))
+print("records:", recovered.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -307,6 +347,20 @@ const s = stack(df);
 // unstack with fill_value=0
 const recovered = unstack(s, { fill_value: 0 });
 console.log("records:", recovered.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+df = pd.DataFrame(
+    {"revenue": [100, None, 300], "cost": [None, 50, 60]},
+    index=["jan", "feb", "mar"],
+)
+
+# stack then drop nulls
+s = df.stack().dropna()
+
+# unstack with fill_value=0
+recovered = s.unstack(fill_value=0)
+print("records:", recovered.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -338,6 +392,20 @@ console.log("stacked index:", [...s.index.values]);
 const recovered = unstack(s, { sep: "::" });
 console.log("index:", [...recovered.index.values]);
 console.log("columns:", [...recovered.columns.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame(
+    {"col-A": [10, 20], "col-B": [30, 40]},
+    index=["row-1", "row-2"],
+)
+
+# pandas uses MultiIndex natively, no separator needed
+s = df.stack()
+print("stacked index:", list(s.index))
+
+recovered = s.unstack()
+print("index:", list(recovered.index))
+print("columns:", list(recovered.columns))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -374,6 +442,26 @@ const result = unstack(filtered, { fill_value: 0 });
 
 console.log("index:", [...result.index.values]);
 console.log("records:", result.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+# Quarterly sales by product
+df = pd.DataFrame(
+    {
+        "widgets": [120, 80, 150, 200],
+        "gadgets": [60, None, 90, 110],
+        "gizmos": [30, 45, None, 70],
+    },
+    index=["Q1", "Q2", "Q3", "Q4"],
+)
+
+# Stack then drop nulls, filter to values > 80, then unstack
+s = df.stack().dropna()
+filtered = s[s > 80]
+result = filtered.unstack(fill_value=0)
+
+print("index:", list(result.index))
+print("records:", result.reset_index().to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

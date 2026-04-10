@@ -207,6 +207,16 @@ const df = DataFrame.fromColumns({
 
 const long = melt(df);
 console.log(long.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "A": [1, 2, 3],
+    "B": [4, 5, 6],
+    "C": [7, 8, 9],
+})
+
+long = pd.melt(df)
+print(long.to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -240,6 +250,21 @@ const long = melt(df, {
   value_name: "sales",
 });
 console.log(long.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "id": ["alice", "bob", "carol"],
+    "jan": [100, 200, 150],
+    "feb": [110, 190, 160],
+    "mar": [120, 210, 140],
+})
+
+long = pd.melt(df,
+    id_vars="id",
+    var_name="month",
+    value_name="sales",
+)
+print(long.to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -273,6 +298,22 @@ const long = melt(df, {
   value_name: "score",
 });
 console.log(long.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name": ["Alice", "Bob"],
+    "score1": [85, 90],
+    "score2": [78, 92],
+    "grade": ["B", "A"],
+})
+
+long = pd.melt(df,
+    id_vars="name",
+    value_vars=["score1", "score2"],
+    var_name="test",
+    value_name="score",
+)
+print(long.to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -305,6 +346,21 @@ const long = melt(df, {
   value_name: "revenue",
 });
 console.log(long.toRecords());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "year": [2022, 2023],
+    "city": ["NYC", "LA"],
+    "q1": [100, 200],
+    "q2": [110, 210],
+})
+
+long = pd.melt(df,
+    id_vars=["year", "city"],
+    var_name="quarter",
+    value_name="revenue",
+)
+print(long.to_dict("records"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

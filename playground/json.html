@@ -215,6 +215,16 @@ console.log("shape:", df.shape);
 console.log("columns:", [...df.columns.values]);
 console.log("names:", [...df.col("name").values]);
 console.log("ages:", [...df.col("age").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+json_text = '[{"name": "alice", "age": 30, "score": 88.5}, {"name": "bob", "age": 25, "score": 92.0}, {"name": "carol", "age": 35, "score": 75.3}]'
+
+df = pd.read_json(io.StringIO(json_text))
+print("shape:", df.shape)
+print("columns:", list(df.columns))
+print("names:", list(df["name"]))
+print("ages:", list(df["age"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -248,6 +258,22 @@ console.log("shape:", df.shape);
 console.log("index:", [...df.index.values]);
 console.log("x:", [...df.col("x").values]);
 console.log("y:", [...df.col("y").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import json
+import io
+
+data = json.dumps({
+    "columns": ["x", "y"],
+    "index": [10, 20, 30],
+    "data": [[1, 4], [2, 5], [3, 6]],
+})
+
+df = pd.read_json(io.StringIO(data), orient="split")
+print("orient auto-detected: split")
+print("shape:", df.shape)
+print("index:", list(df.index))
+print("x:", list(df["x"]))
+print("y:", list(df["y"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -279,6 +305,21 @@ console.log("shape:", df.shape);
 console.log("index:", [...df.index.values]);
 console.log("a:", [...df.col("a").values]);
 console.log("b:", [...df.col("b").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import json
+import io
+
+data = json.dumps({
+    "r0": {"a": 1, "b": "foo"},
+    "r1": {"a": 2, "b": "bar"},
+    "r2": {"a": 3, "b": "baz"},
+})
+
+df = pd.read_json(io.StringIO(data), orient="index")
+print("shape:", df.shape)
+print("index:", list(df.index))
+print("a:", list(df["a"]))
+print("b:", list(df["b"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -310,6 +351,20 @@ console.log("shape:", df.shape);
 console.log("index:", [...df.index.values]);
 console.log("x:", [...df.col("x").values]);
 console.log("y:", [...df.col("y").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import json
+import io
+
+data = json.dumps({
+    "x": {"0": 10, "1": 20, "2": 30},
+    "y": {"0": 1.1, "1": 2.2, "2": 3.3},
+})
+
+df = pd.read_json(io.StringIO(data), orient="columns")
+print("shape:", df.shape)
+print("index:", list(df.index))
+print("x:", list(df["x"]))
+print("y:", list(df["y"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -337,6 +392,15 @@ const df = readJson(json, { orient: "values" });
 console.log("shape:", df.shape);
 console.log("columns:", [...df.columns.values]);
 console.log("col 0:", [...df.col("0").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+json_text = "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]"
+
+df = pd.read_json(io.StringIO(json_text), orient="values")
+print("shape:", df.shape)
+print("columns:", list(df.columns))
+print("col 0:", list(df[0]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -369,6 +433,19 @@ console.log(toJson(df));
 
 console.log("--- split (indented) ---");
 console.log(toJson(df, { orient: "split", indent: 2 }));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "city": ["New York", "London", "Tokyo"],
+    "pop": [8_336_817, 8_982_000, 13_960_000],
+    "gdp": [1.6, 0.6, 1.0],
+})
+
+print("--- records (compact) ---")
+print(df.to_json(orient="records"))
+
+print("--- split (indented) ---")
+print(df.to_json(orient="split", indent=2))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -401,6 +478,21 @@ console.log("JSON:", json);
 console.log("x restored:", [...restored.col("x").values]);
 console.log("label restored:", [...restored.col("label").values]);
 console.log("shapes match:", JSON.stringify(original.shape) === JSON.stringify(restored.shape));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+original = pd.DataFrame({
+    "x": [1, 2, 3, 4, 5],
+    "label": ["a", "b", "c", "d", "e"],
+})
+
+json_text = original.to_json(orient="split")
+restored = pd.read_json(io.StringIO(json_text), orient="split")
+
+print("JSON:", json_text)
+print("x restored:", list(restored["x"]))
+print("label restored:", list(restored["label"]))
+print("shapes match:", original.shape == restored.shape)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

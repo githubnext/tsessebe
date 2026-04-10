@@ -236,6 +236,25 @@ console.log("r (nulls dropped):", pearsonCorr(c, d).toFixed(4));
 
 // Require at least 5 valid pairs — returns NaN when fewer exist
 console.log("r (minPeriods=5):", pearsonCorr(c, d, { minPeriods: 5 }));</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+temperature = pd.Series([22, 24, 28, 31, 35], name="temp_C")
+ice_cream = pd.Series([120, 145, 190, 230, 285], name="sales")
+
+r = temperature.corr(ice_cream)
+print(f"Pearson r: {r:.4f}")   # strong positive correlation
+
+# Negative correlation
+warm_clothes = pd.Series([310, 280, 210, 150, 90], name="jackets")
+print(f"r (temp vs jackets): {temperature.corr(warm_clothes):.4f}")
+
+# Missing values are dropped per-pair
+c = pd.Series([1, None, 3, 4])
+d = pd.Series([2, 4, 6, 8])
+print(f"r (nulls dropped): {c.corr(d):.4f}")
+
+# Require at least 5 valid pairs — returns NaN when fewer exist
+print(f"r (minPeriods=5): {c.corr(d, min_periods=5)}")</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -277,6 +296,25 @@ const rHA = r.col("age").iat(0);     // corr(height, age)
 console.log("height–weight r:", rHW.toFixed(4));
 console.log("height–age r:   ", rHA.toFixed(4));
 console.log("diagonal:", [r.col("height").iat(0), r.col("weight").iat(1), r.col("age").iat(2)]);</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "height": [160, 172, 185, 155, 168],
+    "weight": [55, 72, 90, 48, 65],
+    "age": [22, 35, 28, 19, 31],
+    "city": ["A", "B", "C", "A", "B"],  # non-numeric — skipped
+})
+
+r = df.corr(numeric_only=True)
+print("columns:", list(r.columns))
+print("shape:", r.shape)
+
+# Read off-diagonal entries via iloc (positional access)
+r_hw = r["weight"].iloc[0]  # corr(height, weight)
+r_ha = r["age"].iloc[0]     # corr(height, age)
+print(f"height–weight r: {r_hw:.4f}")
+print(f"height–age r:    {r_ha:.4f}")
+print("diagonal:", [r["height"].iloc[0], r["weight"].iloc[1], r["age"].iloc[2]])</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -318,6 +356,25 @@ const varSample = dataFrameCov(returns, { ddof: 1 }).col("AAPL").iat(0);
 const varPop    = dataFrameCov(returns, { ddof: 0 }).col("AAPL").iat(0);
 console.log("\nAAPL sample variance:", varSample.toFixed(6));
 console.log("AAPL population variance:", varPop.toFixed(6));</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+returns = pd.DataFrame({
+    "AAPL": [0.02, 0.01, -0.03, 0.04, 0.01],
+    "GOOG": [0.01, 0.02, -0.02, 0.03, 0.02],
+    "TSLA": [-0.05, 0.08, -0.10, 0.12, -0.03],
+})
+
+cov = returns.cov()
+print("Covariance matrix:")
+for col in cov.columns:
+    vals = [f"{v:.6f}" for v in cov[col]]
+    print(f"{col}: {'  '.join(vals)}")
+
+# Compare sample (ddof=1) vs population (ddof=0) variance
+var_sample = returns.cov(ddof=1)["AAPL"].iloc[0]
+var_pop = returns.cov(ddof=0)["AAPL"].iloc[0]
+print(f"\nAAPL sample variance: {var_sample:.6f}")
+print(f"AAPL population variance: {var_pop:.6f}")</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>
@@ -362,6 +419,31 @@ for (const col of dataFrameCov(df).columns.values) {
   const vals = [...dataFrameCov(df).col(col).values].map(v => (v).toFixed(2));
   console.log(col + ":", vals.join("  "));
 }</pre>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Try it! Explore correlation and covariance.
+a = pd.Series([1, 2, 3, 4, 5])
+b = pd.Series([2, 4, 6, 8, 10])
+
+print("Perfect positive r:", a.corr(b))
+
+df = pd.DataFrame({
+    "x": [1, 2, 3, 4, 5],
+    "y": [5, 4, 3, 2, 1],
+    "z": [2, 4, 6, 8, 10],
+})
+
+print("\nCorrelation matrix:")
+corr = df.corr()
+for col in corr.columns:
+    vals = [f"{v:.2f}" for v in corr[col]]
+    print(f"{col}: {'  '.join(vals)}")
+
+print("\nCovariance matrix:")
+cov = df.cov()
+for col in cov.columns:
+    vals = [f"{v:.2f}" for v in cov[col]]
+    print(f"{col}: {'  '.join(vals)}")</textarea>
       <pre class="playground-output">Click ▶ Run to execute</pre>
       <div class="playground-hint">Ctrl+Enter to run</div>
     </div>

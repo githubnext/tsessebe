@@ -59,3 +59,20 @@ jobs:
         with:
           name: dist
           path: dist/
+
+  validate-python-examples:
+    name: Validate Python Examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install pandas numpy
+
+      - name: Validate Python playground examples
+        run: python scripts/validate-python-examples.py playground/

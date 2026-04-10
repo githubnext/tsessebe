@@ -228,6 +228,23 @@ console.log(range.toString());
 const stepped = new RangeIndex(0, 10, 2);
 console.log(stepped.toString());
 console.log("Values:", stepped.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# String labels
+labels = pd.Index(["a", "b", "c", "d"], name="letters")
+print(labels.to_list())
+
+# Numeric labels
+nums = pd.Index([10, 20, 30])
+print(nums.to_list())
+
+# RangeIndex — memory-efficient integer range
+range_idx = pd.RangeIndex(5)
+print(range_idx.to_list())
+
+stepped = pd.RangeIndex(0, 10, 2)
+print(stepped.to_list())
+print("Values:", stepped.to_list())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -257,6 +274,18 @@ console.log("name:", idx.name);
 console.log("isUnique:", idx.isUnique);
 console.log("hasDuplicates:", idx.hasDuplicates);
 console.log("isMonotonicIncreasing:", idx.isMonotonicIncreasing);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+idx = pd.Index(["x", "y", "z"], name="axis")
+
+print("size:", idx.size)
+print("shape:", idx.shape)
+print("ndim:", idx.ndim)
+print("empty:", idx.empty)
+print("name:", idx.name)
+print("is_unique:", idx.is_unique)
+print("has_duplicates:", idx.has_duplicates)
+print("is_monotonic_increasing:", idx.is_monotonic_increasing)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -282,6 +311,14 @@ console.log("getLoc('b'):", idx.getLoc("b"));     // unique → single int
 console.log("getLoc('a'):", idx.getLoc("a"));     // duplicated → array
 console.log("contains('c'):", idx.contains("c"));
 console.log("isin(['a', 'c']):", idx.isin(["a", "c"]));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+idx = pd.Index(["a", "b", "c", "a"])
+
+print("get_loc('b'):", idx.get_loc("b"))     # unique → single int
+print("get_loc('a'):", idx.get_loc("a"))     # duplicated → boolean mask
+print("contains 'c':", "c" in idx)
+print("isin(['a', 'c']):", idx.isin(["a", "c"]).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -308,6 +345,15 @@ console.log("union:       ", a.union(b).toString());
 console.log("intersection:", a.intersection(b).toString());
 console.log("difference:  ", a.difference(b).toString());
 console.log("symm. diff.: ", a.symmetricDifference(b).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+a = pd.Index([1, 2, 3])
+b = pd.Index([2, 3, 4])
+
+print("union:       ", a.union(b).to_list())
+print("intersection:", a.intersection(b).to_list())
+print("difference:  ", a.difference(b).to_list())
+print("symm. diff.: ", a.symmetric_difference(b).to_list())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -335,6 +381,16 @@ console.log("min:", idx.min());
 console.log("max:", idx.max());
 console.log("argmin:", idx.argmin());
 console.log("argmax:", idx.argmax());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+idx = pd.Index([30, 10, 20])
+
+print("sort_values:", idx.sort_values().to_list())
+print("argsort:   ", idx.argsort().tolist())
+print("min:", idx.min())
+print("max:", idx.max())
+print("argmin:", idx.argmin())
+print("argmax:", idx.argmax())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -361,6 +417,15 @@ console.log("insert: ", idx.insert(1, "x").toString());
 console.log("delete: ", idx.delete(0).toString());
 console.log("drop:   ", idx.drop(["b"]).toString());
 console.log("rename: ", idx.rename("new_name").toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+idx = pd.Index(["a", "b", "c"])
+
+print("append: ", idx.append(pd.Index(["d", "e"])).to_list())
+print("insert: ", idx.insert(1, "x").to_list())
+print("delete: ", idx.delete(0).to_list())
+print("drop:   ", idx.drop(["b"]).to_list())
+print("rename: ", idx.rename("new_name"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -386,6 +451,15 @@ console.log("isna: ", idx.isna());
 console.log("notna:", idx.notna());
 console.log("dropna:", idx.dropna().toString());
 console.log("fillna(0):", idx.fillna(0).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+idx = pd.Index([1, None, 3])
+
+print("isna: ", idx.isna().tolist())
+print("notna:", idx.notna().tolist())
+print("dropna:", idx.dropna().to_list())
+print("fillna(0):", idx.fillna(0).to_list())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -417,6 +491,20 @@ console.log("desc values:", desc.toArray());
 // Slicing preserves RangeIndex type
 const sliced = r.slice(10, 20);
 console.log("sliced:", sliced.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Only stores start/stop/step — values computed on the fly
+r = pd.RangeIndex(0, 1_000_000)
+print("size:", r.size)
+print("at(500):", r[500])
+
+# Negative step
+desc = pd.RangeIndex(10, 0, -2)
+print("desc values:", desc.to_list())
+
+# Slicing preserves RangeIndex type
+sliced = r[10:20]
+print("sliced:", sliced.to_list())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -448,6 +536,19 @@ console.log(temps.toString());
 console.log("\nMean:", temps.mean());
 console.log("Max:", temps.max());
 console.log("Min:", temps.min());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Create a Series with a custom index
+temps = pd.Series(
+    data=[72, 68, 75, 80, 77],
+    index=["Mon", "Tue", "Wed", "Thu", "Fri"],
+    name="temperature",
+)
+
+print(temps)
+print("\nMean:", temps.mean())
+print("Max:", temps.max())
+print("Min:", temps.min())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

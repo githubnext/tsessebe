@@ -36,6 +36,17 @@ jobs:
       - name: Bundle TypeScript compiler for offline playground
         run: cp node_modules/typescript/lib/typescript.js ./playground/dist/typescript.js
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install pandas numpy
+
+      - name: Validate Python playground examples
+        run: python scripts/validate-python-examples.py playground/
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:

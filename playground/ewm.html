@@ -231,6 +231,20 @@ console.log("span=3:    ", a.values);
 console.log("com=1:     ", b.values);
 console.log("halflife=1:", c.values);
 console.log("alpha=0.5: ", d.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+# All four are equivalent (alpha ≈ 0.5):
+a = s.ewm(span=3).mean()        # alpha = 2/(3+1) = 0.5
+b = s.ewm(com=1).mean()         # alpha = 1/(1+1) = 0.5
+c = s.ewm(halflife=1).mean()    # alpha = 1 − 2^(−1/1) = 0.5
+d = s.ewm(alpha=0.5).mean()     # alpha = 0.5 directly
+
+print("span=3:    ", list(a))
+print("com=1:     ", list(b))
+print("halflife=1:", list(c))
+print("alpha=0.5: ", list(d))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -262,6 +276,13 @@ const s = new Series({ data: [10, 20, 15, 30, 25] });
 // EWM mean with span=3 (alpha=0.5)
 const ewmMean = s.ewm({ span: 3 }).mean();
 console.log("ewm mean:", ewmMean.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 20, 15, 30, 25])
+
+# EWM mean with span=3 (alpha=0.5)
+ewm_mean = s.ewm(span=3).mean()
+print("ewm mean:", list(ewm_mean))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -288,6 +309,13 @@ const s = new Series({ data: [1, 2, 3, 4, 5] });
 // Simple exponential smoothing (alpha=0.3)
 const smooth = s.ewm({ alpha: 0.3, adjust: false }).mean();
 console.log("smoothed:", smooth.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+# Simple exponential smoothing (alpha=0.3)
+smooth = s.ewm(alpha=0.3, adjust=False).mean()
+print("smoothed:", list(smooth))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -317,6 +345,17 @@ console.log("std:", ewmStd.values);
 // Biased (population) variance
 const ewmVarBiased = prices.ewm({ span: 5 }).var(true);
 console.log("var (biased):", ewmVarBiased.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+prices = pd.Series([100, 102, 98, 105, 103, 99])
+
+# EWM standard deviation (span=5)
+ewm_std = prices.ewm(span=5).std()
+print("std:", list(ewm_std))
+
+# Biased (population) variance
+ewm_var_biased = prices.ewm(span=5).var(bias=True)
+print("var (biased):", list(ewm_var_biased))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -343,6 +382,14 @@ const y = new Series({ data: [5, 4, 3, 2, 1] });
 // x goes up, y goes down → negative covariance
 const ewmCov = x.ewm({ alpha: 0.4 }).cov(y);
 console.log("cov(x, y):", ewmCov.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+x = pd.Series([1, 2, 3, 4, 5])
+y = pd.Series([5, 4, 3, 2, 1])
+
+# x goes up, y goes down → negative covariance
+ewm_cov = x.ewm(alpha=0.4).cov(y)
+print("cov(x, y):", list(ewm_cov))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -368,6 +415,13 @@ const s2 = new Series({ data: [2, 4, 6, 8, 10] }); // perfect linear
 
 const ewmCorr = s1.ewm({ span: 3 }).corr(s2);
 console.log("corr(s1, s2):", ewmCorr.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s1 = pd.Series([1, 2, 3, 4, 5])
+s2 = pd.Series([2, 4, 6, 8, 10])  # perfect linear
+
+ewm_corr = s1.ewm(span=3).corr(s2)
+print("corr(s1, s2):", list(ewm_corr))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -399,6 +453,18 @@ console.log("ignoreNa=false:", r1.values);
 // ignoreNa=true: missing values completely skipped
 const r2 = s.ewm({ alpha: 0.5, ignoreNa: true }).mean();
 console.log("ignoreNa=true: ", r2.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([1, None, 3, None, 5])
+
+# ignore_na=False (default): null positions advance time (extra decay)
+r1 = s.ewm(alpha=0.5, ignore_na=False).mean()
+print("ignore_na=False:", list(r1))
+
+# ignore_na=True: missing values completely skipped
+r2 = s.ewm(alpha=0.5, ignore_na=True).mean()
+print("ignore_na=True: ", list(r2))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -432,6 +498,22 @@ dfMean.print();
 const dfStd = df.ewm({ span: 3 }).std();
 console.log("\nEWM std:");
 dfStd.print();</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "open": [10, 11, 10.5, 12, 11.8],
+    "close": [11, 10.5, 12, 11.8, 13],
+})
+
+# EWM mean for each column independently
+df_mean = df.ewm(span=3).mean()
+print("EWM mean:")
+print(df_mean.to_string())
+
+# EWM std for each column
+df_std = df.ewm(span=3).std()
+print("\nEWM std:")
+print(df_std.to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -459,6 +541,14 @@ const ewmWeightedSum = s.ewm({ alpha: 0.5 }).apply((vals, weights) =>
   vals.reduce((acc, v, i) => acc + v * weights[i], 0)
 );
 console.log("weighted sum:", ewmWeightedSum.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+# EWM weighted sum (equivalent to unadjusted numerator)
+# Note: pandas 3.0 removed ewm().apply(); use ewm().sum() instead
+ewm_weighted_sum = s.ewm(alpha=0.5).sum()
+print("weighted sum:", list(ewm_weighted_sum))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
