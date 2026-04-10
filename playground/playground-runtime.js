@@ -250,7 +250,7 @@ function injectHighlightStyles() {
     "border:1px solid transparent;border-top:none;border-bottom:none;" +
     "border-radius:0;" +
     "padding:1rem;" +
-    "font-family:'Cascadia Code','Fira Code','JetBrains Mono',monospace;" +
+    "font-family:var(--font-mono,'Cascadia Code','Fira Code','JetBrains Mono',monospace);" +
     "font-size:0.875rem;line-height:1.55;" +
     "white-space:pre;tab-size:2;overflow:hidden;" +
     "color:#e6edf3;" +
@@ -322,6 +322,7 @@ function setupBlock(block, ts) {
   function autoResize() {
     editor.style.height = "auto";
     editor.style.height = editor.scrollHeight + 2 + "px";
+    syncScroll();
   }
   editor.addEventListener("input", autoResize);
   autoResize();
