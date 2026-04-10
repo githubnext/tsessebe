@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-10T09:30:00Z |
-| Iteration Count | 160 |
-| Best Metric | 90 |
+| Last Run | 2026-04-10T09:57:33Z |
+| Iteration Count | 161 |
+| Best Metric | 91 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258` |
 | PR | #81 |
@@ -26,15 +26,22 @@
 
 ## 🎯 Current Priorities
 
-**State (iter 160)**: 90 files VERIFIED on local branch but NOT PUSHED (auth issue + MCP tools unavailable). Canonical c9103f2f32e44258 branch still has 88 pushed files. To beat best_metric=90, next iteration must re-implement format_ops + export_ops (2 files to reach 90) PLUS one more new feature (to reach 91). Specifics:
-- `src/stats/format_ops.ts` — 14 formatting functions (formatFloat/Percent/Scientific/Engineering/Thousands/Currency/Compact + factories + applySeriesFormatter/applyDataFrameFormatter/seriesToString/dataFrameToString). 84 tests. Already validated.
-- `src/stats/export_ops.ts` — 5 export functions: seriesToHtml, dataFrameToHtml, seriesToMarkdown, dataFrameToMarkdown, dataFrameToLatex. 43 tests. Already validated.  
-- Then one more new feature to reach 91: suggest `src/io/read_excel.ts` OR `src/stats/rank_extended.ts`
+Iter 161 complete: 91 files VERIFIED locally (commit `cee1330`), but push_to_pull_request_branch MCP tool unavailable again. Canonical branch STILL at 88 files (iter 133 = ac23d9b). Next iteration MUST:
+1. Check out canonical branch `autoloop/build-tsb-pandas-typescript-migration-c9103f2f32e44258`
+2. Re-implement format_ops (88→89), export_ops (89→90), corr_methods (90→91) — all 3 already tested & passing
+3. Use push_to_pull_request_branch to push to PR #81
+
+Exact implementations from iter 161:
+- `src/stats/format_ops.ts` — formatFloat/Percent/Scientific/Engineering/Thousands/Currency/Compact, 3 factories, applySeriesFormatter, applyDataFrameFormatter, seriesToString, dataFrameToString. 55 tests.
+- `src/stats/export_ops.ts` — seriesToHtml, dataFrameToHtml, seriesToMarkdown, dataFrameToMarkdown, dataFrameToLatex. 27 tests.
+- `src/stats/corr_methods.ts` — spearmanCorr, spearmanCorrDataFrame, kendallCorr, kendallCorrDataFrame. 21 tests.
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 161 (format_ops + export_ops + corr_methods)**: 3 features in one iteration = +3 metric (88→91). All 103 tests pass. BUT safeoutputs push_to_pull_request_branch unavailable again (4th consecutive iteration with push failure). Canonical branch STILL at 88 files. This is a persistent infrastructure issue.
+- **Iter 161 lesson**: Always verify actual branch file count at start (run eval command on checked-out branch). State file was claiming 90 but actual was 88.
 - **Iter 160 (format_ops + export_ops)**: c9103f2f branch APIs match iter136 (`df.col()`, `series.values`, `new Series({ data })`). `export_ops.ts` (to_html/to_markdown/to_latex) works zero-dep. 127 tests pass. MCP push tools unavailable — commit NOT pushed.
 - **Iter 159 (format_ops)**: `fc.double` range ≤1e15 for `toFixed` tests. `npx bun` when not in PATH. c9103f2f has 88 non-index exported files.
 - **Iter 158 (format_ops re-impl)**: `col(name)` access for DataFrame. `Series({ data: [] })`. `applyDataFrameFormatter` returns `Record<string, string[]>`.
@@ -61,6 +68,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 161 — 2026-04-10 09:57 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24237345621)
+
+- **Status**: ✅ Accepted (local commit `cee1330` — push_to_pull_request_branch unavailable again)
+- **Change**: Added `src/stats/format_ops.ts` (14 formatting fns, 55 tests), `src/stats/export_ops.ts` (5 export fns, 27 tests), `src/stats/corr_methods.ts` (Spearman ρ + Kendall τ-b, 21 tests). 103 tests pass. Metric 88→91 (+3).
+- **Metric**: 91 (previous best: 88 on actual pushed branch, delta: +3)
+- **Commit**: `cee1330` (local, not pushed)
+- **Notes**: Canonical branch still at ac23d9b (88 files). safeoutputs push tool unavailable for 4th consecutive time. Next iteration must re-apply these same 3 modules and push them.
 
 ### Iteration 160 — 2026-04-10 09:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24236297710)
 
