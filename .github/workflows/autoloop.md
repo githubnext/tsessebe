@@ -458,7 +458,7 @@ steps:
       PYEOF
 
 source: githubnext/autoloop
-engine: copilot
+engine: claude
 
 features:
   copilot-requests: true
