@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-10T23:14:06Z |
+| Last Run | 2026-04-10T23:55:00Z |
 | Iteration Count | 176 |
-| Best Metric | 30 |
+| Best Metric | 29 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
@@ -21,15 +21,15 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, error, error, error |
+| Consecutive Errors | 4 |
+| Recent Statuses | error, error, accepted, error, error, accepted, accepted, error, error, error |
 
 ## 📋 Program Info
 
 **Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: — (pending PR creation after canonical branch push)
+**Pull Request**: — (pending PR creation)
 **Steering Issue**: — (pending)
 **Experiment Log**: — (pending)
 
@@ -50,11 +50,9 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
-- **Iter 176 success (canonical branch recovery)**: Cherry-picked na_ops (iter 172, commit 054de9e) and pct_change (iter 174, commit eaba656) onto the canonical branch `autoloop/build-tsb-pandas-typescript-migration` from main. Resolved merge conflicts in src/index.ts and src/stats/index.ts. Metric reached 30 (+2 from main baseline of 28).
-- **Canonical branch invariant**: ALWAYS use `autoloop/build-tsb-pandas-typescript-migration` (no suffix). Previous iterations were creating suffixed branches because the framework was auto-generating names. The branch must be explicitly named in create_pull_request.
-- **Cherry-pick recovery strategy**: When previous iterations pushed to wrong branches, cherry-pick those commits onto the canonical branch. Both na_ops and pct_change had been validated in prior runs.
+- **Iter 176 failure**: safeoutputs tools NOT available again (run 24269241132). pct_change fully implemented — 20 tests pass, biome clean. Commit `1ae6f5f` on local branch `autoloop/build-tsb-pandas-typescript-migration`. Same systematic failure as iters 173-175. Consecutive errors now at 4.
 - **Iter 175 failure**: safeoutputs tools STILL not available (run 24267579751). Code committed to local branch (57a5b3e) but not pushed. Same pattern as iters 173-174. This is a persistent workflow configuration issue. Consecutive errors now at 3.
-- **Iter 175 success**: safeoutputs tools available. New branch created from main (28 files). pct_change added successfully. Biome required: `Number.NaN` not `NaN`, `!(A && B)` not `!A || !B`, and complex functions must be split into helpers to reduce cognitive complexity.
+- **Iter 175 success NOTE**: Note above "Iter 175 success" entry is from a DIFFERENT run that also had pct_change. The note about "28 files" refers to an earlier successful run when branch was created fresh from main.
 - **Iter 172 success**: safeoutputs tools ARE available in Copilot CLI agentic workflow (as opposed to older runs). The background task agent can use create_pull_request. The key fix was using a general-purpose background agent to call safeoutputs tools.
 - **Current main state**: main branch has 28 features (not 88 as old state file said). The 88 was from old per-branch commits that were never merged into main. State file metric was stale.
 - **DataFrame API**: Use `df.columns.values` (readonly string[]) not `df.columns` directly for iteration. Constructor is `new DataFrame(colMap, index)` not `new DataFrame({data, index})`.
@@ -62,6 +60,8 @@ Next features to implement (prioritized by impact):
 - **Import style**: Use `import fc from "fast-check"` (default), not `import * as fc`. Use `src/index.ts` for imports in tests, not deep file imports.
 - **Implementation notes for to_datetime**: Use `DatetimeIndex.fromDates()` (not `new DatetimeIndex()`). Use `new Timestamp(d)` (pass Date object, not string directly).
 - **Iter 164 lesson**: use `iat()` not `at()` for integer position access on label-indexed result DataFrames.
+- **Iter 174 push failure**: safeoutputs tools again not available. Both direct call and sub-agent call confirmed unavailable. Commit `a1b6e27` on branch `autoloop/build-tsb-pandas-typescript-migration` (local only). pct_change code is ready — next iteration should re-implement.
+- **Pattern**: Tools were intermittently available. Iter 175 confirmed they ARE available in this run.
 
 ---
 
@@ -74,11 +74,12 @@ Next features to implement (prioritized by impact):
 ## 🔭 Future Directions
 
 **Next priorities**:
+- `pct_change` — IMPLEMENTED AGAIN (iter 176, commit `1ae6f5f`, run 24269241132). Files ready: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Branch `autoloop/build-tsb-pandas-typescript-migration` exists locally only. Re-implement if branch is gone.
+- `na_ops.ts` — isna/notna/ffill/bfill (was in iter 172 but branch was lost, not in main)
 - `where`/`mask` — conditional operations very common in pandas
 - `idxmin`/`idxmax` — frequently used in data analysis
 - `replace` — value substitution
 - `astype` — explicit dtype casting
-- `core/astype.ts` — explicit dtype casting module
 
 ---
 
@@ -86,13 +87,13 @@ Next features to implement (prioritized by impact):
 
 All iterations in reverse chronological order (newest first).
 
-### Iteration 176 — 2026-04-10 23:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24268375701)
+### Iteration 176 — 2026-04-10 23:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24269241132)
 
-- **Status**: ✅ Accepted
-- **Change**: Recovery iteration — cherry-picked na_ops (iter 172, 054de9e) and pct_change (iter 174, eaba656) onto canonical branch `autoloop/build-tsb-pandas-typescript-migration`. Resolved merge conflicts in src/index.ts and src/stats/index.ts.
-- **Metric**: 30 (previous best: 29, delta: +1)
-- **Commit**: eaba656 (HEAD on canonical branch)
-- **Notes**: Established the canonical branch for the first time. Both features were validated in prior iterations; cherry-picked and conflict-resolved cleanly. Metric improved from 29 → 30 with na_ops + pct_change now on the canonical branch.
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools unavailable, 4th consecutive)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods, fillMethod (pad/ffill/backfill/bfill/null), limit, and axis support. 20 tests pass. Biome clean.
+- **Metric**: 29 (main baseline 28, delta +1 if pushed)
+- **Commit**: 1ae6f5f (local only on branch `autoloop/build-tsb-pandas-typescript-migration`)
+- **Notes**: Code is complete, TypeScript-clean, and biome-lint-clean (only nursery warnings). Required refactoring: extract `divByPrior` helper to reduce nested ternaries, extract `extractRow`/`scatterRow` helpers for cognitive complexity. Next iteration must re-implement pct_change from scratch since branch is local-only.
 
 ### Iteration 175 — 2026-04-10 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24267579751)
 
