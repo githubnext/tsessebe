@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — wide_to_long</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    table { border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #d1d5db; padding: 4px 12px; text-align: left; font-size: 14px; }
+    th { background: #f3f4f6; font-weight: 600; }
+    a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>↔️ wide_to_long</h1>
+  <p>
+    <strong><code>wideToLong</code></strong> reshapes a wide-format DataFrame into long format by
+    gathering columns that share a common stub prefix, mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.wide_to_long.html"><code>pandas.wide_to_long()</code></a>.
+  </p>
+  <p>Equivalent Python: <code>pandas.wide_to_long(df, stubnames, i, j)</code></p>
+  <textarea id="python-equivalent" readonly style="width:100%;height:60px;font-family:monospace;font-size:13px;background:#fffde7;border:1px solid #f9a825;border-radius:4px;padding:8px;">
+import pandas as pd
+pd.wide_to_long(df, stubnames=["math", "eng"], i="id", j="year", sep="_")
+  </textarea>
+
+  <!-- Demo 1: Basic wide to long -->
+  <h2>1 · Basic wide-to-long</h2>
+  <div class="demo">
+    <pre>const df = { id: [1, 2], x1: [10, 20], x2: [11, 21] };
+wideToLong(df, "x", "id", "time")
+// id  time  x
+//  1     1  10
+//  2     1  20
+//  1     2  11
+//  2     2  21</pre>
+    <div id="demo1"></div>
+  </div>
+
+  <!-- Demo 2: Multiple stubs -->
+  <h2>2 · Multiple stubs</h2>
+  <div class="demo">
+    <pre>const df = { id: [1, 2], math1: [90, 80], math2: [95, 85], eng1: [70, 75], eng2: [72, 78] };
+wideToLong(df, ["math", "eng"], "id", "year")</pre>
+    <div id="demo2"></div>
+  </div>
+
+  <!-- Demo 3: Custom separator -->
+  <h2>3 · Custom separator (<code>sep: "_"</code>)</h2>
+  <div class="demo">
+    <pre>const df = { id: [1, 2], math_2020: [90, 80], math_2021: [95, 85], eng_2020: [70, 75], eng_2021: [72, 78] };
+wideToLong(df, ["math", "eng"], "id", "year", { sep: "_" })</pre>
+    <div id="demo3"></div>
+  </div>
+
+  <!-- Demo 4: String suffixes -->
+  <h2>4 · String suffixes with custom suffix pattern</h2>
+  <div class="demo">
+    <pre>const df = { id: [1, 2], score_pre: [50, 60], score_post: [75, 80] };
+wideToLong(df, "score", "id", "period", { sep: "_", suffix: "[a-z]+" })</pre>
+    <div id="demo4"></div>
+  </div>
+
+  <!-- Demo 5: Multiple id columns -->
+  <h2>5 · Multiple identifier columns</h2>
+  <div class="demo">
+    <pre>const df = { grp: ["a","b"], subgrp: [1, 2], v1: [10, 20], v2: [30, 40] };
+wideToLong(df, "v", ["grp", "subgrp"], "t")</pre>
+    <div id="demo5"></div>
+  </div>
+
+  <!-- Demo 6: Single row -->
+  <h2>6 · Single-row input</h2>
+  <div class="demo">
+    <pre>const df = { name: ["Alice"], score1: [95], score2: [88], score3: [91] };
+wideToLong(df, "score", "name", "exam")</pre>
+    <div id="demo6"></div>
+  </div>
+
+  <!-- Demo 7: No matching columns -->
+  <h2>7 · No stub columns → empty output</h2>
+  <div class="demo">
+    <pre>const df = { id: [1, 2], foo: [10, 20] };
+wideToLong(df, "x", "id", "t")
+// → 0 rows (no columns starting with "x")</pre>
+    <div id="demo7"></div>
+  </div>
+
+  <!-- Demo 8: Numeric sort of suffixes -->
+  <h2>8 · Numeric sort of suffixes</h2>
+  <div class="demo">
+    <pre>// Columns x10, x2, x1 → sorted as 1, 2, 10 (numeric)
+const df = { id: [1], x10: [100], x2: [20], x1: [10] };
+wideToLong(df, "x", "id", "t")</pre>
+    <div id="demo8"></div>
+  </div>
+
+  <script>
+    // Minimal wide_to_long implementation for the playground
+    function wideToLong(df, stubnames, i, j, opts = {}) {
+      const { sep = "", suffix = "\\d+" } = opts;
+      const stubs = typeof stubnames === "string" ? [stubnames] : stubnames;
+      const idCols = typeof i === "string" ? [i] : i;
+      const suffixRe = new RegExp(`^(?:${suffix})$`);
+      const colNames = Object.keys(df);
+      const nRows = df[colNames[0]].length;
+
+      // Discover suffixes
+      const suffixMap = new Map();
+      for (const col of colNames) {
+        for (const stub of stubs) {
+          const prefix = stub + sep;
+          if (!col.startsWith(prefix)) continue;
+          const tail = col.slice(prefix.length);
+          if (!suffixRe.test(tail)) continue;
+          if (!suffixMap.has(tail)) suffixMap.set(tail, new Map());
+          suffixMap.get(tail).set(stub, col);
+          break;
+        }
+      }
+
+      // Sort suffixes
+      const ordered = [...suffixMap.keys()].sort((a, b) => {
+        const na = Number(a), nb = Number(b);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return a < b ? -1 : a > b ? 1 : 0;
+      });
+
+      // Build output
+      const out = {};
+      for (const c of idCols) out[c] = [];
+      out[j] = [];
+      for (const s of stubs) out[s] = [];
+
+      for (let r = 0; r < nRows; r++) {
+        for (const suf of ordered) {
+          for (const c of idCols) out[c].push(df[c][r]);
+          out[j].push(/^\d+$/.test(suf) ? Number(suf) : suf);
+          const entry = suffixMap.get(suf);
+          for (const s of stubs) {
+            const col = entry?.get(s);
+            out[s].push(col !== undefined ? df[col][r] : null);
+          }
+        }
+      }
+      return out;
+    }
+
+    function renderTable(data, id) {
+      const cols = Object.keys(data);
+      if (cols.length === 0 || data[cols[0]].length === 0) {
+        document.getElementById(id).innerHTML = "<em>empty DataFrame (0 rows)</em>";
+        return;
+      }
+      const nRows = data[cols[0]].length;
+      let html = "<table><thead><tr>" + cols.map(c => `<th>${c}</th>`).join("") + "</tr></thead><tbody>";
+      for (let r = 0; r < nRows; r++) {
+        html += "<tr>" + cols.map(c => `<td>${data[c][r]}</td>`).join("") + "</tr>";
+      }
+      html += "</tbody></table>";
+      document.getElementById(id).innerHTML = html;
+    }
+
+    renderTable(wideToLong({ id: [1, 2], x1: [10, 20], x2: [11, 21] }, "x", "id", "time"), "demo1");
+    renderTable(wideToLong({ id: [1, 2], math1: [90, 80], math2: [95, 85], eng1: [70, 75], eng2: [72, 78] }, ["math", "eng"], "id", "year"), "demo2");
+    renderTable(wideToLong({ id: [1, 2], math_2020: [90, 80], math_2021: [95, 85], eng_2020: [70, 75], eng_2021: [72, 78] }, ["math", "eng"], "id", "year", { sep: "_" }), "demo3");
+    renderTable(wideToLong({ id: [1, 2], score_pre: [50, 60], score_post: [75, 80] }, "score", "id", "period", { sep: "_", suffix: "[a-z]+" }), "demo4");
+    renderTable(wideToLong({ grp: ["a","b"], subgrp: [1, 2], v1: [10, 20], v2: [30, 40] }, "v", ["grp", "subgrp"], "t"), "demo5");
+    renderTable(wideToLong({ name: ["Alice"], score1: [95], score2: [88], score3: [91] }, "score", "name", "exam"), "demo6");
+    renderTable(wideToLong({ id: [1, 2], foo: [10, 20] }, "x", "id", "t"), "demo7");
+    renderTable(wideToLong({ id: [1], x10: [100], x2: [20], x1: [10] }, "x", "id", "t"), "demo8");
+  </script>
+</body>
+</html>
