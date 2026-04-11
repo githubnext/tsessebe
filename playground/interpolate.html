@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — interpolate</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    .tag { display: inline-block; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+    a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>📈 interpolate</h1>
+  <p>
+    <strong><code>interpolateSeries</code></strong> /
+    <strong><code>interpolateDataFrame</code></strong> fill missing (<code>null</code> / <code>NaN</code>)
+    values using one of several interpolation methods, just like
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.interpolate.html"><code>Series.interpolate()</code></a>.
+  </p>
+  <p>Equivalent Python: <code>series.interpolate(method="linear")</code></p>
+
+  <!-- Demo 1: Linear interpolation -->
+  <h2>1 · Linear interpolation (default)</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [0, null, null, null, 4] });
+interpolateSeries(s).values;
+// → [0, 1, 2, 3, 4]</pre>
+    <div class="output" id="demo1"></div>
+  </div>
+
+  <!-- Demo 2: Edge values not filled -->
+  <h2>2 · Edge missing values are not extrapolated</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [null, null, 2, null, 4, null] });
+interpolateSeries(s).values;
+// → [null, null, 2, 3, 4, null]  (leading/trailing unchanged)</pre>
+    <div class="output" id="demo2"></div>
+  </div>
+
+  <!-- Demo 3: Pad / ffill -->
+  <h2>3 · Pad / forward-fill</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [1, null, null, 4, null] });
+interpolateSeries(s, { method: "pad" }).values;
+// → [1, 1, 1, 4, 4]</pre>
+    <div class="output" id="demo3"></div>
+  </div>
+
+  <!-- Demo 4: Backfill -->
+  <h2>4 · Backfill / backward-fill</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [null, null, 3, null, 5] });
+interpolateSeries(s, { method: "bfill" }).values;
+// → [3, 3, 3, 5, 5]</pre>
+    <div class="output" id="demo4"></div>
+  </div>
+
+  <!-- Demo 5: Nearest -->
+  <h2>5 · Nearest-neighbour</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [1, null, null, null, 5] });
+interpolateSeries(s, { method: "nearest" }).values;
+// → [1, 1, 1, 5, 5]  (pos 1,2 → left; pos 3 → right)</pre>
+    <div class="output" id="demo5"></div>
+  </div>
+
+  <!-- Demo 6: Limit -->
+  <h2>6 · Limit consecutive fills</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [0, null, null, null, null, 5] });
+interpolateSeries(s, { limit: 1 }).values;
+// → [0, 1, null, null, 4.8, 5]  (at most 1 fill from each neighbour)</pre>
+    <div class="output" id="demo6"></div>
+  </div>
+
+  <!-- Demo 7: DataFrame column-wise -->
+  <h2>7 · DataFrame — interpolate each column (axis=0)</h2>
+  <div class="demo">
+    <pre>const df = DataFrame.fromColumns({
+  temperature: [15, null, null, 21],
+  humidity:    [60, 62, null, 66],
+});
+interpolateDataFrame(df).toString();</pre>
+    <div class="output" id="demo7"></div>
+  </div>
+
+  <!-- Demo 8: DataFrame row-wise -->
+  <h2>8 · DataFrame — interpolate across rows (axis=1)</h2>
+  <div class="demo">
+    <pre>const df = DataFrame.fromColumns({
+  mon: [10, 0], tue: [null, null], wed: [20, 8],
+});
+interpolateDataFrame(df, { axis: 1 }).toString();</pre>
+    <div class="output" id="demo8"></div>
+  </div>
+
+  <script type="module">
+    import {
+      Series, DataFrame,
+      interpolateSeries, interpolateDataFrame,
+    } from "./tsb.js";
+
+    function show(id, val) {
+      document.getElementById(id).textContent =
+        val === null ? "null" : JSON.stringify(val, null, 2);
+    }
+
+    // Demo 1
+    {
+      const s = new Series({ data: [0, null, null, null, 4] });
+      show("demo1", [...interpolateSeries(s).values]);
+    }
+
+    // Demo 2
+    {
+      const s = new Series({ data: [null, null, 2, null, 4, null] });
+      show("demo2", [...interpolateSeries(s).values]);
+    }
+
+    // Demo 3
+    {
+      const s = new Series({ data: [1, null, null, 4, null] });
+      show("demo3", [...interpolateSeries(s, { method: "pad" }).values]);
+    }
+
+    // Demo 4
+    {
+      const s = new Series({ data: [null, null, 3, null, 5] });
+      show("demo4", [...interpolateSeries(s, { method: "bfill" }).values]);
+    }
+
+    // Demo 5
+    {
+      const s = new Series({ data: [1, null, null, null, 5] });
+      show("demo5", [...interpolateSeries(s, { method: "nearest" }).values]);
+    }
+
+    // Demo 6
+    {
+      const s = new Series({ data: [0, null, null, null, null, 5] });
+      show("demo6", [...interpolateSeries(s, { limit: 1 }).values]);
+    }
+
+    // Demo 7
+    {
+      const df = DataFrame.fromColumns({
+        temperature: [15, null, null, 21],
+        humidity:    [60, 62, null, 66],
+      });
+      const out = interpolateDataFrame(df);
+      show("demo7", {
+        temperature: [...out.col("temperature").values],
+        humidity:    [...out.col("humidity").values],
+      });
+    }
+
+    // Demo 8
+    {
+      const df = DataFrame.fromColumns({
+        mon: [10, 0], tue: [null, null], wed: [20, 8],
+      });
+      const out = interpolateDataFrame(df, { axis: 1 });
+      show("demo8", {
+        mon: [...out.col("mon").values],
+        tue: [...out.col("tue").values],
+        wed: [...out.col("wed").values],
+      });
+    }
+  </script>
+</body>
+</html>
