@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T22:55:00Z |
-| Iteration Count | 214 |
-| Best Metric | 49 |
+| Last Run | 2026-04-11T23:20:00Z |
+| Iteration Count | 215 |
+| Best Metric | 50 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | #created-iter-214 (PR created for `autoloop/build-tsb-pandas-typescript-migration` in iter 214) |
+| PR | — |
 | Steering Issue | #107 |
 | Paused | false |
 | Pause Reason | — |
@@ -31,7 +31,7 @@
 **Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: Created in iter 214 for `autoloop/build-tsb-pandas-typescript-migration`
+**Pull Request**: — (to be created)
 **Steering Issue**: #107
 **Experiment Log**: #3
 
@@ -41,12 +41,14 @@
 
 Next features to implement (prioritized by impact):
 - `io/read_excel.ts` — Excel file reading (requires xlsx parser from scratch)
-- `window/rolling_apply.ts` — rolling/expanding apply already exists; consider `ewm` improvements
+- `stats/pipe.ts` — pipe function for chaining transformations
+- `stats/transform.ts` — transform with a function applied per column
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 215**: `reduce_ops` — `stats/reduce_ops.ts`. Series constructor takes `SeriesOptions<T>` with `data` key (not a plain array directly). Use `new Series<Scalar>({ data: [...], index: ... })`. Biome auto-formatter splits long function signatures >100 cols across multiple lines — use `bunx biome format --write --unsafe` or `npx @biomejs/biome check --write --unsafe` to fix. `useImportType` lint rule: use `import type { DataFrame }` when only used as a type. Metric: 50 (+1). Commit: a2af153.
 - **Iter 214**: `selectDtypes` — `stats/select_dtypes.ts`. Use `import type` for DataFrame (it's only used as a type). Extract `validateNoOverlap` and `columnPasses` helpers to keep complexity under 15. `useExplicitLengthCheck`: use `(x?.length ?? 0) > 0` pattern for optional arrays. `fc.constantFrom<DtypeSpecifier>(...)` type param needed for property tests. Auto-format with `bunx biome format --write` to fix formatter diffs. Metric: 49 (+1). Commit: edf0fb4.
 - **Iter 213**: `interpolate` — `stats/interpolate.ts`. Extract helpers (`fillLinearRun`, `classifyAreas`, `bisectLeft`, `chooseNearest`) to stay under complexity limit. `classifyAreas` precomputes inside/outside area for each position cleanly. Use `as Scalar`/`as number`/`as string` casts for `noUncheckedIndexedAccess` — same pattern as `na_ops.ts` uses `out[i] as Scalar`. `isMissing()` helper reuse pattern. `interpolateByColumns`/`interpolateByRows` extracted to reduce main function complexity. Metric: 48 (+1). Commit: ab037f6.
 - **Iter 212**: `factorize` + `wide_to_long` — Two features in one iteration to recover from iter 211's lost push. `noExcessiveCognitiveComplexity`: extract `collectUniques`, `buildCodes`, `compareLabels` helpers for factorize; extract `discoverSuffixMap`, `buildStubSourceData`, `accumulateRow` helpers for wideToLong. `useBlockStatements`: always use braces. `noNestedTernary`: use if/else chains. `useSimplifiedLogicExpression`: `!(a || b)` form. `useTopLevelRegex`: move `/^\d+$/` to module top-level. Metric: 47 (+1). Commit: 5b782a6.
@@ -83,6 +85,9 @@ Next features to implement (prioritized by impact):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 215 — 2026-04-11 23:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24293688514)
+- **Status**: ✅ Accepted — Add `stats/reduce_ops.ts`: nuniqueSeries/nunique, anySeries/anyDataFrame, allSeries/allDataFrame. Supports axis=0/1, dropna, skipna, boolOnly. Metric: 50 (+1). Commit: a2af153.
 
 ### Iteration 214 — 2026-04-11 22:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24293279696)
 - **Status**: ✅ Accepted — Add `stats/select_dtypes.ts`: selectDtypes(df, {include, exclude}). Generic aliases: number/integer/signed/unsigned/floating/bool/string/datetime/timedelta/category/object. Metric: 49 (+1). Commit: edf0fb4.
