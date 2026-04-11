@@ -105,3 +105,10 @@ export type {
   ApplyDataFrameOptions,
   ApplyExpandDataFrameOptions,
 } from "./apply.ts";
+export { cut, qcut, cutCodes, cutCategories } from "./cut.ts";
+export type {
+  CutOptions,
+  QcutOptions,
+  CutResult,
+  CutResultWithBins,
+} from "./cut.ts";

@@ -177,3 +177,10 @@ export type {
   ApplyDataFrameOptions,
   ApplyExpandDataFrameOptions,
 } from "./stats/index.ts";
+export { cut, qcut, cutCodes, cutCategories } from "./stats/index.ts";
+export type {
+  CutOptions,
+  QcutOptions,
+  CutResult,
+  CutResultWithBins,
+} from "./stats/index.ts";
