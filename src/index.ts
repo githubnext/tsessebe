@@ -74,6 +74,10 @@ export type {
 } from "./reshape/index.ts";
 export { stack, unstack, STACK_DEFAULT_SEP } from "./reshape/index.ts";
 export type { StackOptions, UnstackOptions } from "./reshape/index.ts";
+export { pivotTableFull } from "./reshape/index.ts";
+export type { PivotTableFullOptions, PivotAggFunc } from "./reshape/index.ts";
+export { explodeSeries, explodeDataFrame } from "./reshape/index.ts";
+export type { ExplodeOptions } from "./reshape/index.ts";
 export { MultiIndex } from "./core/index.ts";
 export type { MultiIndexOptions } from "./core/index.ts";
 export { rankSeries, rankDataFrame } from "./stats/index.ts";
@@ -107,3 +111,86 @@ export {
 export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./stats/index.ts";
 export { valueCounts, dataFrameValueCounts } from "./stats/index.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/index.ts";
+export {
+  isna,
+  notna,
+  isnull,
+  notnull,
+  ffillSeries,
+  bfillSeries,
+  dataFrameFfill,
+  dataFrameBfill,
+} from "./stats/index.ts";
+export type { FillDirectionOptions, DataFrameFillOptions } from "./stats/index.ts";
+export { pctChangeSeries, pctChangeDataFrame } from "./stats/index.ts";
+export type {
+  PctChangeFillMethod,
+  PctChangeOptions,
+  DataFramePctChangeOptions,
+} from "./stats/index.ts";
+export { idxminSeries, idxmaxSeries, idxminDataFrame, idxmaxDataFrame } from "./stats/index.ts";
+export type { IdxOptions, IdxDataFrameOptions } from "./stats/index.ts";
+export { astypeSeries, astype, castScalar } from "./core/index.ts";
+export type { AstypeOptions, DataFrameAstypeOptions } from "./core/index.ts";
+export { replaceSeries, replaceDataFrame } from "./stats/index.ts";
+export type {
+  ReplaceMapping,
+  ReplaceSpec,
+  ReplaceOptions,
+  DataFrameReplaceOptions,
+} from "./stats/index.ts";
+export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./stats/index.ts";
+export type {
+  SeriesCond,
+  DataFrameCond,
+  WhereOptions,
+  WhereDataFrameOptions,
+} from "./stats/index.ts";
+export { diffSeries, diffDataFrame, shiftSeries, shiftDataFrame } from "./stats/index.ts";
+export type {
+  DiffOptions,
+  DataFrameDiffOptions,
+  ShiftOptions,
+  DataFrameShiftOptions,
+} from "./stats/index.ts";
+export {
+  duplicatedSeries,
+  duplicatedDataFrame,
+  dropDuplicatesSeries,
+  dropDuplicatesDataFrame,
+} from "./stats/index.ts";
+export type { KeepPolicy, DuplicatedOptions, DataFrameDuplicatedOptions } from "./stats/index.ts";
+export { sampleSeries, sampleDataFrame } from "./core/index.ts";
+export type { SampleOptions } from "./core/index.ts";
+export { clipAdvancedSeries, clipAdvancedDataFrame } from "./stats/index.ts";
+export type {
+  SeriesBound,
+  DataFrameBound,
+  ClipAdvancedSeriesOptions,
+  ClipAdvancedDataFrameOptions,
+} from "./stats/index.ts";
+export {
+  applySeries,
+  mapSeries,
+  applyDataFrame,
+  applyExpandDataFrame,
+  mapDataFrame,
+} from "./stats/index.ts";
+export type {
+  MapLookup,
+  ApplyDataFrameOptions,
+  ApplyExpandDataFrameOptions,
+} from "./stats/index.ts";
+export { cut, qcut, cutCodes, cutCategories } from "./stats/index.ts";
+export type {
+  CutOptions,
+  QcutOptions,
+  CutResult,
+  CutResultWithBins,
+} from "./stats/index.ts";
+export { Interval, IntervalIndex, intervalRange } from "./stats/index.ts";
+export type { ClosedType, IntervalOptions, IntervalRangeOptions } from "./stats/index.ts";
+export { getDummies, getDummiesSeries, getDummiesDataFrame, fromDummies } from "./stats/index.ts";
+export type { GetDummiesOptions, FromDummiesOptions } from "./stats/index.ts";
+export { crosstab, crosstabSeries } from "./stats/index.ts";
+export type { CrosstabOptions, CrosstabAggFunc, CrosstabNormalize } from "./stats/index.ts";
