@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — pct_change</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.3s;
+    }
+    #playground-loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.9rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .playground-block { margin-top: 1rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--border);
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+    }
+    .playground-label { color: #8b949e; font-family: var(--font-mono); }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .playground-actions button:hover { border-color: var(--accent); color: var(--accent); }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem;
+      color: #484f58;
+      margin-top: 0.35rem;
+      text-align: right;
+    }
+    .api-reference-code {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      overflow-x: auto;
+      margin-top: 0.5rem;
+    }
+    .api-reference-code code {
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📊 pct_change — Interactive Playground</h1>
+  <p>Compute the fractional change between each element and a prior element.
+    Mirrors <code>pandas.Series.pct_change()</code> /
+    <code>pandas.DataFrame.pct_change()</code>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
+
+  <!-- 1 · Basic pct_change -->
+  <div class="section">
+    <h2>1 · Basic pct_change on a Series</h2>
+    <p><code>pctChangeSeries(series)</code> returns the fractional (not percentage) change
+      from each previous element. The first element is always <code>null</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, pctChangeSeries } from "tsb";
+
+// Stock prices
+const prices = new Series({ data: [100, 110, 99, 121], name: "ACME" });
+const changes = pctChangeSeries(prices);
+
+console.log("prices: ", [...prices.values]);
+console.log("pct_change:", changes.values.map(v =>
+  v === null ? "null" : (v * 100).toFixed(2) + "%"
+));
+// null, +10.00%, -10.00%, +22.22%</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Stock prices
+prices = pd.Series([100, 110, 99, 121], name="ACME")
+changes = prices.pct_change()
+
+print("prices:   ", prices.tolist())
+print("pct_change:", [None if pd.isna(v) else f"{v*100:.2f}%" for v in changes])
+# null, +10.00%, -10.00%, +22.22%</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 2 · periods option -->
+  <div class="section">
+    <h2>2 · Multi-period change</h2>
+    <p>The <code>periods</code> option controls the lag. Use <code>periods: 2</code> to
+      compare each value to the one two steps earlier — useful for month-over-month
+      comparisons in quarterly data.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, pctChangeSeries } from "tsb";
+
+// Quarterly revenue (Q1-Q4 over two years)
+const revenue = new Series({
+  data: [100, 120, 130, 115, 110, 132, 143, 127],
+});
+
+// Year-over-year: compare each quarter to the same quarter last year (4 periods)
+const yoy = pctChangeSeries(revenue, { periods: 4 });
+
+console.log("Revenue:    ", [...revenue.values]);
+console.log("YoY change:", yoy.values.map(v =>
+  v === null ? "null" : (v * 100).toFixed(1) + "%"
+));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Quarterly revenue (Q1-Q4 over two years)
+revenue = pd.Series([100, 120, 130, 115, 110, 132, 143, 127])
+
+# Year-over-year: compare each quarter to the same quarter last year (4 periods)
+yoy = revenue.pct_change(periods=4)
+
+print("Revenue:   ", revenue.tolist())
+print("YoY change:", [None if pd.isna(v) else f"{v*100:.1f}%" for v in yoy])</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 3 · NaN handling -->
+  <div class="section">
+    <h2>3 · Handling missing values</h2>
+    <p>By default, <code>pctChangeSeries</code> forward-fills (<code>fillMethod: "pad"</code>)
+      NaN/null values before computing the ratio — so gaps don't break the chain.
+      Set <code>fillMethod: null</code> to propagate NaN instead.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, pctChangeSeries } from "tsb";
+
+const prices = new Series({ data: [100, null, null, 130] });
+
+const withFill    = pctChangeSeries(prices);                       // fillMethod: "pad" (default)
+const noFill      = pctChangeSeries(prices, { fillMethod: null }); // no fill
+
+console.log("pad-fill:   ", [...withFill.values]);
+// null, 0, 0, 0.3  (gaps treated as 0-change then jump)
+console.log("no fill:    ", [...noFill.values]);
+// null, null, null, null  (NaN propagates)</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+prices = pd.Series([100, None, None, 130])
+
+with_fill = prices.pct_change(fill_method="pad")
+no_fill   = prices.pct_change(fill_method=None)
+
+print("pad-fill:  ", with_fill.tolist())
+print("no fill:   ", no_fill.tolist())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 4 · limit option -->
+  <div class="section">
+    <h2>4 · Limit consecutive fills</h2>
+    <p>The <code>limit</code> option caps how many consecutive NaN values get forward-filled.
+      Useful when you want to tolerate short gaps but not bridge large ones.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, pctChangeSeries } from "tsb";
+
+// 1-gap: filled; 2-gap: not filled (exceeds limit=1)
+const data = new Series({ data: [100, null, 110, null, null, 130] });
+
+const limited = pctChangeSeries(data, { fillMethod: "pad", limit: 1 });
+
+console.log("input:    ", [...data.values]);
+console.log("limited:  ", limited.values.map(v =>
+  v === null ? "null" : v.toFixed(4)
+));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# 1-gap: filled; 2-gap: not filled (exceeds limit=1)
+data = pd.Series([100, None, 110, None, None, 130])
+
+limited = data.pct_change(fill_method="pad", limit=1)
+
+print("input:   ", data.tolist())
+print("limited: ", limited.tolist())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 5 · DataFrame pct_change -->
+  <div class="section">
+    <h2>5 · DataFrame column-wise pct_change</h2>
+    <p><code>pctChangeDataFrame(df)</code> applies <code>pctChangeSeries</code> to every
+      column independently. Ideal for comparing multiple assets or metrics simultaneously.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Series, pctChangeDataFrame } from "tsb";
+
+const portfolio = new DataFrame(new Map([
+  ["ACME", new Series({ data: [100, 110, 99, 121] })],
+  ["GLOB", new Series({ data: [200, 190, 209, 230] })],
+  ["ZETA", new Series({ data: [50, 50, 55, 52] })],
+]));
+
+const returns = pctChangeDataFrame(portfolio);
+
+for (const col of returns.columns.values) {
+  const vals = returns.col(col).values;
+  console.log(col + ":", vals.map(v =>
+    v === null ? " null  " : (v >= 0 ? "+" : "") + (v * 100).toFixed(1) + "%"
+  ).join(", "));
+}</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+portfolio = pd.DataFrame({
+  "ACME": [100, 110, 99, 121],
+  "GLOB": [200, 190, 209, 230],
+  "ZETA": [50, 50, 55, 52],
+})
+
+returns = portfolio.pct_change()
+print(returns.to_string())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 6 · Negative periods -->
+  <div class="section">
+    <h2>6 · Negative periods (look-forward change)</h2>
+    <p>A negative <code>periods</code> value computes the forward change: how much will
+      this element change by the time we reach <code>|periods|</code> steps ahead.
+      Useful for computing returns on a "hold for N periods" strategy.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, pctChangeSeries } from "tsb";
+
+// If you buy today, what return do you get in the next 2 days?
+const prices = new Series({ data: [100, 105, 98, 110, 115] });
+const fwd2   = pctChangeSeries(prices, { periods: -2, fillMethod: null });
+
+console.log("prices:         ", [...prices.values]);
+console.log("2-day fwd rtn:  ", fwd2.values.map(v =>
+  v === null ? "null" : (v * 100).toFixed(1) + "%"
+));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# If you buy today, what return do you get in the next 2 days?
+prices = pd.Series([100, 105, 98, 110, 115])
+fwd2 = prices.pct_change(periods=-2, fill_method=None)
+
+print("prices:        ", prices.tolist())
+print("2-day fwd rtn: ", fwd2.tolist())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- API reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <p>All functions return a new Series/DataFrame of the same shape — inputs are never mutated.</p>
+    <pre class="api-reference-code"><code>// Series
+pctChangeSeries(series, {
+  periods?: number,           // default 1 (positive = look back, negative = look forward)
+  fillMethod?: "pad" | "bfill" | null,  // default "pad"
+  limit?: number | null,      // max consecutive fills; default unlimited
+}): Series
+
+// DataFrame
+pctChangeDataFrame(df, {
+  periods?: number,
+  fillMethod?: "pad" | "bfill" | null,
+  limit?: number | null,
+  axis?: 0 | 1 | "index" | "columns",  // default 0 (column-wise)
+}): DataFrame</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
