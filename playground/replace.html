@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — replace (value substitution)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-run, .playground-reset {
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .playground-run { background: var(--accent); color: #000; border-color: var(--accent); }
+    .playground-run:disabled { opacity: 0.5; cursor: not-allowed; }
+    .playground-reset { background: var(--surface); color: var(--text); }
+    textarea.playground-editor, textarea.playground-python {
+      width: 100%;
+      min-height: 120px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+    }
+    .playground-output {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      min-height: 2.5rem;
+      white-space: pre-wrap;
+      color: var(--green);
+    }
+    .playground-hint { font-size: 0.72rem; color: #484f58; margin-top: 0.3rem; }
+    .api-reference-code {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      overflow-x: auto;
+      white-space: pre;
+      color: #e6edf3;
+    }
+    footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    footer p { font-size: 0.85rem; }
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .tab-btn {
+      padding: 0.3rem 0.9rem;
+      font-size: 0.8rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      color: #8b949e;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Loading tsb runtime…</div>
+  </div>
+
+  <a class="back" href="index.html">← Back to playground index</a>
+
+  <h1>replace — value substitution</h1>
+  <p>
+    <code>replaceSeries</code> / <code>replaceDataFrame</code> substitute values
+    matching a pattern with a new value.<br/>
+    Supports scalar, array, and mapping (Record / Map) replacement specs.<br/>
+    Mirrors <code>Series.replace()</code> and <code>DataFrame.replace()</code> from pandas.
+  </p>
+
+  <!-- 1 · Scalar replacement -->
+  <div class="section">
+    <h2>1 · Scalar → scalar replacement</h2>
+    <p>
+      Replace every occurrence of a single value with another value.
+      Works on numbers, strings, booleans, and <code>null</code>.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, replaceSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 2, 1], name: "counts" });
+const r = replaceSeries(s, { toReplace: 2, value: 99 });
+
+console.log("original:", [...s.values]);   // [1, 2, 3, 2, 1]
+console.log("replaced:", [...r.values]);   // [1, 99, 3, 99, 1]
+
+// Replace null with 0
+const s2 = new Series({ data: [1, null, 3, null, 5] });
+const r2 = replaceSeries(s2, { toReplace: null, value: 0 });
+console.log("nulls→0:", [...r2.values]);   // [1, 0, 3, 0, 5]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([1, 2, 3, 2, 1], name="counts")
+r = s.replace(2, 99)
+
+print("original:", s.tolist())   # [1, 2, 3, 2, 1]
+print("replaced:", r.tolist())   # [1, 99, 3, 99, 1]
+
+# Replace NaN with 0
+s2 = pd.Series([1, np.nan, 3, np.nan, 5])
+r2 = s2.replace(np.nan, 0)
+print("NaNs→0:", r2.tolist())   # [1, 0.0, 3, 0.0, 5]</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 2 · Array replacement -->
+  <div class="section">
+    <h2>2 · Array replacement</h2>
+    <p>
+      Replace a list of values with a single target, or perform pair-wise
+      replacement using two equal-length arrays.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, replaceSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+// Many → one: replace 1, 3, 5 with 0
+const r1 = replaceSeries(s, { toReplace: [1, 3, 5], value: 0 });
+console.log("many→one:", [...r1.values]); // [0, 2, 0, 4, 0]
+
+// Pair-wise: 1→10, 2→20, 3→30
+const r2 = replaceSeries(s, { toReplace: [1, 2, 3], value: [10, 20, 30] });
+console.log("pair-wise:", [...r2.values]); // [10, 20, 30, 4, 5]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+# Many → one
+r1 = s.replace([1, 3, 5], 0)
+print("many→one:", r1.tolist())  # [0, 2, 0, 4, 0]
+
+# Pair-wise
+r2 = s.replace([1, 2, 3], [10, 20, 30])
+print("pair-wise:", r2.tolist())  # [10, 20, 30, 4, 5]</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 3 · Mapping replacement -->
+  <div class="section">
+    <h2>3 · Mapping (Record / Map) replacement</h2>
+    <p>
+      Pass a lookup table as either a plain object (<code>Record&lt;string, Scalar&gt;</code>)
+      or a JavaScript <code>Map</code> for full type flexibility.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, replaceSeries } from "tsb";
+
+// Record mapping (keys are stringified)
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+const r1 = replaceSeries(s, { toReplace: { "1": 100, "5": 500 } });
+console.log("record:", [...r1.values]); // [100, 2, 3, 4, 500]
+
+// Map — keys are compared by value (===)
+const s2 = new Series({ data: ["cat", "dog", "cat", "bird"] });
+const map = new Map([["cat", "feline"], ["dog", "canine"]]);
+const r2 = replaceSeries(s2, { toReplace: map });
+console.log("map:", [...r2.values]); // ["feline", "canine", "feline", "bird"]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Dict mapping
+s = pd.Series([1, 2, 3, 4, 5])
+r1 = s.replace({1: 100, 5: 500})
+print("dict:", r1.tolist())  # [100, 2, 3, 4, 500]
+
+# String replacement
+s2 = pd.Series(["cat", "dog", "cat", "bird"])
+r2 = s2.replace({"cat": "feline", "dog": "canine"})
+print("dict:", r2.tolist())  # ["feline", "canine", "feline", "bird"]</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 4 · DataFrame replace -->
+  <div class="section">
+    <h2>4 · DataFrame replacement</h2>
+    <p>
+      <code>replaceDataFrame</code> applies the same spec to all columns by
+      default. Use the <code>columns</code> option to restrict which columns
+      are affected.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, replaceDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  score: [1, 2, 3, 2, 1],
+  grade: [2, 2, 3, 4, 2],
+});
+
+// Replace 2 with 0 in ALL columns
+const r1 = replaceDataFrame(df, { toReplace: 2, value: 0 });
+console.log("score:", [...r1.col("score").values]); // [1, 0, 3, 0, 1]
+console.log("grade:", [...r1.col("grade").values]); // [0, 0, 3, 4, 0]
+
+// Replace only in "score" column
+const r2 = replaceDataFrame(df, { toReplace: 2, value: 0 }, { columns: ["score"] });
+console.log("score:", [...r2.col("score").values]); // [1, 0, 3, 0, 1]
+console.log("grade:", [...r2.col("grade").values]); // [2, 2, 3, 4, 2] (unchanged)</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "score": [1, 2, 3, 2, 1],
+    "grade": [2, 2, 3, 4, 2],
+})
+
+# Replace 2 with 0 everywhere
+r1 = df.replace(2, 0)
+print("score:", r1["score"].tolist())
+print("grade:", r1["grade"].tolist())
+
+# Replace only in "score"
+r2 = df.copy()
+r2["score"] = r2["score"].replace(2, 0)
+print("score:", r2["score"].tolist())
+print("grade:", r2["grade"].tolist())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- API Reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <pre class="api-reference-code"><code>// Replace values in a Series
+replaceSeries(
+  series: Series,
+  spec: ReplaceSpec,
+  options?: ReplaceOptions,
+): Series
+
+// Replace values in a DataFrame
+replaceDataFrame(
+  df: DataFrame,
+  spec: ReplaceSpec,
+  options?: DataFrameReplaceOptions,
+): DataFrame
+
+// Replacement spec variants
+type ReplaceSpec =
+  | { toReplace: Scalar;              value: Scalar }               // scalar → scalar
+  | { toReplace: Scalar[];            value: Scalar }               // array  → scalar
+  | { toReplace: Scalar[];            value: Scalar[] }             // array  → array (pair-wise)
+  | { toReplace: Record&lt;string, Scalar&gt; }                          // Record mapping
+  | { toReplace: Map&lt;Scalar, Scalar&gt; }                             // Map mapping
+
+// Options
+interface ReplaceOptions {
+  matchNaN?: boolean;  // treat NaN===NaN for matching (default: true)
+}
+
+interface DataFrameReplaceOptions extends ReplaceOptions {
+  columns?: string[];  // only replace in these columns (default: all)
+}</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
