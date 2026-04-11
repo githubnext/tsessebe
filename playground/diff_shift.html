@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — diff &amp; shift (discrete difference and value shifting)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-run, .playground-reset {
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.4rem;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .playground-run { background: var(--accent); color: #000; border-color: var(--accent); }
+    .playground-run:disabled { opacity: 0.5; cursor: not-allowed; }
+    .playground-reset { background: var(--surface); color: var(--text); }
+    textarea.playground-editor, textarea.playground-python {
+      width: 100%;
+      min-height: 120px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+    }
+    .playground-output {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      min-height: 2.5rem;
+      white-space: pre-wrap;
+      color: var(--green);
+    }
+    .playground-hint { font-size: 0.72rem; color: #484f58; margin-top: 0.3rem; }
+    .api-reference-code {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      overflow-x: auto;
+      white-space: pre;
+      color: #e6edf3;
+    }
+    footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    footer p { font-size: 0.85rem; }
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .tab-btn {
+      padding: 0.3rem 0.9rem;
+      font-size: 0.8rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      color: #8b949e;
+    }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Loading tsb runtime…</div>
+  </div>
+
+  <a class="back" href="index.html">← Back to playground index</a>
+
+  <h1>diff &amp; shift — discrete difference and value shifting</h1>
+  <p>
+    <code>diffSeries</code> / <code>diffDataFrame</code> compute the element-wise discrete
+    difference (<code>value[i] - value[i-periods]</code>).<br/>
+    <code>shiftSeries</code> / <code>shiftDataFrame</code> shift values forward or backward
+    by a given number of periods, filling with a configurable value.<br/>
+    Mirrors <code>Series.diff()</code>, <code>Series.shift()</code>,
+    <code>DataFrame.diff()</code>, and <code>DataFrame.shift()</code> from pandas.
+  </p>
+
+  <!-- 1 · Series diff -->
+  <div class="section">
+    <h2>1 · Series diff — first discrete difference</h2>
+    <p>
+      Compute <code>s[i] - s[i - periods]</code> for each position.
+      The first <code>periods</code> entries are <code>null</code>.
+      Non-numeric values produce <code>null</code>.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, diffSeries } from "tsb";
+
+const prices = new Series({ data: [100, 102, 99, 107, 110], name: "price" });
+
+// Default periods=1: daily change
+const d1 = diffSeries(prices);
+console.log("diff(1):", [...d1.values]);  // [null, 2, -3, 8, 3]
+
+// periods=2: change over 2 days
+const d2 = diffSeries(prices, { periods: 2 });
+console.log("diff(2):", [...d2.values]);  // [null, null, -1, 5, 11]
+
+// Negative periods: look-forward diff
+const d_neg = diffSeries(prices, { periods: -1 });
+console.log("diff(-1):", [...d_neg.values]); // [2, -3, 8, 3, null]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+prices = pd.Series([100, 102, 99, 107, 110], name="price")
+
+# Default periods=1: daily change
+d1 = prices.diff()
+print("diff(1):", d1.tolist())  # [NaN, 2, -3, 8, 3]
+
+# periods=2: change over 2 days
+d2 = prices.diff(periods=2)
+print("diff(2):", d2.tolist())  # [NaN, NaN, -1, 5, 11]
+
+# Negative periods: look-forward diff
+d_neg = prices.diff(periods=-1)
+print("diff(-1):", d_neg.tolist())  # [2.0, -3.0, 8.0, 3.0, NaN]</textarea>
+      <div class="playground-output">Press ▶ Run to execute</div>
+    </div>
+    <p class="playground-hint">💡 Tip: <code>diffSeries</code> is commonly used to compute returns, velocity, or changes over time.</p>
+  </div>
+
+  <!-- 2 · Series shift -->
+  <div class="section">
+    <h2>2 · Series shift — lag and lead values</h2>
+    <p>
+      Shift values forward (positive periods) or backward (negative periods).
+      Vacated positions are filled with <code>fillValue</code> (default <code>null</code>).
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, shiftSeries } from "tsb";
+
+const s = new Series({ data: [10, 20, 30, 40, 50] });
+
+// Lag: shift forward — compare today's value to yesterday's
+const lagged = shiftSeries(s, { periods: 1 });
+console.log("shift(1):", [...lagged.values]);   // [null, 10, 20, 30, 40]
+
+// Lead: shift backward — look ahead
+const lead = shiftSeries(s, { periods: -2 });
+console.log("shift(-2):", [...lead.values]);    // [30, 40, 50, null, null]
+
+// Custom fill value
+const withFill = shiftSeries(s, { periods: 2, fillValue: 0 });
+console.log("shift(2, fill=0):", [...withFill.values]); // [0, 0, 10, 20, 30]
+
+// Combine: compute percentage change manually
+const prev = shiftSeries(s, { periods: 1 });
+const pct = s.values.map((v, i) => {
+  const p = prev.values[i];
+  return p == null || p === 0 ? null : ((v as number) - (p as number)) / (p as number) * 100;
+});
+console.log("% change:", pct.map(v => v == null ? null : +v.toFixed(1)));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50])
+
+# Lag: shift forward
+lagged = s.shift(1)
+print("shift(1):", lagged.tolist())    # [NaN, 10, 20, 30, 40]
+
+# Lead: shift backward
+lead = s.shift(-2)
+print("shift(-2):", lead.tolist())     # [30, 40, 50, NaN, NaN]
+
+# Custom fill value
+with_fill = s.shift(2, fill_value=0)
+print("shift(2, fill=0):", with_fill.tolist())  # [0, 0, 10, 20, 30]
+
+# Percentage change
+pct = s.pct_change() * 100
+print("% change:", pct.tolist())  # [NaN, 100.0, 50.0, 33.33, 25.0]</textarea>
+      <div class="playground-output">Press ▶ Run to execute</div>
+    </div>
+    <p class="playground-hint">💡 Tip: combine <code>shiftSeries</code> with arithmetic to compute returns, lags, or leads.</p>
+  </div>
+
+  <!-- 3 · DataFrame diff -->
+  <div class="section">
+    <h2>3 · DataFrame diff — column-wise and row-wise</h2>
+    <p>
+      <code>axis=0</code> (default): diff each column independently (rows over time).<br/>
+      <code>axis=1</code>: diff across columns within each row.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, diffDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  open:  [100, 102, 98,  105],
+  close: [102, 99,  105, 110],
+});
+
+// axis=0 (default): daily change per column
+const colDiff = diffDataFrame(df);
+console.log("open diff:", [...colDiff.col("open").values]);   // [null, 2, -4, 7]
+console.log("close diff:", [...colDiff.col("close").values]); // [null, -3, 6, 5]
+
+// axis=1: difference between close and open (within same row)
+const rowDiff = diffDataFrame(df, { axis: 1 });
+console.log("open (axis=1):", [...rowDiff.col("open").values]);   // [null, null, null, null]
+console.log("close (axis=1):", [...rowDiff.col("close").values]); // [2, -3, 7, 5]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "open":  [100, 102, 98,  105],
+    "close": [102, 99,  105, 110],
+})
+
+# axis=0 (default): daily change per column
+col_diff = df.diff()
+print("open diff:", col_diff["open"].tolist())    # [NaN, 2, -4, 7]
+print("close diff:", col_diff["close"].tolist())  # [NaN, -3, 6, 5]
+
+# axis=1: difference across columns per row
+row_diff = df.diff(axis=1)
+print("open (axis=1):", row_diff["open"].tolist())    # [NaN, NaN, NaN, NaN]
+print("close (axis=1):", row_diff["close"].tolist())  # [2.0, -3.0, 7.0, 5.0]</textarea>
+      <div class="playground-output">Press ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 4 · DataFrame shift -->
+  <div class="section">
+    <h2>4 · DataFrame shift — lagging a DataFrame</h2>
+    <p>
+      Shift all columns by the same number of periods.
+      Useful for creating lagged features in machine learning.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="ts">TypeScript</button>
+          <button class="tab-btn" data-tab="py">Python</button>
+        </div>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, shiftDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3, 4, 5],
+  b: [10, 20, 30, 40, 50],
+});
+
+// Shift all columns forward by 1
+const lag1 = shiftDataFrame(df, { periods: 1 });
+console.log("a lagged:", [...lag1.col("a").values]); // [null, 1, 2, 3, 4]
+console.log("b lagged:", [...lag1.col("b").values]); // [null, 10, 20, 30, 40]
+
+// Shift backward (lead)
+const lead = shiftDataFrame(df, { periods: -2 });
+console.log("a lead:", [...lead.col("a").values]); // [3, 4, 5, null, null]
+
+// axis=1: shift across columns per row (with fill=0)
+const axisShift = shiftDataFrame(df, { axis: 1, periods: 1, fillValue: 0 });
+console.log("a (axis=1 fill=0):", [...axisShift.col("a").values]); // [0, 0, 0, 0, 0]
+console.log("b (axis=1 fill=0):", [...axisShift.col("b").values]); // [1, 2, 3, 4, 5]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "a": [1, 2, 3, 4, 5],
+    "b": [10, 20, 30, 40, 50],
+})
+
+# Shift all columns forward by 1
+lag1 = df.shift(1)
+print("a lagged:", lag1["a"].tolist())  # [NaN, 1, 2, 3, 4]
+print("b lagged:", lag1["b"].tolist())  # [NaN, 10, 20, 30, 40]
+
+# Shift backward (lead)
+lead = df.shift(-2)
+print("a lead:", lead["a"].tolist())  # [3.0, 4.0, 5.0, NaN, NaN]
+
+# axis=1: shift across columns (fill=0)
+axis_shift = df.shift(1, axis=1, fill_value=0)
+print("a (axis=1):", axis_shift["a"].tolist())  # [0, 0, 0, 0, 0]
+print("b (axis=1):", axis_shift["b"].tolist())  # [1, 2, 3, 4, 5]</textarea>
+      <div class="playground-output">Press ▶ Run to execute</div>
+    </div>
+    <p class="playground-hint">💡 Tip: creating multiple lagged columns is a common feature-engineering technique for time series forecasting.</p>
+  </div>
+
+  <!-- API Reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <pre class="api-reference-code">// Discrete difference
+diffSeries(series: Series&lt;Scalar&gt;, options?: DiffOptions): Series&lt;Scalar&gt;
+diffDataFrame(df: DataFrame, options?: DataFrameDiffOptions): DataFrame
+
+interface DiffOptions {
+  periods?: number;  // default 1; negative = look forward
+}
+interface DataFrameDiffOptions extends DiffOptions {
+  axis?: 0 | 1 | "index" | "columns";  // default 0
+}
+
+// Value shifting
+shiftSeries(series: Series&lt;Scalar&gt;, options?: ShiftOptions): Series&lt;Scalar&gt;
+shiftDataFrame(df: DataFrame, options?: DataFrameShiftOptions): DataFrame
+
+interface ShiftOptions {
+  periods?:   number;  // default 1; negative = shift backward
+  fillValue?: Scalar;  // default null
+}
+interface DataFrameShiftOptions extends ShiftOptions {
+  axis?: 0 | 1 | "index" | "columns";  // default 0
+}</pre>
+  </div>
+
+  <footer>
+    <p>
+      Part of <a href="index.html">tsb</a> — a TypeScript port of pandas.
+      Source: <code>src/stats/diff_shift.ts</code>
+    </p>
+  </footer>
+
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
