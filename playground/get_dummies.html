@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — getDummies / fromDummies</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --yellow: #d29922;
+        --muted: #8b949e;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); padding: 2rem; max-width: 900px; margin: 0 auto; }
+      h1 { color: var(--accent); font-size: 1.8rem; margin-bottom: .4rem; }
+      .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: .95rem; }
+      h2 { color: var(--accent); font-size: 1.1rem; margin: 2rem 0 .8rem; }
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; margin-bottom: 1.5rem; }
+      pre { background: #0d1117; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .85rem; line-height: 1.5; }
+      code { font-family: "SF Mono", Consolas, monospace; }
+      .label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .5rem; }
+      .result { background: #0d1117; border-radius: 6px; padding: 1rem; margin-top: .8rem; font-family: monospace; font-size: .85rem; white-space: pre; overflow-x: auto; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .tag { display: inline-block; background: #1f6feb33; color: var(--accent); border-radius: 4px; padding: .15rem .5rem; font-size: .75rem; margin-left: .5rem; }
+      button { background: var(--accent); color: #0d1117; border: none; border-radius: 6px; padding: .5rem 1.2rem; cursor: pointer; font-size: .9rem; font-weight: 600; margin-top: .8rem; }
+      button:hover { opacity: .85; }
+      select, input { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: .4rem .7rem; font-size: .9rem; margin-right: .5rem; }
+      .row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+    </style>
+  </head>
+  <body>
+    <h1>getDummies <span class="tag">one-hot encoding</span></h1>
+    <p class="subtitle">Convert categorical variables into binary indicator columns — mirrors <code>pandas.get_dummies</code> and <code>pandas.from_dummies</code>.</p>
+
+    <!-- Demo 1: Basic Series encoding -->
+    <div class="card">
+      <h2>1. Basic Series → dummy DataFrame</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Input Series</div>
+          <pre><code>const s = new Series({
+  data: ["cat", "dog", "cat", "fish"],
+  name: "animal"
+});
+getDummies(s);</code></pre>
+        </div>
+        <div>
+          <div class="label">Output</div>
+          <div class="result" id="demo1-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 2: Custom prefix -->
+    <div class="card">
+      <h2>2. Custom prefix and separator</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Code</div>
+          <pre><code>getDummies(s, {
+  prefix: "pet",
+  prefixSep: "__"
+});</code></pre>
+        </div>
+        <div>
+          <div class="label">Columns</div>
+          <div class="result" id="demo2-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 3: dropFirst -->
+    <div class="card">
+      <h2>3. Drop first level (avoid multicollinearity)</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Code</div>
+          <pre><code>const s2 = new Series({
+  data: ["a","b","c","a"],
+  name: "x"
+});
+getDummies(s2, { dropFirst: true });</code></pre>
+        </div>
+        <div>
+          <div class="label">Columns (a dropped)</div>
+          <div class="result" id="demo3-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 4: dummyNa -->
+    <div class="card">
+      <h2>4. Include NaN indicator column</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Code</div>
+          <pre><code>const s3 = new Series({
+  data: ["a", null, "b", null],
+  name: "x"
+});
+getDummies(s3, { dummyNa: true });</code></pre>
+        </div>
+        <div>
+          <div class="label">Result (with x_nan column)</div>
+          <div class="result" id="demo4-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 5: DataFrame encoding -->
+    <div class="card">
+      <h2>5. DataFrame — encode categorical columns automatically</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Code</div>
+          <pre><code>const df = DataFrame.fromColumns({
+  score: [90, 85, 72],
+  grade: ["A", "B", "C"],
+  pass: [true, true, false]
+});
+getDummies(df);</code></pre>
+        </div>
+        <div>
+          <div class="label">Columns</div>
+          <div class="result" id="demo5-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 6: Selective columns -->
+    <div class="card">
+      <h2>6. Encode only specified columns</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Code</div>
+          <pre><code>const df2 = DataFrame.fromColumns({
+  color: ["r","g","b"],
+  shape: ["sq","ci","sq"],
+  n: [1,2,3]
+});
+getDummies(df2, { columns: ["color"] });</code></pre>
+        </div>
+        <div>
+          <div class="label">Result</div>
+          <div class="result" id="demo6-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 7: fromDummies round-trip -->
+    <div class="card">
+      <h2>7. fromDummies — reverse one-hot encoding</h2>
+      <div class="grid">
+        <div>
+          <div class="label">Code</div>
+          <pre><code>const original = new Series({
+  data: ["cat","dog","cat","fish"],
+  name: "pet"
+});
+const dummies = getDummies(original);
+const recovered = fromDummies(dummies, { sep: "_" });</code></pre>
+        </div>
+        <div>
+          <div class="label">Recovered values</div>
+          <div class="result" id="demo7-out">…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo 8: Interactive encoder -->
+    <div class="card">
+      <h2>8. Interactive encoder</h2>
+      <div class="label">Enter comma-separated values:</div>
+      <div class="row">
+        <input id="demo8-input" value="apple,banana,apple,cherry,banana" style="width:300px" />
+        <label>drop first: <input id="demo8-drop" type="checkbox" /></label>
+        <label>NaN col: <input id="demo8-na" type="checkbox" /></label>
+        <button onclick="runDemo8()">Encode</button>
+      </div>
+      <div class="result" id="demo8-out">…</div>
+    </div>
+
+    <script type="module">
+      import {
+        Series, DataFrame, getDummies, getDummiesDataFrame, fromDummies
+      } from "../src/index.ts";
+
+      function fmtDF(df) {
+        const cols = df.columns.values;
+        const lines = [];
+        lines.push("columns: " + cols.join(", "));
+        const nRows = df.index.size;
+        for (const col of cols) {
+          lines.push(`  ${col}: [${df.col(col).values.join(", ")}]`);
+        }
+        return lines.join("\n");
+      }
+
+      // Demo 1
+      const s1 = new Series({ data: ["cat","dog","cat","fish"], name: "animal" });
+      document.getElementById("demo1-out").textContent = fmtDF(getDummies(s1));
+
+      // Demo 2
+      document.getElementById("demo2-out").textContent =
+        getDummies(s1, { prefix: "pet", prefixSep: "__" }).columns.values.join(", ");
+
+      // Demo 3
+      const s2 = new Series({ data: ["a","b","c","a"], name: "x" });
+      document.getElementById("demo3-out").textContent =
+        "columns: " + getDummies(s2, { dropFirst: true }).columns.values.join(", ");
+
+      // Demo 4
+      const s3 = new Series({ data: ["a", null, "b", null], name: "x" });
+      document.getElementById("demo4-out").textContent = fmtDF(getDummies(s3, { dummyNa: true }));
+
+      // Demo 5
+      const df1 = DataFrame.fromColumns({
+        score: [90, 85, 72],
+        grade: ["A","B","C"],
+        pass: [true, true, false]
+      });
+      document.getElementById("demo5-out").textContent = fmtDF(getDummies(df1));
+
+      // Demo 6
+      const df2 = DataFrame.fromColumns({
+        color: ["r","g","b"],
+        shape: ["sq","ci","sq"],
+        n: [1,2,3]
+      });
+      document.getElementById("demo6-out").textContent =
+        fmtDF(getDummies(df2, { columns: ["color"] }));
+
+      // Demo 7
+      const orig = new Series({ data: ["cat","dog","cat","fish"], name: "pet" });
+      const dummies = getDummies(orig);
+      const recovered = fromDummies(dummies, { sep: "_" });
+      document.getElementById("demo7-out").textContent =
+        `values: [${recovered.values.join(", ")}]\nname: "${recovered.name}"`;
+
+      // Demo 8
+      window.runDemo8 = function() {
+        const raw = document.getElementById("demo8-input").value;
+        const dropFirst = document.getElementById("demo8-drop").checked;
+        const dummyNa = document.getElementById("demo8-na").checked;
+        const data = raw.split(",").map(v => v.trim() || null);
+        const s = new Series({ data, name: "x" });
+        const result = getDummies(s, { dropFirst, dummyNa });
+        document.getElementById("demo8-out").textContent = fmtDF(result);
+      };
+      window.runDemo8();
+    </script>
+  </body>
+</html>
