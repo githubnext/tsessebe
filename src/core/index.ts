@@ -15,3 +15,5 @@ export { CategoricalAccessor } from "./cat_accessor.ts";
 export type { CatSeriesLike } from "./cat_accessor.ts";
 export { MultiIndex } from "./multi_index.ts";
 export type { MultiIndexOptions } from "./multi_index.ts";
+export { astypeSeries, astype, castScalar } from "./astype.ts";
+export type { AstypeOptions, DataFrameAstypeOptions } from "./astype.ts";
