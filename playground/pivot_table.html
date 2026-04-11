@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — pivotTableFull</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; margin-top: 2rem; }
+      pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+      code { font-family: "Fira Code", monospace; font-size: 0.9rem; }
+      .demo { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; }
+      .label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+      table { border-collapse: collapse; margin: 0.5rem 0; }
+      th, td { border: 1px solid #ccc; padding: 0.3rem 0.7rem; text-align: right; }
+      th { background: #f0f0f0; }
+      th:first-child, td:first-child { text-align: left; }
+      .margin-cell { background: #e8f4fd; font-weight: bold; }
+      a { color: #0070f3; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>pivotTableFull</code></h1>
+    <p>
+      <strong>Pivot table with margins</strong> aggregates a DataFrame using row and column
+      groupings, and optionally adds "All" row/column totals.
+      It mirrors
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.pivot_table.html">
+        <code>pandas.pivot_table()</code>
+      </a>.
+    </p>
+    <p><a href="index.html">← back to index</a></p>
+
+    <!-- ── Demo 1: basic sum ────────────────────────────────────────────── -->
+    <h2>1 · Basic pivot table — sum</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>import { DataFrame, pivotTableFull } from "tsb";
+
+const df = DataFrame.fromColumns({
+  A: ["foo","foo","foo","bar","bar","bar"],
+  C: ["small","large","large","small","small","large"],
+  D: [1, 2, 2, 3, 3, 4],
+});
+
+pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "sum" });</code></pre>
+      <div class="label">Result</div>
+      <div id="demo1"></div>
+    </div>
+
+    <!-- ── Demo 2: with margins ─────────────────────────────────────────── -->
+    <h2>2 · Margins — row and column totals</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>pivotTableFull(df, {
+  index: "A", columns: "C", values: "D",
+  aggfunc: "sum",
+  margins: true,           // add "All" row and column
+  margins_name: "All",     // default label
+});</code></pre>
+      <div class="label">Result</div>
+      <div id="demo2"></div>
+    </div>
+
+    <!-- ── Demo 3: custom margins_name ─────────────────────────────────── -->
+    <h2>3 · Custom margins label</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>pivotTableFull(df, {
+  index: "A", columns: "C", values: "D",
+  aggfunc: "sum",
+  margins: true,
+  margins_name: "Total",
+});</code></pre>
+      <div class="label">Result</div>
+      <div id="demo3"></div>
+    </div>
+
+    <!-- ── Demo 4: mean with margins ───────────────────────────────────── -->
+    <h2>4 · Margins with mean — uses raw data, not cell means</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>pivotTableFull(df, {
+  index: "A", columns: "C", values: "D",
+  aggfunc: "mean",
+  margins: true,
+});</code></pre>
+      <div class="label">Result</div>
+      <div id="demo4"></div>
+    </div>
+
+    <!-- ── Demo 5: count ────────────────────────────────────────────────── -->
+    <h2>5 · Count with margins</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>pivotTableFull(df, {
+  index: "A", columns: "C", values: "D",
+  aggfunc: "count",
+  margins: true,
+});</code></pre>
+      <div class="label">Result</div>
+      <div id="demo5"></div>
+    </div>
+
+    <!-- ── Demo 6: fill_value ───────────────────────────────────────────── -->
+    <h2>6 · fill_value — replace empty cells</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const sparse = DataFrame.fromColumns({
+  product: ["A","A","B","B"],
+  region:  ["North","South","North","East"],
+  sales:   [100, 200, 300, 150],
+});
+pivotTableFull(sparse, {
+  index: "product", columns: "region", values: "sales",
+  aggfunc: "sum",
+  fill_value: 0,    // cells with no data become 0
+  margins: true,
+});</code></pre>
+      <div class="label">Result</div>
+      <div id="demo6"></div>
+    </div>
+
+    <!-- ── Demo 7: sort=false ────────────────────────────────────────────── -->
+    <h2>7 · sort=false — preserve insertion order</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>pivotTableFull(df, {
+  index: "A", columns: "C", values: "D",
+  aggfunc: "sum",
+  sort: false,   // keep rows/columns in first-seen order
+});</code></pre>
+      <div class="label">Result (insertion order)</div>
+      <div id="demo7"></div>
+    </div>
+
+    <!-- ── Demo 8: multiple index columns ────────────────────────────────── -->
+    <h2>8 · Multiple index columns</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const df2 = DataFrame.fromColumns({
+  A: ["foo","foo","foo","bar","bar","bar"],
+  B: ["one","one","two","two","one","one"],
+  C: ["small","large","large","small","small","large"],
+  D: [1, 2, 2, 3, 3, 4],
+});
+pivotTableFull(df2, {
+  index: ["A","B"], columns: "C", values: "D",
+  aggfunc: "sum", margins: true,
+});</code></pre>
+      <div class="label">Result</div>
+      <div id="demo8"></div>
+    </div>
+
+    <script type="module">
+      import {
+        DataFrame,
+        pivotTableFull,
+      } from "https://esm.sh/tsb@0.0.1/src/index.ts";
+
+      /* ── helpers ── */
+      function renderTable(df, containerId, marginsName) {
+        const container = document.getElementById(containerId);
+        const allLabel = marginsName ?? "All";
+        const colNames = [...df.columns.values];
+        const rowLabels = [...df.index.values];
+        const rows = rowLabels.map(label => {
+          const row = {};
+          for (const col of colNames) {
+            const vals = [...df.col(col).values];
+            row[col] = vals[rowLabels.indexOf(label)];
+          }
+          return { label, row };
+        });
+
+        let html = "<table><thead><tr><th></th>";
+        for (const col of colNames) {
+          const isMargin = col === allLabel || col.endsWith("_" + allLabel);
+          html += `<th${isMargin ? ' class="margin-cell"' : ""}>${col}</th>`;
+        }
+        html += "</tr></thead><tbody>";
+        for (const { label, row } of rows) {
+          const isMarginRow = label === allLabel;
+          html += `<tr><th${isMarginRow ? ' class="margin-cell"' : ""}>${label}</th>`;
+          for (const col of colNames) {
+            const v = row[col];
+            const fmt = v === null || v === undefined ? "—"
+              : typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(2)) : String(v);
+            const isMargin = col === allLabel || col.endsWith("_" + allLabel) || isMarginRow;
+            html += `<td${isMargin ? ' class="margin-cell"' : ""}>${fmt}</td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+        container.innerHTML = html;
+      }
+
+      const df = DataFrame.fromColumns({
+        A: ["foo","foo","foo","bar","bar","bar"],
+        C: ["small","large","large","small","small","large"],
+        D: [1, 2, 2, 3, 3, 4],
+      });
+
+      renderTable(
+        pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "sum" }),
+        "demo1",
+      );
+      renderTable(
+        pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "sum", margins: true }),
+        "demo2", "All",
+      );
+      renderTable(
+        pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "sum", margins: true, margins_name: "Total" }),
+        "demo3", "Total",
+      );
+      renderTable(
+        pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "mean", margins: true }),
+        "demo4", "All",
+      );
+      renderTable(
+        pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "count", margins: true }),
+        "demo5", "All",
+      );
+
+      const sparse = DataFrame.fromColumns({
+        product: ["A","A","B","B"],
+        region:  ["North","South","North","East"],
+        sales:   [100, 200, 300, 150],
+      });
+      renderTable(
+        pivotTableFull(sparse, { index: "product", columns: "region", values: "sales", aggfunc: "sum", fill_value: 0, margins: true }),
+        "demo6", "All",
+      );
+
+      renderTable(
+        pivotTableFull(df, { index: "A", columns: "C", values: "D", aggfunc: "sum", sort: false }),
+        "demo7",
+      );
+
+      const df2 = DataFrame.fromColumns({
+        A: ["foo","foo","foo","bar","bar","bar"],
+        B: ["one","one","two","two","one","one"],
+        C: ["small","large","large","small","small","large"],
+        D: [1, 2, 2, 3, 3, 4],
+      });
+      renderTable(
+        pivotTableFull(df2, { index: ["A","B"], columns: "C", values: "D", aggfunc: "sum", margins: true }),
+        "demo8", "All",
+      );
+    </script>
+  </body>
+</html>
