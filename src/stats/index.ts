@@ -114,3 +114,5 @@ export type {
 } from "./cut.ts";
 export { Interval, IntervalIndex, intervalRange } from "./interval.ts";
 export type { ClosedType, IntervalOptions, IntervalRangeOptions } from "./interval.ts";
+export { getDummies, getDummiesSeries, getDummiesDataFrame, fromDummies } from "./get_dummies.ts";
+export type { GetDummiesOptions, FromDummiesOptions } from "./get_dummies.ts";

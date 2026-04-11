@@ -186,3 +186,5 @@ export type {
 } from "./stats/index.ts";
 export { Interval, IntervalIndex, intervalRange } from "./stats/index.ts";
 export type { ClosedType, IntervalOptions, IntervalRangeOptions } from "./stats/index.ts";
+export { getDummies, getDummiesSeries, getDummiesDataFrame, fromDummies } from "./stats/index.ts";
+export type { GetDummiesOptions, FromDummiesOptions } from "./stats/index.ts";
