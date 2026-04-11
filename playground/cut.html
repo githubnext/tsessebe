@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — cut / qcut</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #1a1a1a; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      pre { background: #f0f0f0; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; }
+      .demo { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; }
+      button { margin-top: 0.5rem; padding: 0.4rem 1rem; cursor: pointer; border-radius: 4px; border: 1px solid #aaa; background: #f5f5f5; }
+      button:hover { background: #e8e8e8; }
+      output { display: block; margin-top: 0.5rem; white-space: pre; font-family: monospace; font-size: 0.85rem; color: #333; }
+      .label { font-weight: 600; font-size: 0.85rem; color: #555; margin-top: 0.8rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.5rem; }
+      .pandas-equiv { background: #fff8e1; border-left: 3px solid #f9a825; padding: 0.4rem 0.8rem; margin-top: 0.5rem; font-size: 0.8rem; border-radius: 0 4px 4px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>cut</code> / <code>qcut</code></h1>
+    <p>
+      Bin continuous numeric data into discrete intervals.
+      <code>cut</code> uses equal-width (or user-defined) bins;
+      <code>qcut</code> uses equal-frequency (quantile-based) bins.
+      Both return a <code>Series&lt;string | null&gt;</code> of bin labels.
+    </p>
+
+    <h2>Core concept</h2>
+    <pre>// Equal-width bins
+cut(s, 4)                      // 4 bins of equal width
+cut(s, [0, 10, 50, 100])       // explicit edges
+
+// Equal-frequency bins (quartiles)
+qcut(s, 4)                     // 4 bins, each with ~25% of data
+qcut(s, [0, 0.25, 0.5, 0.75, 1])  // explicit quantile levels
+
+// Custom labels
+cut(s, 3, { labels: ["low", "mid", "high"] })
+
+// Return bin edges too
+const [binned, edges] = cut(s, 3, { retbins: true })
+
+// Integer bin codes
+cutCodes(s, 4)  // → Series of 0, 1, 2, 3 integers</pre>
+
+    <div class="pandas-equiv">
+      <strong>pandas equivalent:</strong><br />
+      <code>pd.cut(x, bins, right=True, labels=None, retbins=False, precision=3, include_lowest=False)</code><br />
+      <code>pd.qcut(x, q, labels=None, retbins=False, precision=3, duplicates='raise')</code>
+    </div>
+
+    <!-- Demo 1: cut with integer bins -->
+    <h2>Demo 1 — cut: equal-width bins</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [1, 7, 5, 4, 2, 3, 8, 6], name: "score" });
+cut(s, 4).values;
+// Each value assigned to one of 4 equal-width bins</pre>
+      <button onclick="demo1()">Run</button>
+      <output id="out1"></output>
+    </div>
+
+    <!-- Demo 2: cut with explicit edges -->
+    <h2>Demo 2 — cut: explicit bin edges</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [15, 35, 55, 75, 95] });
+cut(s, [0, 25, 50, 75, 100]).values;
+// → ["(0, 25]", "(25, 50]", "(50, 75]", "(75, 100]", "(75, 100]"]</pre>
+      <button onclick="demo2()">Run</button>
+      <output id="out2"></output>
+    </div>
+
+    <!-- Demo 3: cut with custom labels -->
+    <h2>Demo 3 — cut: custom labels</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const grades = new Series({ data: [45, 62, 78, 91, 55] });
+cut(grades, [0, 60, 70, 80, 100], { labels: ["F", "D", "C", "B/A"] }).values;
+// → grade letter for each score</pre>
+      <button onclick="demo3()">Run</button>
+      <output id="out3"></output>
+    </div>
+
+    <!-- Demo 4: qcut quartiles -->
+    <h2>Demo 4 — qcut: quartile bins</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [3, 1, 7, 2, 9, 4, 6, 8, 5, 10] });
+qcut(s, 4).values;
+// Equal-frequency quartile bins — each bin contains ~25% of values</pre>
+      <button onclick="demo4()">Run</button>
+      <output id="out4"></output>
+    </div>
+
+    <!-- Demo 5: retbins -->
+    <h2>Demo 5 — retbins: get bin edges back</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [10, 30, 50, 70, 90] });
+const [binned, edges] = cut(s, 3, { retbins: true });
+// edges: the computed bin boundaries</pre>
+      <button onclick="demo5()">Run</button>
+      <output id="out5"></output>
+    </div>
+
+    <!-- Demo 6: cutCodes -->
+    <h2>Demo 6 — cutCodes: integer bin codes</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [5, 15, 25, 35, 45] });
+cutCodes(s, [0, 10, 20, 30, 40, 50]).values;
+// → [0, 1, 2, 3, 4]  (integer bin indices)</pre>
+      <button onclick="demo6()">Run</button>
+      <output id="out6"></output>
+    </div>
+
+    <!-- Demo 7: null handling -->
+    <h2>Demo 7 — null / NaN handling</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [1, null, NaN, 5, 10] });
+cut(s, 3).values;
+// null and NaN stay as null in the output</pre>
+      <button onclick="demo7()">Run</button>
+      <output id="out7"></output>
+    </div>
+
+    <!-- Demo 8: qcut with duplicates='drop' -->
+    <h2>Demo 8 — qcut: handling duplicate edges with ties</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [1, 1, 1, 2, 3, 4, 5, 5, 5] });
+qcut(s, 4, { duplicates: "drop" }).values;
+// Ties cause duplicate quantile boundaries — "drop" removes them</pre>
+      <button onclick="demo8()">Run</button>
+      <output id="out8"></output>
+    </div>
+
+    <script type="module">
+      // Inline minimal tsb bundle (subset needed for demos)
+      // Note: in a real deployment this would import from the built tsb package.
+      // For playground purposes we implement lightweight stubs.
+
+      class Index {
+        constructor(data) { this._values = Object.freeze([...data]); }
+        get size() { return this._values.length; }
+        get values() { return this._values; }
+        at(i) { return this._values[i < 0 ? this._values.length + i : i]; }
+        getLoc(label) {
+          const i = this._values.indexOf(label);
+          if (i === -1) throw new Error(`KeyError: ${label}`);
+          return i;
+        }
+      }
+
+      class Series {
+        constructor({ data, index, name }) {
+          this._values = Object.freeze([...data]);
+          this.index = index instanceof Index ? index : new Index(index ?? data.map((_, i) => i));
+          this.name = name ?? null;
+        }
+        get values() { return this._values; }
+        get size() { return this._values.length; }
+      }
+
+      function isMissing(v) {
+        return v === null || v === undefined || (typeof v === "number" && isNaN(v));
+      }
+
+      function fmt(n, precision) {
+        return Number(n.toFixed(precision)).toString();
+      }
+
+      function intervalLabel(lo, hi, right, precision) {
+        const l = fmt(lo, precision), r = fmt(hi, precision);
+        return right ? `(${l}, ${r}]` : `[${l}, ${r})`;
+      }
+
+      function normaliseBinEdges(edges) {
+        if (edges.length < 2) throw new RangeError("At least 2 bin edges required.");
+        const sorted = [...edges].sort((a, b) => a - b);
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i] === sorted[i - 1]) throw new RangeError(`Duplicate edge: ${sorted[i]}`);
+        }
+        return sorted;
+      }
+
+      function buildLabels(edges, right, labels, precision, numBins) {
+        if (labels === false) return Array.from({ length: numBins }, (_, i) => String(i));
+        if (labels != null) {
+          if (labels.length !== numBins) throw new RangeError(`labels length must equal numBins (${numBins})`);
+          return labels;
+        }
+        return Array.from({ length: numBins }, (_, i) =>
+          intervalLabel(edges[i], edges[i + 1], right, precision));
+      }
+
+      function findBin(v, edges, right) {
+        let lo = 0, hi = edges.length - 2;
+        while (lo < hi) {
+          const mid = (lo + hi) >>> 1;
+          if (right ? v <= edges[mid + 1] : v < edges[mid + 1]) hi = mid;
+          else lo = mid + 1;
+        }
+        return lo;
+      }
+
+      function assignBins(data, edges, right, labels, precision, includeLowest) {
+        const numBins = edges.length - 1;
+        const binLabels = buildLabels(edges, right, labels, precision, numBins);
+        const lo0 = edges[0], hiN = edges[numBins];
+        const adjustedLo0 = includeLowest ? lo0 - 1e-10 * (Math.abs(lo0) + 1) : lo0;
+        return data.map(raw => {
+          if (isMissing(raw) || typeof raw !== "number") return null;
+          const inRange = right ? raw > adjustedLo0 && raw <= hiN : raw >= adjustedLo0 && raw < hiN;
+          if (!inRange) return null;
+          return binLabels[findBin(raw, edges, right)] ?? null;
+        });
+      }
+
+      function equalWidthEdges(minV, maxV, bins) {
+        if (minV === maxV) {
+          const lo = minV - 0.5, hi = maxV + 0.5;
+          return Array.from({ length: bins + 1 }, (_, i) => lo + i * (hi - lo) / bins);
+        }
+        const step = (maxV - minV) / bins;
+        return Array.from({ length: bins + 1 }, (_, i) => minV + i * step);
+      }
+
+      function numericOnly(vals) {
+        return vals.filter(v => typeof v === "number" && !isNaN(v));
+      }
+
+      function cut(x, bins, options = {}) {
+        const { right = true, labels, retbins = false, precision = 3, includeLowest = true } = options;
+        const vals = x.values;
+        const nums = numericOnly(vals);
+        let edges;
+        if (typeof bins === "number") {
+          if (!Number.isInteger(bins) || bins < 1) throw new RangeError("`bins` must be a positive integer.");
+          if (nums.length === 0) throw new RangeError("No finite numeric values.");
+          edges = equalWidthEdges(Math.min(...nums), Math.max(...nums), bins);
+        } else {
+          edges = normaliseBinEdges(bins);
+        }
+        const resultVals = assignBins(vals, edges, right, labels, precision, includeLowest);
+        const series = new Series({ data: resultVals, index: x.index, name: x.name });
+        return retbins ? [series, edges] : series;
+      }
+
+      function linearQuantile(sorted, q) {
+        const n = sorted.length;
+        if (n === 0) return NaN;
+        const pos = q * (n - 1), lo = Math.floor(pos), hi = Math.ceil(pos);
+        if (lo === hi) return sorted[lo];
+        return sorted[lo] * (1 - (pos - lo)) + sorted[hi] * (pos - lo);
+      }
+
+      function qcut(x, q, options = {}) {
+        const { labels, retbins = false, precision = 3, duplicates = "raise" } = options;
+        const vals = x.values;
+        const nums = numericOnly(vals);
+        if (nums.length === 0) throw new RangeError("No finite numeric values.");
+        const sorted = [...nums].sort((a, b) => a - b);
+        let qLevels;
+        if (typeof q === "number") {
+          if (!Number.isInteger(q) || q < 2) throw new RangeError("`q` must be integer >= 2.");
+          qLevels = Array.from({ length: q + 1 }, (_, i) => i / q);
+        } else {
+          if (q.length < 2) throw new RangeError("`q` array must have at least 2 elements.");
+          qLevels = [...q].sort((a, b) => a - b);
+        }
+        let rawEdges = qLevels.map(level => linearQuantile(sorted, level));
+        // Handle duplicates
+        for (let i = 1; i < rawEdges.length; i++) {
+          if (rawEdges[i] === rawEdges[i - 1]) {
+            if (duplicates === "drop") {
+              rawEdges = [...new Set(rawEdges)].sort((a, b) => a - b);
+              break;
+            }
+            throw new RangeError(`Duplicate edges found: ${rawEdges[i]}. Use duplicates='drop'.`);
+          }
+        }
+        const resultVals = assignBins(vals, rawEdges, true, labels, precision, true);
+        const series = new Series({ data: resultVals, index: x.index, name: x.name });
+        return retbins ? [series, rawEdges] : series;
+      }
+
+      function cutCodes(x, bins, options = {}) {
+        const strSeries = cut(x, bins, { ...options, labels: false });
+        const data = strSeries.values.map(v => v === null ? null : parseInt(v, 10));
+        return new Series({ data, index: x.index, name: x.name });
+      }
+
+      function show(id, val) { document.getElementById(id).textContent = val; }
+      function fmt2(s) { return JSON.stringify([...s.values]); }
+
+      window.demo1 = () => {
+        const s = new Series({ data: [1, 7, 5, 4, 2, 3, 8, 6], name: "score" });
+        show("out1", fmt2(cut(s, 4)));
+      };
+
+      window.demo2 = () => {
+        const s = new Series({ data: [15, 35, 55, 75, 95] });
+        show("out2", fmt2(cut(s, [0, 25, 50, 75, 100])));
+      };
+
+      window.demo3 = () => {
+        const grades = new Series({ data: [45, 62, 78, 91, 55] });
+        show("out3", fmt2(cut(grades, [0, 60, 70, 80, 100], { labels: ["F", "D", "C", "B/A"] })));
+      };
+
+      window.demo4 = () => {
+        const s = new Series({ data: [3, 1, 7, 2, 9, 4, 6, 8, 5, 10] });
+        show("out4", fmt2(qcut(s, 4)));
+      };
+
+      window.demo5 = () => {
+        const s = new Series({ data: [10, 30, 50, 70, 90] });
+        const [binned, edges] = cut(s, 3, { retbins: true });
+        show("out5", `binned: ${fmt2(binned)}\nedges:  ${JSON.stringify(edges)}`);
+      };
+
+      window.demo6 = () => {
+        const s = new Series({ data: [5, 15, 25, 35, 45] });
+        show("out6", JSON.stringify([...cutCodes(s, [0, 10, 20, 30, 40, 50]).values]));
+      };
+
+      window.demo7 = () => {
+        const s = new Series({ data: [1, null, NaN, 5, 10] });
+        show("out7", fmt2(cut(s, 3)));
+      };
+
+      window.demo8 = () => {
+        const s = new Series({ data: [1, 1, 1, 2, 3, 4, 5, 5, 5] });
+        show("out8", fmt2(qcut(s, 4, { duplicates: "drop" })));
+      };
+    </script>
+  </body>
+</html>
