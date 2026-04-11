@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Interval / IntervalIndex</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #1a1a1a; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      pre { background: #f0f0f0; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; }
+      .demo { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; }
+      button { margin-top: 0.5rem; padding: 0.4rem 1rem; cursor: pointer; border-radius: 4px; border: 1px solid #aaa; background: #f5f5f5; }
+      button:hover { background: #e8e8e8; }
+      output { display: block; margin-top: 0.5rem; white-space: pre; font-family: monospace; font-size: 0.85rem; color: #333; }
+      .label { font-weight: 600; font-size: 0.85rem; color: #555; margin-top: 0.8rem; }
+      .pandas-equiv { background: #fff8e1; border-left: 3px solid #f9a825; padding: 0.4rem 0.8rem; margin-top: 0.5rem; font-size: 0.8rem; border-radius: 0 4px 4px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>Interval</code> / <code>IntervalIndex</code></h1>
+    <p>
+      A single bounded interval and an ordered array of intervals as an axis label.
+      Mirrors <code>pandas.Interval</code> and <code>pandas.IntervalIndex</code>.
+      Works seamlessly with <code>cut()</code> and <code>qcut()</code>.
+    </p>
+
+    <h2>Core concept</h2>
+    <pre>// Single interval — closed on right by default: (left, right]
+const iv = new Interval(0, 5);
+iv.contains(3);           // true
+iv.contains(0);           // false  (open on left)
+iv.contains(5);           // true   (closed on right)
+iv.overlaps(new Interval(4, 10));  // true
+
+// IntervalIndex from break points
+const idx = IntervalIndex.fromBreaks([0, 25, 50, 75, 100]);
+idx.indexOf(60);          // 2  → (50, 75]
+
+// Equal-length intervals via intervalRange
+const rng = intervalRange(0, 1, { periods: 4 });
+// [(0.0, 0.25], (0.25, 0.5], (0.5, 0.75], (0.75, 1.0]]</pre>
+
+    <div class="pandas-equiv">
+      <strong>pandas equivalent:</strong><br />
+      <code>pd.Interval(left, right, closed='right')</code><br />
+      <code>pd.IntervalIndex.from_breaks(breaks, closed='right')</code><br />
+      <code>pd.interval_range(start, end, periods=N, freq=step)</code>
+    </div>
+
+    <!-- Demo 1: Interval basics -->
+    <h2>Demo 1 — Interval: construction and membership</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const iv = new Interval(0, 5);            // (0, 5]
+[iv.left, iv.right, iv.closed, iv.length, iv.mid]
+// → [0, 5, "right", 5, 2.5]
+
+iv.contains(0)   // false — left is open
+iv.contains(5)   // true  — right is closed
+iv.contains(2.5) // true</pre>
+      <button onclick="demo1()">Run</button>
+      <output id="out1"></output>
+    </div>
+
+    <!-- Demo 2: closed variants -->
+    <h2>Demo 2 — Interval: closed="left" | "both" | "neither"</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const left    = new Interval(0, 5, "left");    // [0, 5)
+const both    = new Interval(0, 5, "both");    // [0, 5]
+const neither = new Interval(0, 5, "neither"); // (0, 5)
+
+// endpoint membership
+[left.contains(0), left.contains(5)]       // true, false
+[both.contains(0), both.contains(5)]       // true, true
+[neither.contains(0), neither.contains(5)] // false, false</pre>
+      <button onclick="demo2()">Run</button>
+      <output id="out2"></output>
+    </div>
+
+    <!-- Demo 3: overlaps -->
+    <h2>Demo 3 — Interval.overlaps</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const a = new Interval(0, 3);
+const b = new Interval(2, 5);
+const c = new Interval(4, 8);
+
+a.overlaps(b)  // true  — share interior [2, 3]
+b.overlaps(c)  // true  — share interior [4, 5]
+a.overlaps(c)  // false — disjoint</pre>
+      <button onclick="demo3()">Run</button>
+      <output id="out3"></output>
+    </div>
+
+    <!-- Demo 4: IntervalIndex.fromBreaks -->
+    <h2>Demo 4 — IntervalIndex.fromBreaks</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const idx = IntervalIndex.fromBreaks([0, 25, 50, 75, 100]);
+idx.size           // 4
+idx.get(1)         // (25, 50]
+idx.indexOf(60)    // 2  — 60 falls in (50, 75]
+idx.indexOf(-5)    // -1 — out of range
+idx.left           // [0, 25, 50, 75]
+idx.mid            // [12.5, 37.5, 62.5, 87.5]</pre>
+      <button onclick="demo4()">Run</button>
+      <output id="out4"></output>
+    </div>
+
+    <!-- Demo 5: IntervalIndex.fromArrays -->
+    <h2>Demo 5 — IntervalIndex.fromArrays</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>// Build from separate left and right arrays (non-uniform intervals)
+const idx = IntervalIndex.fromArrays(
+  [0, 1, 3, 6],   // left endpoints
+  [1, 3, 6, 10],  // right endpoints
+  { closed: "left" },
+);
+idx.values.map(iv => iv.toString())
+// ["[0, 1)", "[1, 3)", "[3, 6)", "[6, 10)"]</pre>
+      <button onclick="demo5()">Run</button>
+      <output id="out5"></output>
+    </div>
+
+    <!-- Demo 6: intervalRange with periods -->
+    <h2>Demo 6 — intervalRange: equal-width by period count</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const rng = intervalRange(0, 1, { periods: 4 });
+rng.values.map(iv => iv.toString())
+// ["(0, 0.25]", "(0.25, 0.5]", "(0.5, 0.75]", "(0.75, 1]"]
+
+rng.length   // [0.25, 0.25, 0.25, 0.25]</pre>
+      <button onclick="demo6()">Run</button>
+      <output id="out6"></output>
+    </div>
+
+    <!-- Demo 7: intervalRange with freq -->
+    <h2>Demo 7 — intervalRange: equal-width by step size (freq)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const rng = intervalRange(0, 10, { freq: 2.5 });
+rng.values.map(iv => iv.toString())
+// ["(0, 2.5]", "(2.5, 5]", "(5, 7.5]", "(7.5, 10]"]</pre>
+      <button onclick="demo7()">Run</button>
+      <output id="out7"></output>
+    </div>
+
+    <!-- Demo 8: overlapping query -->
+    <h2>Demo 8 — IntervalIndex.overlapping</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const idx = IntervalIndex.fromBreaks([0, 2, 4, 6, 8, 10]);
+const query = new Interval(3, 7);
+const hits = idx.overlapping(query);
+hits.values.map(iv => iv.toString())
+// All intervals that share any interior point with (3, 7]</pre>
+      <button onclick="demo8()">Run</button>
+      <output id="out8"></output>
+    </div>
+
+    <script type="module">
+      // ── bootstrap tsb from source ─────────────────────────────────────────
+      let Interval, IntervalIndex, intervalRange;
+      try {
+        const mod = await import("../src/index.ts");
+        Interval = mod.Interval;
+        IntervalIndex = mod.IntervalIndex;
+        intervalRange = mod.intervalRange;
+      } catch (e) {
+        document.body.innerHTML += `<p style="color:red">Could not load tsb: ${e.message}</p>`;
+      }
+
+      // ── helpers ───────────────────────────────────────────────────────────
+      function show(id, value) {
+        document.getElementById(id).textContent =
+          typeof value === "string" ? value : JSON.stringify(value, null, 2);
+      }
+
+      // ── demos ─────────────────────────────────────────────────────────────
+      window.demo1 = () => {
+        const iv = new Interval(0, 5);
+        show("out1", {
+          left: iv.left, right: iv.right, closed: iv.closed,
+          length: iv.length, mid: iv.mid,
+          contains_0: iv.contains(0),
+          contains_5: iv.contains(5),
+          contains_2_5: iv.contains(2.5),
+          string: iv.toString(),
+        });
+      };
+
+      window.demo2 = () => {
+        const left    = new Interval(0, 5, "left");
+        const both    = new Interval(0, 5, "both");
+        const neither = new Interval(0, 5, "neither");
+        show("out2", {
+          left_str: left.toString(),
+          both_str: both.toString(),
+          neither_str: neither.toString(),
+          left_contains:    [left.contains(0),    left.contains(5)],
+          both_contains:    [both.contains(0),    both.contains(5)],
+          neither_contains: [neither.contains(0), neither.contains(5)],
+        });
+      };
+
+      window.demo3 = () => {
+        const a = new Interval(0, 3);
+        const b = new Interval(2, 5);
+        const c = new Interval(4, 8);
+        show("out3", {
+          a: a.toString(), b: b.toString(), c: c.toString(),
+          "a.overlaps(b)": a.overlaps(b),
+          "b.overlaps(c)": b.overlaps(c),
+          "a.overlaps(c)": a.overlaps(c),
+        });
+      };
+
+      window.demo4 = () => {
+        const idx = IntervalIndex.fromBreaks([0, 25, 50, 75, 100]);
+        show("out4", {
+          size: idx.size,
+          "get(1)": idx.get(1).toString(),
+          "indexOf(60)": idx.indexOf(60),
+          "indexOf(-5)": idx.indexOf(-5),
+          left: [...idx.left],
+          mid: [...idx.mid],
+        });
+      };
+
+      window.demo5 = () => {
+        const idx = IntervalIndex.fromArrays(
+          [0, 1, 3, 6],
+          [1, 3, 6, 10],
+          { closed: "left" },
+        );
+        show("out5", idx.values.map(iv => iv.toString()));
+      };
+
+      window.demo6 = () => {
+        const rng = intervalRange(0, 1, { periods: 4 });
+        show("out6", {
+          intervals: rng.values.map(iv => iv.toString()),
+          lengths: [...rng.length],
+        });
+      };
+
+      window.demo7 = () => {
+        const rng = intervalRange(0, 10, { freq: 2.5 });
+        show("out7", rng.values.map(iv => iv.toString()));
+      };
+
+      window.demo8 = () => {
+        const idx = IntervalIndex.fromBreaks([0, 2, 4, 6, 8, 10]);
+        const query = new Interval(3, 7);
+        const hits = idx.overlapping(query);
+        show("out8", {
+          query: query.toString(),
+          hits: hits.values.map(iv => iv.toString()),
+        });
+      };
+    </script>
+  </body>
+</html>
