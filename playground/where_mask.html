@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — where / mask</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #1a1a1a; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      pre { background: #f0f0f0; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; }
+      .demo { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; }
+      button { margin-top: 0.5rem; padding: 0.4rem 1rem; cursor: pointer; border-radius: 4px; border: 1px solid #aaa; background: #f5f5f5; }
+      button:hover { background: #e8e8e8; }
+      output { display: block; margin-top: 0.5rem; white-space: pre; font-family: monospace; font-size: 0.85rem; color: #333; }
+      .label { font-weight: 600; font-size: 0.85rem; color: #555; margin-top: 0.8rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.5rem; }
+      .pandas-equiv { background: #fff8e1; border-left: 3px solid #f9a825; padding: 0.4rem 0.8rem; margin-top: 0.5rem; font-size: 0.8rem; border-radius: 0 4px 4px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>where</code> / <code>mask</code></h1>
+    <p>
+      Conditional value selection: keep or replace elements based on a boolean
+      condition.  These are the TypeScript equivalents of
+      <code>pandas.Series.where</code> / <code>pandas.DataFrame.where</code> and
+      <code>pandas.Series.mask</code> / <code>pandas.DataFrame.mask</code>.
+    </p>
+
+    <h2>Core concept</h2>
+    <pre>// where: keep where cond=true, replace with `other` where cond=false
+whereSeries(s, cond, { other: null })
+
+// mask: replace where cond=true with `other`, keep where cond=false
+maskSeries(s, cond, { other: null })</pre>
+
+    <div class="pandas-equiv">
+      <strong>pandas equivalent:</strong><br />
+      <code>s.where(cond, other=np.nan)</code><br />
+      <code>s.mask(cond, other=np.nan)</code>
+    </div>
+
+    <!-- Demo 1: whereSeries with boolean array -->
+    <h2>Demo 1 — whereSeries with boolean array</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [10, 20, 30, 40, 50], name: "prices" });
+whereSeries(s, [true, false, true, false, true]);
+// → [10, null, 30, null, 50]</pre>
+      <button onclick="demo1()">Run</button>
+      <output id="out1"></output>
+    </div>
+
+    <!-- Demo 2: maskSeries with callable -->
+    <h2>Demo 2 — maskSeries with callable condition</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [1, 2, 3, 4, 5] });
+// Replace values > 3 with -1
+maskSeries(s, (v) => v > 3, { other: -1 });
+// → [1, 2, 3, -1, -1]</pre>
+      <button onclick="demo2()">Run</button>
+      <output id="out2"></output>
+    </div>
+
+    <!-- Demo 3: whereDataFrame with 2-D boolean array -->
+    <h2>Demo 3 — whereDataFrame with 2-D condition</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const df = DataFrame.fromColumns({
+  a: [1, 2, 3],
+  b: [4, 5, 6],
+});
+const cond = [[true, false], [false, true], [true, true]];
+whereDataFrame(df, cond);
+// a: [1, null, 3]
+// b: [null, 5, 6]</pre>
+      <button onclick="demo3()">Run</button>
+      <output id="out3"></output>
+    </div>
+
+    <!-- Demo 4: whereDataFrame with Series condition (row broadcast) -->
+    <h2>Demo 4 — whereDataFrame with Series condition (axis=0)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const df = DataFrame.fromColumns({
+  a: [1, 2, 3],
+  b: [10, 20, 30],
+});
+// Keep rows 0 and 2 only, replace row 1 across all columns
+const rowCond = new Series({ data: [true, false, true], index: [0, 1, 2] });
+whereDataFrame(df, rowCond, { axis: 0, other: 0 });
+// a: [1, 0, 3]
+// b: [10, 0, 30]</pre>
+      <button onclick="demo4()">Run</button>
+      <output id="out4"></output>
+    </div>
+
+    <!-- Demo 5: maskDataFrame with DataFrame condition -->
+    <h2>Demo 5 — maskDataFrame with DataFrame condition</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+const condDf = DataFrame.fromColumns({
+  a: [false, true, false],
+  b: [true, false, true],
+});
+maskDataFrame(df, condDf, { other: 99 });
+// a: [1, 99, 3]
+// b: [99, 5, 99]</pre>
+      <button onclick="demo5()">Run</button>
+      <output id="out5"></output>
+    </div>
+
+    <!-- Demo 6: interactive editor -->
+    <h2>Demo 6 — Interactive editor</h2>
+    <div class="demo">
+      <div class="label">Edit and run</div>
+      <textarea id="editor" rows="12">const s = new Series({ data: [5, 10, 15, 20, 25], name: "vals" });
+
+// Keep only values in [10, 20]
+const result = whereSeries(s, (v) => v >= 10 && v <= 20, { other: null });
+return result.values;</textarea>
+      <button onclick="runEditor()">Run</button>
+      <output id="out6"></output>
+    </div>
+
+    <script type="module">
+      import {
+        Series,
+        DataFrame,
+        whereSeries,
+        maskSeries,
+        whereDataFrame,
+        maskDataFrame,
+      } from "https://esm.sh/tsb@0.0.1" // swap for local bundle in dev
+
+      // Expose to global for onclick handlers
+      Object.assign(window, {
+        Series, DataFrame, whereSeries, maskSeries, whereDataFrame, maskDataFrame,
+      });
+
+      window.demo1 = () => {
+        const s = new Series({ data: [10, 20, 30, 40, 50], name: "prices" });
+        const r = whereSeries(s, [true, false, true, false, true]);
+        document.getElementById("out1").textContent = JSON.stringify(r.values);
+      };
+
+      window.demo2 = () => {
+        const s = new Series({ data: [1, 2, 3, 4, 5] });
+        const r = maskSeries(s, (v) => v > 3, { other: -1 });
+        document.getElementById("out2").textContent = JSON.stringify(r.values);
+      };
+
+      window.demo3 = () => {
+        const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+        const cond = [[true, false], [false, true], [true, true]];
+        const r = whereDataFrame(df, cond);
+        document.getElementById("out3").textContent =
+          `a: ${JSON.stringify(r.col("a").values)}\nb: ${JSON.stringify(r.col("b").values)}`;
+      };
+
+      window.demo4 = () => {
+        const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [10, 20, 30] });
+        const rowCond = new Series({ data: [true, false, true], index: [0, 1, 2] });
+        const r = whereDataFrame(df, rowCond, { axis: 0, other: 0 });
+        document.getElementById("out4").textContent =
+          `a: ${JSON.stringify(r.col("a").values)}\nb: ${JSON.stringify(r.col("b").values)}`;
+      };
+
+      window.demo5 = () => {
+        const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+        const condDf = DataFrame.fromColumns({
+          a: [false, true, false],
+          b: [true, false, true],
+        });
+        const r = maskDataFrame(df, condDf, { other: 99 });
+        document.getElementById("out5").textContent =
+          `a: ${JSON.stringify(r.col("a").values)}\nb: ${JSON.stringify(r.col("b").values)}`;
+      };
+
+      window.runEditor = () => {
+        const code = document.getElementById("editor").value;
+        try {
+          // eslint-disable-next-line no-new-func
+          const fn = new Function(
+            "Series", "DataFrame", "whereSeries", "maskSeries",
+            "whereDataFrame", "maskDataFrame",
+            `"use strict";\n${code}`,
+          );
+          const result = fn(Series, DataFrame, whereSeries, maskSeries, whereDataFrame, maskDataFrame);
+          document.getElementById("out6").textContent = JSON.stringify(result, null, 2);
+        } catch (e) {
+          document.getElementById("out6").textContent = `Error: ${e.message}`;
+        }
+      };
+    </script>
+  </body>
+</html>
