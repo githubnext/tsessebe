@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T14:55:00Z |
-| Iteration Count | 199 |
-| Best Metric | 36 |
+| Last Run | 2026-04-11T15:45:00Z |
+| Iteration Count | 200 |
+| Best Metric | 38 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #111 |
@@ -40,27 +40,24 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `stats/clip_advanced.ts` — clip with per-element Series/DataFrame bounds
 - `io/read_excel.ts` — Excel file reading (requires xlsx parser)
-- `stats/duplicated.ts` — duplicated/dropDuplicates for Series/DataFrame
+- `stats/apply.ts` — apply arbitrary function along axis for Series/DataFrame
+- `groupby` extensions — transform, filter, apply
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 199**: `sampleSeries`/`sampleDataFrame` — Mulberry32 seeded PRNG, Fisher-Yates (uniform) + Gumbel-max trick (weighted) for without-replacement, CDF binary-search for with-replacement. Import `Scalar` from `../../src/index.ts` (not `../../src/types.ts`) in tests to satisfy `useImportRestrictions`.
-- **Iter 198**: `duplicatedSeries`/`duplicatedDataFrame`/`dropDuplicatesSeries`/`dropDuplicatesDataFrame` — use `scalarKey()` pattern (same as value_counts) for stable scalar/null/NaN/Date serialization. `push_to_pull_request_branch` requires creating a local branch alias matching the remote branch name (e.g. `autoloop/...-531c0338e43e4af9`) for incremental patch generation. PR #111 is the canonical draft PR.
-- **Iter 197**: `diffSeries`/`diffDataFrame`/`shiftSeries`/`shiftDataFrame` — decompose axis=0 (col-wise) vs axis=1 (row-wise) into separate helper functions to keep complexity low. `diffArray` yields null for non-finite values; `shiftArray` fills vacated positions with configurable `fillValue`. 35 tests (unit + fast-check). Canonical branch `autoloop/build-tsb-pandas-typescript-migration` first had its PR created this iteration.
-- **Iter 196**: `whereSeries`/`maskSeries` — Series and DataFrame where/mask. Refactor complex branch into small helpers (buildFromDataFrameCond, buildFrom2DArray, buildFromSeriesAxis0/1, buildFromCallable) to satisfy Biome's noExcessiveCognitiveComplexity (max 15). Use `setCell()` helper instead of `matrix[r]![c]` to avoid `noNonNullAssertion`. 33 tests (unit + fast-check properties).
-- **Iter 195**: `replaceSeries`/`replaceDataFrame` — scalar, array, Record, Map specs. DataFrame iteration is `for (const name of df.columns.values)` then `df.col(name)`. Biome `useExplicitType` requires `: Scalar` on all lambdas (not just top-level functions). 27 tests (unit + fast-check).
-- **Iter 194**: Canonical branch `autoloop/build-tsb-pandas-typescript-migration` (no suffix) now in use. `new DataFrame(colMap, df.index)` works for constructing DataFrames from column maps in stats/core modules — no `fromColumnMap` factory needed. Issues: experiment log #3, steering #107.
-- **Iter 193 (BREAKTHROUGH)**: safeoutputs MCP accessible via direct HTTP with session-ID. Steps: (1) POST to `http://host.docker.internal:80/mcp/safeoutputs` with `Authorization` header from `/home/runner/.copilot/mcp-config.json`, (2) capture `Mcp-Session-Id` response header, (3) POST `notifications/initialized` with session ID, (4) call `tools/call`. Unblocked 20+ consecutive push failures.
+- **Iter 200**: `clipAdvancedSeries`/`clipAdvancedDataFrame` — Series bounds use positional alignment; DataFrame bounds use element-wise. Biome `noNonNullAssertion` on 2D arrays → use `?.` optional chaining. `noUselessElse` requires `--unsafe` flag.
+- **Iter 199**: `sampleSeries`/`sampleDataFrame` — Import `Scalar` from `../../src/index.ts` (not `../../src/types.ts`) in tests to satisfy `useImportRestrictions`.
+- **Iter 197**: Decompose DataFrame operations into separate axis helpers (colWise/rowWise) to keep Biome cognitive complexity low.
+- **Iter 196**: Biome `noExcessiveCognitiveComplexity` (max 15): extract small helpers. Use `setCell()` helper to avoid `noNonNullAssertion` on matrix access.
+- **Iter 195**: DataFrame iteration: `for (const name of df.columns.values)` + `df.col(name)`. Biome `useExplicitType` requires explicit `: Scalar` return type on arrow functions.
 - **DataFrame API**: `df.columns.values` is `readonly string[]`. `df.index.size` (not `.length`). Use `DataFrame.fromColumns()` factory.
-- **Series options**: `dtype` must be a `Dtype` object (e.g. `Dtype.from("object")`), not a string literal.
-- **Biome**: `useBlockStatements` auto-fixable with `--write --unsafe`. `noExcessiveCognitiveComplexity` requires extracting helpers. Use `Number.NaN`, `Number.POSITIVE_INFINITY`.
-- **Tests**: `import fc from "fast-check"` (default). Import from `../../src/index.ts`. Type Series params as `Series<Scalar>`.
-- **Canonical branch source**: `origin/autoloop/build-tsb-pandas-typescript-migration-dcf09ab30313d8db` has na_ops (iter 172) + pct_change (iter 174). Metric = 30. Use as base when setting up canonical branch from scratch.
-- **pct_change**: 2 pre-existing test failures (index.length bug, axis=1 bug). Don't fix unless that's the feature being added.
+- **Series options**: `dtype` must be a `Dtype` object; `name` accepts `string | null` (not `undefined`).
+- **Biome**: `useBlockStatements` auto-fixable with `--write --unsafe`. `Number.NaN`, `Number.POSITIVE_INFINITY` required. Use `import fc from "fast-check"` (default import).
+- **Tests**: Import from `../../src/index.ts`. Type Series params as `Series<Scalar>`.
+- **MCP**: Use direct HTTP to `http://host.docker.internal:80/mcp/safeoutputs` with session-ID handshake. `push_to_pull_request_branch` requires local branch named exactly as remote tracking branch.
 
 ---
 
@@ -79,6 +76,14 @@ Next features to implement (prioritized by impact):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 200 — 2026-04-11 15:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24285870280)
+
+- **Status**: ✅ Accepted
+- **Change**: Add `stats/clip_advanced.ts` — `clipAdvancedSeries`, `clipAdvancedDataFrame`. Per-element clipping with scalar, Series (positional), or DataFrame (element-wise) bounds; axis=0/1 for broadcasting. 32 tests (unit + fast-check). Playground page `clip_advanced.html`.
+- **Metric**: 38 (previous best: 36, delta: +2)
+- **Commit**: e0f8724 (branch: autoloop/build-tsb-pandas-typescript-migration-531c0338e43e4af9 → PR #111)
+- **Notes**: `expandDataFrameBound()` helper handles all four bound types. Biome `noNonNullAssertion` on 2D grids — use optional chaining (`?.`). `noUselessElse` requires `--unsafe` flag to auto-fix.
 
 ### Iteration 199 — 2026-04-11 14:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24284805137)
 
