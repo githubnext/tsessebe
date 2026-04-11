@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T18:47:49Z |
-| Iteration Count | 206 |
-| Best Metric | 42 |
+| Last Run | 2026-04-11T19:32:00Z |
+| Iteration Count | 207 |
+| Best Metric | 43 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #111 |
@@ -40,14 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `stats/crosstab.ts` — cross-tabulation (pd.crosstab)
 - `io/read_excel.ts` — Excel file reading (requires xlsx parser from scratch)
 - `stats/describe_categorical.ts` — describe() for categorical/string Series (check what's missing from existing describe.ts)
+- `reshape/pivot_table.ts` — pivot_table with aggfunc and margins
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 207**: `crosstab`/`crosstabSeries` — extract `pushObservation` helper to keep `buildCellMap` under complexity 15. Extract `buildColumnMap` + `resolveFinalLayout` to keep `crosstab` under 15. Remove `void rowname`/`void colname` (noVoid). Canonical branch is hash-suffix `531c0338e43e4af9` — check it out by name for push. Metric: 43 (+1).
 - **Iter 206**: `getDummies`/`fromDummies` — fix `noExcessiveCognitiveComplexity` by splitting large functions into `collectLevels`, `buildIndicatorCol`, `buildNaCol`, `splitColName`, `inferSeriesName`, `findActiveLabel` helpers. Fix `noNestedTernary` with if/else. Import `Dtype` from `../core/index.ts` not `../core/dtype.ts` (`useImportRestrictions`). Canonical branch still tracked from hash-suffix 531c.
 - **Iter 205**: `Interval`/`IntervalIndex`/`intervalRange` — import tests from `../../src/index.ts` (not `../../src/stats/index.ts`) to satisfy `useImportRestrictions`. Auto-fix formatter with `biome check --write`. Canonical branch did not exist remotely despite state file claiming it — had to re-create from hash-suffix branch.
 - **Iter 204**: `cut`/`qcut` — decompose `assignBins` to keep cognitive complexity under 15. `useCollapsedElseIf` requires removing `else { if (...) }` → `else if (...)`. `noExportedImports` means don't re-export types imported from other modules. Use `biome format --write` to auto-fix formatter issues. `as unknown as [T, U]` required for overload narrowing (not `(...) as [T, U]`).
@@ -83,13 +84,18 @@ Next features to implement (prioritized by impact):
 
 ## 📊 Iteration History
 
+### Iteration 207 — 2026-04-11 19:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24289641935)
+
+- **Status**: ✅ Accepted
+- **Change**: Add `stats/crosstab.ts` — `crosstab` and `crosstabSeries`. Cross-tabulation with count/custom aggfunc, normalize (all/index/columns), margins with custom name, dropna. 30 unit + property-based tests. Playground page `crosstab.html` (8 interactive demos).
+- **Metric**: 43 (previous best: 42, delta: +1)
+- **Commit**: dacdb21 (branch: autoloop/build-tsb-pandas-typescript-migration-531c0338e43e4af9)
+- **Notes**: Extract `pushObservation` helper for `buildCellMap`, `buildColumnMap`+`resolveFinalLayout` for `crosstab` to stay under Biome complexity limit. `noVoid` — don't use `void x` to suppress unused-var.
+
 ### Iteration 206 — 2026-04-11 18:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24289114918)
 
 - **Status**: ✅ Accepted
-- **Change**: Add `stats/get_dummies.ts` — `getDummies`, `getDummiesSeries`, `getDummiesDataFrame`, `fromDummies`. One-hot encoding: custom prefix/prefixSep, dropFirst, dummyNa, dtype, per-column prefix array/map. `fromDummies` reverses the encoding with configurable defaultCategory. 45+ unit + fast-check tests. Playground page `get_dummies.html` (8 interactive demos).
-- **Metric**: 42 (previous best: 41, delta: +1)
-- **Commit**: f5a69ab (branch: autoloop/build-tsb-pandas-typescript-migration)
-- **Notes**: Fix Biome `noExcessiveCognitiveComplexity` by extracting focused helpers. Fix `noNestedTernary` with if/else. Import `Dtype` from `../core/index.ts` not `../core/dtype.ts`.
+- **Change**: Add `stats/get_dummies.ts` — one-hot encoding. Metric: 42 (+1). Commit: f5a69ab
 
 ### Iteration 205 — 2026-04-11 18:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24288493950)
 - **Status**: ✅ Accepted — Add `stats/interval.ts`: Interval/IntervalIndex/intervalRange. Metric: 41 (+1). Commit: e58b620
