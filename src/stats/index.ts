@@ -39,3 +39,22 @@ export {
   nsmallestDataFrame,
 } from "./nlargest.ts";
 export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
+export {
+  isna,
+  notna,
+  isnull,
+  notnull,
+  ffillSeries,
+  bfillSeries,
+  dataFrameFfill,
+  dataFrameBfill,
+} from "./na_ops.ts";
+export type { FillDirectionOptions, DataFrameFillOptions } from "./na_ops.ts";
+export { pctChangeSeries, pctChangeDataFrame } from "./pct_change.ts";
+export type {
+  PctChangeFillMethod,
+  PctChangeOptions,
+  DataFramePctChangeOptions,
+} from "./pct_change.ts";
+export { idxminSeries, idxmaxSeries, idxminDataFrame, idxmaxDataFrame } from "./idxmin_idxmax.ts";
+export type { IdxOptions, IdxDataFrameOptions } from "./idxmin_idxmax.ts";
