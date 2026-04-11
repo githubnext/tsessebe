@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T01:00:27Z |
-| Iteration Count | 178 |
+| Last Run | 2026-04-11T01:44:30Z |
+| Iteration Count | 179 |
 | Best Metric | 28 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
 | Steering Issue | — |
 | Paused | true |
-| Pause Reason | 6 consecutive push failures: safeoutputs MCP tools not available in workflow runs |
+| Pause Reason | 7 consecutive push failures: safeoutputs MCP tools not registered as callable in this agent context |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 6 |
-| Recent Statuses | error, error, error, error, accepted, error, error, accepted, accepted, error |
+| Consecutive Errors | 7 |
+| Recent Statuses | error, error, error, error, error, error, error, accepted, accepted, error |
 
 ## 📋 Program Info
 
@@ -50,11 +50,10 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
-- **Iters 173-178 (6 consecutive) failure**: safeoutputs MCP tools consistently NOT available in Copilot CLI workflow runs. `create_issue`, `create_pull_request`, `push_to_pull_request_branch`, and `noop` are all listed in the system instructions but not registered as callable tools at runtime. Root cause unknown — likely a workflow configuration issue. Direct git push also fails (GITHUB_TOKEN empty). **Action required from maintainer** to fix workflow auth so safeoutputs tools are available.
-- **pct_change implementation ready**: Committed as d8f0c10 on local branch `autoloop/build-tsb-pandas-typescript-migration`. Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts` (27 tests), `playground/pct_change.html`. Would bring metric to 29. Needs push.
-- **Iter 172 success**: safeoutputs tools WERE available in Copilot CLI agentic workflow. The background task agent used create_pull_request. NOT reproducible since.
-- **Current main state**: main branch has 28 features. pct_change (metric 29) was implemented 5 times but never successfully pushed.
-- **pct_change implementation**: Committed to local branch `autoloop/build-tsb-pandas-typescript-migration` (commit 21b1e10, run 24270222763). Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Metric would be 29.
+- **Iters 173-179 (7 consecutive) failure**: safeoutputs MCP tools consistently NOT available as callable tools in this workflow. Both direct calls (`create_pull_request`) and sub-agents (general-purpose mode) fail. The system lists these tools in `<safe-output-tools>` but they are NOT registered in the tool executor. Root cause: workflow config issue. **Action required from maintainer.**
+- **pct_change implementation**: Committed as 07b0eb4 on local branch `autoloop/build-tsb-pandas-typescript-migration` (canonical name, no suffix, created fresh from main). Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Would bring metric to 29. Code is tsc-clean.
+- **Iter 172 success**: safeoutputs tools WERE available in Copilot CLI agentic workflow. NOT reproducible since then.
+- **Current main state**: main branch has 28 features. pct_change (metric 29) committed locally 7 times across iters 173-179.
 - **DataFrame API**: Use `df.columns.values` (readonly string[]) not `df.columns` directly. Constructor is `new DataFrame(colMap, index)`.
 - **Biome formatting**: overload signatures that exceed 100 chars need line breaks.
 - **Import style**: Use `import fc from "fast-check"` (default). Use `src/index.ts` for imports in tests.
@@ -71,7 +70,6 @@ Next features to implement (prioritized by impact):
 ## 🔭 Future Directions
 
 **Next priorities**:
-- `pct_change` — IMPLEMENTED (iter 177, commit 21b1e10, run 24270222763). Files ready: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Branch `autoloop/build-tsb-pandas-typescript-migration` committed locally. Must fix push auth first.
 - `na_ops.ts` — isna/notna/ffill/bfill (was in iter 172 but branch was lost, not in main)
 - `where`/`mask` — conditional operations very common in pandas
 - `idxmin`/`idxmax` — frequently used in data analysis
@@ -83,6 +81,14 @@ Next features to implement (prioritized by impact):
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 179 — 2026-04-11 01:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24271783221)
+
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools not registered as callable, 7th consecutive)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods and axis options. 20 tests, tsc clean.
+- **Metric**: 29 (main baseline 28, delta +1 if pushed)
+- **Commit**: 07b0eb4 (local only on branch `autoloop/build-tsb-pandas-typescript-migration`)
+- **Notes**: Sub-agents (general-purpose mode) also lack safeoutputs tools. The main agent `create_pull_request` call returns "Tool does not exist". Branch created fresh from main (canonical name, no suffix). Code quality is good. Root cause: workflow config issue preventing safeoutputs MCP server registration.
 
 ### Iteration 178 — 2026-04-11 01:00 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24270929276)
 
