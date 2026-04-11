@@ -10,26 +10,26 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T03:15:00Z |
-| Iteration Count | 180 |
+| Last Run | 2026-04-11T04:30:00Z |
+| Iteration Count | 181 |
 | Best Metric | 28 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
 | Steering Issue | — |
 | Paused | true |
-| Pause Reason | 8 consecutive push failures: safeoutputs MCP tools not registered as callable in Copilot CLI agent context |
+| Pause Reason | 9 consecutive push failures: safeoutputs MCP tools not registered AND git push requires auth not available in Copilot CLI context |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 8 |
-| Recent Statuses | error, error, error, error, error, error, error, error, accepted, accepted |
+| Consecutive Errors | 9 |
+| Recent Statuses | error, error, error, error, error, error, error, error, error, accepted |
 
 ## 📋 Program Info
 
 **Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: — (pending PR creation)
+**Pull Request**: — (cannot create — safeoutputs tools unavailable in Copilot CLI context)
 **Steering Issue**: — (pending)
 **Experiment Log**: — (pending)
 
@@ -50,14 +50,11 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
-- **Iters 173-180 (8 consecutive) failure**: safeoutputs MCP tools consistently NOT available as callable tools in this workflow. Confirmed in both autoloop workflow runs AND Copilot CLI agent runs. The `create_pull_request` call returns "Tool does not exist". Root cause: safeoutputs MCP server not connected/registered. **Action required from maintainer to fix workflow config.**
-- **pct_change implementation (iter 180)**: Clean implementation with `toNullableNumber` helper to avoid nested ternaries. Use `noUncheckedIndexedAccess`-safe patterns: check for `undefined` in array access. Test `approx()` helper must accept `Scalar | undefined` for both args. Use `fc.double` not `fc.float` for property tests (float requires 32-bit precision values). DataFrame tests use `fromRecords()` not `fromRows()` (doesn't exist).
-- **pct_change implementation**: Committed as 07b0eb4 on local branch `autoloop/build-tsb-pandas-typescript-migration` (canonical name, no suffix, created fresh from main). Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Would bring metric to 29. Code is tsc-clean.
-- **Iter 172 success**: safeoutputs tools WERE available in Copilot CLI agentic workflow. NOT reproducible since then.
-- **Current main state**: main branch has 28 features. pct_change (metric 29) committed locally 7 times across iters 173-179.
+- **Iter 173-181 (9 consecutive) failure**: safeoutputs MCP tools NOT available as callable tools in Copilot CLI agent context. Additionally, git push requires HTTPS auth (GITHUB_TOKEN) or SSH auth — neither is configured. The push always fails. **This is a Copilot CLI context limitation, not a code issue.**
+- **pct_change is READY** (iter 181): Code committed as de2a797 but lost (local branch). Implementation: `src/stats/pct_change.ts` with helpers `pctChangeSeries`/`pctChangeDataFrame`, `extractRow`/`scatterRow`/`applyForwardPct`/`applyBackwardPct`. Use `== null` for undefined+null checks. Extract small helpers to avoid noExcessiveCognitiveComplexity. 23 tests including property-based. Full playground page.
 - **DataFrame API**: Use `df.columns.values` (readonly string[]) not `df.columns` directly. Constructor is `new DataFrame(colMap, index)`.
-- **Biome formatting**: overload signatures that exceed 100 chars need line breaks.
-- **Import style**: Use `import fc from "fast-check"` (default). Use `src/index.ts` for imports in tests.
+- **Import style**: Use `import fc from "fast-check"` (default). Use `src/index.ts` for imports in tests. `fc.double` not `fc.float` for property tests.
+- **Biome**: `useBlockStatements` is auto-fixable with `--write`. `noExcessiveCognitiveComplexity` requires extracting helper functions.
 - **Iter 164 lesson**: use `iat()` not `at()` for integer position access on label-indexed result DataFrames.
 
 ---
@@ -82,6 +79,14 @@ Next features to implement (prioritized by impact):
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 181 — 2026-04-11 04:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24274459125)
+
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools unavailable AND git requires auth, 9th consecutive)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods, fillMethod (pad/ffill/backfill/bfill/null), fill limit, and axis=0/1 support. 23 tests (unit + property-based), TypeScript-clean, Biome-clean (0 errors, 13 warnings). Code committed to local branch `autoloop/build-tsb-pandas-typescript-migration` as de2a797.
+- **Metric**: 29 (main baseline 28, delta +1 if pushed)
+- **Commit**: de2a797 (local only — branch cannot be pushed without auth)
+- **Notes**: Implemented full pct_change with all edge cases. tsc --noEmit clean. Biome has 13 warnings (nursery rules) but zero errors. Extracted `extractRow`/`scatterRow`/`applyForwardPct`/`applyBackwardPct` helpers to satisfy noExcessiveCognitiveComplexity. Used `== null` shorthand for undefined+null checks. Code is ready — next iteration should re-implement this feature.
 
 ### Iteration 180 — 2026-04-11 03:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24273206351)
 
