@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T13:49:39Z |
-| Iteration Count | 197 |
-| Best Metric | 35 |
+| Last Run | 2026-04-11T14:25:00Z |
+| Iteration Count | 198 |
+| Best Metric | 36 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | (see PR created this run) |
+| PR | #111 |
 | Steering Issue | #107 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, error, error, error, error, error, error, error, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, error, error, error, error, error, error, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,7 +31,7 @@
 **Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: (PR created this iteration for `autoloop/build-tsb-pandas-typescript-migration`)
+**Pull Request**: #111
 **Steering Issue**: #107
 **Experiment Log**: #3
 
@@ -40,14 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `stats/duplicated.ts` — `duplicatedSeries`, `duplicatedDataFrame`, `dropDuplicates` (very commonly used)
 - `stats/clip_advanced.ts` — clip with per-element Series/DataFrame bounds
 - `io/read_excel.ts` — Excel file reading (requires xlsx parser)
+- `core/sample.ts` — random sampling from Series/DataFrame
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 198**: `duplicatedSeries`/`duplicatedDataFrame`/`dropDuplicatesSeries`/`dropDuplicatesDataFrame` — use `scalarKey()` pattern (same as value_counts) for stable scalar/null/NaN/Date serialization. `push_to_pull_request_branch` requires creating a local branch alias matching the remote branch name (e.g. `autoloop/...-531c0338e43e4af9`) for incremental patch generation. PR #111 is the canonical draft PR.
 - **Iter 197**: `diffSeries`/`diffDataFrame`/`shiftSeries`/`shiftDataFrame` — decompose axis=0 (col-wise) vs axis=1 (row-wise) into separate helper functions to keep complexity low. `diffArray` yields null for non-finite values; `shiftArray` fills vacated positions with configurable `fillValue`. 35 tests (unit + fast-check). Canonical branch `autoloop/build-tsb-pandas-typescript-migration` first had its PR created this iteration.
 - **Iter 196**: `whereSeries`/`maskSeries` — Series and DataFrame where/mask. Refactor complex branch into small helpers (buildFromDataFrameCond, buildFrom2DArray, buildFromSeriesAxis0/1, buildFromCallable) to satisfy Biome's noExcessiveCognitiveComplexity (max 15). Use `setCell()` helper instead of `matrix[r]![c]` to avoid `noNonNullAssertion`. 33 tests (unit + fast-check properties).
 - **Iter 195**: `replaceSeries`/`replaceDataFrame` — scalar, array, Record, Map specs. DataFrame iteration is `for (const name of df.columns.values)` then `df.col(name)`. Biome `useExplicitType` requires `: Scalar` on all lambdas (not just top-level functions). 27 tests (unit + fast-check).
@@ -77,6 +78,14 @@ Next features to implement (prioritized by impact):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 198 — 2026-04-11 14:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24284243449)
+
+- **Status**: ✅ Accepted
+- **Change**: Add `stats/duplicated.ts` — `duplicatedSeries`, `duplicatedDataFrame`, `dropDuplicatesSeries`, `dropDuplicatesDataFrame`. Supports `keep="first"/"last"/false` and `subset` for DataFrames. 35 tests (unit + fast-check). Playground page `duplicated.html`.
+- **Metric**: 36 (previous best: 35, delta: +1)
+- **Commit**: 5218a72 (branch: autoloop/build-tsb-pandas-typescript-migration-531c0338e43e4af9 → PR #111)
+- **Notes**: Reused `scalarKey()` pattern from value_counts. `push_to_pull_request_branch` requires local branch named exactly as the remote tracking branch for incremental patch computation.
 
 ### Iteration 197 — 2026-04-11 13:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24283807306)
 
