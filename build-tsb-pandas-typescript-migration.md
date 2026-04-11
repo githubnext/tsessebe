@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T01:44:30Z |
-| Iteration Count | 179 |
+| Last Run | 2026-04-11T03:15:00Z |
+| Iteration Count | 180 |
 | Best Metric | 28 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
 | Steering Issue | — |
 | Paused | true |
-| Pause Reason | 7 consecutive push failures: safeoutputs MCP tools not registered as callable in this agent context |
+| Pause Reason | 8 consecutive push failures: safeoutputs MCP tools not registered as callable in Copilot CLI agent context |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 7 |
-| Recent Statuses | error, error, error, error, error, error, error, accepted, accepted, error |
+| Consecutive Errors | 8 |
+| Recent Statuses | error, error, error, error, error, error, error, error, accepted, accepted |
 
 ## 📋 Program Info
 
@@ -50,7 +50,8 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
-- **Iters 173-179 (7 consecutive) failure**: safeoutputs MCP tools consistently NOT available as callable tools in this workflow. Both direct calls (`create_pull_request`) and sub-agents (general-purpose mode) fail. The system lists these tools in `<safe-output-tools>` but they are NOT registered in the tool executor. Root cause: workflow config issue. **Action required from maintainer.**
+- **Iters 173-180 (8 consecutive) failure**: safeoutputs MCP tools consistently NOT available as callable tools in this workflow. Confirmed in both autoloop workflow runs AND Copilot CLI agent runs. The `create_pull_request` call returns "Tool does not exist". Root cause: safeoutputs MCP server not connected/registered. **Action required from maintainer to fix workflow config.**
+- **pct_change implementation (iter 180)**: Clean implementation with `toNullableNumber` helper to avoid nested ternaries. Use `noUncheckedIndexedAccess`-safe patterns: check for `undefined` in array access. Test `approx()` helper must accept `Scalar | undefined` for both args. Use `fc.double` not `fc.float` for property tests (float requires 32-bit precision values). DataFrame tests use `fromRecords()` not `fromRows()` (doesn't exist).
 - **pct_change implementation**: Committed as 07b0eb4 on local branch `autoloop/build-tsb-pandas-typescript-migration` (canonical name, no suffix, created fresh from main). Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Would bring metric to 29. Code is tsc-clean.
 - **Iter 172 success**: safeoutputs tools WERE available in Copilot CLI agentic workflow. NOT reproducible since then.
 - **Current main state**: main branch has 28 features. pct_change (metric 29) committed locally 7 times across iters 173-179.
@@ -82,7 +83,13 @@ Next features to implement (prioritized by impact):
 
 All iterations in reverse chronological order (newest first).
 
-### Iteration 179 — 2026-04-11 01:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24271783221)
+### Iteration 180 — 2026-04-11 03:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24273206351)
+
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools unavailable, 8th consecutive)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods, fillMethod (pad/ffill/backfill/bfill/null), limit, and axis support. 23 tests (unit + property-based), all pass. TypeScript-clean (tsc --noEmit), Biome-clean.
+- **Metric**: 29 (main baseline 28, delta +1 if pushed)
+- **Commit**: a1fcb53 (local only on branch `autoloop/build-tsb-pandas-typescript-migration`)
+- **Notes**: Triggered via Copilot CLI (non-autoloop). Same root cause as iters 173-179: `create_pull_request` tool returns "Tool does not exist". safeoutputs MCP server not connected in this agent context.
 
 - **Status**: ⚠️ Error (push failure — safeoutputs MCP tools not registered as callable, 7th consecutive)
 - **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods and axis options. 20 tests, tsc clean.
