@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T00:27:00Z |
-| Iteration Count | 177 |
+| Last Run | 2026-04-11T01:00:27Z |
+| Iteration Count | 178 |
 | Best Metric | 28 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
 | Steering Issue | — |
 | Paused | true |
-| Pause Reason | 5 consecutive push failures: safeoutputs MCP tools not available in workflow runs |
+| Pause Reason | 6 consecutive push failures: safeoutputs MCP tools not available in workflow runs |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 5 |
-| Recent Statuses | error, error, error, accepted, error, error, accepted, accepted, error, error |
+| Consecutive Errors | 6 |
+| Recent Statuses | error, error, error, error, accepted, error, error, accepted, accepted, error |
 
 ## 📋 Program Info
 
@@ -50,7 +50,8 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
-- **Iters 173-177 (5 consecutive) failure**: safeoutputs MCP tools consistently NOT available in workflow runs since iter 172. Root cause unknown. Direct git push fails (GITHUB_TOKEN empty/restricted by one-shot-token.so). Sub-agents also cannot access safeoutputs tools. Program auto-paused at 5 consecutive errors. Action required from maintainer to fix workflow auth.
+- **Iters 173-178 (6 consecutive) failure**: safeoutputs MCP tools consistently NOT available in Copilot CLI workflow runs. `create_issue`, `create_pull_request`, `push_to_pull_request_branch`, and `noop` are all listed in the system instructions but not registered as callable tools at runtime. Root cause unknown — likely a workflow configuration issue. Direct git push also fails (GITHUB_TOKEN empty). **Action required from maintainer** to fix workflow auth so safeoutputs tools are available.
+- **pct_change implementation ready**: Committed as d8f0c10 on local branch `autoloop/build-tsb-pandas-typescript-migration`. Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts` (27 tests), `playground/pct_change.html`. Would bring metric to 29. Needs push.
 - **Iter 172 success**: safeoutputs tools WERE available in Copilot CLI agentic workflow. The background task agent used create_pull_request. NOT reproducible since.
 - **Current main state**: main branch has 28 features. pct_change (metric 29) was implemented 5 times but never successfully pushed.
 - **pct_change implementation**: Committed to local branch `autoloop/build-tsb-pandas-typescript-migration` (commit 21b1e10, run 24270222763). Files: `src/stats/pct_change.ts`, `tests/stats/pct_change.test.ts`, `playground/pct_change.html`. Metric would be 29.
@@ -82,6 +83,14 @@ Next features to implement (prioritized by impact):
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 178 — 2026-04-11 01:00 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24270929276)
+
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools unavailable, 6th consecutive)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods, fillMethod (pad/ffill/bfill/backfill/null), fill limit, and axis support. 27 tests, all pass. Biome clean, tsc clean.
+- **Metric**: 29 (main baseline 28, delta +1 if pushed)
+- **Commit**: d8f0c10 (local only on branch `autoloop/build-tsb-pandas-typescript-migration`)
+- **Notes**: Code is fully implemented and correct. create_issue / create_pull_request / push_to_pull_request_branch tools not registered in this workflow run. Same root cause as iters 173-177.
 
 ### Iteration 177 — 2026-04-11 00:27 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24270222763)
 
