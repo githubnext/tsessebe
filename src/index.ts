@@ -107,3 +107,27 @@ export {
 export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./stats/index.ts";
 export { valueCounts, dataFrameValueCounts } from "./stats/index.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/index.ts";
+export {
+  isna,
+  notna,
+  isnull,
+  notnull,
+  ffillSeries,
+  bfillSeries,
+  dataFrameFfill,
+  dataFrameBfill,
+} from "./stats/index.ts";
+export type { FillDirectionOptions, DataFrameFillOptions } from "./stats/index.ts";
+export { pctChangeSeries, pctChangeDataFrame } from "./stats/index.ts";
+export type {
+  PctChangeFillMethod,
+  PctChangeOptions,
+  DataFramePctChangeOptions,
+} from "./stats/index.ts";
+export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./stats/index.ts";
+export type {
+  SeriesCond,
+  SeriesWhereOptions,
+  DataFrameCond,
+  DataFrameWhereOptions,
+} from "./stats/index.ts";
