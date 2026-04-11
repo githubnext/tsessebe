@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T17:12:45Z |
-| Iteration Count | 203 |
-| Best Metric | 39 |
+| Last Run | 2026-04-11T17:45:02Z |
+| Iteration Count | 204 |
+| Best Metric | 40 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #111 |
@@ -42,12 +42,13 @@
 Next features to implement (prioritized by impact):
 - `io/read_excel.ts` — Excel file reading (requires xlsx parser)
 - `groupby` extensions — transform, filter, apply
-- `stats/cut.ts` — `cut`/`qcut` — binning continuous data into categories
+- `stats/interval.ts` — Interval type and IntervalIndex (pandas Interval objects)
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 204**: `cut`/`qcut` — decompose `assignBins` to keep cognitive complexity under 15. `useCollapsedElseIf` requires removing `else { if (...) }` → `else if (...)`. `noExportedImports` means don't re-export types imported from other modules. Use `biome format --write` to auto-fix formatter issues. `as unknown as [T, U]` required for overload narrowing (not `(...) as [T, U]`).
 - **Iter 203**: Canonical branch `autoloop/build-tsb-pandas-typescript-migration` created from hash-suffix branch (iter 199 state, 37 files). Re-implemented `clip_advanced.ts` (lost from iter 200) and `apply.ts` (lost from iter 201). Biome `noExcessiveCognitiveComplexity` → decompose into axis helpers. `noUselessElse` → remove else after early returns. Metric: 39 (from 37, delta: +2).
 - **Iter 202**: `clipAdvancedSeries`/`clipAdvancedDataFrame` — canonical branch created from main. Fixed missing exports in src/index.ts, stats/index.ts, core/index.ts for modules from iters 172–199. `noNestedTernary` → use if/else for axis resolution. `ReadonlyArray<T>` → `readonly T[]` for Biome. Metric: 38 (from 37; also fixed index wiring).
 - **Iter 201**: `applySeries`/`applyDataFrame`/`applyExpandDataFrame`/`mapDataFrame` — Map<string,Series<Scalar>> is directly assignable to ReadonlyMap (no `as` cast needed). Biome `--write` auto-fixes formatter issues.
@@ -74,11 +75,19 @@ Next features to implement (prioritized by impact):
 
 - `io/read_excel.ts` — Excel reading
 - `groupby` extensions — transform, filter, apply
-- `stats/cut.ts` — binning continuous data (cut/qcut)
+- `stats/interval.ts` — Interval type and IntervalIndex
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 204 — 2026-04-11 17:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24288003426)
+
+- **Status**: ✅ Accepted
+- **Change**: Add `stats/cut.ts` — `cut()`, `qcut()`, `cutCodes()`, `cutCategories()`. `cut` supports integer bins or explicit edges, right/left-closed intervals, custom labels, retbins, precision, includeLowest. `qcut` supports integer or explicit quantile levels, duplicates=raise/drop. 30+ unit + fast-check tests. Playground page `cut.html` (8 interactive demos).
+- **Metric**: 40 (previous best: 39, delta: +1)
+- **Commit**: 7dac470 (branch: autoloop/build-tsb-pandas-typescript-migration)
+- **Notes**: `useCollapsedElseIf` lint rule → `else if` for conditional ranges. Decompose into small helpers to stay under cognitive complexity 15. `as unknown as [T, U]` for overload cast narrowing.
 
 ### Iteration 203 — 2026-04-11 17:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24287426738)
 
