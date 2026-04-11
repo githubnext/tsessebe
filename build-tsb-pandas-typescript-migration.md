@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T04:30:00Z |
-| Iteration Count | 181 |
-| Best Metric | 28 |
+| Last Run | 2026-04-11T05:30:00Z |
+| Iteration Count | 182 |
+| Best Metric | 29 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | — |
 | Steering Issue | — |
 | Paused | true |
-| Pause Reason | 9 consecutive push failures: safeoutputs MCP tools not registered AND git push requires auth not available in Copilot CLI context |
+| Pause Reason | 10 consecutive push failures: safeoutputs MCP tools not registered AND git push requires auth not available in Copilot CLI context |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 9 |
-| Recent Statuses | error, error, error, error, error, error, error, error, error, accepted |
+| Consecutive Errors | 10 |
+| Recent Statuses | error, error, error, error, error, error, error, error, error, error |
 
 ## 📋 Program Info
 
@@ -50,11 +50,11 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
-- **Iter 173-181 (9 consecutive) failure**: safeoutputs MCP tools NOT available as callable tools in Copilot CLI agent context. Additionally, git push requires HTTPS auth (GITHUB_TOKEN) or SSH auth — neither is configured. The push always fails. **This is a Copilot CLI context limitation, not a code issue.**
-- **pct_change is READY** (iter 181): Code committed as de2a797 but lost (local branch). Implementation: `src/stats/pct_change.ts` with helpers `pctChangeSeries`/`pctChangeDataFrame`, `extractRow`/`scatterRow`/`applyForwardPct`/`applyBackwardPct`. Use `== null` for undefined+null checks. Extract small helpers to avoid noExcessiveCognitiveComplexity. 23 tests including property-based. Full playground page.
-- **DataFrame API**: Use `df.columns.values` (readonly string[]) not `df.columns` directly. Constructor is `new DataFrame(colMap, index)`.
+- **Iter 173-182 (10 consecutive) failure**: safeoutputs MCP tools NOT available as callable tools in Copilot CLI agent context. Additionally, git push requires HTTPS auth (GITHUB_TOKEN) or SSH auth — neither is configured. The push always fails. **This is a Copilot CLI context limitation, not a code issue.**
+- **pct_change is READY** (iter 182): Code committed as 8745ebd (local branch only). Implementation: `src/stats/pct_change.ts` with helpers `pctChangeSeries`/`pctChangeDataFrame`, `computePct`/`applyForwardFill`/`applyBackwardFill`/`fillValues`/`applyForwardPct`. Use `df.index.size` (not `.length`). Use `DataFrame.fromColumns()` in tests. 22 unit + 3 property-based tests. tsc: 0 errors. Biome: 0 errors, 0 warnings. Metric: 29.
+- **DataFrame API**: Use `df.columns.values` (readonly string[]) not `df.columns` directly. Constructor requires explicit index: `new DataFrame(colMap, index)`. Use `DataFrame.fromColumns()` factory for tests.
 - **Import style**: Use `import fc from "fast-check"` (default). Use `src/index.ts` for imports in tests. `fc.double` not `fc.float` for property tests.
-- **Biome**: `useBlockStatements` is auto-fixable with `--write`. `noExcessiveCognitiveComplexity` requires extracting helper functions.
+- **Biome**: `useBlockStatements` warnings auto-fixable with `--write --unsafe`. `noExcessiveCognitiveComplexity` requires extracting helper functions. Use `Number.NaN`, `Number.POSITIVE_INFINITY` etc (not bare `NaN`, `Infinity`).
 - **Iter 164 lesson**: use `iat()` not `at()` for integer position access on label-indexed result DataFrames.
 
 ---
@@ -68,6 +68,7 @@ Next features to implement (prioritized by impact):
 ## 🔭 Future Directions
 
 **Next priorities**:
+- `pct_change.ts` — READY as 8745ebd (local only). Re-implement from scratch on next push-capable iteration. All lessons documented above.
 - `na_ops.ts` — isna/notna/ffill/bfill (was in iter 172 but branch was lost, not in main)
 - `where`/`mask` — conditional operations very common in pandas
 - `idxmin`/`idxmax` — frequently used in data analysis
@@ -79,6 +80,14 @@ Next features to implement (prioritized by impact):
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 182 — 2026-04-11 05:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24275320895)
+
+- **Status**: ⚠️ Error (push failure — safeoutputs MCP tools unavailable AND git requires auth, 10th consecutive)
+- **Change**: Add `pct_change.ts` — `pctChangeSeries`/`pctChangeDataFrame` with periods, fillMethod (pad/ffill/backfill/bfill/null), fill limit, and axis=0/1 support. 22 unit + 3 property-based tests. tsc: 0 errors. Biome: 0 errors, 0 warnings.
+- **Metric**: 29 (main baseline 28, delta +1 if pushed)
+- **Commit**: 8745ebd (local only — branch cannot be pushed without auth)
+- **Notes**: Full implementation complete and clean. Used `DataFrame.fromColumns()` in tests, `df.index.size` (not `.length`), `Number.NaN`/`Number.POSITIVE_INFINITY` (not bare globals). Extracted `computePct` helper to avoid nested ternaries. `--write --unsafe` fixes `useBlockStatements`. Next iteration should re-implement pct_change or na_ops from scratch.
 
 ### Iteration 181 — 2026-04-11 04:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24274459125)
 
