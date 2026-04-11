@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T13:05:00Z |
-| Iteration Count | 195 |
-| Best Metric | 33 |
+| Last Run | 2026-04-11T13:40:00Z |
+| Iteration Count | 196 |
+| Best Metric | 34 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | (to be created) |
+| PR | (pending creation) |
 | Steering Issue | #107 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, error, error, error, error, error, error, error, error, error, error, error, error, error, error, error, error, accepted, accepted, accepted |
+| Recent Statuses | error, error, error, error, error, error, error, error, error, error, error, error, error, error, error, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,7 +31,7 @@
 **Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: (to be created)
+**Pull Request**: (pending creation)
 **Steering Issue**: #107
 **Experiment Log**: #3
 
@@ -40,14 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `stats/where_mask.ts` — conditional value selection (where/mask)
 - `io/read_excel.ts` — Excel file reading
 - `stats/clip_advanced.ts` — clip with Series/DataFrame bounds
+- `groupby` extensions — transform, filter, apply
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 196**: `whereSeries`/`maskSeries` — Series and DataFrame where/mask. Refactor complex branch into small helpers (buildFromDataFrameCond, buildFrom2DArray, buildFromSeriesAxis0/1, buildFromCallable) to satisfy Biome's noExcessiveCognitiveComplexity (max 15). Use `setCell()` helper instead of `matrix[r]![c]` to avoid `noNonNullAssertion`. 33 tests (unit + fast-check properties).
 - **Iter 195**: `replaceSeries`/`replaceDataFrame` — scalar, array, Record, Map specs. DataFrame iteration is `for (const name of df.columns.values)` then `df.col(name)`. Biome `useExplicitType` requires `: Scalar` on all lambdas (not just top-level functions). 27 tests (unit + fast-check).
 - **Iter 194**: Canonical branch `autoloop/build-tsb-pandas-typescript-migration` (no suffix) now in use. `new DataFrame(colMap, df.index)` works for constructing DataFrames from column maps in stats/core modules — no `fromColumnMap` factory needed. Issues: experiment log #3, steering #107.
 - **Iter 193 (BREAKTHROUGH)**: safeoutputs MCP accessible via direct HTTP with session-ID. Steps: (1) POST to `http://host.docker.internal:80/mcp/safeoutputs` with `Authorization` header from `/home/runner/.copilot/mcp-config.json`, (2) capture `Mcp-Session-Id` response header, (3) POST `notifications/initialized` with session ID, (4) call `tools/call`. Unblocked 20+ consecutive push failures.
@@ -68,13 +69,21 @@ Next features to implement (prioritized by impact):
 
 ## 🔭 Future Directions
 
-- `stats/where_mask.ts` — conditional selection
 - `io/read_excel.ts` — Excel reading
+- `stats/clip_advanced.ts` — clip with Series/DataFrame bounds
 - `groupby` extensions — transform, filter, apply
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 196 — 2026-04-11 13:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24283415842)
+
+- **Status**: ✅ Accepted
+- **Change**: Add `stats/where_mask.ts` — `whereSeries`, `maskSeries`, `whereDataFrame`, `maskDataFrame`. Supports boolean[], Series, DataFrame, 2-D array, and callable conditions. 33 tests (unit + fast-check properties). Playground page `where_mask.html`.
+- **Metric**: 34 (previous best: 33, delta: +1)
+- **Commit**: 3a85852 (branch: autoloop/build-tsb-pandas-typescript-migration)
+- **Notes**: Biome noExcessiveCognitiveComplexity (max 15) requires extracting small helpers for each condition type. Use `setCell()` helper to avoid noNonNullAssertion on matrix access.
 
 ### Iteration 195 — 2026-04-11 13:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24282791339)
 
