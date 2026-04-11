@@ -230,6 +230,11 @@
           <div class="status done">✅ Complete</div>
         </div>
         <div class="feature-card">
+          <h3><a href="pivot_table.html" style="color: var(--accent); text-decoration: none;">📊 pivotTableFull (margins)</a></h3>
+          <p>Enhanced pivot table with row/column margin totals. Supports all aggfuncs, custom margins_name, sort order, fill_value, dropna, and multiple index/column columns.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
           <h3><a href="stack_unstack.html" style="color: var(--accent); text-decoration: none;">📐 stack &amp; unstack</a></h3>
           <p>Pivot column labels to/from row index. stack() rotates columns into a compound-index Series; unstack() recovers the DataFrame. Custom sep, dropna, and fill_value support.</p>
           <div class="status done">✅ Complete</div>
@@ -255,6 +260,11 @@
           <div class="status done">✅ Complete</div>
         </div>
         <div class="feature-card">
+          <h3><a href="na_ops.html" style="color: var(--accent); text-decoration: none;">🔍 missing-value ops</a></h3>
+          <p>Detect and fill missing values. isna(), notna(), isnull(), notnull() for scalars/Series/DataFrame. ffillSeries(), bfillSeries(), dataFrameFfill(), dataFrameBfill() with optional limit and axis support.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
           <h3><a href="value_counts.html" style="color: var(--accent); text-decoration: none;">🔢 value_counts</a></h3>
           <p>Count unique values. valueCounts() for Series and dataFrameValueCounts() for DataFrame with normalize, sort, ascending, and dropna options.</p>
           <div class="status done">✅ Complete</div>
@@ -262,6 +272,96 @@
         <div class="feature-card">
           <h3><a href="multi_index.html" style="color: var(--accent); text-decoration: none;">🗂️ MultiIndex</a></h3>
           <p>Hierarchical indexing. MultiIndex for multi-level row and column labels with fromArrays, fromTuples, fromProduct, level access, and swapLevels.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="pct_change.html" style="color: var(--accent); text-decoration: none;">📊 pct_change</a></h3>
+          <p>Fractional change between elements. pctChangeSeries() and pctChangeDataFrame() with periods, fillMethod (pad/bfill), limit, and axis options.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="idxmin_idxmax.html" style="color: var(--accent); text-decoration: none;">🔎 idxmin / idxmax</a></h3>
+          <p>Return the index label of the minimum or maximum value. idxminSeries(), idxmaxSeries(), idxminDataFrame(), idxmaxDataFrame() with skipna support.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="astype.html" style="color: var(--accent); text-decoration: none;">🔄 astype</a></h3>
+          <p>Cast Series and DataFrame values to a different dtype. astypeSeries(), astype() with per-column mapping support and integer clamping.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="replace.html" style="color: var(--accent); text-decoration: none;">🔁 replace</a></h3>
+          <p>Substitute values in Series and DataFrame. Supports scalar, array (many→one, pair-wise), Record, and Map replacement specs.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="where_mask.html" style="color: var(--accent); text-decoration: none;">🔀 where / mask</a></h3>
+          <p>Conditional value selection. <code>where</code> keeps values where the condition is true; <code>mask</code> replaces them. Supports boolean arrays, Series, DataFrame, and callable conditions.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="diff_shift.html" style="color: var(--accent); text-decoration: none;">📈 diff / shift</a></h3>
+          <p>Discrete difference and value shifting for Series and DataFrame. <code>diff</code> computes element-wise differences; <code>shift</code> lags or leads values by a number of periods. Essential for time-series analysis.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="duplicated.html" style="color: var(--accent); text-decoration: none;">🔍 duplicated / drop_duplicates</a></h3>
+          <p>Detect and remove duplicate values or rows. Supports <code>keep="first"</code>, <code>keep="last"</code>, and <code>keep=false</code> (mark all occurrences). DataFrame supports a <code>subset</code> of columns.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="sample.html" style="color: var(--accent); text-decoration: none;">🎲 sample</a></h3>
+          <p>Random sampling from Series and DataFrame. Supports fixed count, fractional sampling, with/without replacement, weighted sampling, and seeded deterministic results via <code>randomState</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="clip_advanced.html" style="color: var(--accent); text-decoration: none;">✂️ clip_advanced</a></h3>
+          <p>Per-element clipping with scalar, array, Series, or DataFrame bounds. Supports axis-based Series broadcasting for DataFrames — mirrors <code>pandas.Series.clip(lower, upper)</code> with array bounds.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="apply.html" style="color: var(--accent); text-decoration: none;">🔧 apply / map</a></h3>
+          <p>Function application and value mapping. <code>applySeries</code>, <code>mapSeries</code> (function/dict lookup), <code>applyDataFrame</code> (reduce per col/row), <code>applyExpandDataFrame</code> (transform per col/row), <code>mapDataFrame</code> (element-wise).</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="cut.html" style="color: var(--accent); text-decoration: none;">🪣 cut / qcut</a></h3>
+          <p>Bin continuous data into discrete intervals. <code>cut</code> for equal-width or user-defined bins; <code>qcut</code> for equal-frequency quantile bins. Custom labels, <code>retbins</code>, <code>cutCodes</code>, and <code>cutCategories</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="interval.html" style="color: var(--accent); text-decoration: none;">📐 Interval / IntervalIndex</a></h3>
+          <p>Bounded interval objects and an ordered index of intervals. <code>Interval</code> supports all four closed types; <code>IntervalIndex</code> supports lookup, overlap queries, and <code>intervalRange</code> for equal-length ranges.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="get_dummies.html" style="color: var(--accent); text-decoration: none;">🎲 getDummies / fromDummies</a></h3>
+          <p>One-hot encode categorical Series or DataFrame columns into binary indicator columns. <code>getDummies</code> supports custom prefix, separator, <code>dropFirst</code>, and <code>dummyNa</code>. <code>fromDummies</code> reverses the encoding.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="crosstab.html" style="color: var(--accent); text-decoration: none;">📊 crosstab</a></h3>
+          <p>Cross-tabulation frequency tables for two categorical factors. Supports custom <code>aggfunc</code> (count, sum, mean, min, max), row/column <code>margins</code>, <code>normalize</code> (all / index / columns), and <code>dropna</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="explode.html" style="color: var(--accent); text-decoration: none;">🔀 explode</a></h3>
+          <p>Transform list-valued cells into multiple rows — one row per element. Supports <code>explodeSeries</code>, <code>explodeDataFrame</code>, multi-column explosion, and <code>ignore_index</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="factorize.html" style="color: var(--accent); text-decoration: none;">🔢 factorize</a></h3>
+          <p>Encode an array of values as integer codes. Maps each unique non-null value to a 0-based code (first-seen or sorted). Missing values receive a configurable sentinel (default <code>-1</code>). Mirrors <code>pandas.factorize()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="wide_to_long.html" style="color: var(--accent); text-decoration: none;">↔️ wide_to_long</a></h3>
+          <p>Reshape a wide-format DataFrame to long format by gathering stub-prefixed columns into rows. Supports multiple stubs, custom separator, custom suffix patterns, and multiple id columns. Mirrors <code>pandas.wide_to_long()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="interpolate.html" style="color: var(--accent); text-decoration: none;">📈 interpolate</a></h3>
+          <p>Fill missing values using interpolation. Supports <code>linear</code>, <code>pad</code>/<code>ffill</code>, <code>backfill</code>/<code>bfill</code>, and <code>nearest</code> methods with <code>limit</code>, <code>limitDirection</code>, and <code>limitArea</code> options. Mirrors <code>Series.interpolate()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
       </div>
