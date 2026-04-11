@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — clip_advanced (per-element clipping)</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #1a1a1a; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.3rem; }
+      pre { background: #f0f0f0; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; }
+      .demo { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; }
+      button { margin-top: 0.5rem; padding: 0.4rem 1rem; cursor: pointer; border-radius: 4px; border: 1px solid #aaa; background: #f5f5f5; }
+      button:hover { background: #e8e8e8; }
+      output { display: block; margin-top: 0.5rem; white-space: pre; font-family: monospace; font-size: 0.85rem; color: #333; }
+      .label { font-weight: 600; font-size: 0.85rem; color: #555; margin-top: 0.8rem; }
+      textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.85rem; border: 1px solid #ccc; border-radius: 4px; padding: 0.5rem; }
+      .pandas-equiv { background: #fff8e1; border-left: 3px solid #f9a825; padding: 0.4rem 0.8rem; margin-top: 0.5rem; font-size: 0.8rem; border-radius: 0 4px 4px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>clip_advanced</code> (per-element clipping)</h1>
+    <p>
+      Clip Series and DataFrame values to per-element bounds.
+      Unlike the simple scalar <code>clip</code>, <code>clipAdvancedSeries</code> and
+      <code>clipAdvancedDataFrame</code> support array, Series, and DataFrame bounds —
+      enabling per-position or element-wise bound specification.
+    </p>
+
+    <h2>Core concept</h2>
+    <pre>// Scalar bounds (like pandas s.clip(lower=0, upper=5))
+clipAdvancedSeries(s, { lower: 0, upper: 5 })
+
+// Per-element array bounds
+clipAdvancedSeries(s, { lower: [1, 2, 3], upper: [4, 5, 6] })
+
+// Series bounds (positional alignment)
+clipAdvancedSeries(s, { lower: loSeries, upper: hiSeries })
+
+// DataFrame element-wise bounds
+clipAdvancedDataFrame(df, { lower: loDf, upper: hiDf })
+
+// Series broadcast on DataFrame (axis=0: one bound per column; axis=1: one per row)
+clipAdvancedDataFrame(df, { lower: loSeries, axis: 1 })</pre>
+
+    <div class="pandas-equiv">
+      <strong>pandas equivalent:</strong><br />
+      <code>s.clip(lower=lo_array, upper=hi_array)</code><br />
+      <code>df.clip(lower=lo_df, upper=hi_df)</code>
+    </div>
+
+    <!-- Demo 1: scalar bounds -->
+    <h2>Demo 1 — clipAdvancedSeries with scalar bounds</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [-3, 1, 5, 10] });
+clipAdvancedSeries(s, { lower: 0, upper: 6 }).values;
+// → [0, 1, 5, 6]</pre>
+      <button onclick="demo1()">Run</button>
+      <output id="out1"></output>
+    </div>
+
+    <!-- Demo 2: per-element array bounds -->
+    <h2>Demo 2 — clipAdvancedSeries with per-element array bounds</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [-1, 0, 5, 12] });
+const lo = [2, -1, 4, 10];
+const hi = [5,  3, 8, 11];
+clipAdvancedSeries(s, { lower: lo, upper: hi }).values;
+// → [2, 0, 5, 11]</pre>
+      <button onclick="demo2()">Run</button>
+      <output id="out2"></output>
+    </div>
+
+    <!-- Demo 3: Series bounds -->
+    <h2>Demo 3 — clipAdvancedSeries with Series bounds</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const s = new Series({ data: [0, 5, 10, 15] });
+const loBound = new Series({ data: [1, 3, 8, 12] });
+const hiBound = new Series({ data: [2, 7, 9, 20] });
+clipAdvancedSeries(s, { lower: loBound, upper: hiBound }).values;
+// → [1, 5, 9, 15]</pre>
+      <button onclick="demo3()">Run</button>
+      <output id="out3"></output>
+    </div>
+
+    <!-- Demo 4: DataFrame element-wise bounds -->
+    <h2>Demo 4 — clipAdvancedDataFrame with DataFrame bounds</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>const df = DataFrame.fromColumns({ a: [1, 5, 9], b: [2, 6, 10] });
+const lo = DataFrame.fromColumns({ a: [2, 3, 4], b: [1, 4, 8] });
+const hi = DataFrame.fromColumns({ a: [3, 7, 8], b: [5, 9, 12] });
+const result = clipAdvancedDataFrame(df, { lower: lo, upper: hi });
+result.col("a").values; // → [2, 5, 8]
+result.col("b").values; // → [2, 6, 10]</pre>
+      <button onclick="demo4()">Run</button>
+      <output id="out4"></output>
+    </div>
+
+    <!-- Demo 5: Series broadcast axis=1 -->
+    <h2>Demo 5 — clipAdvancedDataFrame with Series broadcast (axis=1)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre>// axis=1: one lower bound per row
+const df = DataFrame.fromColumns({ a: [1, 5, 9], b: [2, 6, 10] });
+const loPerRow = new Series({ data: [0, 4, 10] });
+const result = clipAdvancedDataFrame(df, { lower: loPerRow, axis: 1 });
+result.col("a").values; // → [1, 5, 10]
+result.col("b").values; // → [2, 6, 10]</pre>
+      <button onclick="demo5()">Run</button>
+      <output id="out5"></output>
+    </div>
+
+    <script type="module">
+      import {
+        Series,
+        DataFrame,
+        clipAdvancedSeries,
+        clipAdvancedDataFrame,
+      } from "https://esm.sh/tsb@latest";
+
+      window.demo1 = () => {
+        const s = new Series({ data: [-3, 1, 5, 10] });
+        document.getElementById("out1").textContent =
+          JSON.stringify(clipAdvancedSeries(s, { lower: 0, upper: 6 }).values);
+      };
+
+      window.demo2 = () => {
+        const s = new Series({ data: [-1, 0, 5, 12] });
+        document.getElementById("out2").textContent =
+          JSON.stringify(clipAdvancedSeries(s, { lower: [2, -1, 4, 10], upper: [5, 3, 8, 11] }).values);
+      };
+
+      window.demo3 = () => {
+        const s = new Series({ data: [0, 5, 10, 15] });
+        const loBound = new Series({ data: [1, 3, 8, 12] });
+        const hiBound = new Series({ data: [2, 7, 9, 20] });
+        document.getElementById("out3").textContent =
+          JSON.stringify(clipAdvancedSeries(s, { lower: loBound, upper: hiBound }).values);
+      };
+
+      window.demo4 = () => {
+        const df = DataFrame.fromColumns({ a: [1, 5, 9], b: [2, 6, 10] });
+        const lo = DataFrame.fromColumns({ a: [2, 3, 4], b: [1, 4, 8] });
+        const hi = DataFrame.fromColumns({ a: [3, 7, 8], b: [5, 9, 12] });
+        const result = clipAdvancedDataFrame(df, { lower: lo, upper: hi });
+        document.getElementById("out4").textContent =
+          `a: ${JSON.stringify(result.col("a").values)}\nb: ${JSON.stringify(result.col("b").values)}`;
+      };
+
+      window.demo5 = () => {
+        const df = DataFrame.fromColumns({ a: [1, 5, 9], b: [2, 6, 10] });
+        const loPerRow = new Series({ data: [0, 4, 10] });
+        const result = clipAdvancedDataFrame(df, { lower: loPerRow, axis: 1 });
+        document.getElementById("out5").textContent =
+          `a: ${JSON.stringify(result.col("a").values)}\nb: ${JSON.stringify(result.col("b").values)}`;
+      };
+    </script>
+  </body>
+</html>
