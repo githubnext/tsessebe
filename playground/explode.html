@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — explode</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    .tag { display: inline-block; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+    a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>🔀 explode</h1>
+  <p>
+    <code>explodeSeries</code> and <code>explodeDataFrame</code> transform list-valued cells into
+    multiple rows — one row per element.  Mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.explode.html" target="_blank">
+      <code>pandas.DataFrame.explode</code></a>.
+  </p>
+
+  <!-- Demo 1 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 1</span> Basic Series explode</h2>
+    <pre>
+import { Series, explodeSeries } from "tsb";
+
+const s = new Series({ data: [[1, 2, 3], [4, 5], [6]], name: "nums" });
+const result = explodeSeries(s);
+// Values: [1, 2, 3, 4, 5, 6]
+// Index:  [0, 0, 1, 1, 2]  ← original labels repeated
+    </pre>
+    <div class="output" id="out1">Running…</div>
+  </div>
+
+  <!-- Demo 2 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 2</span> ignore_index = true</h2>
+    <pre>
+const s = new Series({ data: [["a","b"], ["c"]], index: ["row0","row1"], name: "letters" });
+explodeSeries(s, { ignore_index: true });
+// Values: ["a", "b", "c"]
+// Index:  [0, 1, 2]  ← fresh RangeIndex
+    </pre>
+    <div class="output" id="out2">Running…</div>
+  </div>
+
+  <!-- Demo 3 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 3</span> null and empty array handling</h2>
+    <pre>
+const s = new Series({ data: [null, [], [1, 2]], name: "x" });
+explodeSeries(s);
+// Values: [null, null, 1, 2]   ← null → null,  [] → null
+    </pre>
+    <div class="output" id="out3">Running…</div>
+  </div>
+
+  <!-- Demo 4 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 4</span> DataFrame explode — single column</h2>
+    <pre>
+import { DataFrame, explodeDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:   [1, 2, 3],
+  tags: [["ts","js"], ["python"], ["go","rust","c++"]],
+});
+explodeDataFrame(df, "tags");
+// id  tags
+//  1  ts
+//  1  js
+//  2  python
+//  3  go
+//  3  rust
+//  3  c++
+    </pre>
+    <div class="output" id="out4">Running…</div>
+  </div>
+
+  <!-- Demo 5 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 5</span> DataFrame explode — multiple columns</h2>
+    <pre>
+const df = DataFrame.fromColumns({
+  x: [[1, 2], [3, 4]],
+  y: [["a", "b"], ["c", "d"]],
+  z: [10, 20],
+});
+explodeDataFrame(df, ["x", "y"]);
+// x  y  z
+// 1  a  10
+// 2  b  10
+// 3  c  20
+// 4  d  20
+    </pre>
+    <div class="output" id="out5">Running…</div>
+  </div>
+
+  <!-- Demo 6 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 6</span> Mismatched list lengths — padding with null</h2>
+    <pre>
+const df = DataFrame.fromColumns({
+  a: [[1, 2, 3]],
+  b: [["x", "y"]],
+});
+explodeDataFrame(df, ["a", "b"]);
+// a   b
+// 1   x
+// 2   y
+// 3   null  ← b is shorter, padded
+    </pre>
+    <div class="output" id="out6">Running…</div>
+  </div>
+
+  <!-- Demo 7 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 7</span> Explode with ignore_index</h2>
+    <pre>
+const df = DataFrame.fromColumns(
+  { vals: [[10, 20], [30]] },
+  { index: ["r0", "r1"] },
+);
+explodeDataFrame(df, "vals", { ignore_index: true });
+// vals   index
+//   10   0
+//   20   1
+//   30   2
+    </pre>
+    <div class="output" id="out7">Running…</div>
+  </div>
+
+  <!-- Demo 8 -->
+  <div class="demo">
+    <h2><span class="tag">Demo 8</span> Real-world: normalising nested data</h2>
+    <pre>
+// Survey: each person chose one or more answers
+const df = DataFrame.fromColumns({
+  name:    ["Alice", "Bob", "Carol"],
+  answers: [["A","B"], ["C"], ["A","C","D"]],
+});
+const long = explodeDataFrame(df, "answers");
+// name   answers
+// Alice  A
+// Alice  B
+// Bob    C
+// Carol  A
+// Carol  C
+// Carol  D
+    </pre>
+    <div class="output" id="out8">Running…</div>
+  </div>
+
+  <script type="module">
+    // Minimal runtime helpers (no bundler in playground)
+    function renderTable(df) {
+      const cols = df.columns.values;
+      const idx = df.index.values;
+      const rows = [];
+      rows.push("index  " + cols.join("  "));
+      rows.push("─".repeat(cols.join("  ").length + 8));
+      for (let i = 0; i < df.index.size; i++) {
+        const rowVals = cols.map(c => String(df.col(c).iat(i)));
+        rows.push(`${idx[i]}      ${rowVals.join("  ")}`);
+      }
+      return rows.join("\n");
+    }
+
+    // ── Demo 1
+    try {
+      const { Series, explodeSeries } = await import("../src/index.ts");
+      const s = new Series({ data: [[1,2,3],[4,5],[6]], name: "nums" });
+      const result = explodeSeries(s);
+      document.getElementById("out1").textContent =
+        `Values: [${[...result.values].join(", ")}]\nIndex:  [${[...result.index.values].join(", ")}]`;
+    } catch(e) { document.getElementById("out1").textContent = "Error: " + e.message; }
+
+    // ── Demo 2
+    try {
+      const { Series, explodeSeries } = await import("../src/index.ts");
+      const s = new Series({ data: [["a","b"],["c"]], index: ["row0","row1"], name: "letters" });
+      const result = explodeSeries(s, { ignore_index: true });
+      document.getElementById("out2").textContent =
+        `Values: [${[...result.values].join(", ")}]\nIndex:  [${[...result.index.values].join(", ")}]`;
+    } catch(e) { document.getElementById("out2").textContent = "Error: " + e.message; }
+
+    // ── Demo 3
+    try {
+      const { Series, explodeSeries } = await import("../src/index.ts");
+      const s = new Series({ data: [null, [], [1, 2]], name: "x" });
+      const result = explodeSeries(s);
+      document.getElementById("out3").textContent =
+        `Values: [${[...result.values].map(v => v === null ? "null" : v).join(", ")}]`;
+    } catch(e) { document.getElementById("out3").textContent = "Error: " + e.message; }
+
+    // ── Demo 4
+    try {
+      const { DataFrame, explodeDataFrame } = await import("../src/index.ts");
+      const df = DataFrame.fromColumns({
+        id: [1, 2, 3],
+        tags: [["ts","js"], ["python"], ["go","rust","c++"]],
+      });
+      const result = explodeDataFrame(df, "tags");
+      document.getElementById("out4").textContent = renderTable(result);
+    } catch(e) { document.getElementById("out4").textContent = "Error: " + e.message; }
+
+    // ── Demo 5
+    try {
+      const { DataFrame, explodeDataFrame } = await import("../src/index.ts");
+      const df = DataFrame.fromColumns({
+        x: [[1,2],[3,4]],
+        y: [["a","b"],["c","d"]],
+        z: [10, 20],
+      });
+      const result = explodeDataFrame(df, ["x","y"]);
+      document.getElementById("out5").textContent = renderTable(result);
+    } catch(e) { document.getElementById("out5").textContent = "Error: " + e.message; }
+
+    // ── Demo 6
+    try {
+      const { DataFrame, explodeDataFrame } = await import("../src/index.ts");
+      const df = DataFrame.fromColumns({ a: [[1,2,3]], b: [["x","y"]] });
+      const result = explodeDataFrame(df, ["a","b"]);
+      document.getElementById("out6").textContent = renderTable(result);
+    } catch(e) { document.getElementById("out6").textContent = "Error: " + e.message; }
+
+    // ── Demo 7
+    try {
+      const { DataFrame, explodeDataFrame } = await import("../src/index.ts");
+      const df = DataFrame.fromColumns({ vals: [[10,20],[30]] }, { index: ["r0","r1"] });
+      const result = explodeDataFrame(df, "vals", { ignore_index: true });
+      document.getElementById("out7").textContent = renderTable(result);
+    } catch(e) { document.getElementById("out7").textContent = "Error: " + e.message; }
+
+    // ── Demo 8
+    try {
+      const { DataFrame, explodeDataFrame } = await import("../src/index.ts");
+      const df = DataFrame.fromColumns({
+        name: ["Alice","Bob","Carol"],
+        answers: [["A","B"],["C"],["A","C","D"]],
+      });
+      const result = explodeDataFrame(df, "answers");
+      document.getElementById("out8").textContent = renderTable(result);
+    } catch(e) { document.getElementById("out8").textContent = "Error: " + e.message; }
+  </script>
+</body>
+</html>
