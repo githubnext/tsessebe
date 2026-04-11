@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T20:46:00Z |
-| Iteration Count | 210 |
-| Best Metric | 45 |
+| Last Run | 2026-04-11T21:10:56Z |
+| Iteration Count | 211 |
+| Best Metric | 46 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #113 (hash-suffix; canonical PR being created for `autoloop/build-tsb-pandas-typescript-migration`) |
@@ -48,13 +48,13 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
+- **Iter 211**: `factorize`/`factorizeSeries` — `stats/factorize.ts`. With `noUncheckedIndexedAccess: true`, use `for (const [i, v] of values.entries())` instead of `values[i]` in a for loop to avoid `Scalar | undefined`. `codeMap.get(v) ?? naValue` handles the `undefined` case from Map.get. `rawUniques as readonly Label[]` cast is necessary since `Scalar` is wider than `Label` — same pattern used in crosstab.ts. Metric: 46 (+1). Commit: 620ff7a.
 - **Iter 210**: `explode` — `reshape/explode.ts`. For `Array.isArray(value)` where `value: Scalar` (Scalar has no array members), TypeScript narrows to `never` in the truthy branch. Fix: widen to `unknown` first (`const raw: unknown = value`), then `Array.isArray(raw)` narrows to `unknown[]`. Use `arr.map(c => (c ?? null) as Scalar)` for element extraction. `typeof column === "string"` is cleaner than `Array.isArray` for `string | readonly string[]` union. `DataFrame.fromColumns` accepts `Record<string, Scalar[]>` directly (no `as` cast to readonly needed). Metric: 45 (+1). Commit: 6434a78.
-- **Iter 209**: `pivotTableFull` — `reshape/pivot_table.ts` with full margins support. Biome `noSecrets` flags internal sentinel strings (use biome-ignore comment). `useAtIndex` requires `.at(-1)` over `[length-1]`. `useShorthandArrayType`: `T[]` not `Array<T>`. `useSimplifiedLogicExpression`: `!(a || b)` not `!a && !b`. Canonical branch still tracking hash-suffix d50883e81cd4a027 — no issue with push since local branch is named canonically. Metric: 44 (+1). Commit: 0932ce7.
-- **Iter 208**: `crosstab`/`crosstabSeries` — `noExcessiveCognitiveComplexity` (max 15): split `normalizeMatrix` into `normalizeAll`/`normalizeByIndex`/`normalizeByColumns` + `sumAll`/`sumExcludeMargins`/`divideMatrix` helpers. Remove unused functions (`buildMatrix`, `buildColumnMap`). `DataFrame.fromColumns` options have no `name` field. Use `create_pull_request` when canonical branch `autoloop/build-tsb-pandas-typescript-migration` doesn't exist remotely (push_to_pull_request_branch fails). Metric: 43 (+1). Commit: 1ab2e7c.
-- **Iter 207**: `crosstab`/`crosstabSeries` — extract `pushObservation` helper to keep `buildCellMap` under complexity 15. Extract `buildColumnMap` + `resolveFinalLayout` to keep `crosstab` under 15. Remove `void rowname`/`void colname` (noVoid). Canonical branch is hash-suffix `531c0338e43e4af9` — check it out by name for push. Metric: 43 (+1).
-- **Iter 206**: `getDummies`/`fromDummies` — fix `noExcessiveCognitiveComplexity` by splitting large functions into `collectLevels`, `buildIndicatorCol`, `buildNaCol`, `splitColName`, `inferSeriesName`, `findActiveLabel` helpers. Fix `noNestedTernary` with if/else. Import `Dtype` from `../core/index.ts` not `../core/dtype.ts` (`useImportRestrictions`). Canonical branch still tracked from hash-suffix 531c.
-- **Iter 205**: `Interval`/`IntervalIndex`/`intervalRange` — import tests from `../../src/index.ts` (not `../../src/stats/index.ts`) to satisfy `useImportRestrictions`. Auto-fix formatter with `biome check --write`. Canonical branch did not exist remotely despite state file claiming it — had to re-create from hash-suffix branch.
-- **Iter 204**: `cut`/`qcut` — decompose `assignBins` to keep cognitive complexity under 15. `useCollapsedElseIf` requires removing `else { if (...) }` → `else if (...)`. `noExportedImports` means don't re-export types imported from other modules. Use `biome format --write` to auto-fix formatter issues. `as unknown as [T, U]` required for overload narrowing (not `(...) as [T, U]`).
+- **Iter 209**: `pivotTableFull` — `noSecrets` flags sentinel strings (use biome-ignore). `useAtIndex` → `.at(-1)`. `useShorthandArrayType`: `T[]`. `useSimplifiedLogicExpression`: `!(a || b)`. Metric: 44 (+1). Commit: 0932ce7.
+- **Iter 208**: `crosstab` — `noExcessiveCognitiveComplexity` (max 15): split normalize/sum helpers. Use `create_pull_request` when canonical branch doesn't exist remotely. Metric: 43 (+1). Commit: 1ab2e7c.
+- **Iter 206**: `getDummies`/`fromDummies` — fix complexity by extracting helpers. Import `Dtype` from `../core/index.ts`. Metric: 42 (+1). Commit: f5a69ab.
+- **Iter 205**: `Interval`/`IntervalIndex`/`intervalRange` — import tests from `../../src/index.ts`. Canonical branch may not exist remotely — re-create from hash-suffix. Metric: 41 (+1).
+- **Iter 204**: `cut`/`qcut` — decompose `assignBins` for complexity. `useCollapsedElseIf`. `as unknown as [T, U]` for overload narrowing. Metric: 40 (+1).
 - **Iter 203**: Canonical branch `autoloop/build-tsb-pandas-typescript-migration` created from hash-suffix branch (iter 199 state, 37 files). Re-implemented `clip_advanced.ts` (lost from iter 200) and `apply.ts` (lost from iter 201). Biome `noExcessiveCognitiveComplexity` → decompose into axis helpers. `noUselessElse` → remove else after early returns. Metric: 39 (from 37, delta: +2).
 - **Iter 202**: `clipAdvancedSeries`/`clipAdvancedDataFrame` — canonical branch created from main. Fixed missing exports in src/index.ts, stats/index.ts, core/index.ts for modules from iters 172–199. `noNestedTernary` → use if/else for axis resolution. `ReadonlyArray<T>` → `readonly T[]` for Biome. Metric: 38 (from 37; also fixed index wiring).
 - **Iter 199**: `sampleSeries`/`sampleDataFrame` — Import `Scalar` from `../../src/index.ts` (not `../../src/types.ts`) in tests to satisfy `useImportRestrictions`.
@@ -81,6 +81,14 @@ Next features to implement (prioritized by impact):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 211 — 2026-04-11 21:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24291664190)
+
+- **Status**: ✅ Accepted
+- **Change**: Add `stats/factorize.ts` — `factorize` and `factorizeSeries`. Encodes values as integer codes (0-based, occurrence order or sorted), returns codes + unique values. Supports NA sentinel (default -1), custom naValue, sort option. 30 unit + 4 property-based tests. Playground `factorize.html` with 8 demos.
+- **Metric**: 46 (previous best: 45, delta: +1)
+- **Commit**: 620ff7a (branch: autoloop/build-tsb-pandas-typescript-migration)
+- **Notes**: `for (const [i, v] of values.entries())` avoids `noUncheckedIndexedAccess` issues. `rawUniques as readonly Label[]` cast needed since Scalar is wider than Label — same pattern as crosstab.ts.
 
 ### Iteration 210 — 2026-04-11 20:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24291234244)
 
@@ -119,26 +127,13 @@ Next features to implement (prioritized by impact):
 - **Status**: ✅ Accepted
 - **Change**: Add `stats/get_dummies.ts` — one-hot encoding. Metric: 42 (+1). Commit: f5a69ab
 
-### Iteration 205 — 2026-04-11 18:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24288493950)
+### Iteration 205 — 2026-04-11 18:12 UTC
 - **Status**: ✅ Accepted — Add `stats/interval.ts`: Interval/IntervalIndex/intervalRange. Metric: 41 (+1). Commit: e58b620
 
-### Iters 200–204 — 2026-04-11 — ✅ (metrics 38→40)
-- 200: clip_advanced. 201: apply. 202: fix exports + clip_advanced canonical. 203: re-implement apply+clip. 204: cut/qcut.
+### Iters 199–204 — 2026-04-11 — ✅ (metrics 36→40)
+- 199: sample. 200–201: clip_advanced, apply (lost on push). 202: fix exports + clip_advanced. 203: re-impl apply+clip. 204: cut/qcut.
 
-### Iters 199–205 — 2026-04-11 — ✅ (metrics 36→41: 7 accepted iterations)
-- Iter 199: sample (n/frac/replace/weights/randomState). Metric: 36.
-- Iter 200–201: clip_advanced, apply (on hash-suffix; lost before canonical). Metric: 38.
-- Iter 202: clip_advanced + fixed missing exports for iters 172–199. Metric: 38. Canonical branch created.
-- Iter 203: Re-implement clip_advanced + apply. Metric: 39.
-- Iter 204: cut/qcut. Metric: 40.
-- Iter 205: Interval/IntervalIndex/intervalRange. Metric: 41.
+### Iters 172–198 — 2026-04-10/11 — ✅ (metrics 29→36)
+- 172: na_ops. 173–192: push failures. 193: idxmin_idxmax (MCP fixed). 194–198: astype, replace, where_mask, diff_shift, duplicated.
 
-### Iters 172–198 — 2026-04-10/11 — ✅ (metrics 29→36: 26+ accepted iterations)
-- Iter 172: na_ops. Metric: 29. Iters 173–192: push failures (MCP unavailable), features lost.
-- Iter 193: idxmin_idxmax (fixed MCP). Metric: 31.
-- Iters 194–198: astype, replace, where_mask, diff_shift, duplicated. Metrics: 32–36.
-
-### Iteration 167 — 2026-04-10 18:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24256220682)
-- **Status**: ✅ Accepted — Re-committed 7 modules. Metric: 51. Commit: 2ece4b5
-
-### Iters 53–166 — ✅/⚠️ (metrics 8→51: feature implementations and recoveries)
+### Iters 53–171 — ✅/⚠️ (metrics 8→51: feature implementations and recoveries)
