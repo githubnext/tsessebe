@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T10:46:55Z |
-| Iteration Count | 229 |
-| Best Metric | 60 |
+| Last Run | 2026-04-12T11:15:07Z |
+| Iteration Count | 230 |
+| Best Metric | 61 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #120 |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, error, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, accepted, error, error, error, accepted, accepted, accepted |
 
 ---
 
@@ -40,15 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
+- `stats/timedelta_range.ts` — pd.timedelta_range() for generating TimedeltaIndex sequences
 - `core/str_accessor` improvements or new string ops (findall, extractall)
 - `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
-- `stats/date_range.ts` — pd.date_range() for generating DatetimeIndex sequences
-- `stats/timedelta_range.ts` — pd.timedelta_range() for generating TimedeltaIndex sequences
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 230**: `date_range` — `dateRange(opts?)` + `parseFreq/advanceDate/retreatDate` helpers. Frequencies: D/B/h/min/s/ms/W/W-DOW/MS/ME/QS/QE/YS/YE with multiplier prefix. `inclusive="both|left|right|neither"`. `normalize=true` snaps to midnight UTC. `UNIT_NORM` lookup table for normaliseUnit (complexity ≤15). `hasValue/requireTwoOf/parseDateInputs` helpers to keep `dateRange` complexity ≤15. Biome: `Number.parseInt`, `.at(-1)`. No TS errors. 60+ unit + 4 property tests. Playground: date_range.html. Metric: 61 (+1). Commit: 996705d.
 - **Iter 229**: `to_timedelta` — Successfully pushed after 5 prior failures. Checked out 480c452 branch (has to_datetime at 716a7f3). `(value as unknown) instanceof Timedelta` passthrough. RE_HUMAN_UNIT.lastIndex=0 reset. parseFrac() pads to 9 digits/1e6. formatTimedelta() for toString. applyErrors() helper. Commit 48a486c. Metric: 60 (first actual push at this level).
 - **Iter 226**: `to_timedelta` — PUSH FAILED (safeoutputs MCP blocked by policy, same as iters 224–225). Code committed locally as eb1f9ce on autoloop/build-tsb-pandas-typescript-migration, not pushed. `toTimedelta(scalar|array|Series, opts?)` + `Timedelta` class. Top-level regex: RE_PANDAS/RE_CLOCK/RE_HUMAN. Units: ns/us/ms/s/m/h/D/W. Timedelta: totalMs/days/hours/minutes/seconds/ms accessors; add/subtract/scale/abs/lt/gt/eq. `parseFrac` for sub-second precision. `formatTimedelta` for toString. 50+ unit + 4 property tests. Playground: to_timedelta.html. Metric would be 60 (+1 vs 59, +2 vs best 58). Recovery: re-implement on canonical branch next iter. NOTE: to_datetime (iter 225) IS on remote at 716a7f3.
 - **Iter 228**: `to_timedelta` — PUSH FAILED (safeoutputs MCP filtered by policy, same as iters 224–226). `toTimedelta(scalar|array|Series, opts?)` + `Timedelta` class fully implemented. applyErrors() helper for errors-handling. RE_HUMAN_UNIT global regex reset with lastIndex=0. parseFrac() pads to 9 digits / 1e6. formatTimedelta() exported. tsc --noEmit clean. 55+ unit + 4 property tests. Playground: to_timedelta.html. Commit: 987b281 local-only. Metric would be 60. Recovery: re-implement on canonical branch next iter.
@@ -91,6 +91,11 @@ Next features to implement (prioritized by impact):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 230 — 2026-04-12 11:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24305375139)
+- **Status**: ✅ Accepted — Add `stats/date_range.ts`: `dateRange(opts)` mirroring `pandas.date_range()`. Frequencies: D/B/h/min/s/ms/W/W-DOW/MS/ME/QS/QE/YS/YE + multiplier prefix. `inclusive` endpoint control. `normalize=true`. `UNIT_NORM` lookup table keeps normaliseUnit ≤15 complexity. `hasValue/requireTwoOf/parseDateInputs/caseStartPeriods/caseEndPeriods/caseStartEnd` helpers keep dateRange ≤15 complexity. 60+ unit + 4 property tests. Playground: date_range.html.
+- **Metric**: 61 (previous best: 60, delta: +1)
+- **Commit**: 996705d
 
 ### Iteration 229 — 2026-04-12 10:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24304871817)
 - **Status**: ✅ Accepted — Add `stats/to_timedelta.ts`: `toTimedelta(scalar|array|Series, opts?)` + `Timedelta` class. RE_PANDAS/RE_ISO/RE_HUMAN_UNIT top-level regexes. `applyErrors()` helper. `(value as unknown) instanceof Timedelta` passthrough. `parseFrac()` pads to 9 digits/1e6 for ns→ms. `formatTimedelta()` exported. Checked out 480c452 branch (has to_datetime). tsc --noEmit clean. 60+ unit + 4 property tests. Playground: to_timedelta.html. Metric: 60 (+1). Commit: 48a486c.
