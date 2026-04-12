@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T02:19:36Z |
-| Iteration Count | 218 |
-| Best Metric | 53 |
+| Last Run | 2026-04-12T03:43:43Z |
+| Iteration Count | 219 |
+| Best Metric | 54 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #120 |
@@ -40,14 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `stats/sem_var.ts` — standard error of mean and variance aggregations
 - `core/str_accessor` improvements or new string ops (findall, extractall)
-- `io/to_json_normalize.ts` — inverse of jsonNormalize
+- `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
+- `stats/nancumsum.ts` or similar cumulative ops with skipna
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 219**: `sem_var` — `stats/sem_var.ts`. `varSeries(s, {ddof?, skipna?, minCount?})` + `semSeries` + DataFrame variants. `StatFn = (xs: readonly number[], ddof: number, minCount: number) => number` type alias for passing computeVar/computeSem as callbacks to reducers. Non-numeric columns in DataFrame without `numericOnly` return `NaN` rather than being skipped. `series.values as readonly Scalar[]` cast needed for noUncheckedIndexedAccess, consistent with skew_kurt.ts pattern. Metric: 54 (+1). Commit: b5a0f88.
 - **Iter 218**: `mode` + `skew_kurt` — Two features in one iteration (recovering from iter 217's lost push). `modeSeries`/`modeDataFrame`/`skewSeries`/`kurtSeries`/`skewDataFrame`/`kurtDataFrame`. `df.col(name)` throws (not undefined) for all cols from `df.columns.values` — remove `=== undefined` checks. `DataFrame.fromColumns(cols, { index: df.index })` for row-wise results with original index. Skewness: `n/((n-1)*(n-2)) * m3/s^3` (adjusted Fisher-Pearson, s=sample std). Kurtosis: `n*(n+1)/((n-1)*(n-2)*(n-3)) * m4/sampleVar^2 - 3*(n-1)^2/((n-2)*(n-3))` (bias-corrected excess). Metric: 53 (+2). Commit: 35e1521.
 - **Iter 216**: `jsonNormalize` — `io/json_normalize.ts`. Flatten nested JSON objects into DataFrames. `isJsonPrimitive` type guard for safe narrowing of `JsonValue` after `!isJsonObject && !Array.isArray` checks (avoids `as` casts). `navigatePath`: TypeScript narrows `cur` to `JsonObject` after `if (!isJsonObject(cur)) return null` guard, so `cur[key]` works without cast. `Array.isArray(data)` on `JsonObject | readonly JsonObject[]` gives `any[]`, assignable to `readonly JsonObject[]`. Helper decomposition: `flattenObject`, `flattenTopLevel`, `flattenRecordRows`, `buildMetaRecord`, `extractRecords`, `prefixRecord`, `primitiveOrStringify`, `navigatePath`. `DataFrame.fromRecords(flatRows)` works without cast (`Record<string,Scalar>[]` → `readonly Readonly<Record<string,Scalar>>[]` is covariant). Metric: 51 (+1). Commit: b26b44c.
 - **Iter 215**: `readExcel`/`xlsxSheetNames` — `io/read_excel.ts`. Full XLSX reader from scratch: ZIP binary parser (EOCD + central directory + local headers), DEFLATE via `node:zlib` `inflateRawSync` (biome-ignore noNodejsModules). XML parsing via `regexAll` generator (avoids `noAssignInExpressions`). `noExcessiveCognitiveComplexity`: extract `extractHeaderLabels`, `pivotToColumns`, `padHeaderLabels` helpers from `buildColumnarData`. `useNumberNamespace`: use `Number.parseInt`, `Number.isNaN`. Function signature `Uint8Array | ArrayBufferLike` (not `ArrayBuffer`) to accept `.buffer` property without casts. Property tests: use `fc.uniqueArray` to avoid duplicate headers causing shape mismatch. Metric: 50 (+1). Commit: 5748b07.
@@ -80,14 +81,16 @@ Next features to implement (prioritized by impact):
 
 ## 🔭 Future Directions
 
-- `stats/skew_kurt.ts` — skewness and kurtosis for Series/DataFrame
-- `stats/sem_var.ts` — standard error of mean and variance
-- `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
 - `core/str_accessor` — more string methods on Series (findall, extractall, normalize)
+- `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
+- `stats/nancumsum.ts` or similar cumulative ops with skipna parameter
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 219 — 2026-04-12 03:43 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24297956451)
+- **Status**: ✅ Accepted — Add `stats/sem_var.ts`: varSeries/varDataFrame (sample/population variance, configurable ddof) + semSeries/semDataFrame (SEM = √(var/n)). skipna, minCount, axis, numericOnly support. 28 unit tests + 3 property-based tests. Playground: sem_var.html. Metric: 54 (+1). Commit: b5a0f88.
 
 ### Iteration 218 — 2026-04-12 02:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24296661989)
 - **Status**: ✅ Accepted — Add `stats/mode.ts` (modeSeries/modeDataFrame, all tied modes sorted, axis=0/1, dropna, numericOnly) and `stats/skew_kurt.ts` (skewSeries/kurtSeries/skewDataFrame/kurtDataFrame, adjusted Fisher-Pearson skew + bias-corrected excess kurtosis, skipna, axis, numericOnly). 16+18 unit tests, 3+3 property tests. Playground: mode.html, skew_kurt.html. Metric: 53 (+2). Commit: 35e1521.
