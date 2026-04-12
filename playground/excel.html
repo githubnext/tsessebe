@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — readExcel playground</title>
+    <link rel="stylesheet" href="index-playground.html" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: #f9fafb;
+        color: #111;
+      }
+      h1 { color: #1d4ed8; }
+      h2 { color: #374151; margin-top: 2rem; }
+      pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 0.875rem;
+      }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; }
+      .note {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 0.75rem 1rem;
+        border-radius: 0 6px 6px 0;
+        margin: 1rem 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+      }
+      th {
+        background: #1d4ed8;
+        color: white;
+        padding: 0.5rem 1rem;
+        text-align: left;
+      }
+      td {
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 1rem;
+      }
+      tr:nth-child(even) td { background: #f3f4f6; }
+      button {
+        background: #1d4ed8;
+        color: white;
+        border: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin: 0.5rem 0.25rem 0.5rem 0;
+      }
+      button:hover { background: #1e40af; }
+      #output {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 1rem;
+        min-height: 80px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        white-space: pre;
+      }
+      .upload-area {
+        border: 2px dashed #93c5fd;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        background: #eff6ff;
+        margin: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📊 readExcel — XLSX file reading</h1>
+    <p>
+      <strong>tsb</strong> can read Excel XLSX files natively — no dependencies. The
+      <code>readExcel()</code> function accepts a <code>Uint8Array</code> or
+      <code>ArrayBuffer</code> and returns a <code>DataFrame</code>.
+    </p>
+
+    <div class="note">
+      <strong>Python equivalent:</strong>
+      <code>pd.read_excel("data.xlsx")</code>
+    </div>
+
+    <h2>Basic usage</h2>
+    <pre><code>import { readExcel, xlsxSheetNames } from "tsb";
+
+// Read first sheet (default)
+const df = readExcel(buffer);
+console.log(df.shape);         // [rows, cols]
+console.log(df.columns.toArray()); // column names
+
+// List all sheet names
+const sheets = xlsxSheetNames(buffer);
+// → ["Sheet1", "Summary", "Data"]
+
+// Read a specific sheet by name
+const df2 = readExcel(buffer, { sheetName: "Summary" });
+
+// Read a specific sheet by index
+const df3 = readExcel(buffer, { sheetName: 1 });
+</code></pre>
+
+    <h2>Options</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Option</th>
+          <th>Type</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>sheetName</code></td>
+          <td><code>string | number</code></td>
+          <td><code>0</code></td>
+          <td>Sheet to read (name or 0-based index)</td>
+        </tr>
+        <tr>
+          <td><code>header</code></td>
+          <td><code>number | null</code></td>
+          <td><code>0</code></td>
+          <td>Row index of the header, or null for no header</td>
+        </tr>
+        <tr>
+          <td><code>indexCol</code></td>
+          <td><code>string | number | null</code></td>
+          <td><code>null</code></td>
+          <td>Column to use as the row index</td>
+        </tr>
+        <tr>
+          <td><code>skipRows</code></td>
+          <td><code>number</code></td>
+          <td><code>0</code></td>
+          <td>Data rows to skip after the header</td>
+        </tr>
+        <tr>
+          <td><code>nrows</code></td>
+          <td><code>number</code></td>
+          <td>unlimited</td>
+          <td>Maximum number of data rows to read</td>
+        </tr>
+        <tr>
+          <td><code>naValues</code></td>
+          <td><code>string[]</code></td>
+          <td><code>[]</code></td>
+          <td>Additional strings to treat as NA</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Interactive demo</h2>
+    <p>Upload an <code>.xlsx</code> file to inspect it, or use the demo data below.</p>
+
+    <div class="upload-area">
+      <input type="file" id="fileInput" accept=".xlsx" />
+      <p style="margin:0.5rem 0 0; color:#6b7280;">or</p>
+      <button onclick="loadDemo()">Load demo data</button>
+    </div>
+
+    <div id="options-row" style="margin: 1rem 0;">
+      <label>Sheet index: <input type="number" id="sheetIdx" value="0" min="0" style="width:60px" /></label>
+      &nbsp;
+      <label>
+        <input type="checkbox" id="noHeader" />
+        No header (header: null)
+      </label>
+      &nbsp;
+      <label>Skip rows: <input type="number" id="skipRows" value="0" min="0" style="width:60px" /></label>
+      &nbsp;
+      <label>Max rows: <input type="number" id="nrows" value="" style="width:80px" placeholder="all" /></label>
+      <br /><br />
+      <button onclick="parseFile()">Parse</button>
+    </div>
+
+    <pre id="output">Upload a file or click "Load demo data" to start.</pre>
+
+    <h2>Advanced example</h2>
+    <pre><code>// Use a named column as the row index
+const df = readExcel(buffer, { indexCol: "ID" });
+
+// Skip 2 rows and read at most 100 rows
+const df2 = readExcel(buffer, { skipRows: 2, nrows: 100 });
+
+// Treat custom strings as missing
+const df3 = readExcel(buffer, { naValues: ["N/A", "MISSING", "-"] });
+
+// DataFrame operations work immediately
+df.describe();
+df.col("revenue").sum();
+df.groupby("region").mean();
+</code></pre>
+
+    <h2>Python equivalent</h2>
+    <pre><code># pandas
+import pandas as pd
+
+df = pd.read_excel("data.xlsx", sheet_name=0)
+df = pd.read_excel("data.xlsx", sheet_name="Summary")
+df = pd.read_excel("data.xlsx", header=None)
+df = pd.read_excel("data.xlsx", index_col="ID")
+df = pd.read_excel("data.xlsx", skiprows=2, nrows=100)
+</code></pre>
+
+    <script type="module">
+      // ── In-browser XLSX fixture builder for demo ──────────────────────────
+
+      const ENC = new TextEncoder();
+
+      function le16(n) {
+        const v = n & 0xffff;
+        return new Uint8Array([v & 0xff, (v >> 8) & 0xff]);
+      }
+
+      function le32(n) {
+        const v = n >>> 0;
+        return new Uint8Array([v & 0xff, (v >> 8) & 0xff, (v >> 16) & 0xff, (v >> 24) & 0xff]);
+      }
+
+      function concat(...parts) {
+        let total = 0;
+        for (const p of parts) total += p.length;
+        const out = new Uint8Array(total);
+        let pos = 0;
+        for (const p of parts) { out.set(p, pos); pos += p.length; }
+        return out;
+      }
+
+      function buildStoredZip(files) {
+        const localParts = [];
+        const localOffsets = [];
+        let curOffset = 0;
+
+        for (const f of files) {
+          const nameBytes = ENC.encode(f.name);
+          const lh = concat(
+            new Uint8Array([0x50, 0x4b, 0x03, 0x04]),
+            le16(20), le16(0), le16(0),
+            le16(0), le16(0),
+            le32(0),
+            le32(f.data.length), le32(f.data.length),
+            le16(nameBytes.length), le16(0),
+            nameBytes, f.data,
+          );
+          localOffsets.push(curOffset);
+          localParts.push(lh);
+          curOffset += lh.length;
+        }
+
+        const cdParts = [];
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          const nameBytes = ENC.encode(f.name);
+          const cd = concat(
+            new Uint8Array([0x50, 0x4b, 0x01, 0x02]),
+            le16(20), le16(20),
+            le16(0), le16(0),
+            le16(0), le16(0),
+            le32(0),
+            le32(f.data.length), le32(f.data.length),
+            le16(nameBytes.length), le16(0), le16(0),
+            le16(0), le16(0),
+            le32(0), le32(localOffsets[i] ?? 0),
+            nameBytes,
+          );
+          cdParts.push(cd);
+        }
+
+        const cdSize = cdParts.reduce((s, p) => s + p.length, 0);
+        const cdOffset = curOffset;
+        const eocd = concat(
+          new Uint8Array([0x50, 0x4b, 0x05, 0x06]),
+          le16(0), le16(0),
+          le16(files.length), le16(files.length),
+          le32(cdSize), le32(cdOffset),
+          le16(0),
+        );
+
+        return concat(...localParts, ...cdParts, eocd);
+      }
+
+      function escXml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      function numToColLetter(c) {
+        let col = c + 1, result = "";
+        while (col > 0) {
+          const rem = (col - 1) % 26;
+          result = String.fromCharCode(65 + rem) + result;
+          col = Math.floor((col - 1) / 26);
+        }
+        return result;
+      }
+
+      function makeXlsx(headers, rows) {
+        const stringList = [];
+        const stringIdx = new Map();
+
+        function getStr(s) {
+          const ex = stringIdx.get(s);
+          if (ex !== undefined) return ex;
+          const idx = stringList.length;
+          stringList.push(s);
+          stringIdx.set(s, idx);
+          return idx;
+        }
+
+        for (const h of headers) getStr(h);
+        for (const row of rows)
+          for (const cell of row)
+            if (typeof cell === "string") getStr(cell);
+
+        const sstXml = [
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+          `<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${stringList.length}" uniqueCount="${stringList.length}">`,
+          ...stringList.map(s => `<si><t>${escXml(s)}</t></si>`),
+          "</sst>",
+        ].join("\n");
+
+        const wsRowParts = [];
+        const hCells = headers.map((h, c) => `<c r="${numToColLetter(c)}1" t="s"><v>${stringIdx.get(h) ?? 0}</v></c>`);
+        wsRowParts.push(`<row r="1">${hCells.join("")}</row>`);
+        rows.forEach((row, ri) => {
+          const rowNum = ri + 2;
+          const cells = [];
+          row.forEach((cell, ci) => {
+            if (cell === null) return;
+            const ref = `${numToColLetter(ci)}${rowNum}`;
+            if (typeof cell === "string") cells.push(`<c r="${ref}" t="s"><v>${stringIdx.get(cell) ?? 0}</v></c>`);
+            else if (typeof cell === "boolean") cells.push(`<c r="${ref}" t="b"><v>${cell ? 1 : 0}</v></c>`);
+            else cells.push(`<c r="${ref}"><v>${cell}</v></c>`);
+          });
+          wsRowParts.push(`<row r="${rowNum}">${cells.join("")}</row>`);
+        });
+
+        const wsXml = [
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+          '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">',
+          "<sheetData>", ...wsRowParts, "</sheetData>", "</worksheet>",
+        ].join("\n");
+
+        const wbXml = [
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+          '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">',
+          "<sheets><sheet name=\"Sheet1\" sheetId=\"1\" r:id=\"rId1\"/></sheets></workbook>",
+        ].join("\n");
+
+        const wbRelsXml = [
+          '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+          '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">',
+          '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>',
+          '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>',
+          "</Relationships>",
+        ].join("\n");
+
+        const relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+
+        const ctXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>';
+
+        return buildStoredZip([
+          { name: "[Content_Types].xml", data: ENC.encode(ctXml) },
+          { name: "_rels/.rels", data: ENC.encode(relsXml) },
+          { name: "xl/workbook.xml", data: ENC.encode(wbXml) },
+          { name: "xl/_rels/workbook.xml.rels", data: ENC.encode(wbRelsXml) },
+          { name: "xl/sharedStrings.xml", data: ENC.encode(sstXml) },
+          { name: "xl/worksheets/sheet1.xml", data: ENC.encode(wsXml) },
+        ]);
+      }
+
+      // ── tsb import ──────────────────────────────────────────────────────────
+      // In the playground we use the built dist bundle (or a CDN mock).
+      // For the demo we show simulated output since tsb isn't bundled here.
+
+      let currentBuffer = null;
+
+      window.loadDemo = function () {
+        const demoHeaders = ["Name", "Age", "City", "Score", "Active"];
+        const demoRows = [
+          ["Alice", 28, "New York", 95.5, true],
+          ["Bob", 34, "London", 87.2, false],
+          ["Carol", 22, "Tokyo", 99.0, true],
+          ["Dave", 45, "Berlin", 72.8, true],
+          ["Eve", 31, "Paris", 88.5, false],
+        ];
+        currentBuffer = makeXlsx(demoHeaders, demoRows);
+        document.getElementById("output").textContent =
+          "Demo XLSX loaded (" + currentBuffer.length + " bytes). Click Parse to inspect.";
+      };
+
+      document.getElementById("fileInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        file.arrayBuffer().then((ab) => {
+          currentBuffer = new Uint8Array(ab);
+          document.getElementById("output").textContent =
+            `File "${file.name}" loaded (${currentBuffer.length} bytes). Click Parse to inspect.`;
+        });
+      });
+
+      window.parseFile = function () {
+        if (!currentBuffer) {
+          document.getElementById("output").textContent = "No file loaded.";
+          return;
+        }
+        try {
+          const sheetIdx = parseInt(document.getElementById("sheetIdx").value, 10) || 0;
+          const noHeader = document.getElementById("noHeader").checked;
+          const skipRows = parseInt(document.getElementById("skipRows").value, 10) || 0;
+          const nrowsVal = document.getElementById("nrows").value;
+          const nrows = nrowsVal ? parseInt(nrowsVal, 10) : undefined;
+
+          // Parse the ZIP structure manually in-browser to show sheet info
+          const buf = currentBuffer;
+          const dec = new TextDecoder("utf-8");
+
+          function readU32(off) {
+            return (buf[off] | buf[off+1]<<8 | buf[off+2]<<16 | buf[off+3]<<24) >>> 0;
+          }
+          function readU16(off) {
+            return (buf[off] | buf[off+1]<<8) >>> 0;
+          }
+
+          // Find EOCD
+          let eocd = -1;
+          for (let i = buf.length - 22; i >= 0; i--) {
+            if (readU32(i) === 0x06054b50) { eocd = i; break; }
+          }
+          if (eocd === -1) throw new Error("Not a ZIP file");
+
+          const cdOffset = readU32(eocd + 16);
+          const cdSize = readU32(eocd + 12);
+
+          const entries = new Map();
+          let pos = cdOffset;
+          while (pos < cdOffset + cdSize) {
+            if (readU32(pos) !== 0x02014b50) break;
+            const nameLen = readU16(pos + 28);
+            const extraLen = readU16(pos + 30);
+            const commentLen = readU16(pos + 32);
+            const localOff = readU32(pos + 42);
+            const name = dec.decode(buf.subarray(pos + 46, pos + 46 + nameLen));
+            const compSize = readU32(pos + 20);
+            const lNameLen = readU16(localOff + 26);
+            const lExtraLen = readU16(localOff + 28);
+            const dataOff = localOff + 30 + lNameLen + lExtraLen;
+            entries.set(name, { dataOff, compSize });
+            pos += 46 + nameLen + extraLen + commentLen;
+          }
+
+          function getText(name) {
+            const e = entries.get(name);
+            if (!e) return null;
+            return dec.decode(buf.subarray(e.dataOff, e.dataOff + e.compSize));
+          }
+
+          // Parse workbook to get sheet names
+          const wbXml = getText("xl/workbook.xml") ?? "";
+          const sheetNames = [];
+          const re = /<sheet\b([^>]*)>/g;
+          let m;
+          while ((m = re.exec(wbXml)) !== null) {
+            const nameMatch = /\bname="([^"]*)"/.exec(m[1] ?? "");
+            if (nameMatch) sheetNames.push(nameMatch[1]);
+          }
+
+          // Parse worksheet
+          const wsXml = getText(`xl/worksheets/sheet${sheetIdx + 1}.xml`) ?? "";
+          const sstXml = getText("xl/sharedStrings.xml") ?? "";
+
+          const strings = [];
+          const siRe = /<si>([\s\S]*?)<\/si>/g;
+          let si;
+          while ((si = siRe.exec(sstXml)) !== null) {
+            const tRe = /<t(?:[^>]*)>([\s\S]*?)<\/t>/g;
+            let t, txt = "";
+            while ((t = tRe.exec(si[1] ?? "")) !== null) txt += (t[1] ?? "");
+            strings.push(txt);
+          }
+
+          // Parse rows
+          const rowRe = /<row\b([^>]*)>([\s\S]*?)<\/row>/g;
+          const allRows = [];
+          let rRow;
+          while ((rRow = rowRe.exec(wsXml)) !== null) {
+            const rAttr = /\br="(\d+)"/.exec(rRow[1] ?? "");
+            const rIdx = rAttr ? parseInt(rAttr[1], 10) - 1 : 0;
+            const cells = new Map();
+            const cellRe = /<c\b([^>]*)>([\s\S]*?)<\/c>/g;
+            let cEl;
+            while ((cEl = cellRe.exec(rRow[2] ?? "")) !== null) {
+              const cRef = /\br="([A-Z]+\d+)"/.exec(cEl[1] ?? "");
+              if (!cRef) continue;
+              const colMatch = /^([A-Z]+)/.exec(cRef[1] ?? "");
+              if (!colMatch) continue;
+              let colIdx = 0;
+              for (const ch of colMatch[1]) colIdx = colIdx * 26 + (ch.charCodeAt(0) - 64);
+              colIdx--;
+              const tMatch = /\bt="([^"]*)"/.exec(cEl[1] ?? "");
+              const vMatch = /<v>([\s\S]*?)<\/v>/.exec(cEl[2] ?? "");
+              const vText = vMatch ? vMatch[1] ?? "" : "";
+              let val = null;
+              if (tMatch && tMatch[1] === "s") val = strings[parseInt(vText, 10)] ?? null;
+              else if (tMatch && tMatch[1] === "b") val = vText === "1";
+              else if (vText) val = isNaN(Number(vText)) ? vText : Number(vText);
+              cells.set(colIdx, val);
+            }
+            allRows.push({ rIdx, cells });
+          }
+
+          const headerRowIdx = noHeader ? null : 0;
+          let numCols = 0;
+          for (const row of allRows) for (const c of row.cells.keys()) if (c >= numCols) numCols = c + 1;
+
+          let headerLabels = [];
+          const dataRows = [];
+          for (const row of allRows) {
+            if (headerRowIdx !== null && row.rIdx === headerRowIdx) {
+              for (let c = 0; c < numCols; c++) headerLabels.push(String(row.cells.get(c) ?? c));
+            } else if (headerRowIdx === null || row.rIdx > headerRowIdx) {
+              dataRows.push(row);
+            }
+          }
+          if (headerLabels.length === 0) for (let c = 0; c < numCols; c++) headerLabels.push(String(c));
+
+          const sliced = dataRows.slice(skipRows, nrows !== undefined ? skipRows + nrows : undefined);
+
+          // Format as table text
+          let out = `Sheets: ${sheetNames.join(", ")}\n`;
+          out += `Showing sheet index ${sheetIdx}: ${numCols} columns, ${sliced.length} data rows\n\n`;
+          const colWidth = 14;
+          out += headerLabels.map(h => h.slice(0, colWidth).padEnd(colWidth)).join(" | ") + "\n";
+          out += headerLabels.map(() => "-".repeat(colWidth)).join("-+-") + "\n";
+          for (const row of sliced.slice(0, 20)) {
+            out += headerLabels.map((_, c) => {
+              const v = row.cells.get(c) ?? "";
+              return String(v ?? "null").slice(0, colWidth).padEnd(colWidth);
+            }).join(" | ") + "\n";
+          }
+          if (sliced.length > 20) out += `… (${sliced.length - 20} more rows)\n`;
+
+          document.getElementById("output").textContent = out;
+        } catch (err) {
+          document.getElementById("output").textContent = "Error: " + err.message;
+        }
+      };
+    </script>
+  </body>
+</html>
