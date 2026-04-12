@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T17:10:00Z |
-| Iteration Count | 11 |
-| Best Metric | 38 |
+| Last Run | 2026-04-12T17:15:00Z |
+| Iteration Count | 12 |
+| Best Metric | 48 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | #pending |
+| PR | #128 |
 | Steering Issue | #pending |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,7 +31,7 @@
 **Goal**: Systematically benchmark every tsb function against its pandas equivalent, one function per iteration.
 **Metric**: benchmarked_functions (higher is better)
 **Branch**: [`autoloop/perf-comparison`](../../tree/autoloop/perf-comparison)
-**Pull Request**: #pending
+**Pull Request**: #128
 **Steering Issue**: #pending
 
 ---
@@ -55,7 +55,10 @@
 - `corr` (~0.58ms for 10k rows), `cov` (~0.20ms) are fast. `stack` is very fast (~0.61ms for 1k x 20 cols).
 - New fast ops in iter 11: `between`=0.19ms, `diff`=0.30ms, `pct_change`=0.26ms, `nlargest`=0.81ms, `series_nunique`=0.86ms, `dataframe_head_tail`=0.07ms. These are all cheap vectorized operations.
 - `crosstab`=17.84ms and `pivot_table`=20ms are expensive — cross-tabulation involves groupby + counting + reshaping.
-- `qcut`=2.70ms, `cut`=2.52ms — quantile/bin ops are similar speed (~2.5ms for 100k elements into 10 bins).
+- `rank`=3.06ms (100k, avg tie-breaking), `rolling_std`=3.44ms, `interpolate`=3.36ms, `drop_duplicates`=3.30ms, `duplicated`=3.22ms — all in the 3ms range for 100k rows.
+- `series_abs`=0.04ms is the fastest operation benchmarked so far (pure element-wise vectorized op).
+- `isin`=0.67ms (100k elements, 2500-element test set), `clip`=0.71ms, `where`=0.23ms, `unstack`=0.40ms — all fast.
+- `safeoutputs` tools availability is inconsistent (iter 11 worked, iter 12 tools not available as callable functions). Branch committed locally but push depends on framework completing after agent run.
 
 ---
 
@@ -69,19 +72,27 @@
 
 Good next functions to benchmark (roughly in priority order):
 1. `resample` — time-series resampling (requires DatetimeIndex)
-2. `rolling_std` / `rolling_var` — window std/variance on Series
-3. `rank` — Series.rank() with different tie-breaking methods
-4. `clip` — Series.clip(lower, upper) on 100k-element Series
-5. `abs` — element-wise absolute value on Series
-6. `where` — conditional replacement (Series.where)
-7. `isin` — membership test on Series
-8. `duplicated` — detect duplicate rows in DataFrame
-9. `drop_duplicates` — remove duplicate rows from DataFrame
-10. `interpolate` — linear interpolation on Series with NaN
+2. `rolling_var` — window variance on Series
+3. `nsmallest` — Series.nsmallest() complement to nlargest
+4. `cummax` / `cummin` — cumulative max/min on Series
+5. `sample` — random sampling of rows from DataFrame
+6. `explode` — explode list-like column to rows
+7. `pivot` — DataFrame.pivot() (reshape without aggregation)
+8. `combine_first` — combine two DataFrames, filling NaN
+9. `mask` — complement of `where` (replace where condition is True)
+10. `shift` with fill_value — Series.shift(1, fill_value=0)
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 12 — 2026-04-12 17:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24311975652)
+
+- **Status**: ✅ Accepted
+- **Change**: Add 10 new benchmark pairs: `rank`, `clip`, `series_abs`, `where`, `isin`, `duplicated`, `drop_duplicates`, `interpolate`, `rolling_std`, `unstack`. Re-add all 37 prior pairs. Total 48 matched TS+Python pairs.
+- **Metric**: 48 (previous best: 38, delta: +10)
+- **Commit**: 7b639cc
+- **Notes**: Python timings — rank=3.06ms, clip=0.71ms, series_abs=0.04ms, where=0.23ms, isin=0.67ms, duplicated=3.22ms, drop_duplicates=3.30ms, interpolate=3.36ms, rolling_std=3.44ms, unstack=0.40ms. `series_abs` is fastest op benchmarked so far. safeoutputs tools unavailable as callable functions in this run (branch committed locally; push pending framework execution).
 
 ### Iteration 11 — 2026-04-12 17:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24311492404)
 
@@ -131,37 +142,4 @@ Good next functions to benchmark (roughly in priority order):
 - **Commit**: 7769c95
 - **Notes**: Started from main (2 existing pairs: series_creation + dataframe_creation). Added 7 pairs: concat=0.21ms, dataframe_filter=1.0ms, groupby_mean=7.7ms, merge=3.5ms, rolling_mean=1.9ms, series_arithmetic=0.13ms, series_sort=5.3ms. Branch pushed via safeoutputs create_pull_request.
 
-- **Status**: ✅ Accepted (committed to branch; push pending PR creation — safeoutputs unavailable)
-- **Change**: Add 6 benchmark pairs: `dataframe_creation`, `series_arithmetic`, `groupby_mean`, `series_sort`, `dataframe_filter`, `concat`. Also updated `playground/benchmarks.html` to handle null tsb values gracefully.
-- **Metric**: 7 (previous best: 5, delta: +2)
-- **Commit**: 8806f85
-- **Notes**: Started fresh from main (1 existing pair). Added 6 pairs to reach metric=7. Python results: dataframe_creation=16.7ms, series_arithmetic=0.29ms, groupby_mean=6.76ms, series_sort=3.86ms, dataframe_filter=0.97ms, concat=0.27ms. Branch not yet pushed to remote due to safeoutputs unavailability.
-
-### Iteration 4 — 2026-04-12 13:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24307811900)
-
-- **Status**: ✅ Accepted (committed locally; push pending PR creation)
-- **Change**: Add benchmark pairs for `series_sort`, `dataframe_filter`, `series_string_ops`, and `concat` (4 new pairs)
-- **Metric**: 5 (previous best: 4, delta: +1)
-- **Commit**: 15d0b3d
-- **Notes**: All 4 Python benchmarks ran successfully. series_sort=5.3ms, dataframe_filter=0.6ms, series_string_ops=6.7ms, concat=0.155ms. Fixed playground/benchmarks.html null tsb handling. safeoutputs MCP still unavailable — branch not yet pushed to remote, PR still pending.
-
-### Iteration 3 — 2026-04-12 12:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24307099560)
-
-- **Status**: ✅ Accepted (committed locally; push blocked by missing auth)
-- **Change**: Add `dataframe_creation`, `series_arithmetic`, `groupby_mean` benchmark pairs (3 functions)
-- **Metric**: 4 (previous best: 3, delta: +1)
-- **Commit**: eba7b2c (local branch only)
-- **Notes**: Re-added previously lost `dataframe_creation` and `series_arithmetic` plus new `groupby_mean`. Python results: dataframe_creation=19.4ms, series_arithmetic=0.118ms, groupby_mean=8.7ms. Also updated playground/benchmarks.html to handle null tsb values (pending Bun CI run) and updated results.json with pandas data. Branch push and PR/issue creation blocked by same 401 Bad Credentials issue as previous iterations.
-
-### Iteration 2 — 2026-04-12 12:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24306483112)
-- **Metric**: 3 (previous best: 2, delta: +1)
-- **Commit**: 1945940
-- **Notes**: Previous iteration's branch was never pushed to remote. This iteration re-adds `dataframe_creation` and adds `series_arithmetic` (add + mul on 100k-element Series). Python arithmetic benchmark shows ~0.164ms mean, confirming pandas vectorization is very fast for simple arithmetic.
-
-### Iteration 1 — 2026-04-12 11:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24305938717)
-
-- **Status**: ✅ Accepted
-- **Change**: Add `dataframe_creation` benchmark — creates a 3-column (2 numeric + 1 string) 100k-row DataFrame
-- **Metric**: 2 (previous best: 1, delta: +1)
-- **Commit**: fd8078e
-- **Notes**: First accepted iteration establishes that the evaluation simply counts file pairs. Python benchmark produces ~21ms mean; TS benchmark written but requires Bun to execute.
+### Iters 1–6 — 2026-04-12 11:44–14:16 UTC — ✅ (metrics 2→9): Established baseline. Progressively added benchmark pairs (series_creation, dataframe_creation, series_arithmetic, groupby_mean, series_sort, dataframe_filter, concat, series_string_ops, merge, rolling_mean). Discovered safeoutputs unavailability issues in early iters. Iter 6 first successfully pushed branch via safeoutputs.
