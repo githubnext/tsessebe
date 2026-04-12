@@ -10,12 +10,12 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-11T23:30:00Z |
-| Iteration Count | 215 |
-| Best Metric | 50 |
+| Last Run | 2026-04-12T00:30:00Z |
+| Iteration Count | 216 |
+| Best Metric | 51 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | #new-pr-created-iter-215 (New canonical-branch PR created for `autoloop/build-tsb-pandas-typescript-migration` in iter 215) |
+| PR | — |
 | Steering Issue | #107 |
 | Paused | false |
 | Pause Reason | — |
@@ -31,7 +31,7 @@
 **Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
 **Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: Created in iter 214 for `autoloop/build-tsb-pandas-typescript-migration`
+**Pull Request**: TBD (to be created for `autoloop/build-tsb-pandas-typescript-migration`)
 **Steering Issue**: #107
 **Experiment Log**: #3
 
@@ -40,13 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `io/read_excel.ts` — Excel file reading (requires xlsx parser from scratch)
-- `window/rolling_apply.ts` — rolling/expanding apply already exists; consider `ewm` improvements
+- `stats/describe_categorical.ts` — extend describe() for categorical/string Series
+- `core/str_accessor` improvements or new string ops
+- `window/ewm` improvements
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 216**: `jsonNormalize` — `io/json_normalize.ts`. Flatten nested JSON objects into DataFrames. `isJsonPrimitive` type guard for safe narrowing of `JsonValue` after `!isJsonObject && !Array.isArray` checks (avoids `as` casts). `navigatePath`: TypeScript narrows `cur` to `JsonObject` after `if (!isJsonObject(cur)) return null` guard, so `cur[key]` works without cast. `Array.isArray(data)` on `JsonObject | readonly JsonObject[]` gives `any[]`, assignable to `readonly JsonObject[]`. Helper decomposition: `flattenObject`, `flattenTopLevel`, `flattenRecordRows`, `buildMetaRecord`, `extractRecords`, `prefixRecord`, `primitiveOrStringify`, `navigatePath`. `DataFrame.fromRecords(flatRows)` works without cast (`Record<string,Scalar>[]` → `readonly Readonly<Record<string,Scalar>>[]` is covariant). Metric: 51 (+1). Commit: b26b44c.
 - **Iter 215**: `readExcel`/`xlsxSheetNames` — `io/read_excel.ts`. Full XLSX reader from scratch: ZIP binary parser (EOCD + central directory + local headers), DEFLATE via `node:zlib` `inflateRawSync` (biome-ignore noNodejsModules). XML parsing via `regexAll` generator (avoids `noAssignInExpressions`). `noExcessiveCognitiveComplexity`: extract `extractHeaderLabels`, `pivotToColumns`, `padHeaderLabels` helpers from `buildColumnarData`. `useNumberNamespace`: use `Number.parseInt`, `Number.isNaN`. Function signature `Uint8Array | ArrayBufferLike` (not `ArrayBuffer`) to accept `.buffer` property without casts. Property tests: use `fc.uniqueArray` to avoid duplicate headers causing shape mismatch. Metric: 50 (+1). Commit: 5748b07.
 - **Iter 214**: `selectDtypes` — `stats/select_dtypes.ts`. Use `import type` for DataFrame (it's only used as a type). Extract `validateNoOverlap` and `columnPasses` helpers to keep complexity under 15. `useExplicitLengthCheck`: use `(x?.length ?? 0) > 0` pattern for optional arrays. `fc.constantFrom<DtypeSpecifier>(...)` type param needed for property tests. Auto-format with `bunx biome format --write` to fix formatter diffs. Metric: 49 (+1). Commit: edf0fb4.
 - **Iter 213**: `interpolate` — `stats/interpolate.ts`. Extract helpers (`fillLinearRun`, `classifyAreas`, `bisectLeft`, `chooseNearest`) to stay under complexity limit. `classifyAreas` precomputes inside/outside area for each position cleanly. Use `as Scalar`/`as number`/`as string` casts for `noUncheckedIndexedAccess` — same pattern as `na_ops.ts` uses `out[i] as Scalar`. `isMissing()` helper reuse pattern. `interpolateByColumns`/`interpolateByRows` extracted to reduce main function complexity. Metric: 48 (+1). Commit: ab037f6.
@@ -77,12 +79,16 @@ Next features to implement (prioritized by impact):
 
 ## 🔭 Future Directions
 
-- `io/read_excel.ts` — Excel reading (requires xlsx parser from scratch)
 - `stats/describe_categorical.ts` — extend describe() for categorical/string Series
+- `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
+- `core/str_accessor` — more string methods on Series
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 216 — 2026-04-12 00:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24294949963)
+- **Status**: ✅ Accepted — Add `io/json_normalize.ts`: jsonNormalize(data, options?) — flatten nested JSON to DataFrame. recordPath, meta, metaPrefix, recordPrefix, sep, maxLevel, errors options. 26 tests (unit + fast-check property tests). Playground: json_normalize.html. Metric: 51 (+1). Commit: b26b44c.
 
 ### Iteration 215 — 2026-04-11 23:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24294236300)
 - **Status**: ✅ Accepted — Add `io/read_excel.ts`: readExcel(data, options?) + xlsxSheetNames(data). ZIP binary parser + DEFLATE + XML regex parsing. header/skipRows/nrows/naValues/indexCol/sheetName options. 26 tests. Metric: 50 (+1). Commit: 5748b07.
