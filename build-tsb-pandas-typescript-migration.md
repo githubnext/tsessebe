@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T05:15:00Z |
-| Iteration Count | 220 |
-| Best Metric | 55 |
+| Last Run | 2026-04-12T05:46:00Z |
+| Iteration Count | 221 |
+| Best Metric | 56 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #120 |
@@ -42,12 +42,13 @@
 Next features to implement (prioritized by impact):
 - `core/str_accessor` improvements or new string ops (findall, extractall)
 - `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
-- `stats/quantile.ts` — quantile/percentile for Series and DataFrame (pandas Series.quantile)
+- `stats/nancumops.ts` — nansum, nanmean, nanmedian top-level functions
 
 ---
 
 ## 📚 Lessons Learned
 
+- **Iter 221**: `quantile` — `quantileSeries`/`quantileDataFrame`; 5 interpolation methods (linear/lower/higher/midpoint/nearest); multi-q returns Series/DataFrame; axis=0/1; numericOnly; skipna. `biome check --write --unsafe` fixes noNegationElse + NaN → Number.NaN. `Series<Scalar>` (not `Series<unknown>`) in tests + `import type { Scalar }`. 46 unit + 4 property tests. Metric: 56 (+1). Commit: a48560f.
 - **Iter 220**: `sem_var` + `nunique/any/all` — `stats/sem_var.ts`: `StatFn=(xs,ddof,minCount)=>number` for reducer callbacks; varSeries/semSeries/varDataFrame/semDataFrame with ddof/skipna/minCount/axis/numericOnly. Non-numeric cols without numericOnly return NaN. `stats/nunique.ts`: anyInSlice/allInSlice/rowValues helpers to keep anyDataFrame/allDataFrame complexity ≤15. Biome: `Array(n)` → `new Array(n)`, remove extra parens. Metric: 55 (+2). Commit: bb3f8f3.
 - **Iter 218**: `mode` + `skew_kurt` — `df.col(name)` throws (not undefined). `DataFrame.fromColumns(cols,{index})` for row-wise. Skewness: `n/((n-1)*(n-2))*m3/s^3`. Kurtosis: `n(n+1)/((n-1)(n-2)(n-3))*m4/sv^2 - 3(n-1)^2/((n-2)(n-3))`. Metric: 53 (+2).
 - **Iter 216**: `jsonNormalize` — `isJsonPrimitive` type guard. `navigatePath` with TypeScript narrowing. Helper decomposition pattern. Metric: 51 (+1).
@@ -76,12 +77,14 @@ Next features to implement (prioritized by impact):
 
 - `core/str_accessor` — more string methods on Series (findall, extractall, normalize)
 - `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
-- `stats/quantile.ts` — percentile/quantile for Series and DataFrame
 - `stats/nancumops.ts` — nansum, nanmean, nanmedian top-level functions
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 221 — 2026-04-12 05:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24299797044)
+- **Status**: ✅ Accepted — Add `stats/quantile.ts`: quantileSeries/quantileDataFrame; 5 interpolation methods (linear/lower/higher/midpoint/nearest); multi-q returns Series/DataFrame; axis=0/1; numericOnly; skipna. 46 unit + 4 property tests. Playground: quantile.html. Metric: 56 (+1). Commit: a48560f.
 
 ### Iteration 220 — 2026-04-12 05:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24299079452)
 - **Status**: ✅ Accepted — Add `stats/sem_var.ts` (varSeries/varDataFrame, semSeries/semDataFrame; ddof/skipna/minCount/axis/numericOnly; StatFn type alias; 25 unit + 3 property tests) and `stats/nunique.ts` (nuniqueSeries/nuniqueDataFrame/anySeries/allSeries/anyDataFrame/allDataFrame; anyInSlice/allInSlice/rowValues helpers for complexity; 31 unit + 2 property tests). Playground: sem_var.html, nunique.html. Metric: 55 (+2 vs actual 53, +1 vs state 54). Commit: bb3f8f3.
