@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T09:19:36Z |
-| Iteration Count | 226 |
-| Best Metric | 58 |
+| Last Run | 2026-04-12T09:47:32Z |
+| Iteration Count | 227 |
+| Best Metric | 60 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #120 |
@@ -21,8 +21,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 2 |
-| Recent Statuses | error, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -40,17 +40,18 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- **RECOVER**: `stats/to_timedelta.ts` + `stats/to_datetime.ts` — push failed in iters 225–226 (safeoutputs MCP blocked by policy). Iter 225 code (to_datetime) is on remote at commit 716a7f3 of origin/autoloop/build-tsb-pandas-typescript-migration-480c452af2b58478. Iter 226 code (to_timedelta, Timedelta class) is committed locally as eb1f9ce but not pushed. Next run: checkout canonical branch, verify to_datetime is there, implement to_timedelta fresh.
 - `core/str_accessor` improvements or new string ops (findall, extractall)
 - `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
+- `stats/date_range.ts` — pd.date_range() for generating DatetimeIndex sequences
+- `stats/timedelta_range.ts` — pd.timedelta_range() for generating TimedeltaIndex sequences
 
 ---
 
 ## 📚 Lessons Learned
 
 - **Iter 226**: `to_timedelta` — PUSH FAILED (safeoutputs MCP blocked by policy, same as iters 224–225). Code committed locally as eb1f9ce on autoloop/build-tsb-pandas-typescript-migration, not pushed. `toTimedelta(scalar|array|Series, opts?)` + `Timedelta` class. Top-level regex: RE_PANDAS/RE_CLOCK/RE_HUMAN. Units: ns/us/ms/s/m/h/D/W. Timedelta: totalMs/days/hours/minutes/seconds/ms accessors; add/subtract/scale/abs/lt/gt/eq. `parseFrac` for sub-second precision. `formatTimedelta` for toString. 50+ unit + 4 property tests. Playground: to_timedelta.html. Metric would be 60 (+1 vs 59, +2 vs best 58). Recovery: re-implement on canonical branch next iter. NOTE: to_datetime (iter 225) IS on remote at 716a7f3.
-- **Iter 225**: `to_datetime` — PUSH FAILED (safeoutputs MCP blocked by policy). Code committed locally as 96e60bd on autoloop/build-tsb-pandas-typescript-migration. `toDatetime(scalar|array|Series, opts?)`. Top-level regex: RE_ISO/RE_MDY/RE_DMY_DASH/RE_COMPACT/RE_INT. Helpers: `convertSeries`, `convertOne`, `convertNumber`, `convertString`, `tryParseString`, `parseCompact`, `parseMDY`, `parseDMY`, `expandYear`, `handleFailure`. `unit=s/ms/us/ns`, `errors=raise/coerce/ignore`, `utc`, `dayfirst`. 42 unit + 4 property tests. Playground: to_datetime.html. Metric would be 59 (+1). Recovery: re-implement on canonical branch next iter.
-- **Iter 224**: `to_datetime` — PUSH FAILED (MCP blocked). Code ready: `toDatetime(scalar|array|Series, opts?)`. Move all regex to top-level constants (RE_MDY, RE_DMY_DASH, etc.) for `useTopLevelRegex`. Use `../core/index.ts` for Series/Dtype imports. Overload: scalar→`Date|null`, array→`(Date|null)[]`, Series→`Series<Date|null>`. `errors='ignore'` returns original scalar (tests use `as unknown as string`). 42 unit + 4 property tests. Recover by re-implementing this file on canonical branch next iteration.
+- **Iter 227**: `to_timedelta` — Successfully implemented `toTimedelta(scalar|array|Series, opts?) + Timedelta class` by checking out 480c452 branch (which had to_datetime from iter 225). `(value as unknown) instanceof Timedelta` pattern to allow Timedelta passthrough without TypeScript error (Timedelta not in Scalar union). `RE_HUMAN.lastIndex = 0` reset needed before re-using global regex in loop. `parseFrac()` pads to 9 digits then divides by 1e6 for ns→ms. Metric: 60 (+2 vs best 58). Commit: ca3f286.
+- **Iter 225**: `to_datetime` — code at 716a7f3 on 480c452 branch. IS on remote.
 - **Iter 223**: `nancumops` — 9 top-level nan-ignoring aggregate functions: nansum/nanmean/nanmedian/nanvar/nanstd/nanmin/nanmax/nanprod/nancount. All accept `readonly Scalar[] | Series<Scalar>`. `toValues()` helper dispatches via `Array.isArray`. `sortedAsc` for median. `as number` casts for noUncheckedIndexedAccess. 36 unit + 4 property tests. Playground: nancumops.html. Canonical branch restored. Metric: 58 (+1). Commit: f7ab898.
 - **Iter 222**: `to_numeric` — overloaded `toNumeric(scalar|array|Series, opts?)`. Extracts `convertString`/`convertUnknown` helpers to keep `convertScalar` ≤15 complexity. `useBlockStatements`: all if-branches wrapped. `convertUnknown` signature stays single-line for biome format. Remove unused type imports in tests. Export `Scalar` from `src/index.ts` for test imports. `import type { Index }` for value-unused imports. Metric: 57 (+1). Commit: 576ddbb.
 - **Iter 221**: `quantile` — `quantileSeries`/`quantileDataFrame`; 5 interpolation methods (linear/lower/higher/midpoint/nearest); multi-q returns Series/DataFrame; axis=0/1; numericOnly; skipna. `biome check --write --unsafe` fixes noNegationElse + NaN → Number.NaN. `Series<Scalar>` (not `Series<unknown>`) in tests + `import type { Scalar }`. 46 unit + 4 property tests. Metric: 56 (+1). Commit: a48560f.
@@ -82,24 +83,27 @@ Next features to implement (prioritized by impact):
 
 - `core/str_accessor` — more string methods on Series (findall, extractall, normalize)
 - `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
-- `stats/to_datetime.ts` — pd.to_datetime() parsing strings/timestamps to datetime values
-- `stats/to_timedelta.ts` — pd.to_timedelta() for duration parsing
+- `stats/date_range.ts` — pd.date_range() for generating DatetimeIndex sequences
+- `stats/timedelta_range.ts` — pd.timedelta_range() for generating TimedeltaIndex sequences
 
 ---
 
 ## 📊 Iteration History
 
+### Iteration 227 — 2026-04-12 09:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24303813672)
+- **Status**: ✅ Accepted — Add `stats/to_timedelta.ts`: `toTimedelta(scalar|array|Series, opts?)` + `Timedelta` class. Supports clock (01:30:00), pandas canonical (1 days HH:MM:SS), and natural language (2 hours 30 minutes). Units: ns/us/ms/s/m/h/D/W. Timedelta class with arithmetic (add/subtract/scale/abs), comparisons (lt/gt/eq), and accessors (totalMs/days/hours/minutes/seconds/ms). 50+ unit + 4 property tests. Playground: to_timedelta.html. Checked out 480c452 branch (which has to_datetime from iter 225) and added to_timedelta on top. Metric: 60 (+2 vs best 58). Commit: ca3f286.
+
 ### Iteration 226 — 2026-04-12 09:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24303331299)
-- **Status**: ⚠️ Push failed — safeoutputs MCP blocked by policy (same as iters 224–225). Code committed locally (eb1f9ce on autoloop/build-tsb-pandas-typescript-migration, not pushed). toTimedelta() + Timedelta class fully implemented: scalar/array/Series overloads, units ns/us/ms/s/m/h/D/W, errors=raise/coerce/ignore. Timedelta class with arithmetic add/subtract/scale/abs and accessors totalMs/days/hours/minutes/seconds. 50+ unit + 4 property tests. Playground: to_timedelta.html. Metric would be 60 (+2 vs best 58). NOTE: to_datetime (iter 225) IS on remote at 716a7f3. Recovery needed next iteration.
+- **Status**: ⚠️ Push failed — safeoutputs MCP blocked by policy (same as iters 224–225). toTimedelta() + Timedelta class fully implemented but not pushed. Metric would be 60.
 
 ### Iteration 225 — 2026-04-12 08:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24302775343)
-- **Status**: ⚠️ Push failed — safeoutputs MCP blocked by policy. Code committed locally (96e60bd on autoloop/build-tsb-pandas-typescript-migration, not pushed). toDatetime() fully implemented: scalar/array/Series overloads, unit=s/ms/us/ns, errors=raise/coerce/ignore, utc, dayfirst, ISO/US/European/compact formats. 42 unit + 4 property tests. Metric would be 59 (+1). Recovery needed next iteration.
+- **Status**: ⚠️ Push failed — safeoutputs MCP blocked by policy. toDatetime() fully implemented (code on 480c452 branch at 716a7f3). Metric would be 59.
 
 ### Iteration 224 — 2026-04-12 08:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24302289084)
-- **Status**: ⚠️ Push failed — MCP servers blocked by policy. Code implemented locally (commit 81dfb68 on local branch, not pushed). toDatetime() fully implemented: scalar/array/Series overloads, unit=s/ms/us/ns, errors=raise/coerce/ignore, utc flag, ISO/US/compact formats. 42 unit + 4 property tests. Metric would be 59 (+1) if pushed. Recovery needed next iteration: re-implement stats/to_datetime.ts on the canonical branch.
+- **Status**: ⚠️ Push failed — MCP servers blocked by policy. toDatetime() implemented but not pushed. Metric would be 59.
 
 ### Iteration 223 — 2026-04-12 07:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24301503087)
-- **Status**: ✅ Accepted — Add `stats/nancumops.ts`: 9 nan-ignoring aggregate functions (nansum/nanmean/nanmedian/nanvar/nanstd/nanmin/nanmax/nanprod/nancount). Accept `readonly Scalar[] | Series<Scalar>`. `toValues()` dispatches via `Array.isArray`. `sortedAsc` helper for median. `as number` casts for noUncheckedIndexedAccess. Canonical branch restored from 480c452 base. 36 unit + 4 property tests. Playground: nancumops.html. Metric: 58 (+1). Commit: f7ab898.
+- **Status**: ✅ Accepted — Add `stats/nancumops.ts`: 9 nan-ignoring aggregate functions. Canonical branch restored. Metric: 58 (+1). Commit: f7ab898.
 
 ### Iteration 222 — 2026-04-12 06:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24300571298)
 - **Status**: ✅ Accepted — Add `stats/to_numeric.ts`: toNumeric(scalar|array|Series, opts?) — mirrors pandas.to_numeric(). errors='raise'/'coerce'/'ignore'; downcast='integer'/'signed'/'unsigned'/'float'. Handles null/NaN, bool, bigint, Date. Extracted convertString/convertUnknown helpers to keep complexity ≤15. 50 unit + 5 property tests. Playground: to_numeric.html. Metric: 57 (+1). Commit: 576ddbb.
