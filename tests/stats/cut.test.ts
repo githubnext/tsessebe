@@ -37,9 +37,9 @@ describe("cut — basic", () => {
   });
 
   it("returns null for out-of-range values", () => {
-    const result = cut([1, 2, 3, 100], 2);
+    const result = cut([1, 2, 3, 101], [0, 50, 100]);
     const v = result.values as readonly (string | null)[];
-    // 100 is outside the natural range expanded by 0.1%, expect null
+    // 101 is outside explicit bin edges [0, 50, 100], expect null
     expect(v[3]).toBe(null);
   });
 

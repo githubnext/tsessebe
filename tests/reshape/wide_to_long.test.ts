@@ -370,9 +370,13 @@ describe("wideToLong", () => {
             const result = wideToLong(df, "A", "id", "t");
             const outIds = col(result, "id");
             // Each original id should appear exactly nSuffixes times
+            const counts = new Map<Scalar, number>();
             for (const id of ids) {
+              counts.set(id, (counts.get(id) ?? 0) + 1);
+            }
+            for (const [id, originalCount] of counts) {
               const count = outIds.filter((v) => v === id).length;
-              if (count !== nSuffixes) return false;
+              if (count !== originalCount * nSuffixes) return false;
             }
             return true;
           },

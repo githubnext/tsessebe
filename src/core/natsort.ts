@@ -123,6 +123,9 @@ export function natCompare(
     if (c !== 0) return reverse ? -c : c;
   }
   const lenCmp = ta.length - tb.length;
+  if (lenCmp === 0) {
+    return 0;
+  }
   return reverse ? -lenCmp : lenCmp;
 }
 
@@ -227,6 +230,9 @@ export function natArgSort(
       if (c !== 0) return reverse ? -c : c;
     }
     const lc = ta.length - tb.length;
+    if (lc === 0) {
+      return 0;
+    }
     return reverse ? -lc : lc;
   });
   return indices;
