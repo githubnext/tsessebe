@@ -288,4 +288,174 @@ export type { ExplodeOptions, ExplodeDataFrameOptions } from "./stats/index.ts";
 
 export { isin, dataFrameIsin } from "./stats/index.ts";
 export type { IsinValues, IsinDict, DataFrameIsinValues } from "./stats/index.ts";
-// Re-merged main (2026-04-09T17:22Z): resolved barrel-export conflicts, PR branch is superset of main
+
+export { readExcel, xlsxSheetNames } from "./io/index.ts";
+export type { ReadExcelOptions } from "./io/index.ts";
+export { astypeSeries, astype, castScalar } from "./core/index.ts";
+export type { AstypeOptions, DataFrameAstypeOptions } from "./core/index.ts";
+
+export { clipAdvancedSeries, clipAdvancedDataFrame } from "./stats/index.ts";
+export type {
+  SeriesBound,
+  DataFrameBound,
+  ClipAdvancedSeriesOptions,
+  ClipAdvancedDataFrameOptions,
+} from "./stats/index.ts";
+export { idxminSeries, idxmaxSeries, idxminDataFrame, idxmaxDataFrame } from "./stats/index.ts";
+export type { IdxOptions, IdxDataFrameOptions } from "./stats/index.ts";
+export { modeSeries, modeDataFrame } from "./stats/index.ts";
+export type { ModeSeriesOptions, ModeDataFrameOptions } from "./stats/index.ts";
+export {
+  nancount,
+  nansum,
+  nanmean,
+  nanmedian,
+  nanvar,
+  nanstd,
+  nanmin,
+  nanmax,
+  nanprod,
+} from "./stats/index.ts";
+export type { NanInput, NanAggOptions } from "./stats/index.ts";
+export {
+  nuniqueSeries,
+  nuniqueDataFrame,
+  anySeries,
+  allSeries,
+  anyDataFrame,
+  allDataFrame,
+} from "./stats/index.ts";
+export type {
+  NuniqueSeriesOptions,
+  NuniqueDataFrameOptions,
+  AnyAllSeriesOptions,
+  AnyAllDataFrameOptions,
+} from "./stats/index.ts";
+export { pctChangeSeries, pctChangeDataFrame } from "./stats/index.ts";
+export type {
+  PctChangeFillMethod,
+  PctChangeOptions,
+  DataFramePctChangeOptions,
+} from "./stats/index.ts";
+export { quantileSeries, quantileDataFrame } from "./stats/index.ts";
+export type {
+  QuantileInterpolation,
+  QuantileSeriesOptions,
+  QuantileDataFrameOptions,
+} from "./stats/index.ts";
+export { replaceSeries, replaceDataFrame } from "./stats/index.ts";
+export type {
+  ReplaceMapping,
+  ReplaceSpec,
+  ReplaceOptions,
+  DataFrameReplaceOptions,
+} from "./stats/index.ts";
+export { varSeries, semSeries, varDataFrame, semDataFrame } from "./stats/index.ts";
+export type { VarSemSeriesOptions, VarSemDataFrameOptions } from "./stats/index.ts";
+export { skewSeries, kurtSeries, skewDataFrame, kurtDataFrame } from "./stats/index.ts";
+export type {
+  SkewKurtSeriesOptions,
+  SkewKurtDataFrameOptions,
+} from "./stats/index.ts";
+export { toDatetime } from "./stats/index.ts";
+export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./stats/index.ts";
+
+// iter136 features — core
+export { isScalar, isListLike, isArrayLike, isDictLike, isIterator } from "./core/index.ts";
+export { getAttrs, setAttrs, updateAttrs, copyAttrs } from "./core/index.ts";
+export type { Attrs } from "./core/index.ts";
+export { insertColumn, popColumn, reorderColumns, moveColumn } from "./core/index.ts";
+export type { PopResult } from "./core/index.ts";
+export { toDictOriented, fromDictOriented } from "./core/index.ts";
+export type { ToDictOrient, FromDictOrient, DictSplit, DictTight } from "./core/index.ts";
+
+// iter136 features — stats
+export {
+  catFromCodes,
+  catUnionCategories,
+  catSortByFreq,
+  catCrossTab,
+} from "./stats/index.ts";
+export type {
+  CatFromCodesOptions,
+  CatSortByFreqOptions,
+  CatCrossTabOptions,
+} from "./stats/index.ts";
+export {
+  formatFloat,
+  formatPercent,
+  formatScientific,
+  formatEngineering,
+  formatThousands,
+  seriesToString,
+  dataFrameToString,
+} from "./stats/index.ts";
+export type {
+  Formatter,
+  SeriesToStringOptions,
+  DataFrameToStringOptions,
+} from "./stats/index.ts";
+export {
+  histogram,
+  zscore,
+  minMaxNormalize,
+  coefficientOfVariation,
+  digitize,
+  linspace,
+  arange,
+  percentileOfScore,
+  seriesDigitize,
+} from "./stats/index.ts";
+export type {
+  HistogramOptions,
+  HistogramResult,
+  ZscoreOptions,
+  MinMaxOptions,
+  CvOptions,
+} from "./stats/index.ts";
+export {
+  strNormalize,
+  strGetDummies,
+  strExtractAll,
+  strRemovePrefix,
+  strRemoveSuffix,
+  strTranslate,
+  strCharWidth,
+  strByteLength,
+} from "./stats/index.ts";
+export type {
+  NormalizeForm,
+  StrInput,
+  StrGetDummiesOptions,
+  ExtractAllOptions,
+} from "./stats/index.ts";
+export {
+  strSplitExpand,
+  strExtractGroups,
+  strPartition,
+  strRPartition,
+  strMultiReplace,
+  strIndent,
+  strDedent,
+} from "./stats/index.ts";
+export type {
+  SplitExpandOptions,
+  ExtractGroupsOptions,
+  PartitionResult,
+  ReplacePair,
+  IndentOptions,
+} from "./stats/index.ts";
+export {
+  rollingSem,
+  rollingSkew,
+  rollingKurt,
+  rollingQuantile,
+} from "./stats/index.ts";
+export type {
+  WindowExtOptions,
+  RollingQuantileOptions,
+} from "./stats/index.ts";
+
+// iter136 features — window
+export { rollingApply, rollingAgg } from "./window/index.ts";
+export type { RollingApplyOptions, RollingAggOptions, AggFunctions } from "./window/index.ts";

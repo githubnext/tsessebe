@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — nunique / any / all</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>🔢 nunique / any / all</h1>
+  <p>
+    Count unique values and perform boolean reductions, mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.nunique.html"><code>Series.nunique()</code></a>,
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.any.html"><code>Series.any()</code></a>, and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.all.html"><code>Series.all()</code></a>.
+  </p>
+
+  <h2>1 · nunique — count distinct values</h2>
+  <div class="demo">
+    <pre>import { Series, nuniqueSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 2, 3, 3, 3, null] });
+
+nuniqueSeries(s);                 // 3 (null excluded by default)
+nuniqueSeries(s, { dropna: false }); // 4 (null counted as a distinct value)</pre>
+    <div class="output">nuniqueSeries(s)              → 3
+nuniqueSeries(s, {dropna:false}) → 4</div>
+  </div>
+
+  <h2>2 · any — is any element truthy?</h2>
+  <div class="demo">
+    <pre>import { anySeries } from "tsb";
+
+const allZero = new Series({ data: [0, 0, 0] });
+const hasOne  = new Series({ data: [0, 0, 1] });
+
+anySeries(allZero); // false
+anySeries(hasOne);  // true
+
+// With nulls (skipna=true by default)
+const withNull = new Series({ data: [null, 0, null] });
+anySeries(withNull); // false — null skipped, 0 is falsy</pre>
+    <div class="output">anySeries(allZero) → false
+anySeries(hasOne)  → true
+anySeries(withNull) → false</div>
+  </div>
+
+  <h2>3 · all — are all elements truthy?</h2>
+  <div class="demo">
+    <pre>import { allSeries } from "tsb";
+
+const allTrue = new Series({ data: [1, 2, 3] });
+const hasFalsy = new Series({ data: [1, 0, 3] });
+
+allSeries(allTrue);  // true
+allSeries(hasFalsy); // false
+
+// Empty or all-null series vacuously returns true
+allSeries(new Series({ data: [] }));              // true
+allSeries(new Series({ data: [null, null] }));    // true</pre>
+    <div class="output">allSeries(allTrue)  → true
+allSeries(hasFalsy) → false
+allSeries([])       → true (vacuous)
+allSeries([null])   → true (vacuous)</div>
+  </div>
+
+  <h2>4 · DataFrame nunique</h2>
+  <div class="demo">
+    <pre>import { DataFrame, nuniqueDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  category: ["A", "B", "A", "C"],
+  value:    [1,   2,   1,   3  ],
+});
+
+nuniqueDataFrame(df);          // per-column: category→3, value→3
+nuniqueDataFrame(df, { axis: 1 }); // per-row: how many distinct values in each row</pre>
+    <div class="output">nuniqueDataFrame(df)         → category: 3, value: 3
+nuniqueDataFrame(df, {axis:1}) → row0: 2, row1: 2, row2: 2, row3: 2</div>
+  </div>
+
+  <h2>5 · DataFrame any / all</h2>
+  <div class="demo">
+    <pre>import { anyDataFrame, allDataFrame } from "tsb";
+
+const df2 = DataFrame.fromColumns({
+  a: [0, 0, 1],
+  b: [1, 1, 1],
+});
+
+anyDataFrame(df2); // a: true, b: true  (each col has at least one truthy)
+allDataFrame(df2); // a: false, b: true (col a has a 0)
+
+// axis=1: reduce across columns per row
+anyDataFrame(df2, { axis: 1 }); // row0: true, row1: true, row2: true
+allDataFrame(df2, { axis: 1 }); // row0: false, row1: false, row2: true</pre>
+    <div class="output">anyDataFrame(df2)         → a: true,  b: true
+allDataFrame(df2)         → a: false, b: true
+anyDataFrame(df2,{axis:1}) → [true, true, true]
+allDataFrame(df2,{axis:1}) → [false, false, true]</div>
+  </div>
+</body>
+</html>

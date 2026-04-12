@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — NaN-Ignoring Aggregates (nancumops)</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; padding: 2rem; }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); margin-bottom: 2rem; }
+    h2 { font-size: 1.1rem; color: var(--accent); margin: 1.5rem 0 0.5rem; }
+    p { color: var(--muted); line-height: 1.6; margin-bottom: 0.75rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    label { font-size: 0.85rem; color: var(--muted); display: block; margin-bottom: 0.25rem; }
+    input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 0.4rem 0.6rem; font-size: 0.95rem; width: 100%; margin-bottom: 0.75rem; }
+    button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px;
+      padding: 0.5rem 1.25rem; font-size: 0.95rem; cursor: pointer; font-weight: 600; }
+    button:hover { opacity: 0.85; }
+    .output { background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      padding: 0.75rem; font-family: monospace; font-size: 0.9rem; white-space: pre; min-height: 3rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: var(--bg); color: var(--muted); padding: 0.4rem 0.75rem; text-align: left;
+      border-bottom: 1px solid var(--border); }
+    td { padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); font-family: monospace; }
+    code { background: var(--bg); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.88rem; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.78rem;
+      font-weight: 600; margin-left: 0.5rem; }
+    .badge-green { background: #1a3a1c; color: var(--green); }
+    .badge-blue { background: #112233; color: var(--accent); }
+    details { margin-bottom: 1rem; }
+    summary { cursor: pointer; color: var(--accent); font-size: 0.9rem; }
+    .py-equiv { background: #1a1000; border: 1px solid #3d2800; border-radius: 4px;
+      padding: 0.75rem; font-family: monospace; font-size: 0.88rem; white-space: pre; color: #d29922; }
+  </style>
+</head>
+<body>
+
+<h1>🔢 NaN-Ignoring Aggregates</h1>
+<p class="subtitle">
+  <code>nansum</code>, <code>nanmean</code>, <code>nanmedian</code>, <code>nanstd</code>, <code>nanvar</code>,
+  <code>nanmin</code>, <code>nanmax</code>, <code>nanprod</code>, <code>nancount</code>
+  — mirrors <code>numpy.nan*</code> functions in pandas workflows.
+</p>
+
+<!-- ── Live Calculator ─────────────────────────────────────────────── -->
+<div class="card">
+  <h2>🧮 Live Calculator</h2>
+  <p>Enter a comma-separated list of numbers (use <code>NaN</code>, <code>null</code> for missing).</p>
+  <label>Input values</label>
+  <input id="inputValues" value="1, 2, NaN, null, 3, 5, NaN" />
+  <label>ddof (for std/var)</label>
+  <select id="ddofSelect">
+    <option value="1">1 (sample — default)</option>
+    <option value="0">0 (population)</option>
+    <option value="2">2</option>
+  </select>
+  <button onclick="runCalc()">Compute All</button>
+  <div id="calcOutput" class="output" style="margin-top:0.75rem;"></div>
+</div>
+
+<!-- ── Reference Table ────────────────────────────────────────────── -->
+<div class="card">
+  <h2>📖 Function Reference</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Function</th>
+        <th>Description</th>
+        <th>Empty/all-NaN returns</th>
+        <th>pandas / numpy equivalent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>nancount(input)</code></td><td>Count of valid (non-NaN) numeric values</td><td><code>0</code></td><td><code>np.count_nonzero(~np.isnan(a))</code></td></tr>
+      <tr><td><code>nansum(input)</code></td><td>Sum, ignoring NaN/null</td><td><code>0</code></td><td><code>np.nansum(a)</code></td></tr>
+      <tr><td><code>nanmean(input)</code></td><td>Mean, ignoring NaN/null</td><td><code>NaN</code></td><td><code>np.nanmean(a)</code></td></tr>
+      <tr><td><code>nanmedian(input)</code></td><td>Median, ignoring NaN/null</td><td><code>NaN</code></td><td><code>np.nanmedian(a)</code></td></tr>
+      <tr><td><code>nanvar(input, {ddof})</code></td><td>Variance (ddof=1 default)</td><td><code>NaN</code></td><td><code>np.nanvar(a, ddof=1)</code></td></tr>
+      <tr><td><code>nanstd(input, {ddof})</code></td><td>Std deviation (ddof=1 default)</td><td><code>NaN</code></td><td><code>np.nanstd(a, ddof=1)</code></td></tr>
+      <tr><td><code>nanmin(input)</code></td><td>Minimum, ignoring NaN/null</td><td><code>NaN</code></td><td><code>np.nanmin(a)</code></td></tr>
+      <tr><td><code>nanmax(input)</code></td><td>Maximum, ignoring NaN/null</td><td><code>NaN</code></td><td><code>np.nanmax(a)</code></td></tr>
+      <tr><td><code>nanprod(input)</code></td><td>Product, ignoring NaN/null</td><td><code>1</code></td><td><code>np.nanprod(a)</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Usage Examples ─────────────────────────────────────────────── -->
+<div class="card">
+  <h2>💡 Usage Examples</h2>
+
+  <details open>
+    <summary>Basic array usage</summary>
+    <pre style="margin-top:0.5rem;padding:0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:0.88rem;overflow-x:auto;">
+import { nansum, nanmean, nanmedian, nanstd } from "tsb";
+
+const data = [1, 2, NaN, null, 3, 5];
+
+nansum(data);     // 11
+nanmean(data);    // 2.75
+nanmedian(data);  // 2.5
+nanstd(data);     // 1.708...
+</pre>
+    <div class="py-equiv">
+# Python / pandas equivalent
+import numpy as np
+
+data = [1, 2, np.nan, np.nan, 3, 5]
+
+np.nansum(data)     # 11.0
+np.nanmean(data)    # 2.75
+np.nanmedian(data)  # 2.5
+np.nanstd(data, ddof=1)  # 1.708...
+    </div>
+  </details>
+
+  <details>
+    <summary>Using with Series</summary>
+    <pre style="margin-top:0.5rem;padding:0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:0.88rem;overflow-x:auto;">
+import { Series, nansum, nanmean, nancount } from "tsb";
+
+const s = new Series({ data: [10, null, 30, NaN, 50] });
+
+nancount(s);  // 3
+nansum(s);    // 90
+nanmean(s);   // 30
+</pre>
+    <div class="py-equiv">
+# Python / pandas equivalent
+import pandas as pd, numpy as np
+
+s = pd.Series([10, np.nan, 30, np.nan, 50])
+
+s.count()        # 3
+s.sum()          # 90.0
+s.mean()         # 30.0
+    </div>
+  </details>
+
+  <details>
+    <summary>Variance and std with ddof</summary>
+    <pre style="margin-top:0.5rem;padding:0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:0.88rem;overflow-x:auto;">
+import { nanvar, nanstd } from "tsb";
+
+const xs = [2, 4, 4, 4, 5, 5, 7, 9];
+
+// Sample (ddof=1, default)
+nanvar(xs);           // ≈ 4.571
+nanstd(xs);           // ≈ 2.138
+
+// Population (ddof=0)
+nanvar(xs, { ddof: 0 });  // 4.0
+nanstd(xs, { ddof: 0 });  // 2.0
+</pre>
+    <div class="py-equiv">
+# Python / pandas equivalent
+import numpy as np
+
+xs = [2, 4, 4, 4, 5, 5, 7, 9]
+
+np.nanvar(xs, ddof=1)  # 4.571...
+np.nanstd(xs, ddof=1)  # 2.138...
+
+np.nanvar(xs, ddof=0)  # 4.0
+np.nanstd(xs, ddof=0)  # 2.0
+    </div>
+  </details>
+</div>
+
+<!-- ── Comparison: skipna vs no-skipna ──────────────────────────────── -->
+<div class="card">
+  <h2>⚡ NaN Impact Demo</h2>
+  <p>See how NaN values affect results with and without nan-ignoring functions.</p>
+  <button onclick="runComparison()">Run Comparison</button>
+  <div id="compOutput" class="output" style="margin-top:0.75rem;min-height:6rem;"></div>
+</div>
+
+<script type="module">
+  // ── inline implementation (mirrors src/stats/nancumops.ts) ──────────
+  function toValues(input) {
+    if (Array.isArray(input)) return input;
+    return input.values ?? [];
+  }
+  function numericValues(input) {
+    return toValues(input).filter(v => typeof v === "number" && !Number.isNaN(v));
+  }
+  function sortedAsc(xs) { return [...xs].sort((a, b) => a - b); }
+
+  function nancount(input) { return numericValues(input).length; }
+  function nansum(input) {
+    const xs = numericValues(input);
+    return xs.length === 0 ? 0 : xs.reduce((s, x) => s + x, 0);
+  }
+  function nanmean(input) {
+    const xs = numericValues(input);
+    if (xs.length === 0) return NaN;
+    return xs.reduce((s, x) => s + x, 0) / xs.length;
+  }
+  function nanmedian(input) {
+    const xs = sortedAsc(numericValues(input));
+    const n = xs.length;
+    if (n === 0) return NaN;
+    const mid = Math.floor(n / 2);
+    return n % 2 === 1 ? xs[mid] : (xs[mid - 1] + xs[mid]) / 2;
+  }
+  function nanvar(input, ddof = 1) {
+    const xs = numericValues(input);
+    const n = xs.length;
+    if (n <= ddof) return NaN;
+    const mean = xs.reduce((s, x) => s + x, 0) / n;
+    return xs.reduce((ss, x) => ss + (x - mean) ** 2, 0) / (n - ddof);
+  }
+  function nanstd(input, ddof = 1) { return Math.sqrt(nanvar(input, ddof)); }
+  function nanmin(input) {
+    const xs = numericValues(input);
+    return xs.length === 0 ? NaN : Math.min(...xs);
+  }
+  function nanmax(input) {
+    const xs = numericValues(input);
+    return xs.length === 0 ? NaN : Math.max(...xs);
+  }
+  function nanprod(input) {
+    const xs = numericValues(input);
+    return xs.length === 0 ? 1 : xs.reduce((p, x) => p * x, 1);
+  }
+
+  function parseInput(str) {
+    return str.split(",").map(s => {
+      const t = s.trim();
+      if (t === "null" || t === "undefined") return null;
+      if (t === "NaN") return NaN;
+      const n = Number(t);
+      return Number.isNaN(n) ? null : n;
+    });
+  }
+
+  function fmt(n) {
+    if (typeof n !== "number") return String(n);
+    if (Number.isNaN(n)) return "NaN";
+    return Number.isInteger(n) ? String(n) : n.toPrecision(6);
+  }
+
+  window.runCalc = function() {
+    const data = parseInput(document.getElementById("inputValues").value);
+    const ddof = parseInt(document.getElementById("ddofSelect").value);
+    const lines = [
+      `Input (parsed): [${data.map(v => v === null ? "null" : fmt(v)).join(", ")}]`,
+      `nancount  : ${nancount(data)}`,
+      `nansum    : ${fmt(nansum(data))}`,
+      `nanmean   : ${fmt(nanmean(data))}`,
+      `nanmedian : ${fmt(nanmedian(data))}`,
+      `nanvar    : ${fmt(nanvar(data, ddof))}  (ddof=${ddof})`,
+      `nanstd    : ${fmt(nanstd(data, ddof))}  (ddof=${ddof})`,
+      `nanmin    : ${fmt(nanmin(data))}`,
+      `nanmax    : ${fmt(nanmax(data))}`,
+      `nanprod   : ${fmt(nanprod(data))}`,
+    ];
+    document.getElementById("calcOutput").textContent = lines.join("\n");
+  };
+
+  window.runComparison = function() {
+    const data = [1, 2, NaN, null, 3, 5, NaN, 4];
+    const cleanData = data.filter(v => typeof v === "number" && !Number.isNaN(v));
+
+    const lines = [
+      `Full array : [${data.map(v => v === null ? "null" : fmt(v)).join(", ")}]`,
+      `Clean array: [${cleanData.join(", ")}]`,
+      "",
+      "Standard JS Math (without NaN handling):",
+      `  [1,2,NaN,...].reduce(+)       = ${[1,2,NaN,null,3,5,NaN,4].reduce((a,b) => a + b, 0)}`,
+      `  Math.min(1,2,NaN,null,3,5)    = ${Math.min(1,2,NaN,null,3,5)}`,
+      "",
+      "tsb nan-ignoring functions:",
+      `  nansum    = ${fmt(nansum(data))}    (ignores NaN/null)`,
+      `  nanmean   = ${fmt(nanmean(data))}   (ignores NaN/null)`,
+      `  nanmin    = ${fmt(nanmin(data))}      (ignores NaN/null)`,
+      `  nanmax    = ${fmt(nanmax(data))}      (ignores NaN/null)`,
+      `  nancount  = ${nancount(data)} / ${data.length} values are valid`,
+    ];
+    document.getElementById("compOutput").textContent = lines.join("\n");
+  };
+
+  // run on load
+  window.runCalc();
+</script>
+
+</body>
+</html>

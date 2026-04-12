@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — quantile</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    a { color: #4f46e5; }
+    table { border-collapse: collapse; margin-top: 8px; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 12px; text-align: right; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>📐 quantile</h1>
+  <p>
+    <strong><code>quantileSeries</code></strong> / <strong><code>quantileDataFrame</code></strong> —
+    compute quantile(s) / percentile(s), mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.quantile.html"><code>Series.quantile()</code></a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.quantile.html"><code>DataFrame.quantile()</code></a>.
+  </p>
+  <p>Equivalent Python: <code>series.quantile(q=0.5)</code> / <code>df.quantile(q=0.5)</code></p>
+
+  <h2>1 · Scalar quantile (median)</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [1, 2, 3, 4, 5] });
+quantileSeries(s);          // default q=0.5 → 3
+quantileSeries(s, { q: 0.25 }); // → 2
+quantileSeries(s, { q: 0.75 }); // → 4</pre>
+    <div class="output" id="demo1"></div>
+  </div>
+
+  <h2>2 · Multiple quantile levels</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [1, 2, 3, 4, 5] });
+const q = quantileSeries(s, { q: [0.25, 0.5, 0.75] });
+// Series indexed by q-values: { 0.25: 2, 0.5: 3, 0.75: 4 }</pre>
+    <div class="output" id="demo2"></div>
+  </div>
+
+  <h2>3 · Interpolation methods</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [0, 10] });
+// q=0.5 → position 0.5 between indices 0 and 1
+quantileSeries(s, { q: 0.5, interpolation: "linear" });   // 5
+quantileSeries(s, { q: 0.5, interpolation: "lower" });    // 0
+quantileSeries(s, { q: 0.5, interpolation: "higher" });   // 10
+quantileSeries(s, { q: 0.5, interpolation: "midpoint" }); // 5
+quantileSeries(s, { q: 0.5, interpolation: "nearest" });  // 0</pre>
+    <div class="output" id="demo3"></div>
+  </div>
+
+  <h2>4 · NaN handling (skipna=true by default)</h2>
+  <div class="demo">
+    <pre>const s = new Series({ data: [1, null, 3, NaN, 5] });
+quantileSeries(s, { q: 0.5 });             // ignores null/NaN → 3
+quantileSeries(s, { q: 0.5, skipna: false }); // NaN propagates → NaN</pre>
+    <div class="output" id="demo4"></div>
+  </div>
+
+  <h2>5 · DataFrame — axis=0 (per-column quantiles)</h2>
+  <div class="demo">
+    <pre>const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 20, 30, 40] });
+quantileDataFrame(df, { q: 0.5 });
+// Series { a: 2.5, b: 25 }
+
+quantileDataFrame(df, { q: [0.25, 0.5, 0.75] });
+// DataFrame 3×2: rows=[0.25, 0.5, 0.75], cols=[a, b]</pre>
+    <div class="output" id="demo5"></div>
+  </div>
+
+  <h2>6 · DataFrame — axis=1 (per-row quantiles)</h2>
+  <div class="demo">
+    <pre>const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [3, 4, 5], c: [5, 6, 7] });
+quantileDataFrame(df, { axis: 1, q: 0.5 });
+// Series — median of each row: [3, 4, 5]</pre>
+    <div class="output" id="demo6"></div>
+  </div>
+
+  <h2>7 · Q=[0, 0.25, 0.5, 0.75, 1] summary table</h2>
+  <div class="demo">
+    <pre>const df = DataFrame.fromColumns({ score: [55, 70, 80, 88, 92, 95, 99] });
+quantileDataFrame(df, { q: [0, 0.25, 0.5, 0.75, 1] });
+// → summary statistics table</pre>
+    <div id="demo7"></div>
+  </div>
+
+  <script type="module">
+    import { Series, DataFrame, quantileSeries, quantileDataFrame } from "./tsb.js";
+
+    function show(id, val) {
+      document.getElementById(id).textContent = JSON.stringify(val, null, 2);
+    }
+
+    // Demo 1
+    {
+      const s = new Series({ data: [1, 2, 3, 4, 5] });
+      show("demo1", {
+        "q=0.5 (default)": quantileSeries(s),
+        "q=0.25": quantileSeries(s, { q: 0.25 }),
+        "q=0.75": quantileSeries(s, { q: 0.75 }),
+      });
+    }
+
+    // Demo 2
+    {
+      const s = new Series({ data: [1, 2, 3, 4, 5] });
+      const result = quantileSeries(s, { q: [0.25, 0.5, 0.75] });
+      const idx = [...result.index.values];
+      const vals = [...result.values];
+      const obj = {};
+      for (let i = 0; i < idx.length; i++) obj[idx[i]] = vals[i];
+      show("demo2", obj);
+    }
+
+    // Demo 3
+    {
+      const s = new Series({ data: [0, 10] });
+      show("demo3", {
+        linear: quantileSeries(s, { q: 0.5, interpolation: "linear" }),
+        lower: quantileSeries(s, { q: 0.5, interpolation: "lower" }),
+        higher: quantileSeries(s, { q: 0.5, interpolation: "higher" }),
+        midpoint: quantileSeries(s, { q: 0.5, interpolation: "midpoint" }),
+        nearest: quantileSeries(s, { q: 0.5, interpolation: "nearest" }),
+      });
+    }
+
+    // Demo 4
+    {
+      const s = new Series({ data: [1, null, 3, NaN, 5] });
+      show("demo4", {
+        "skipna=true": quantileSeries(s, { q: 0.5 }),
+        "skipna=false": quantileSeries(s, { q: 0.5, skipna: false }),
+      });
+    }
+
+    // Demo 5
+    {
+      const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 20, 30, 40] });
+      const scalar = quantileDataFrame(df, { q: 0.5 });
+      const multi = quantileDataFrame(df, { q: [0.25, 0.5, 0.75] });
+      show("demo5", {
+        "axis=0 single q=0.5": { a: [...scalar.col("a").values][0] ?? scalar.values[0], b: scalar.values[1] },
+        "axis=0 multi-q shape": multi.shape,
+        "axis=0 multi-q row 0.25 a": multi.col("a").values[0],
+        "axis=0 multi-q row 0.5 a": multi.col("a").values[1],
+        "axis=0 multi-q row 0.75 a": multi.col("a").values[2],
+      });
+    }
+
+    // Demo 6
+    {
+      const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [3, 4, 5], c: [5, 6, 7] });
+      const r = quantileDataFrame(df, { axis: 1, q: 0.5 });
+      show("demo6", { "axis=1 q=0.5 per row": [...r.values] });
+    }
+
+    // Demo 7 — summary table
+    {
+      const df = DataFrame.fromColumns({ score: [55, 70, 80, 88, 92, 95, 99] });
+      const result = quantileDataFrame(df, { q: [0, 0.25, 0.5, 0.75, 1] });
+      const table = document.createElement("table");
+      const labels = ["min (q=0)", "Q1 (q=0.25)", "median (q=0.5)", "Q3 (q=0.75)", "max (q=1)"];
+      const vals = [...result.col("score").values];
+      let html = "<thead><tr><th>Statistic</th><th>score</th></tr></thead><tbody>";
+      for (let i = 0; i < labels.length; i++) {
+        html += `<tr><td>${labels[i]}</td><td>${vals[i]}</td></tr>`;
+      }
+      html += "</tbody>";
+      table.innerHTML = html;
+      document.getElementById("demo7").appendChild(table);
+    }
+  </script>
+</body>
+</html>

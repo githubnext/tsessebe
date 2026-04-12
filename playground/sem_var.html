@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — sem_var</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    a { color: #4f46e5; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>📊 Variance &amp; Standard Error (sem_var)</h1>
+  <p>
+    <strong><code>varSeries</code></strong> / <strong><code>semSeries</code></strong> /
+    <strong><code>varDataFrame</code></strong> / <strong><code>semDataFrame</code></strong> —
+    compute sample/population variance and standard error of the mean, mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.var.html"><code>Series.var()</code></a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.sem.html"><code>Series.sem()</code></a>.
+  </p>
+  <p>Equivalent Python: <code>series.var(ddof=1)</code> / <code>series.sem()</code></p>
+
+  <h2>1 · Sample variance (ddof=1)</h2>
+  <div class="demo">
+    <pre>import { Series, varSeries } from "tsb";
+
+const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9] });
+varSeries(s);           // 4.0  (sample variance, ddof=1)
+varSeries(s, { ddof: 0 }); // 3.5  (population variance, ddof=0)</pre>
+    <div class="output">varSeries(s)           → 4.0
+varSeries(s, {ddof:0}) → 3.5</div>
+  </div>
+
+  <h2>2 · Standard error of the mean</h2>
+  <div class="demo">
+    <pre>import { semSeries } from "tsb";
+
+// SEM = sqrt(var / n)
+semSeries(s); // sqrt(4 / 8) ≈ 0.7071</pre>
+    <div class="output">semSeries(s) ≈ 0.7071</div>
+  </div>
+
+  <h2>3 · Handling missing values</h2>
+  <div class="demo">
+    <pre>const s2 = new Series({ data: [1, 2, 3, null, 5] });
+
+varSeries(s2);                 // skipna=true (default): ignores null
+varSeries(s2, { skipna: false }); // propagates NaN when null present
+varSeries(s2, { minCount: 5 });   // NaN: need 5 valid values but only 4</pre>
+    <div class="output">varSeries(s2)                  → 2.9167 (approx)
+varSeries(s2, {skipna:false})  → NaN
+varSeries(s2, {minCount:5})    → NaN</div>
+  </div>
+
+  <h2>4 · DataFrame column-wise variance</h2>
+  <div class="demo">
+    <pre>import { DataFrame, varDataFrame, semDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3],
+  b: [10, 20, 30],
+});
+
+varDataFrame(df);          // Series { a: 1, b: 100 }
+semDataFrame(df);          // Series { a: sqrt(1/3), b: sqrt(100/3) }
+varDataFrame(df, { axis: 1 }); // row-wise variance</pre>
+    <div class="output">varDataFrame(df)   → a: 1.0, b: 100.0
+semDataFrame(df)   → a: ≈0.577, b: ≈5.774
+varDataFrame(df, {axis:1}) → row0: 20.25, row1: 81.0, row2: 182.25</div>
+  </div>
+
+  <h2>5 · numericOnly — skip non-numeric columns</h2>
+  <div class="demo">
+    <pre>const df2 = DataFrame.fromColumns({
+  score: [10, 20, 30],
+  label: ["A", "B", "C"],
+});
+
+varDataFrame(df2, { numericOnly: true });
+// Only includes "score", excludes "label"</pre>
+    <div class="output">varDataFrame(df2, {numericOnly:true}) → score: 100.0</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Rolling Apply &amp; Multi-Aggregation</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 860px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        line-height: 1.6;
+        color: #1a1a1a;
+      }
+      h1 { color: #0d47a1; }
+      h2 { color: #1565c0; border-bottom: 2px solid #e3f2fd; padding-bottom: 0.25rem; }
+      pre {
+        background: #f5f5f5;
+        border-left: 4px solid #0d47a1;
+        padding: 1rem;
+        overflow-x: auto;
+        border-radius: 4px;
+      }
+      code { font-family: "Fira Code", "Cascadia Code", monospace; font-size: 0.9em; }
+      .demo {
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+      }
+      .demo h3 { margin-top: 0; color: #2e7d32; }
+      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+      th, td { border: 1px solid #ccc; padding: 0.4rem 0.75rem; text-align: left; }
+      th { background: #e3f2fd; }
+      .note { background: #fff9c4; border: 1px solid #f9a825; border-radius: 4px; padding: 0.75rem 1rem; }
+      a { color: #0d47a1; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — Rolling Apply &amp; Multi-Aggregation</h1>
+    <p>
+      Standalone functions for applying custom aggregation logic over sliding
+      windows, mirroring
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.core.window.rolling.Rolling.apply.html">
+        <code>pandas.Series.rolling().apply()</code>
+      </a>
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.core.window.rolling.Rolling.agg.html">
+        <code>Rolling.agg()</code>
+      </a>.
+    </p>
+
+    <h2>1. <code>rollingApply</code> — Custom Function Per Window</h2>
+    <p>
+      Apply any aggregation function to each rolling window.  The function
+      receives the <strong>valid (non-null, non-NaN) numeric values</strong>
+      in the window and must return a single number.
+    </p>
+    <pre><code>import { rollingApply } from "tsb";
+
+const prices = new Series({ data: [10, 12, 11, 15, 14, 16], name: "price" });
+
+// Custom: range (max - min) over each 3-day window
+const range = (w) =&gt; Math.max(...w) - Math.min(...w);
+
+rollingApply(prices, 3, range).toArray();
+// [null, null, 2, 4, 4, 5]
+//  ↑↑ insufficient data (need 3 observations)</code></pre>
+
+    <div class="demo">
+      <h3>Options</h3>
+      <table>
+        <thead>
+          <tr><th>Option</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>minPeriods</code></td><td><code>window</code></td><td>Minimum valid observations to compute (null otherwise)</td></tr>
+          <tr><td><code>center</code></td><td><code>false</code></td><td>Centre the window (symmetric) instead of trailing</td></tr>
+          <tr><td><code>raw</code></td><td><code>false</code></td><td>Pass full window including nulls (filtered to valid nums before fn call)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <pre><code>// minPeriods=1 → start computing from the very first position
+rollingApply(prices, 3, range, { minPeriods: 1 }).toArray();
+// [0, 2, 2, 4, 4, 5]
+
+// center=true → symmetric window around each point
+rollingApply(prices, 3, range, { center: true }).toArray();
+// [null, 2, 4, 4, 5, null]</code></pre>
+
+    <h2>2. <code>rollingAgg</code> — Multiple Aggregations at Once</h2>
+    <p>
+      Apply several named aggregation functions in a single pass over a Series,
+      returning a <code>DataFrame</code> where each column holds one
+      aggregation result.
+    </p>
+    <pre><code>import { rollingAgg } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8] });
+
+const result = rollingAgg(s, 3, {
+  mean: (w) =&gt; w.reduce((a, b) =&gt; a + b, 0) / w.length,
+  max:  (w) =&gt; Math.max(...w),
+  min:  (w) =&gt; Math.min(...w),
+  range:(w) =&gt; Math.max(...w) - Math.min(...w),
+});
+
+// result is a DataFrame with columns: "mean", "max", "min", "range"
+// result.col("mean").toArray() → [null, null, 2, 3, 4, 5, 6, 7]
+// result.col("range").toArray() → [null, null, 2, 2, 2, 2, 2, 2]</code></pre>
+
+    <div class="note">
+      <strong>Pandas equivalent:</strong><br />
+      <code>s.rolling(3).agg({"mean": np.mean, "max": np.max, "min": np.min})</code>
+    </div>
+
+    <h2>3. <code>dataFrameRollingApply</code> — Apply Per Column</h2>
+    <p>
+      Apply a single custom function independently to each column of a
+      DataFrame, returning a new DataFrame of the same shape.
+    </p>
+    <pre><code>import { dataFrameRollingApply } from "tsb";
+
+const df = DataFrame.fromColumns({
+  open:  [100, 102, 101, 105, 103],
+  close: [101, 103, 100, 106, 104],
+});
+
+// Pairwise range within each 2-step window per column
+const range = (w) =&gt; Math.max(...w) - Math.min(...w);
+
+dataFrameRollingApply(df, 2, range);
+//   open  close
+// 0 null  null
+// 1    2     2
+// 2    1     3
+// 3    4     6
+// 4    2     2</code></pre>
+
+    <h2>4. <code>dataFrameRollingAgg</code> — Multi-Agg Per Column</h2>
+    <p>
+      Apply multiple named aggregation functions to every column of a
+      DataFrame.  The result has columns named
+      <code>{originalColumn}_{aggName}</code>.
+    </p>
+    <pre><code>import { dataFrameRollingAgg } from "tsb";
+
+const df = DataFrame.fromColumns({
+  A: [1, 2, 3, 4, 5],
+  B: [10, 20, 30, 40, 50],
+});
+
+const out = dataFrameRollingAgg(df, 3, {
+  sum:  (w) =&gt; w.reduce((a, b) =&gt; a + b, 0),
+  mean: (w) =&gt; w.reduce((a, b) =&gt; a + b, 0) / w.length,
+});
+
+// Columns: "A_sum", "A_mean", "B_sum", "B_mean"
+// A_sum:  [null, null, 6, 9, 12]
+// A_mean: [null, null, 2, 3,  4]
+// B_sum:  [null, null, 60, 90, 120]
+// B_mean: [null, null, 20, 30,  40]</code></pre>
+
+    <h2>Comparison with pandas</h2>
+    <table>
+      <thead>
+        <tr><th>tsb</th><th>pandas</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>rollingApply(s, w, fn)</code></td>
+          <td><code>s.rolling(w).apply(fn, raw=True)</code></td>
+        </tr>
+        <tr>
+          <td><code>rollingApply(s, w, fn, {minPeriods:1})</code></td>
+          <td><code>s.rolling(w, min_periods=1).apply(fn)</code></td>
+        </tr>
+        <tr>
+          <td><code>rollingAgg(s, w, {f1, f2})</code></td>
+          <td><code>s.rolling(w).agg({"f1": f1, "f2": f2})</code></td>
+        </tr>
+        <tr>
+          <td><code>dataFrameRollingApply(df, w, fn)</code></td>
+          <td><code>df.rolling(w).apply(fn)</code></td>
+        </tr>
+        <tr>
+          <td><code>dataFrameRollingAgg(df, w, {f1, f2})</code></td>
+          <td><code>df.rolling(w).agg({"f1": f1, "f2": f2})</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Use case: Bollinger Band width</h2>
+    <pre><code>import { rollingAgg } from "tsb";
+
+// Bollinger Band width = (upper - lower) / middle
+// where upper = mean + 2·std, lower = mean - 2·std
+const prices = new Series({
+  data: [20, 21, 22, 20, 19, 21, 23, 24, 22, 21],
+  name: "price",
+});
+
+const stats = rollingAgg(prices, 5, {
+  mean: (w) =&gt; w.reduce((a, b) =&gt; a + b, 0) / w.length,
+  std: (w) =&gt; {
+    const m = w.reduce((a, b) =&gt; a + b, 0) / w.length;
+    return Math.sqrt(w.reduce((a, b) =&gt; a + (b - m) ** 2, 0) / (w.length - 1));
+  },
+});
+
+// Bollinger Band width = 4 * std / mean
+const bw = stats.col("std").toArray().map((std, i) =&gt; {
+  const mean = stats.col("mean").toArray()[i];
+  if (std === null || mean === null || mean === 0) return null;
+  return (4 * (std as number)) / (mean as number);
+});</code></pre>
+
+    <p>
+      <a href="index.html">← Back to tsb playground index</a>
+    </p>
+  </body>
+</html>
