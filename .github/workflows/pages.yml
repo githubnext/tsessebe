@@ -36,6 +36,13 @@ jobs:
       - name: Bundle TypeScript compiler for offline playground
         run: cp node_modules/typescript/lib/typescript.js ./playground/dist/typescript.js
 
+      - name: Copy benchmark results to playground
+        run: |
+          mkdir -p ./playground/benchmarks
+          if [ -f benchmarks/results.json ]; then
+            cp benchmarks/results.json ./playground/benchmarks/results.json
+          fi
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
