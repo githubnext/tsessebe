@@ -179,10 +179,10 @@ steps:
       print(f"Found {len(prs)} open PR(s)")
 
       if not prs:
-          print("No open PRs. Exiting.")
+          print("No open PRs. Nothing to do.")
           with open(output_file, "w") as f:
               json.dump({"selected": None, "reason": "no_open_prs"}, f)
-          sys.exit(1)
+          sys.exit(0)
 
       # Evaluate each PR deterministically (sorted by PR number ascending)
       candidates = []
@@ -257,8 +257,8 @@ steps:
           print(f"    Issues: {selected['issues']}")
           print(f"    Attempt: {selected['attempts'] + 1}/{MAX_ATTEMPTS}")
       else:
-          print("\nNo PRs need attention. Exiting.")
-          sys.exit(1)
+          print("\nNo PRs need attention. Nothing to do.")
+          sys.exit(0)
       PYEOF
 
 features:
@@ -282,6 +282,8 @@ A pre-flight step has already identified a PR that needs attention. Read the sel
    - `selected.head_branch` — the PR's branch name
    - `selected.base_branch` — the target branch (usually `main`)
    - `selected.attempts` — how many times we've already tried on this SHA
+
+   > If `selected` is `null`, no PRs need attention right now. Call the **noop** tool with a message like "All PRs are healthy — nothing to fix." and stop.
 
 2. The pre-flight step already checks out `selected.head_branch` as a named local tracking branch before you start. Keep working on that branch (do not switch back to `main` or use detached HEAD).
 
