@@ -367,7 +367,7 @@ export function jsonNormalize(
   }
 
   // Build Series columns and infer dtypes
-  const seriesMap: Record<string, Series> = {};
+  const seriesMap = new Map<string, Series<Scalar>>();
   for (const [col, vals] of Object.entries(colData)) {
     let dtype: Dtype;
     if (vals.every((v) => v === null || typeof v === "number")) {
@@ -377,8 +377,8 @@ export function jsonNormalize(
     } else {
       dtype = Dtype.object;
     }
-    seriesMap[col] = new Series({ data: vals, name: col, dtype });
+    seriesMap.set(col, new Series({ data: vals, name: col, dtype }));
   }
 
-  return new DataFrame(seriesMap, { index: new RangeIndex(rows.length) });
+  return new DataFrame(seriesMap, new RangeIndex(rows.length));
 }
