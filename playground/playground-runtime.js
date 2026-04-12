@@ -8,9 +8,42 @@
  *   2. Loads the TypeScript compiler (local bundle first, CDN fallback)
  *   3. Converts playground blocks into editable editors with Run/Reset buttons
  *   4. Transforms imports, transpiles TS → JS, and executes with output capture
+ *   5. Shows equivalent Python/pandas code in a switchable tab (read-only)
+ *   6. Reports execution timing for each code run
  *
  * No WASM needed — the TypeScript compiler runs natively in JavaScript.
  */
+
+// ── Inject tab-related CSS ─────────────────────────────────────────
+
+(function injectTabStyles() {
+  var style = document.createElement("style");
+  style.textContent = [
+    ".playground-tabs { display: flex; gap: 0; margin-bottom: -1px; position: relative; z-index: 1; }",
+    ".playground-tab {",
+    "  padding: 0.35rem 0.9rem; font-size: 0.8rem; font-weight: 500;",
+    "  border: 1px solid #30363d; border-bottom: none;",
+    "  border-radius: 0.4rem 0.4rem 0 0; cursor: pointer;",
+    "  background: #0d1117; color: #8b949e; transition: background 0.15s, color 0.15s;",
+    "}",
+    ".playground-tab:hover { background: #161b22; color: #e6edf3; }",
+    ".playground-tab.active { background: #1c2128; color: #58a6ff; border-bottom-color: #1c2128; }",
+    ".playground-tab-python.active { color: #3572A5; }",
+    ".playground-python-view {",
+    "  display: none; width: 100%; background: #0d1117; color: #e6edf3;",
+    "  border: 1px solid #30363d; border-top: none; border-bottom: none;",
+    "  padding: 1rem; font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;",
+    "  font-size: 0.875rem; line-height: 1.55; white-space: pre; overflow-x: auto;",
+    "  tab-size: 4;",
+    "}",
+    ".playground-python-view.active { display: block; }",
+    ".playground-timing {",
+    "  font-size: 0.75rem; color: #8b949e; margin-left: auto; font-family: system-ui, sans-serif;",
+    "}",
+    ".playground-timing .timing-value { color: #3fb950; font-weight: 600; }",
+  ].join("\n");
+  document.head.appendChild(style);
+})();
 
 // ── Load TypeScript compiler (local bundle → CDN fallback) ─────────
 
@@ -169,6 +202,104 @@ function setEditorCode(editor, code) {
   }
 }
 
+// ── Syntax highlighting ────────────────────────────────────────────
+
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+var HL_KEYWORDS =
+  "import|from|export|default|const|let|var|function|return|if|else|for|" +
+  "while|do|switch|case|break|continue|throw|try|catch|finally|new|class|" +
+  "extends|implements|interface|type|enum|as|typeof|instanceof|in|of|void|" +
+  "async|await|yield|static|get|set|super|delete|namespace";
+var HL_LITERALS = "true|false|null|undefined|this|NaN|Infinity";
+var HL_LITERALS_SET = {};
+HL_LITERALS.split("|").forEach(function (w) {
+  HL_LITERALS_SET[w] = true;
+});
+
+var HL_REGEX = new RegExp(
+  "(" +
+    "\\/\\/[^\\n]*" +
+    "|\\/\\*[\\s\\S]*?\\*\\/" +
+    '|"(?:[^"\\\\]|\\\\.)*"' +
+    "|'(?:[^'\\\\]|\\\\.)*'" +
+    "|`(?:[^`\\\\]|\\\\.)*`" +
+    "|\\b(?:" +
+    HL_KEYWORDS +
+    ")\\b" +
+    "|\\b(?:" +
+    HL_LITERALS +
+    ")\\b" +
+    "|\\b\\d+(?:\\.\\d+)?(?:e[+-]?\\d+)?\\b" +
+    ")",
+  "g",
+);
+
+function highlightCode(code) {
+  var html = "";
+  var lastIndex = 0;
+  HL_REGEX.lastIndex = 0;
+  var match;
+  while ((match = HL_REGEX.exec(code)) !== null) {
+    if (match.index > lastIndex) {
+      html += escapeHtml(code.slice(lastIndex, match.index));
+    }
+    var token = match[0];
+    var cls;
+    var ch = token.charAt(0);
+    if (ch === "/" && (token.charAt(1) === "/" || token.charAt(1) === "*")) {
+      cls = "hl-comment";
+    } else if (ch === '"' || ch === "'" || ch === "`") {
+      cls = "hl-string";
+    } else if (/^\d/.test(token)) {
+      cls = "hl-number";
+    } else if (HL_LITERALS_SET[token]) {
+      cls = "hl-literal";
+    } else {
+      cls = "hl-keyword";
+    }
+    html += '<span class="' + cls + '">' + escapeHtml(token) + "</span>";
+    lastIndex = HL_REGEX.lastIndex;
+  }
+  if (lastIndex < code.length) {
+    html += escapeHtml(code.slice(lastIndex));
+  }
+  return html;
+}
+
+function injectHighlightStyles() {
+  var style = document.createElement("style");
+  style.textContent =
+    ".editor-wrapper{position:relative}" +
+    ".editor-highlight{" +
+    "position:absolute;top:0;left:0;right:0;bottom:0;" +
+    "margin:0;pointer-events:none;z-index:1;" +
+    "background:transparent;" +
+    "border:1px solid transparent;border-top:none;border-bottom:none;" +
+    "border-radius:0;" +
+    "padding:1rem;" +
+    "font-family:var(--font-mono,'Cascadia Code','Fira Code','JetBrains Mono',monospace);" +
+    "font-size:0.875rem;line-height:1.55;" +
+    "white-space:pre;tab-size:2;overflow:hidden;" +
+    "color:#e6edf3;" +
+    "}" +
+    ".playground-editor.editor-transparent{" +
+    "color:transparent!important;" +
+    "caret-color:#e6edf3;" +
+    "}" +
+    ".hl-keyword{color:#ff7b72}" +
+    ".hl-string{color:#a5d6ff}" +
+    ".hl-comment{color:#8b949e;font-style:italic}" +
+    ".hl-number{color:#79c0ff}" +
+    ".hl-literal{color:#79c0ff}";
+  document.head.appendChild(style);
+}
+
 // ── Playground block setup ─────────────────────────────────────────
 
 function setupBlock(block, ts) {
@@ -176,15 +307,122 @@ function setupBlock(block, ts) {
   var runBtn = block.querySelector(".playground-run");
   var resetBtn = block.querySelector(".playground-reset");
   var output = block.querySelector(".playground-output");
+  var pythonSource = block.querySelector(".playground-python");
   if (!editor || !runBtn || !output) return;
 
   var originalCode = getEditorCode(editor);
 
-  // Auto-resize textarea to fit content
+  // Normalize: convert contenteditable <pre> to <textarea>
+  if (!isTextarea(editor)) {
+    var ta = document.createElement("textarea");
+    ta.className = editor.className;
+    ta.value = originalCode;
+    ta.spellcheck = false;
+    ta.setAttribute("autocomplete", "off");
+    ta.setAttribute("autocorrect", "off");
+    ta.setAttribute("autocapitalize", "off");
+    editor.parentNode.replaceChild(ta, editor);
+    editor = ta;
+  }
+  editor.spellcheck = false;
+
+  // ── Python tab setup ───────────────────────────────
+  if (pythonSource) {
+    var pythonCode = getEditorCode(pythonSource);
+    pythonSource.style.display = "none"; // hide the source textarea
+
+    // Create tab bar
+    var header = block.querySelector(".playground-header");
+    var tabBar = document.createElement("div");
+    tabBar.className = "playground-tabs";
+
+    var tsTab = document.createElement("div");
+    tsTab.className = "playground-tab playground-tab-ts active";
+    tsTab.textContent = "TypeScript";
+
+    var pyTab = document.createElement("div");
+    pyTab.className = "playground-tab playground-tab-python";
+    pyTab.textContent = "Python";
+
+    tabBar.appendChild(tsTab);
+    tabBar.appendChild(pyTab);
+
+    // Insert tab bar before the header
+    block.insertBefore(tabBar, header);
+
+    // Hide the label in the header since tabs show the language
+    var label = header.querySelector(".playground-label");
+    if (label) label.style.display = "none";
+
+    // Create Python read-only view
+    var pythonView = document.createElement("pre");
+    pythonView.className = "playground-python-view";
+    pythonView.textContent = pythonCode;
+
+    // Insert Python view after editor
+    editor.parentNode.insertBefore(pythonView, editor.nextSibling);
+
+    // Tab switching (use wrapper to also hide/show the highlight overlay)
+    tsTab.addEventListener("click", function () {
+      tsTab.classList.add("active");
+      pyTab.classList.remove("active");
+      var editorWrapper = editor.closest(".editor-wrapper");
+      if (editorWrapper) {
+        editorWrapper.style.display = "";
+      } else {
+        editor.style.display = "";
+      }
+      pythonView.classList.remove("active");
+      runBtn.style.display = "";
+      if (resetBtn) resetBtn.style.display = "";
+    });
+
+    pyTab.addEventListener("click", function () {
+      pyTab.classList.add("active");
+      tsTab.classList.remove("active");
+      var editorWrapper = editor.closest(".editor-wrapper");
+      if (editorWrapper) {
+        editorWrapper.style.display = "none";
+      } else {
+        editor.style.display = "none";
+      }
+      pythonView.classList.add("active");
+      runBtn.style.display = "none";
+      if (resetBtn) resetBtn.style.display = "none";
+    });
+  }
+
+  // Wrap editor in a container and add a highlight overlay
+  var wrapper = document.createElement("div");
+  wrapper.className = "editor-wrapper";
+  editor.parentNode.insertBefore(wrapper, editor);
+  wrapper.appendChild(editor);
+
+  var highlightPre = document.createElement("pre");
+  highlightPre.className = "editor-highlight";
+  highlightPre.setAttribute("aria-hidden", "true");
+  wrapper.appendChild(highlightPre);
+
+  editor.classList.add("editor-transparent");
+
+  function syncHighlight() {
+    highlightPre.innerHTML = highlightCode(editor.value) + "\n";
+  }
+
+  function syncScroll() {
+    highlightPre.scrollTop = editor.scrollTop;
+    highlightPre.scrollLeft = editor.scrollLeft;
+  }
+
+  editor.addEventListener("input", syncHighlight);
+  editor.addEventListener("scroll", syncScroll);
+  syncHighlight();
+
+  // ── Auto-resize textarea to fit content ────────────
   function autoResize() {
-    if (!isTextarea(editor)) return;
     editor.style.height = "auto";
     editor.style.height = editor.scrollHeight + 2 + "px";
+    syncScroll();
   }
   editor.addEventListener("input", autoResize);
   autoResize();
@@ -193,17 +431,12 @@ function setupBlock(block, ts) {
   editor.addEventListener("keydown", function (e) {
     if (e.key === "Tab") {
       e.preventDefault();
-      if (isTextarea(editor)) {
-        var start = editor.selectionStart;
-        var end = editor.selectionEnd;
-        editor.value =
-          editor.value.substring(0, start) +
-          "  " +
-          editor.value.substring(end);
-        editor.selectionStart = editor.selectionEnd = start + 2;
-      } else {
-        document.execCommand("insertText", false, "  ");
-      }
+      var start = editor.selectionStart;
+      var end = editor.selectionEnd;
+      editor.value =
+        editor.value.substring(0, start) + "  " + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + 2;
+      syncHighlight();
     }
     // Ctrl+Enter or Cmd+Enter runs the code
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -212,16 +445,31 @@ function setupBlock(block, ts) {
     }
   });
 
-  // Run button handler
+  // Create timing display element
+  var timingEl = document.createElement("span");
+  timingEl.className = "playground-timing";
+  var actionsEl = block.querySelector(".playground-actions");
+  if (actionsEl) {
+    actionsEl.parentNode.insertBefore(timingEl, actionsEl);
+  }
+
+  // Run button handler (with timing)
   runBtn.addEventListener("click", function () {
     output.classList.remove("error");
     output.classList.add("active");
+    timingEl.innerHTML = "";
     try {
-      var code = getEditorCode(editor);
+      var code = editor.value;
+      var startTime = performance.now();
       var js = transformCode(code, ts);
       var result = executeCode(js);
+      var elapsed = performance.now() - startTime;
       output.textContent =
         result || "(no output \u2014 add console.log() to see results)";
+      timingEl.innerHTML =
+        "\u23f1 <span class=\"timing-value\">" +
+        elapsed.toFixed(1) +
+        "ms</span>";
     } catch (err) {
       output.textContent = "\u274c " + err.message;
       output.classList.add("error");
@@ -231,9 +479,11 @@ function setupBlock(block, ts) {
   // Reset button handler
   if (resetBtn) {
     resetBtn.addEventListener("click", function () {
-      setEditorCode(editor, originalCode);
+      editor.value = originalCode;
       output.textContent = "";
       output.classList.remove("error", "active");
+      syncHighlight();
+      timingEl.innerHTML = "";
       autoResize();
     });
   }
@@ -258,6 +508,7 @@ async function initPlayground() {
     var ts = await loadTypeScript();
 
     setStatus("Initializing editors\u2026");
+    injectHighlightStyles();
 
     // Initialize all playground blocks on the page
     var blocks = document.querySelectorAll(".playground-block");

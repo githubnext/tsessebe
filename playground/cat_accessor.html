@@ -212,6 +212,22 @@ console.log("codes:", size.cat.codes.toArray());
 
 console.log("nCategories:", size.cat.nCategories);
 console.log("ordered:", size.cat.ordered);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+size = pd.Series(
+    ["M", "S", "L", "S", "M", "XL"],
+    name="size",
+    dtype="category",
+)
+
+# Sorted unique categories
+print("categories:", size.cat.categories.tolist())
+
+# Integer codes (position in categories array; -1 for null)
+print("codes:", size.cat.codes.tolist())
+
+print("nCategories:", len(size.cat.categories))
+print("ordered:", size.cat.ordered)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -237,6 +253,13 @@ const s = new Series({ data: ["a", null, "b", null, "a"] });
 console.log("categories:", [...s.cat.categories.values]);
 console.log("codes:", s.cat.codes.toArray());
 console.log("nCategories:", s.cat.nCategories);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["a", None, "b", None, "a"], dtype="category")
+
+print("categories:", s.cat.categories.tolist())
+print("codes:", s.cat.codes.tolist())
+print("nCategories:", len(s.cat.categories))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -267,6 +290,18 @@ console.log("after add:", [...s2.cat.categories.values]);
 const s3 = s.cat.removeCategories(["red"]);
 console.log("after remove values:", s3.toArray());
 console.log("after remove cats:", [...s3.cat.categories.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["red", "blue", "red"], dtype="category")
+
+# Add a new category (not yet in data)
+s2 = s.cat.add_categories(["green"])
+print("after add:", s2.cat.categories.tolist())
+
+# Remove a category — matching values become null
+s3 = s.cat.remove_categories(["red"])
+print("after remove values:", s3.tolist())
+print("after remove cats:", s3.cat.categories.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -294,6 +329,16 @@ console.log("before:", s2.cat.nCategories);
 const s3 = s2.cat.removeUnusedCategories();
 console.log("after:", s3.cat.nCategories);
 console.log("cats:", [...s3.cat.categories.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["a", "b"], dtype="category")
+# Manually add extra categories
+s2 = s.cat.add_categories(["c", "d", "e"])
+print("before:", len(s2.cat.categories))
+
+s3 = s2.cat.remove_unused_categories()
+print("after:", len(s3.cat.categories))
+print("cats:", s3.cat.categories.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -323,6 +368,18 @@ console.log("renamed cats:", [...s2.cat.categories.values]);
 // Array replacement (same order as categories)
 const s3 = s.cat.renameCategories(["H", "L", "M"]);
 console.log("array rename:", s3.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["low", "mid", "high", "mid"], dtype="category")
+
+# Object mapping
+s2 = s.cat.rename_categories({"low": "L", "mid": "M", "high": "H"})
+print("renamed values:", s2.tolist())
+print("renamed cats:", s2.cat.categories.tolist())
+
+# Array replacement (same order as categories)
+s3 = s.cat.rename_categories(["H", "L", "M"])
+print("array rename:", s3.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -354,6 +411,18 @@ console.log("set cats:", s2.toArray());
 const s3 = s.cat.reorderCategories(["XS", "S", "M", "L", "XL"], true);
 console.log("ordered:", s3.cat.ordered);
 console.log("custom order:", [...s3.cat.categories.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["XS", "S", "M", "L", "XL"], dtype="category")
+
+# set_categories: restrict to a subset
+s2 = s.cat.set_categories(["S", "M", "L"])
+print("set cats:", s2.tolist())
+
+# reorder_categories: custom ordering (e.g., by size not alphabetically)
+s3 = s.cat.reorder_categories(["XS", "S", "M", "L", "XL"], ordered=True)
+print("ordered:", s3.cat.ordered)
+print("custom order:", s3.cat.categories.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -380,6 +449,14 @@ const gradesFull = grades.cat.addCategories(["D", "F"]);
 const counts = gradesFull.cat.valueCounts();
 console.log("categories:", [...gradesFull.cat.categories.values]);
 console.log("counts:", counts.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+grades = pd.Series(["A", "B", "A", "C", "B", "A"], dtype="category")
+grades_full = grades.cat.add_categories(["D", "F"])
+
+counts = grades_full.value_counts()
+print("categories:", grades_full.cat.categories.tolist())
+print("counts:", counts.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -411,6 +488,20 @@ console.log("categories:", [...ordered.cat.categories.values]);
 
 // bad=0, good=1, excellent=2
 console.log("codes:", ordered.cat.codes.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+rating = pd.Series(["good", "bad", "excellent", "good"], dtype="category")
+
+# Establish a meaningful order
+ordered = rating.cat.reorder_categories(
+    ["bad", "good", "excellent"], ordered=True
+)
+
+print("ordered:", ordered.cat.ordered)
+print("categories:", ordered.cat.categories.tolist())
+
+# bad=0, good=1, excellent=2
+print("codes:", ordered.cat.codes.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

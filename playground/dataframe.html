@@ -238,6 +238,28 @@ const df3 = DataFrame.from2D(
   ["a", "b"],
 );
 console.log("\nfrom2D col 'a' values:", df3.col("a").values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Dict of columns — most common
+df1 = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Carol"],
+    "age":   [30, 25, 35],
+    "score": [90, 80, 95],
+})
+print("DataFrame from dict:")
+print(df1.to_string())
+
+# from_records — list of dicts
+df2 = pd.DataFrame.from_records([
+    {"city": "London", "pop": 9_000_000},
+    {"city": "Tokyo",  "pop": 14_000_000},
+    {"city": "NYC",    "pop": 8_300_000},
+])
+print("\nfrom_records shape:", df2.shape)
+
+# From 2D array with column names
+df3 = pd.DataFrame([[1, 4], [2, 5], [3, 6]], columns=["a", "b"])
+print("\nfrom 2D col 'a' values:", df3["a"].values)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -269,6 +291,20 @@ console.log("size:", df.size);       // rows × cols
 console.log("empty:", df.empty);     // false
 console.log("index:", df.index.toString());
 console.log("columns:", df.columns.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Carol"],
+    "age":   [30, 25, 35],
+    "score": [90, 80, 95],
+})
+
+print("shape:", df.shape)      # (rows, cols)
+print("ndim:", df.ndim)        # always 2
+print("size:", df.size)        # rows × cols
+print("empty:", df.empty)      # False
+print("index:", df.index.tolist())
+print("columns:", df.columns.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -308,6 +344,27 @@ console.log("has('xyz'):", df.has("xyz"));
 
 // Chain into Series methods
 console.log("mean age:", df.col("age").mean());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Carol"],
+    "age":   [30, 25, 35],
+    "score": [90, 80, 95],
+})
+
+# df["col"] returns a Series — raises KeyError if missing
+print("df['age']:", df["age"].to_string())
+
+# .get("col") returns Series or default
+print("get('score'):", df.get("score").values)
+print("get('nope'):", df.get("nope"))
+
+# Check existence
+print("'name' in columns:", "name" in df.columns)
+print("'xyz' in columns:", "xyz" in df.columns)
+
+# Chain into Series methods
+print("mean age:", df["age"].mean())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -349,6 +406,29 @@ const labeled = DataFrame.fromColumns(
 );
 console.log("\nloc(['a', 'c']):");
 console.log(labeled.loc(["a", "c"]).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Carol", "Dave", "Eve"],
+    "score": [90, 80, 95, 70, 85],
+})
+
+print("head(2):")
+print(df.head(2).to_string())
+
+print("\ntail(2):")
+print(df.tail(2).to_string())
+
+print("\niloc[[0, 2, 4]]:")
+print(df.iloc[[0, 2, 4]].to_string())
+
+# loc uses index labels
+labeled = pd.DataFrame(
+    {"val": [10, 20, 30]},
+    index=["a", "b", "c"],
+)
+print("\nloc[['a', 'c']]:")
+print(labeled.loc[["a", "c"]].to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -395,6 +475,33 @@ console.log(selected.toString());
 const renamed = df.rename({ age: "years" });
 console.log("\nrename({ age: 'years' }):");
 console.log(renamed.columns.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Carol"],
+    "age":   [30, 25, 35],
+    "score": [90, 80, 95],
+})
+
+# assign — add or replace columns
+with_bonus = df.assign(bonus=[5, 10, 15])
+print("assign:")
+print(with_bonus.to_string())
+
+# drop — remove columns
+dropped = df.drop(columns=["score"])
+print("\ndrop(['score']):")
+print(dropped.to_string())
+
+# select — reorder / subset columns
+selected = df[["score", "name"]]
+print("\nselect(['score', 'name']):")
+print(selected.to_string())
+
+# rename — rename columns
+renamed = df.rename(columns={"age": "years"})
+print("\nrename({'age': 'years'}):")
+print(renamed.columns.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -432,6 +539,26 @@ console.log(df.dropna().toString());
 // fillna — replace nulls with a value
 console.log("\nfillna(0):");
 console.log(df.fillna(0).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "a": [1, None, 3],
+    "b": [4, 5, None],
+})
+
+print("isna():")
+print(df.isna().to_string())
+
+print("\nnotna():")
+print(df.notna().to_string())
+
+# dropna — keep only rows with no nulls
+print("\ndropna() shape:", df.dropna().shape)
+print(df.dropna().to_string())
+
+# fillna — replace nulls with a value
+print("\nfillna(0):")
+print(df.fillna(0).to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -466,6 +593,21 @@ console.log("count:", df.count().toString());
 
 console.log("\ndescribe():");
 console.log(df.describe().toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "a": [10, 20, 30],
+    "b": [1, 2, 3],
+})
+
+print("sum:  ", df.sum().to_string())
+print("mean: ", df.mean().to_string())
+print("min:  ", df.min().to_string())
+print("max:  ", df.max().to_string())
+print("count:", df.count().to_string())
+
+print("\ndescribe():")
+print(df.describe().to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -506,6 +648,28 @@ const labeled = DataFrame.fromColumns(
 );
 console.log("\nsortIndex():");
 console.log(labeled.sortIndex().toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob", "Carol"],
+    "score": [90, 80, 95],
+})
+
+# Sort ascending by score
+print("sort_values('score'):")
+print(df.sort_values("score").to_string())
+
+# Sort descending
+print("\nsort_values('score', ascending=False):")
+print(df.sort_values("score", ascending=False).to_string())
+
+# Sort by index
+labeled = pd.DataFrame(
+    {"val": [30, 10, 20]},
+    index=["c", "a", "b"],
+)
+print("\nsort_index():")
+print(labeled.sort_index().to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -548,6 +712,28 @@ console.log("\niterrows():");
 for (const [label, row] of df.iterrows()) {
   console.log(`  row ${label}:`, row.values);
 }</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "a": [1, 2, 3],
+    "b": [4, 5, 6],
+})
+
+# apply axis=0 — aggregate each column
+print("apply(sum, axis=0):", df.apply(sum, axis=0).to_string())
+
+# apply axis=1 — aggregate each row
+print("apply(sum, axis=1):", df.apply(sum, axis=1).to_string())
+
+# items() — iterate over (col_name, Series) pairs
+print("\nitems():")
+for name, col in df.items():
+    print(f"  {name}: sum = {col.sum()}")
+
+# iterrows() — iterate over (label, row_series) pairs
+print("\niterrows():")
+for label, row in df.iterrows():
+    print(f"  row {label}:", row.values)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -590,6 +776,29 @@ const reset = indexed.resetIndex();
 console.log("\nresetIndex():");
 console.log(reset.toString());
 console.log("columns:", reset.columns.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name":  ["Alice", "Bob"],
+    "score": [90, 80],
+})
+
+print("to_dict('records'):", df.to_dict("records"))
+print("to_dict('list'):", df.to_dict("list"))
+print("values:", df.values.tolist())
+
+# set_index — promote a column to the row index
+indexed = df.set_index("name")
+print("\nset_index('name'):")
+print(indexed.to_string())
+print("index values:", indexed.index.tolist())
+print("columns:", indexed.columns.tolist())
+
+# reset_index — restore a numeric index
+reset = indexed.reset_index()
+print("\nreset_index():")
+print(reset.to_string())
+print("columns:", reset.columns.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -622,6 +831,20 @@ console.log("\nTotal qty:", sales.col("qty").sum());
 console.log("Avg price:", sales.col("price").mean());
 console.log("\nSorted by price (desc):");
 console.log(sales.sortValues("price", false).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+# Build a DataFrame, explore, and transform!
+sales = pd.DataFrame([
+    {"product": "Widget", "qty": 100, "price": 9.99},
+    {"product": "Gadget", "qty": 50,  "price": 24.99},
+    {"product": "Doohickey", "qty": 200, "price": 4.99},
+])
+
+print(sales.to_string())
+print("\nTotal qty:", sales["qty"].sum())
+print("Avg price:", sales["price"].mean())
+print("\nSorted by price (desc):")
+print(sales.sort_values("price", ascending=False).to_string())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
