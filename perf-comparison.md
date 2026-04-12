@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T15:15:00Z |
-| Iteration Count | 8 |
-| Best Metric | 13 |
+| Last Run | 2026-04-12T15:46:00Z |
+| Iteration Count | 9 |
+| Best Metric | 22 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #pending |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -50,7 +50,9 @@
 - The safeoutputs and github MCP servers are consistently unavailable (401 Bad Credentials). No GitHub operations (create PR, create issue, push branch) are possible. Only the branch commits and state file updates persist.
 - Each iteration must beat `best_metric` from the state file. Since previous iterations' branches often don't persist on remote, each iteration must start from main (1 existing pair) and add enough new pairs to beat the best_metric. Adding 10+ pairs per iteration is reliable.
 - `playground/benchmarks.html` must handle null tsb values gracefully since tsb results require Bun and can't be produced in this environment. The JS checks for null before accessing `.mean_ms` and computes ratio only when both values are available.
-- On iteration 8, started from main (1 pair), added 12 pairs (including read_csv and series_string_ops) to reach metric=13.
+- On iteration 9, started from main (1 pair), added 21 pairs to reach metric=22. All 9 Future Directions consumed; updated with new targets.
+- `dataframe_apply` with row-wise lambda is slow in pandas (~47ms for 10k rows) — similar overhead expected for tsb. Reduced dataset to 10k rows for this benchmark.
+- `merge` (inner join on non-unique key) is slow in pandas (~60ms for 50k rows). This is a key benchmark to monitor tsb's hash-join implementation against.
 
 ---
 
@@ -63,19 +65,27 @@
 ## 🔭 Future Directions
 
 Good next functions to benchmark (roughly in priority order):
-1. `pivot_table` — pivot aggregation
-2. `ewm_mean` — exponentially weighted mean
-3. `dataframe_apply` — apply a function across rows/columns
-4. `series_fillna` — fill missing values
-5. `dataframe_dropna` — drop rows with missing values
-6. `dataframe_sort` — sort_values on a DataFrame by multiple columns
-7. `series_cumsum` — cumulative sum
-8. `series_shift` — shift values by n positions
-9. `dataframe_rename` — rename columns
+1. `melt` — unpivot a DataFrame from wide to long format
+2. `stack` / `unstack` — reshape using MultiIndex
+3. `cut` / `qcut` — binning operations on Series
+4. `resample` — time-series resampling
+5. `corr` — correlation matrix of a DataFrame
+6. `cov` — covariance matrix
+7. `expanding_mean` — expanding window mean
+8. `series_map` — element-wise map on a Series
+9. `dataframe_astype` — type casting columns
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 9 — 2026-04-12 15:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24310339206)
+
+- **Status**: ✅ Accepted
+- **Change**: Add 21 new benchmark pairs: `dataframe_creation`, `series_arithmetic`, `groupby_mean`, `series_sort`, `dataframe_filter`, `concat`, `merge`, `rolling_mean`, `describe`, `series_value_counts`, `read_csv`, `series_string_ops`, `pivot_table`, `ewm_mean`, `dataframe_apply`, `series_fillna`, `dataframe_dropna`, `dataframe_sort`, `series_cumsum`, `series_shift`, `dataframe_rename`.
+- **Metric**: 22 (previous best: 13, delta: +9)
+- **Commit**: 01c6563
+- **Notes**: Started from main (1 pair). Added all future directions from state file plus re-added previous iteration's pairs. Python results: dataframe_creation=5.1ms, series_arithmetic=0.76ms, groupby_mean=8.1ms, series_sort=5.1ms, dataframe_filter=0.50ms, concat=0.11ms, merge=60.4ms, rolling_mean=1.7ms, describe=5.5ms, series_value_counts=9.2ms, read_csv=30ms, series_string_ops=34ms, pivot_table=22.5ms, ewm_mean=1.8ms, dataframe_apply=47ms, series_fillna=0.19ms, dataframe_dropna=2.4ms, dataframe_sort=33ms, series_cumsum=1.1ms, series_shift=0.07ms, dataframe_rename=0.17ms.
 
 ### Iteration 8 — 2026-04-12 15:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24309758520)
 
