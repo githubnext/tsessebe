@@ -253,3 +253,5 @@ export {
   nanprod,
 } from "./stats/index.ts";
 export type { NanInput, NanAggOptions } from "./stats/index.ts";
+export { toDatetime } from "./stats/index.ts";
+export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./stats/index.ts";

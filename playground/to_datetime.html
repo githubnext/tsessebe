@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — toDatetime</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #222; }
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+      pre { background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 16px; overflow: auto; font-size: 0.85rem; }
+      code { font-family: "SFMono-Regular", Consolas, monospace; }
+      .tag { display: inline-block; background: #dbeafe; color: #1e40af; border-radius: 4px; padding: 1px 8px; font-size: 0.75rem; font-weight: bold; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+      th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+      th { background: #f6f8fa; }
+      textarea { width: 100%; font-family: monospace; font-size: 0.85rem; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+      .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; margin-top: 8px; min-height: 40px; white-space: pre; font-family: monospace; font-size: 0.85rem; }
+      button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
+      button:hover { background: #1d4ed8; }
+      a { color: #2563eb; }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">← tsb playground</a></p>
+    <h1>toDatetime <span class="tag">stats</span></h1>
+    <p>
+      Convert scalars, arrays, or <code>Series</code> values to JavaScript
+      <code>Date</code> objects — mirroring
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html"
+        ><code>pandas.to_datetime()</code></a
+      >.
+    </p>
+
+    <h2>Supported input formats</h2>
+    <table>
+      <tr><th>Format</th><th>Example</th><th>Result</th></tr>
+      <tr><td>ISO 8601 date</td><td><code>"2024-03-15"</code></td><td>Mar 15 2024</td></tr>
+      <tr><td>ISO 8601 datetime</td><td><code>"2024-03-15T12:00:00Z"</code></td><td>Mar 15 2024 12:00 UTC</td></tr>
+      <tr><td>US format (MM/DD/YYYY)</td><td><code>"01/15/2024"</code></td><td>Jan 15 2024</td></tr>
+      <tr><td>European (DD-MM-YYYY)</td><td><code>"15-03-2024"</code></td><td>Mar 15 2024</td></tr>
+      <tr><td>Compact (YYYYMMDD)</td><td><code>"20240315"</code></td><td>Mar 15 2024</td></tr>
+      <tr><td>Unix ms (number)</td><td><code>1710460800000</code></td><td>Mar 15 2024 00:00 UTC</td></tr>
+      <tr><td>Unix s (unit="s")</td><td><code>1710460800</code></td><td>Mar 15 2024 00:00 UTC</td></tr>
+      <tr><td>Date object</td><td><code>new Date(2024,2,15)</code></td><td>unchanged</td></tr>
+      <tr><td>null / undefined / NaN</td><td><code>null</code></td><td><code>null</code></td></tr>
+    </table>
+
+    <h2>Error handling</h2>
+    <table>
+      <tr><th>errors=</th><th>Behaviour</th></tr>
+      <tr><td><code>"raise"</code> (default)</td><td>Throws <code>TypeError</code> on unparseable input</td></tr>
+      <tr><td><code>"coerce"</code></td><td>Returns <code>null</code> on unparseable input</td></tr>
+      <tr><td><code>"ignore"</code></td><td>Returns the original value unchanged</td></tr>
+    </table>
+
+    <h2>Quick examples</h2>
+    <pre><code>import { toDatetime, Series } from "tsb";
+
+// Scalar
+toDatetime("2024-03-15");         // Date: Mar 15 2024
+toDatetime(1710460800000);        // Date from Unix ms
+toDatetime(1710460800, { unit: "s" }); // Date from Unix seconds
+toDatetime(null);                 // null
+toDatetime("nope", { errors: "coerce" }); // null
+toDatetime("nope", { errors: "ignore" }); // "nope"
+
+// Array
+toDatetime(["2024-01-01", null, "2024-06-15"]);
+// => [Date, null, Date]
+
+// Series
+const s = new Series({ data: ["2024-01-01", "2024-06-15", null] });
+toDatetime(s);
+// => Series&lt;Date | null&gt; with dtype=datetime</code></pre>
+
+    <h2>Python / pandas equivalent</h2>
+    <textarea rows="10" readonly>
+import pandas as pd
+
+# Scalar (returns Timestamp or NaT)
+pd.to_datetime("2024-03-15")
+pd.to_datetime(1710460800000, unit="ms")
+pd.to_datetime(None)          # NaT
+pd.to_datetime("nope", errors="coerce")   # NaT
+pd.to_datetime("nope", errors="ignore")   # "nope"
+
+# List
+pd.to_datetime(["2024-01-01", None, "2024-06-15"])
+
+# Series
+s = pd.Series(["2024-01-01", "2024-06-15", None])
+pd.to_datetime(s)
+    </textarea>
+
+    <h2>Live demo</h2>
+    <p>Enter a date string or number and click <em>Convert</em>:</p>
+    <input id="inp" type="text" value="2024-03-15" style="width:100%;padding:8px;font-size:0.9rem;border:1px solid #ddd;border-radius:6px;" />
+    <button onclick="runDemo()">Convert</button>
+    <div class="output" id="out">—</div>
+
+    <script type="module">
+      import { toDatetime, Series } from "https://esm.sh/tsb@0.0.1";
+
+      window.runDemo = function () {
+        const raw = document.getElementById("inp").value.trim();
+        const out = document.getElementById("out");
+        try {
+          const input = /^-?\d+$/.test(raw) ? Number(raw) : raw;
+          const result = toDatetime(input, { errors: "coerce" });
+          out.textContent = result === null ? "null" : result.toString();
+        } catch (e) {
+          out.textContent = "Error: " + e.message;
+        }
+      };
+    </script>
+  </body>
+</html>

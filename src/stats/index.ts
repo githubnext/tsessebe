@@ -171,3 +171,5 @@ export {
   nanprod,
 } from "./nancumops.ts";
 export type { NanInput, NanAggOptions } from "./nancumops.ts";
+export { toDatetime } from "./to_datetime.ts";
+export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./to_datetime.ts";
