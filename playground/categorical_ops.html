@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Categorical Ops</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.75rem;
+      resize: vertical;
+    }
+    button {
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 0.35rem;
+      padding: 0.5rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.75rem;
+    }
+    button:hover { opacity: 0.85; }
+    .output {
+      margin-top: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.75rem;
+      min-height: 3rem;
+    }
+    .output.error { color: var(--red); }
+    .output.ok { color: var(--green); }
+    table { border-collapse: collapse; font-family: var(--font-mono); font-size: 0.85rem; }
+    th, td { border: 1px solid var(--border); padding: 0.3rem 0.75rem; }
+    th { background: var(--surface); color: var(--accent); }
+  </style>
+</head>
+<body>
+<div id="playground-loading">
+  <div class="spinner"></div>
+  <span>Loading tsb runtime…</span>
+</div>
+
+<a class="back" href="index.html">← back to index</a>
+<h1>🏷️ Categorical Ops</h1>
+<p>
+  Standalone categorical utility functions that complement the <code>Series.cat</code> accessor.
+  Mirrors <code>pd.Categorical.from_codes</code>, set operations on categories, frequency helpers,
+  and cross-tabulation.
+</p>
+
+<!-- ── catFromCodes ─────────────────────────────────────────────────── -->
+<div class="card">
+  <h2><code>catFromCodes(codes, categories, opts?)</code></h2>
+  <p>
+    Construct a categorical Series from integer codes (0-based) and a categories array.
+    Code <code>-1</code> maps to <code>null</code> (missing). Mirrors
+    <code>pd.Categorical.from_codes</code>.
+  </p>
+  <textarea id="code-from-codes">const { catFromCodes } = tsb;
+
+// Build a categorical from codes + category list
+const s = catFromCodes([0, 2, 1, -1, 0], ["red", "green", "blue"]);
+console.log("values:", s.toArray());
+console.log("categories:", s.cat.categories.values);
+console.log("ordered:", s.cat.ordered);
+
+// With ordered=true
+const grade = catFromCodes([2, 0, 1, 2], ["F", "C", "A"], { ordered: true, name: "grade" });
+console.log("grade values:", grade.toArray());
+console.log("grade ordered:", grade.cat.ordered);
+console.log("grade codes back:", grade.cat.codes.toArray());
+</textarea>
+  <button onclick="run('code-from-codes','out-from-codes')">▶ Run</button>
+  <div class="output" id="out-from-codes"></div>
+</div>
+
+<!-- ── Category set operations ──────────────────────────────────────── -->
+<div class="card">
+  <h2>Category set operations</h2>
+  <p>
+    <code>catUnionCategories</code>, <code>catIntersectCategories</code>,
+    <code>catDiffCategories</code>, and <code>catEqualCategories</code> let you
+    combine or compare the category sets of two Series.
+  </p>
+  <textarea id="code-set-ops">const { Series, catUnionCategories, catIntersectCategories, catDiffCategories, catEqualCategories } = tsb;
+
+const a = new Series({ data: ["x", "y", "z"] }).cat.setCategories(["x", "y", "z"]);
+const b = new Series({ data: ["y", "z", "w"] }).cat.setCategories(["y", "z", "w"]);
+
+const union = catUnionCategories(a, b);
+console.log("union cats:", union.cat.categories.values);     // x y z w
+
+const inter = catIntersectCategories(a, b);
+console.log("intersect cats:", inter.cat.categories.values); // y z
+console.log("intersect vals:", inter.toArray());             // null y z
+
+const diff = catDiffCategories(a, b);
+console.log("diff cats:", diff.cat.categories.values);       // x
+console.log("diff vals:", diff.toArray());                   // x null null
+
+console.log("equal?", catEqualCategories(a, b));             // false
+const c = new Series({ data: [] }).cat.setCategories(["z", "x", "y"]);
+console.log("equal (diff order)?", catEqualCategories(a, c)); // true
+</textarea>
+  <button onclick="run('code-set-ops','out-set-ops')">▶ Run</button>
+  <div class="output" id="out-set-ops"></div>
+</div>
+
+<!-- ── catSortByFreq ────────────────────────────────────────────────── -->
+<div class="card">
+  <h2><code>catSortByFreq(series, opts?)</code></h2>
+  <p>
+    Reorder categories by their frequency in the data (most frequent first by default).
+    Mirrors <code>s.cat.reorder_categories(s.value_counts().index)</code>.
+  </p>
+  <textarea id="code-sort-freq">const { Series, catSortByFreq } = tsb;
+
+const s = new Series({ data: ["b", "a", "b", "c", "b", "a"] })
+  .cat.setCategories(["a", "b", "c"]);
+
+const sorted = catSortByFreq(s);
+console.log("categories (most frequent first):", sorted.cat.categories.values);
+// b=3, a=2, c=1 → ["b", "a", "c"]
+
+const asc = catSortByFreq(s, { ascending: true });
+console.log("categories (rarest first):", asc.cat.categories.values);
+// → ["c", "a", "b"]
+</textarea>
+  <button onclick="run('code-sort-freq','out-sort-freq')">▶ Run</button>
+  <div class="output" id="out-sort-freq"></div>
+</div>
+
+<!-- ── catToOrdinal ─────────────────────────────────────────────────── -->
+<div class="card">
+  <h2><code>catToOrdinal(series, order)</code></h2>
+  <p>
+    Create an ordered categorical from a Series using <code>order</code> to define both the
+    category set and their rank.  Values not in <code>order</code> become <code>null</code>.
+  </p>
+  <textarea id="code-to-ordinal">const { Series, catToOrdinal } = tsb;
+
+const s = new Series({ data: ["med", "low", "high", "med", "extreme"] });
+const ord = catToOrdinal(s, ["low", "med", "high"]);
+
+console.log("values:", ord.toArray());         // med low high med null
+console.log("ordered:", ord.cat.ordered);      // true
+console.log("categories:", ord.cat.categories.values); // low med high
+</textarea>
+  <button onclick="run('code-to-ordinal','out-to-ordinal')">▶ Run</button>
+  <div class="output" id="out-to-ordinal"></div>
+</div>
+
+<!-- ── catFreqTable ─────────────────────────────────────────────────── -->
+<div class="card">
+  <h2><code>catFreqTable(series)</code></h2>
+  <p>
+    Return a plain <code>Record&lt;string, number&gt;</code> of counts per category.
+    Zero-frequency categories are included.
+  </p>
+  <textarea id="code-freq-table">const { Series, catFreqTable } = tsb;
+
+const s = new Series({ data: ["b", "a", "b", null] })
+  .cat.setCategories(["a", "b", "c"]);
+
+const table = catFreqTable(s);
+console.log("frequency table:", table);
+// { a: 1, b: 2, c: 0 }
+
+// Sum equals non-null count
+const total = Object.values(table).reduce((sum, n) => sum + n, 0);
+console.log("total (non-null):", total); // 3
+</textarea>
+  <button onclick="run('code-freq-table','out-freq-table')">▶ Run</button>
+  <div class="output" id="out-freq-table"></div>
+</div>
+
+<!-- ── catCrossTab ──────────────────────────────────────────────────── -->
+<div class="card">
+  <h2><code>catCrossTab(a, b, opts?)</code></h2>
+  <p>
+    Cross-tabulation of two categorical Series. Rows = <code>a</code>'s categories,
+    columns = <code>b</code>'s categories, cells = co-occurrence counts.
+    Supports margins and normalization.
+  </p>
+  <textarea id="code-crosstab">const { Series, catCrossTab } = tsb;
+
+const gender = new Series({ data: ["M","F","M","F","M","F","M"] })
+  .cat.setCategories(["M","F"]);
+const response = new Series({ data: ["Yes","No","Yes","Yes","No","Yes","Yes"] })
+  .cat.setCategories(["Yes","No"]);
+
+const ct = catCrossTab(gender, response);
+console.log("columns:", ct.columns.values);
+console.log("index:", [...ct.index.values]);
+console.log("Yes col:", ct.get("Yes").toArray());
+console.log("No col:", ct.get("No").toArray());
+
+// With margins
+const ctm = catCrossTab(gender, response, { margins: true });
+console.log("\nWith margins:");
+console.log("columns:", ctm.columns.values);
+console.log("All col:", ctm.get("All").toArray());
+
+// Normalized
+const ctn = catCrossTab(gender, response, { normalize: true });
+console.log("\nNormalized Yes col:", ctn.get("Yes").toArray());
+</textarea>
+  <button onclick="run('code-crosstab','out-crosstab')">▶ Run</button>
+  <div class="output" id="out-crosstab"></div>
+</div>
+
+<!-- ── catRecode ────────────────────────────────────────────────────── -->
+<div class="card">
+  <h2><code>catRecode(series, mapping)</code></h2>
+  <p>
+    Rename categories via an object map or a transform function. Unmapped categories
+    are left unchanged.
+  </p>
+  <textarea id="code-recode">const { Series, catRecode } = tsb;
+
+const s = new Series({ data: ["a", "b", "c"] }).cat.setCategories(["a", "b", "c"]);
+
+// Object map (partial)
+const r1 = catRecode(s, { a: "alpha", b: "beta" });
+console.log("via map:", r1.cat.categories.values);  // alpha beta c
+console.log("values:", r1.toArray());               // alpha beta c
+
+// Transform function
+const r2 = catRecode(s, (x) => x.toUpperCase());
+console.log("via fn:", r2.cat.categories.values);   // A B C
+console.log("values:", r2.toArray());               // A B C
+</textarea>
+  <button onclick="run('code-recode','out-recode')">▶ Run</button>
+  <div class="output" id="out-recode"></div>
+</div>
+
+<script src="playground-runtime.js"></script>
+<script>
+async function run(codeId, outId) {
+  const code = document.getElementById(codeId).value;
+  const out = document.getElementById(outId);
+  out.className = 'output';
+  out.textContent = '…';
+  try {
+    const lines = [];
+    const tsb = await getTsb();
+    const origLog = console.log;
+    console.log = (...args) => lines.push(args.map(v =>
+      typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)
+    ).join(' '));
+    try {
+      const fn = new Function('tsb', code);
+      await fn(tsb);
+    } finally {
+      console.log = origLog;
+    }
+    out.textContent = lines.join('\n') || '(no output)';
+    out.classList.add('ok');
+  } catch (e) {
+    out.textContent = String(e);
+    out.classList.add('error');
+  }
+}
+</script>
+</body>
+</html>

@@ -211,6 +211,20 @@ console.log("size:", mi.size);
 console.log("names:", mi.names);
 console.log("at(0):", mi.at(0));
 console.log("at(-1):", mi.at(-1));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi = pd.MultiIndex.from_tuples([
+    ("bar", "one"),
+    ("bar", "two"),
+    ("baz", "one"),
+    ("baz", "two"),
+], names=["first", "second"])
+
+print("nlevels:", mi.nlevels)
+print("size:", mi.size)
+print("names:", list(mi.names))
+print("at(0):", mi[0])
+print("at(-1):", mi[-1])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -240,6 +254,17 @@ const mi = MultiIndex.fromArrays(
 );
 
 console.log("toArray:", mi.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi = pd.MultiIndex.from_arrays(
+    [
+        ["a", "a", "b", "b"],
+        [1, 2, 1, 2],
+    ],
+    names=["letter", "number"],
+)
+
+print("tolist:", mi.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -269,6 +294,16 @@ console.log("size:", mi.size);
 for (const t of mi) {
   console.log(t.join(" / "));
 }</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi = pd.MultiIndex.from_product(
+    [["control", "treatment"], ["pre", "post"]],
+    names=["group", "period"],
+)
+
+print("size:", mi.size)
+for t in mi:
+    print(" / ".join(str(x) for x in t))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -299,6 +334,18 @@ console.log("contains(['b', 3]):", mi.contains(["b", 3]));
 // Duplicate tuples return an array of positions
 const dup = MultiIndex.fromTuples([["a", 1], ["b", 2], ["a", 1]]);
 console.log("dup getLoc(['a', 1]):", dup.getLoc(["a", 1]));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi = pd.MultiIndex.from_tuples([
+    ("a", 1), ("a", 2), ("b", 1), ("b", 2),
+])
+
+print("get_loc(('a', 2)):", mi.get_loc(("a", 2)))
+print("contains (('b', 3) in mi):", ("b", 3) in mi)
+
+# Duplicate tuples return a slice or array of positions
+dup = pd.MultiIndex.from_tuples([("a", 1), ("b", 2), ("a", 1)])
+print("dup get_loc(('a', 1)):", dup.get_loc(("a", 1)))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -335,6 +382,25 @@ console.log("after swaplevel(0,1) at(0):", swapped.at(0));
 // Drop to a single level → plain Index
 const idx = mi.droplevel([0, 1]);
 console.log("droplevel([0,1]) type:", idx.constructor.name);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi = pd.MultiIndex.from_tuples([
+    ("a", 1, "x"),
+    ("b", 2, "y"),
+], names=["letter", "num", "code"])
+
+# Drop the first level — returns a 2-level MultiIndex
+two = mi.droplevel(0)
+print("after droplevel(0) nlevels:", two.nlevels)
+print("after droplevel(0) at(0):", two[0])
+
+# Swap levels 0 and 1
+swapped = mi.swaplevel(0, 1)
+print("after swaplevel(0,1) at(0):", swapped[0])
+
+# Drop to a single level — plain Index
+idx = mi.droplevel([0, 1])
+print("droplevel([0,1]) type:", type(idx).__name__)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -361,6 +427,14 @@ const mi2 = MultiIndex.fromTuples([["b", 2], ["d", 4]]);
 console.log("union:", mi1.union(mi2).toArray());
 console.log("intersection:", mi1.intersection(mi2).toArray());
 console.log("difference:", mi1.difference(mi2).toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi1 = pd.MultiIndex.from_tuples([("a", 1), ("b", 2), ("c", 3)])
+mi2 = pd.MultiIndex.from_tuples([("b", 2), ("d", 4)])
+
+print("union:", mi1.union(mi2).tolist())
+print("intersection:", mi1.intersection(mi2).tolist())
+print("difference:", mi1.difference(mi2).tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -387,6 +461,15 @@ const mi = MultiIndex.fromTuples([
 console.log("sortValues:", mi.sortValues().toArray());
 console.log("dropDuplicates:", mi.dropDuplicates().toArray());
 console.log("duplicated('first'):", mi.duplicated("first"));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+mi = pd.MultiIndex.from_tuples([
+    ("b", 2), ("a", 1), ("b", 1), ("a", 2), ("a", 1),
+])
+
+print("sort_values:", mi.sort_values().tolist())
+print("drop_duplicates:", mi.drop_duplicates().tolist())
+print("duplicated('first'):", mi.duplicated(keep="first").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -418,6 +501,20 @@ console.log("isna:", mi.isna());
 const clean = mi.dropna();
 console.log("after dropna size:", clean.size);
 console.log("after dropna toArray:", clean.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+mi = pd.MultiIndex.from_tuples([
+    (None, 1),
+    ("a",  2),
+    ("b",  None),
+    ("c",  3),
+])
+
+print("isna:", [any(x is None for x in t) for t in mi])
+clean = mi.dropna()
+print("after dropna size:", clean.size)
+print("after dropna tolist:", clean.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

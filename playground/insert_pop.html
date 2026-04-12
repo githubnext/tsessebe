@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — insertColumn / popColumn</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .note { background: #fffbea; border-left: 4px solid #f5a623; padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f0f4f8; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+
+  <h1><code>insertColumn</code> / <code>popColumn</code></h1>
+  <p>
+    Column insertion and removal for DataFrames — mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.insert.html" target="_blank">
+    <code>pandas.DataFrame.insert()</code></a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.pop.html" target="_blank">
+    <code>pandas.DataFrame.pop()</code></a>.
+  </p>
+  <p>
+    Because tsb DataFrames are <strong>immutable</strong>, both functions return a new DataFrame
+    rather than mutating the original.  <code>popColumn</code> returns both the extracted
+    <code>Series</code> and the resulting DataFrame.
+  </p>
+
+  <h2>API summary</h2>
+  <table>
+    <thead><tr><th>Function</th><th>Pandas equivalent</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>insertColumn(df, loc, col, values)</code></td>
+        <td><code>df.insert(loc, col, value)</code></td>
+        <td>Insert a new column at integer position <code>loc</code></td>
+      </tr>
+      <tr>
+        <td><code>popColumn(df, col)</code></td>
+        <td><code>df.pop(col)</code></td>
+        <td>Remove a column; returns <code>{ series, df }</code></td>
+      </tr>
+      <tr>
+        <td><code>reorderColumns(df, order)</code></td>
+        <td><code>df[order]</code></td>
+        <td>Reorder (and optionally subset) columns</td>
+      </tr>
+      <tr>
+        <td><code>moveColumn(df, col, newLoc)</code></td>
+        <td>—</td>
+        <td>Move an existing column to a new integer position</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Example 1 — <code>insertColumn</code></h2>
+  <pre><code>import { DataFrame, insertColumn } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name: ["Alice", "Bob", "Carol"],
+  age:  [30, 25, 35],
+});
+// columns: ["name", "age"]
+
+// Insert "city" between "name" and "age"
+const df2 = insertColumn(df, 1, "city", ["NY", "LA", "SF"]);
+// df2.columns.values → ["name", "city", "age"]
+// df2.col("city").values → ["NY", "LA", "SF"]
+
+// Original is unchanged
+// df.columns.values → ["name", "age"]
+</code></pre>
+
+  <h2>Example 2 — Insert with a Series</h2>
+  <pre><code>import { DataFrame, Series, insertColumn } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+const salary = new Series({ data: [100_000, 90_000, 120_000], name: "salary" });
+
+const df2 = insertColumn(df, 0, "salary", salary);
+// df2.columns.values → ["salary", "a", "b"]
+</code></pre>
+
+  <h2>Example 3 — <code>popColumn</code></h2>
+  <pre><code>import { DataFrame, popColumn } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:   [1, 2, 3],
+  name: ["Alice", "Bob", "Carol"],
+  age:  [30, 25, 35],
+});
+
+// Remove "age" and keep the Series
+const { series: ageSeries, df: df2 } = popColumn(df, "age");
+// ageSeries.values       → [30, 25, 35]
+// df2.columns.values     → ["id", "name"]
+// df.columns.values      → ["id", "name", "age"]  ← original unchanged
+</code></pre>
+
+  <h2>Example 4 — <code>reorderColumns</code></h2>
+  <pre><code>import { DataFrame, reorderColumns } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1], b: [2], c: [3], d: [4] });
+
+// Reverse the column order
+const df2 = reorderColumns(df, ["d", "c", "b", "a"]);
+// df2.columns.values → ["d", "c", "b", "a"]
+
+// Select a subset (drops columns not listed)
+const df3 = reorderColumns(df, ["a", "c"]);
+// df3.columns.values → ["a", "c"]   (b and d are dropped)
+</code></pre>
+
+  <h2>Example 5 — <code>moveColumn</code></h2>
+  <pre><code>import { DataFrame, moveColumn } from "tsb";
+
+const df = DataFrame.fromColumns({
+  year:  [2020, 2021, 2022],
+  value: [10, 20, 30],
+  label: ["a", "b", "c"],
+});
+// columns: ["year", "value", "label"]
+
+// Move "label" to the front
+const df2 = moveColumn(df, "label", 0);
+// df2.columns.values → ["label", "year", "value"]
+</code></pre>
+
+  <h2>Error cases</h2>
+  <pre><code>// Duplicate column name (default: not allowed)
+insertColumn(df, 1, "a", [1, 2, 3]);
+// → RangeError: Column "a" already exists. Use allowDuplicates=true to permit...
+
+// Out-of-range loc
+insertColumn(df, 99, "x", [1, 2, 3]);
+// → RangeError: loc=99 is out of range [0, 2].
+
+// Wrong number of values
+insertColumn(df, 0, "x", [1]);  // df has 3 rows
+// → RangeError: values length 1 does not match DataFrame row count 3.
+
+// Column not found
+popColumn(df, "missing");
+// → RangeError: Column "missing" not found in DataFrame.
+</code></pre>
+
+  <div class="note">
+    <strong>Immutability:</strong> Like all tsb DataFrame operations, these functions never
+    mutate the original DataFrame.  Always assign the return value to a new variable.
+  </div>
+
+  <h2>pandas equivalence table</h2>
+  <table>
+    <thead>
+      <tr><th>pandas</th><th>tsb</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>df.insert(1, "x", [1,2,3])</code> *(mutates)*</td><td><code>insertColumn(df, 1, "x", [1,2,3])</code></td></tr>
+      <tr><td><code>series = df.pop("col")</code> *(mutates)*</td><td><code>const { series, df: df2 } = popColumn(df, "col")</code></td></tr>
+      <tr><td><code>df[["c","a","b"]]</code></td><td><code>reorderColumns(df, ["c","a","b"])</code></td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — toDictOriented / fromDictOriented</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .note { background: #fffbea; border-left: 4px solid #f5a623; padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f0f4f8; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+
+  <h1><code>toDictOriented</code> / <code>fromDictOriented</code></h1>
+  <p>
+    Convert a DataFrame to and from dictionary structures with flexible orientation — mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html" target="_blank">
+    <code>pandas.DataFrame.to_dict(orient=...)</code></a> and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.from_dict.html" target="_blank">
+    <code>pandas.DataFrame.from_dict(orient=...)</code></a>.
+  </p>
+
+  <h2>Supported orientations — <code>toDictOriented</code></h2>
+  <table>
+    <thead><tr><th>Orient</th><th>Return type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>"dict"</code> / <code>"columns"</code></td><td><code>Record&lt;col, Record&lt;rowLabel, value&gt;&gt;</code></td><td>Nested column → row-label → value map</td></tr>
+      <tr><td><code>"list"</code></td><td><code>Record&lt;col, value[]&gt;</code></td><td>Column name → array of values</td></tr>
+      <tr><td><code>"series"</code></td><td><code>Record&lt;col, Series&gt;</code></td><td>Column name → Series object</td></tr>
+      <tr><td><code>"split"</code></td><td><code>{ index, columns, data }</code></td><td>Serialisable split structure</td></tr>
+      <tr><td><code>"tight"</code></td><td><code>{ index, columns, data, index_names, column_names }</code></td><td>Split plus axis-name metadata</td></tr>
+      <tr><td><code>"records"</code></td><td><code>Record&lt;col, value&gt;[]</code></td><td>Array of row objects</td></tr>
+      <tr><td><code>"index"</code></td><td><code>Record&lt;rowLabel, Record&lt;col, value&gt;&gt;</code></td><td>Row-label → column → value</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Supported orientations — <code>fromDictOriented</code></h2>
+  <table>
+    <thead><tr><th>Orient</th><th>Input shape</th></tr></thead>
+    <tbody>
+      <tr><td><code>"columns"</code> (default)</td><td><code>{ col: value[] }</code></td></tr>
+      <tr><td><code>"index"</code></td><td><code>{ rowLabel: { col: value } }</code></td></tr>
+      <tr><td><code>"split"</code></td><td><code>{ index?, columns, data }</code></td></tr>
+      <tr><td><code>"tight"</code></td><td>Same as <code>"split"</code>, extra fields ignored</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Example — all orientations</h2>
+  <pre><code>import { DataFrame } from "tsb";
+import { toDictOriented, fromDictOriented } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { name: ["Alice", "Bob"], score: [92, 85] },
+  { index: new Index(["r0", "r1"]) },
+);
+
+// "dict" / "columns"
+toDictOriented(df, "dict");
+// { name: { r0: "Alice", r1: "Bob" }, score: { r0: 92, r1: 85 } }
+
+// "list"
+toDictOriented(df, "list");
+// { name: ["Alice", "Bob"], score: [92, 85] }
+
+// "records"
+toDictOriented(df, "records");
+// [ { name: "Alice", score: 92 }, { name: "Bob", score: 85 } ]
+
+// "split"
+toDictOriented(df, "split");
+// { index: ["r0", "r1"], columns: ["name", "score"], data: [["Alice", 92], ["Bob", 85]] }
+
+// "index"
+toDictOriented(df, "index");
+// { r0: { name: "Alice", score: 92 }, r1: { name: "Bob", score: 85 } }
+
+// fromDictOriented — columns (default)
+fromDictOriented({ name: ["Alice", "Bob"], score: [92, 85] });
+
+// fromDictOriented — index
+fromDictOriented(
+  { r0: { name: "Alice", score: 92 }, r1: { name: "Bob", score: 85 } },
+  "index",
+);
+
+// fromDictOriented — split (round-trip)
+const split = toDictOriented(df, "split");
+const df2 = fromDictOriented(split, "split");
+// df2 is equivalent to df
+</code></pre>
+
+  <h2>Missing values</h2>
+  <div class="note">
+    Missing values (<code>null</code> / <code>undefined</code>) are preserved as <code>null</code>
+    in all orientations.  When using <code>fromDictOriented</code> with <code>"index"</code>
+    orientation, any column that is absent from a given row object is filled with <code>null</code>.
+  </div>
+
+  <h2>Type signatures</h2>
+  <pre><code>function toDictOriented(df: DataFrame, orient: "dict" | "columns"): Record&lt;string, Record&lt;string, Scalar&gt;&gt;;
+function toDictOriented(df: DataFrame, orient: "list"): Record&lt;string, Scalar[]&gt;;
+function toDictOriented(df: DataFrame, orient: "series"): Record&lt;string, Series&lt;Scalar&gt;&gt;;
+function toDictOriented(df: DataFrame, orient: "split"): DictSplit;
+function toDictOriented(df: DataFrame, orient: "tight"): DictTight;
+function toDictOriented(df: DataFrame, orient: "records"): Record&lt;string, Scalar&gt;[];
+function toDictOriented(df: DataFrame, orient: "index"): Record&lt;string, Record&lt;string, Scalar&gt;&gt;;
+
+function fromDictOriented(data: Record&lt;string, readonly Scalar[]&gt;, orient?: "columns"): DataFrame;
+function fromDictOriented(data: Record&lt;string, Record&lt;string, Scalar&gt;&gt;, orient: "index"): DataFrame;
+function fromDictOriented(data: SplitInput, orient: "split" | "tight"): DataFrame;
+</code></pre>
+</body>
+</html>

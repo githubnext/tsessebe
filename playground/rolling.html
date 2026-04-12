@@ -208,6 +208,13 @@ const prices = new Series({
 // 3-day rolling mean — first two positions are null (not enough data)
 const ma3 = prices.rolling(3).mean();
 console.log(ma3.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+prices = pd.Series([100, 102, 98, 105, 110, 108, 112], name="price")
+
+# 3-day rolling mean — first two positions are NaN (not enough data)
+ma3 = prices.rolling(3).mean()
+print(ma3.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -233,6 +240,13 @@ const s = new Series({ data: [10, 20, 30, 40, 50] });
 // window=3 but minPeriods=1 → start computing from index 0
 const result = s.rolling(3, { minPeriods: 1 }).mean();
 console.log(result.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50])
+
+# window=3 but min_periods=1 → start computing from index 0
+result = s.rolling(3, min_periods=1).mean()
+print(result.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -260,6 +274,15 @@ console.log("std :", w.std().toArray().map(v =>
   v === null ? null : Number(v.toFixed(4))));
 console.log("min :", w.min().toArray());
 console.log("max :", w.max().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([2, 4, 4, 4, 5, 5, 7, 9])
+w = s.rolling(3)
+
+print("sum :", w.sum().tolist())
+print("std :", [round(v, 4) if pd.notna(v) else None for v in w.std()])
+print("min :", w.min().tolist())
+print("max :", w.max().tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -288,6 +311,17 @@ console.log(s.rolling(3).count().toArray());
 
 // mean() with minPeriods=1 skips null-only windows
 console.log(s.rolling(2, { minPeriods: 1 }).mean().toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([1, None, 3, None, 5])
+
+# count valid observations per window
+print(s.rolling(2).count().tolist())
+print(s.rolling(3).count().tolist())
+
+# mean() with min_periods=1 skips null-only windows
+print(s.rolling(2, min_periods=1).mean().tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -314,6 +348,15 @@ const medW  = s.rolling(3, { minPeriods: 1 }).median().toArray();
 
 console.log("mean  :", meanW.map(v => v === null ? null : +v.toFixed(2)));
 console.log("median:", medW);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 3, 5, 1, 100, 2, 4])
+
+mean_w = s.rolling(3, min_periods=1).mean().tolist()
+med_w = s.rolling(3, min_periods=1).median().tolist()
+
+print("mean  :", [round(v, 2) if v is not None else None for v in mean_w])
+print("median:", med_w)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -345,6 +388,17 @@ console.log("range:", range.toArray());
 // Rolling product
 const prod = s.rolling(2).apply(vals => vals.reduce((a, b) => a * b, 1));
 console.log("prod :", prod.toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+# Rolling range (max - min)
+range_s = s.rolling(3).apply(lambda vals: vals.max() - vals.min())
+print("range:", range_s.tolist())
+
+# Rolling product
+prod = s.rolling(2).apply(lambda vals: vals.prod())
+print("prod :", prod.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -374,6 +428,17 @@ const centered = s.rolling(3, { center: true, minPeriods: 1 }).mean().toArray();
 
 console.log("trailing:", trailing);
 console.log("centered:", centered);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+# trailing (default)
+trailing = s.rolling(3).mean().tolist()
+# centered
+centered = s.rolling(3, center=True, min_periods=1).mean().tolist()
+
+print("trailing:", trailing)
+print("centered:", centered)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -402,6 +467,16 @@ const df = DataFrame.fromColumns({
 const rolled = df.rolling(3).mean();
 console.log(rolled.col("open").toArray());
 console.log(rolled.col("close").toArray());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "open": [100, 101, 103, 102, 105],
+    "close": [101, 103, 102, 105, 107],
+})
+
+rolled = df.rolling(3).mean()
+print(rolled["open"].tolist())
+print(rolled["close"].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

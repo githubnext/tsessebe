@@ -215,6 +215,22 @@ console.log("age dtype  :", df.col("age").dtype.name);
 console.log("score dtype:", df.col("score").dtype.name);
 console.log("names:", [...df.col("name").values]);
 console.log("ages :", [...df.col("age").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+csv = """name,age,score
+alice,30,88.5
+bob,25,92.0
+carol,35,75.3"""
+
+df = pd.read_csv(io.StringIO(csv))
+print("shape:", df.shape)
+print("columns:", list(df.columns))
+print("name dtype :", df["name"].dtype)
+print("age dtype  :", df["age"].dtype)
+print("score dtype:", df["score"].dtype)
+print("names:", list(df["name"]))
+print("ages :", list(df["age"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -246,6 +262,19 @@ const csv = `x,y
 const df = readCsv(csv, { naValues: ["?"] });
 console.log("x:", [...df.col("x").values]);
 console.log("y:", [...df.col("y").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+csv = """x,y
+1,
+2,NA
+3,?
+4,5"""
+
+# "?" added as an extra NA value
+df = pd.read_csv(io.StringIO(csv), na_values=["?"])
+print("x:", list(df["x"]))
+print("y:", list(df["y"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -275,6 +304,18 @@ const df = readCsv(csv, { sep: ";" });
 console.log("name[0]:", df.col("name").values[0]);
 console.log("note[1]:", df.col("note").values[1]);
 console.log("name[2]:", df.col("name").values[2]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+csv = """name;note
+"Smith, Jr.";Senior developer
+"O'Brien";"Joined ""the team"" in 2020"
+Jones;Junior"""
+
+df = pd.read_csv(io.StringIO(csv), sep=";")
+print("name[0]:", df["name"].iloc[0])
+print("note[1]:", df["note"].iloc[1])
+print("name[2]:", df["name"].iloc[2])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -304,6 +345,18 @@ const df = readCsv(csv, { indexCol: "id" });
 console.log("index:", [...df.index.values]);
 console.log("columns:", [...df.columns.values]);
 console.log("city at A:", df.col("city").at("A"));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+csv = """id,city,pop
+A,London,9000000
+B,Paris,2200000
+C,Berlin,3700000"""
+
+df = pd.read_csv(io.StringIO(csv), index_col="id")
+print("index:", list(df.index))
+print("columns:", list(df.columns))
+print("city at A:", df.loc["A", "city"])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -336,6 +389,21 @@ console.log("nRows=3:", [...first3.col("val").values]);
 
 const skip2 = readCsv(csv, { skipRows: 2 });
 console.log("skipRows=2:", [...skip2.col("val").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+csv = """val
+10
+20
+30
+40
+50"""
+
+first3 = pd.read_csv(io.StringIO(csv), nrows=3)
+print("nrows=3:", list(first3["val"]))
+
+skip2 = pd.read_csv(io.StringIO(csv), skiprows=range(1, 3))
+print("skiprows=2:", list(skip2["val"]))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -373,6 +441,25 @@ console.log(toCsv(df, { index: false }));
 const df2 = DataFrame.fromColumns({ x: [1, null, 3] });
 console.log("--- semicolons + NA rep ---");
 console.log(toCsv(df2, { sep: ";", index: false, naRep: "MISSING" }));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "name": ["alice", "bob", "carol"],
+    "score": [88, 92, 75],
+})
+
+# Default: includes index and header
+print("--- with index ---")
+print(df.to_csv())
+
+# Without index
+print("--- no index ---")
+print(df.to_csv(index=False))
+
+# Semicolon separator, custom NA rep
+df2 = pd.DataFrame({"x": [1, None, 3]})
+print("--- semicolons + NA rep ---")
+print(df2.to_csv(sep=";", index=False, na_rep="MISSING"))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -407,6 +494,23 @@ console.log("restored x:", [...restored.col("x").values]);
 console.log("restored y:", [...restored.col("y").values]);
 console.log("restored label:", [...restored.col("label").values]);
 console.log("shapes match:", JSON.stringify(original.shape) === JSON.stringify(restored.shape));</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import io
+
+original = pd.DataFrame({
+    "x": [1, 2, 3, 4, 5],
+    "y": [10.1, 20.2, 30.3, 40.4, 50.5],
+    "label": ["a", "b", "c", "d", "e"],
+})
+
+csv = original.to_csv(index=False)
+print("CSV:\n" + csv)
+
+restored = pd.read_csv(io.StringIO(csv))
+print("restored x:", list(restored["x"]))
+print("restored y:", list(restored["y"]))
+print("restored label:", list(restored["label"]))
+print("shapes match:", original.shape == restored.shape)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

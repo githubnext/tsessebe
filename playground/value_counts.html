@@ -206,6 +206,13 @@ const vc = valueCounts(s);
 
 console.log("index:", vc.index.values);
 console.log("values:", vc.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["apple", "banana", "apple", "cherry", "banana", "apple"])
+vc = s.value_counts()
+
+print("index:", vc.index.tolist())
+print("values:", vc.values.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -231,6 +238,13 @@ const pct = valueCounts(s, { normalize: true });
 
 console.log("index:", pct.index.values);
 console.log("proportions:", pct.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["apple", "banana", "apple", "cherry", "banana", "apple"])
+pct = s.value_counts(normalize=True)
+
+print("index:", pct.index.tolist())
+print("proportions:", pct.values.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -262,6 +276,19 @@ console.log("ascending values:", asc.values);
 const ins = valueCounts(s, { sort: false });
 console.log("unsorted index:", ins.index.values);
 console.log("unsorted values:", ins.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["apple", "banana", "apple", "cherry", "banana", "apple"])
+
+# Ascending order (least frequent first)
+asc = s.value_counts(ascending=True)
+print("ascending index:", asc.index.tolist())
+print("ascending values:", asc.values.tolist())
+
+# Preserve insertion order (no sort)
+ins = s.value_counts(sort=False)
+print("unsorted index:", ins.index.tolist())
+print("unsorted values:", ins.values.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -293,6 +320,19 @@ console.log("dropna=true  values:", dropNull.values);
 const keepNull = valueCounts(s, { dropna: false });
 console.log("dropna=false index:", keepNull.index.values);
 console.log("dropna=false values:", keepNull.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series(["a", None, "b", None, "a"])
+
+# dropna=True (default) — exclude nulls
+drop_null = s.value_counts()
+print("dropna=True  index:", drop_null.index.tolist())
+print("dropna=True  values:", drop_null.values.tolist())
+
+# dropna=False — include nulls
+keep_null = s.value_counts(dropna=False)
+print("dropna=False index:", keep_null.index.tolist())
+print("dropna=False values:", keep_null.values.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -323,6 +363,18 @@ const df = DataFrame.fromRecords([
 const vc = dataFrameValueCounts(df);
 console.log("index:", vc.index.values);
 console.log("counts:", vc.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame([
+    {"city": "NYC", "temp": "hot"},
+    {"city": "NYC", "temp": "cold"},
+    {"city": "LA",  "temp": "hot"},
+    {"city": "NYC", "temp": "hot"},
+])
+
+vc = df.value_counts()
+print("index:", vc.index.tolist())
+print("counts:", vc.values.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -352,6 +404,18 @@ const df = DataFrame.fromRecords([
 const vc = dataFrameValueCounts(df, { subset: ["city"] });
 console.log("index:", vc.index.values);
 console.log("counts:", vc.values);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame([
+    {"city": "NYC", "temp": "hot"},
+    {"city": "NYC", "temp": "cold"},
+    {"city": "LA",  "temp": "hot"},
+    {"city": "NYC", "temp": "hot"},
+])
+
+vc = df.value_counts(subset=["city"])
+print("index:", vc.index.tolist())
+print("counts:", vc.values.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

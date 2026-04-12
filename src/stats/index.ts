@@ -150,7 +150,6 @@ export type { FactorizeOptions, FactorizeResult } from "./factorize.ts";
 export { crosstab, seriesCrosstab } from "./crosstab.ts";
 export type { AggFunc, Normalize, CrosstabOptions } from "./crosstab.ts";
 
-
 export { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "./to_numeric.ts";
 export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./to_numeric.ts";
 
@@ -188,3 +187,91 @@ export type { ExplodeOptions, ExplodeDataFrameOptions } from "./explode.ts";
 
 export { isin, dataFrameIsin } from "./isin.ts";
 export type { IsinValues, IsinDict, DataFrameIsinValues } from "./isin.ts";
+
+export { rollingSem, rollingSkew, rollingKurt, rollingQuantile } from "./window_extended.ts";
+export type { WindowExtOptions, RollingQuantileOptions } from "./window_extended.ts";
+export { fillna, countna, countValid } from "./notna_isna.ts";
+export type { IsnaInput, FillnaOptions, DropnaOptions } from "./notna_isna.ts";
+export {
+  strNormalize,
+  strGetDummies,
+  strExtractAll,
+  strRemovePrefix,
+  strRemoveSuffix,
+  strTranslate,
+  strCharWidth,
+  strByteLength,
+} from "./string_ops.ts";
+export type { NormalizeForm, StrInput, ExtractAllOptions } from "./string_ops.ts";
+export {
+  strSplitExpand,
+  strExtractGroups,
+  strPartition,
+  strRPartition,
+  strMultiReplace,
+  strIndent,
+  strDedent,
+} from "./string_ops_extended.ts";
+export type {
+  SplitExpandOptions,
+  ExtractGroupsOptions,
+  PartitionResult,
+  ReplacePair,
+  IndentOptions,
+} from "./string_ops_extended.ts";
+export {
+  digitize,
+  histogram,
+  linspace,
+  arange,
+  percentileOfScore,
+  zscore,
+  minMaxNormalize,
+  coefficientOfVariation,
+  seriesDigitize,
+} from "./numeric_extended.ts";
+export type {
+  HistogramOptions,
+  HistogramResult,
+  ZscoreOptions,
+  MinMaxOptions,
+  CvOptions,
+} from "./numeric_extended.ts";
+export {
+  catFromCodes,
+  catUnionCategories,
+  catIntersectCategories,
+  catDiffCategories,
+  catEqualCategories,
+  catSortByFreq,
+  catToOrdinal,
+  catFreqTable,
+  catCrossTab,
+  catRecode,
+} from "./categorical_ops.ts";
+export type {
+  CatFromCodesOptions,
+  CatSortByFreqOptions,
+  CatCrossTabOptions,
+} from "./categorical_ops.ts";
+export {
+  formatFloat,
+  formatPercent,
+  formatScientific,
+  formatEngineering,
+  formatThousands,
+  formatCurrency,
+  formatCompact,
+  makeFloatFormatter,
+  makePercentFormatter,
+  makeCurrencyFormatter,
+  applySeriesFormatter,
+  applyDataFrameFormatter,
+  seriesToString,
+  dataFrameToString,
+} from "./format_ops.ts";
+export type {
+  Formatter,
+  SeriesToStringOptions,
+  DataFrameToStringOptions,
+} from "./format_ops.ts";

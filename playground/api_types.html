@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — api_types: Runtime type-checking predicates</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+    h1 { border-bottom: 2px solid #e2e8f0; padding-bottom: .5rem; }
+    h2 { margin-top: 2rem; color: #2d3748; }
+    h3 { color: #4a5568; margin-top: 1.5rem; }
+    pre { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .9rem; }
+    code { font-family: 'Fira Code', monospace; }
+    .result { background: #ebf8ff; border-left: 4px solid #4299e1; padding: .5rem 1rem; margin: .5rem 0; border-radius: 0 6px 6px 0; font-family: monospace; }
+    .ok { color: #276749; }
+    .fail { color: #c53030; }
+    .section { background: #fff5f5; border: 1px solid #fed7d7; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #e2e8f0; padding: .4rem .8rem; text-align: left; }
+    th { background: #f7fafc; font-weight: 600; }
+    a { color: #3182ce; }
+  </style>
+</head>
+<body>
+  <h1>📦 <code>api_types</code> — Runtime type-checking predicates</h1>
+  <p>
+    Port of <a href="https://pandas.pydata.org/docs/reference/api/pandas.api.types.html" target="_blank"><code>pandas.api.types</code></a>.
+    Two groups of predicates:
+    <strong>value-level</strong> (work on arbitrary JS values) and
+    <strong>dtype-level</strong> (work on <code>Dtype</code> instances or dtype name strings).
+  </p>
+
+  <h2>Value-Level Predicates</h2>
+
+  <h3><code>isScalar(val)</code></h3>
+  <p>Returns <code>true</code> for primitives and <code>Date</code>. Mirrors <code>pd.api.types.is_scalar</code>.</p>
+  <pre><code>import { isScalar } from "tsb";
+
+isScalar(42);            // true
+isScalar("hello");       // true
+isScalar(null);          // true
+isScalar(new Date());    // true
+isScalar([1, 2]);        // false
+isScalar({ a: 1 });      // false</code></pre>
+  <div id="scalar-demo" class="result"></div>
+
+  <h3><code>isListLike(val)</code></h3>
+  <p>Returns <code>true</code> for iterables (excluding strings) and objects with a numeric <code>length</code>.</p>
+  <pre><code>isListLike([1, 2, 3]);      // true
+isListLike(new Set([1]));   // true
+isListLike("abc");          // false
+isListLike(42);             // false</code></pre>
+  <div id="listlike-demo" class="result"></div>
+
+  <h3><code>isArrayLike(val)</code></h3>
+  <p>Returns <code>true</code> for values with a non-negative integer <code>length</code> (including strings).</p>
+  <pre><code>isArrayLike([1, 2]);      // true
+isArrayLike("hello");     // true
+isArrayLike(42);          // false</code></pre>
+
+  <h3><code>isDictLike(val)</code></h3>
+  <p>Returns <code>true</code> for plain objects and <code>Map</code>.</p>
+  <pre><code>isDictLike({ a: 1 });   // true
+isDictLike(new Map());  // true
+isDictLike([]);         // false</code></pre>
+
+  <h3><code>isNumber / isBool / isStringValue / isFloat / isInteger</code></h3>
+  <pre><code>isNumber(3.14);      // true
+isNumber(NaN);       // true  (typeof NaN === "number")
+isBool(true);        // true
+isStringValue("hi"); // true
+isFloat(3.14);       // true
+isFloat(3.0);        // false  (integer value)
+isInteger(42);       // true
+isInteger(3.14);     // false</code></pre>
+  <div id="value-demo" class="result"></div>
+
+  <h3><code>isMissing(val)</code></h3>
+  <p>Returns <code>true</code> for <code>null</code>, <code>undefined</code>, or <code>NaN</code>.</p>
+  <pre><code>isMissing(null);       // true
+isMissing(undefined);  // true
+isMissing(NaN);        // true
+isMissing(0);          // false</code></pre>
+
+  <h3><code>isHashable(val)</code></h3>
+  <p>Returns <code>true</code> for values safe to use as object keys (primitives).</p>
+  <pre><code>isHashable("key");  // true
+isHashable(42);     // true
+isHashable({});     // false</code></pre>
+
+  <h2>Dtype-Level Predicates</h2>
+  <p>All accept a <code>Dtype</code> instance or a dtype name string.</p>
+
+  <pre><code>import { Dtype, isNumericDtype, isFloatDtype, isIntegerDtype,
+         isStringDtype, isDatetimeDtype, isCategoricalDtype } from "tsb";
+
+isNumericDtype(Dtype.float64);    // true
+isNumericDtype("int32");          // true
+isNumericDtype("string");         // false
+
+isFloatDtype("float32");          // true
+isIntegerDtype("int64");          // true
+isUnsignedIntegerDtype("uint8");  // true
+isSignedIntegerDtype("int8");     // true
+isStringDtype("string");          // true
+isDatetimeDtype("datetime");      // true
+isCategoricalDtype("category");   // true
+isObjectDtype("object");          // true
+isExtensionArrayDtype("category"); // true
+isExtensionArrayDtype("int32");    // false</code></pre>
+  <div id="dtype-demo" class="result"></div>
+
+  <h2>Complete Predicate Reference</h2>
+  <table>
+    <tr><th>Function</th><th>Pandas equivalent</th><th>Description</th></tr>
+    <tr><td><code>isScalar(val)</code></td><td><code>is_scalar</code></td><td>Primitive or Date</td></tr>
+    <tr><td><code>isListLike(val)</code></td><td><code>is_list_like</code></td><td>Iterable (not string) or has length</td></tr>
+    <tr><td><code>isArrayLike(val)</code></td><td><code>is_array_like</code></td><td>Has non-negative integer length</td></tr>
+    <tr><td><code>isDictLike(val)</code></td><td><code>is_dict_like</code></td><td>Plain object or Map</td></tr>
+    <tr><td><code>isIterator(val)</code></td><td><code>is_iterator</code></td><td>Has callable <code>next</code> method</td></tr>
+    <tr><td><code>isNumber(val)</code></td><td><code>is_number</code></td><td><code>typeof === "number"</code></td></tr>
+    <tr><td><code>isBool(val)</code></td><td><code>is_bool</code></td><td><code>typeof === "boolean"</code></td></tr>
+    <tr><td><code>isStringValue(val)</code></td><td><code>is_string</code></td><td><code>typeof === "string"</code></td></tr>
+    <tr><td><code>isFloat(val)</code></td><td><code>is_float</code></td><td>Finite number with fractional part</td></tr>
+    <tr><td><code>isInteger(val)</code></td><td><code>is_integer</code></td><td>Integer-valued number</td></tr>
+    <tr><td><code>isBigInt(val)</code></td><td>—</td><td><code>typeof === "bigint"</code></td></tr>
+    <tr><td><code>isRegExp(val)</code></td><td><code>is_re</code></td><td>RegExp instance</td></tr>
+    <tr><td><code>isReCompilable(val)</code></td><td><code>is_re_compilable</code></td><td>String or RegExp</td></tr>
+    <tr><td><code>isMissing(val)</code></td><td><code>isna</code></td><td>null / undefined / NaN</td></tr>
+    <tr><td><code>isHashable(val)</code></td><td><code>is_hashable</code></td><td>Safe as object key (primitive)</td></tr>
+    <tr><td><code>isDate(val)</code></td><td>—</td><td>Date instance</td></tr>
+    <tr><td><code>isNumericDtype(d)</code></td><td><code>is_numeric_dtype</code></td><td>Int, uint, or float</td></tr>
+    <tr><td><code>isIntegerDtype(d)</code></td><td><code>is_integer_dtype</code></td><td>Any integer (signed or unsigned)</td></tr>
+    <tr><td><code>isSignedIntegerDtype(d)</code></td><td><code>is_signed_integer_dtype</code></td><td>int8–int64</td></tr>
+    <tr><td><code>isUnsignedIntegerDtype(d)</code></td><td><code>is_unsigned_integer_dtype</code></td><td>uint8–uint64</td></tr>
+    <tr><td><code>isFloatDtype(d)</code></td><td><code>is_float_dtype</code></td><td>float32 or float64</td></tr>
+    <tr><td><code>isBoolDtype(d)</code></td><td><code>is_bool_dtype</code></td><td>bool</td></tr>
+    <tr><td><code>isStringDtype(d)</code></td><td><code>is_string_dtype</code></td><td>string dtype</td></tr>
+    <tr><td><code>isDatetimeDtype(d)</code></td><td><code>is_datetime64_dtype</code></td><td>datetime</td></tr>
+    <tr><td><code>isTimedeltaDtype(d)</code></td><td><code>is_timedelta64_dtype</code></td><td>timedelta</td></tr>
+    <tr><td><code>isCategoricalDtype(d)</code></td><td><code>is_categorical_dtype</code></td><td>category</td></tr>
+    <tr><td><code>isObjectDtype(d)</code></td><td><code>is_object_dtype</code></td><td>object</td></tr>
+    <tr><td><code>isComplexDtype(d)</code></td><td><code>is_complex_dtype</code></td><td>Always false (no complex in tsb)</td></tr>
+    <tr><td><code>isExtensionArrayDtype(d)</code></td><td><code>is_extension_array_dtype</code></td><td>string/object/datetime/timedelta/category</td></tr>
+    <tr><td><code>isPeriodDtype(d)</code></td><td><code>is_period_dtype</code></td><td>Maps to datetime</td></tr>
+    <tr><td><code>isIntervalDtype(d)</code></td><td><code>is_interval_dtype</code></td><td>Numeric dtypes</td></tr>
+  </table>
+
+  <script type="module">
+    // Inline demo (no bundler required for playground)
+    function show(id, lines) {
+      document.getElementById(id).innerHTML = lines
+        .map(([expr, val]) => `<span class="${val ? 'ok' : 'fail'}">${expr}: ${val}</span>`)
+        .join('<br>');
+    }
+
+    // Value predicate demos (inline implementations for playground)
+    function isScalar(val) {
+      if (val === null || val === undefined) return true;
+      const t = typeof val;
+      if (t === "string" || t === "number" || t === "bigint" || t === "boolean" || t === "symbol") return true;
+      if (val instanceof Date) return true;
+      return false;
+    }
+    function isListLike(val) {
+      if (val === null || val === undefined || typeof val === "string") return false;
+      if (typeof val === "number" || typeof val === "boolean") return false;
+      if (typeof val === "object") {
+        if (Symbol.iterator in val) return true;
+        const len = val["length"];
+        if (typeof len === "number" && len >= 0 && Number.isInteger(len)) return true;
+      }
+      return false;
+    }
+
+    show("scalar-demo", [
+      ["isScalar(42)", isScalar(42)],
+      ["isScalar('hello')", isScalar("hello")],
+      ["isScalar(null)", isScalar(null)],
+      ["isScalar([1, 2])", isScalar([1, 2])],
+      ["isScalar({ a: 1 })", isScalar({ a: 1 })],
+    ]);
+
+    show("listlike-demo", [
+      ["isListLike([1, 2, 3])", isListLike([1, 2, 3])],
+      ["isListLike(new Set([1]))", isListLike(new Set([1]))],
+      ["isListLike('abc')", isListLike("abc")],
+      ["isListLike(42)", isListLike(42)],
+    ]);
+
+    function isFloat(val) {
+      if (typeof val !== "number" || !Number.isFinite(val)) return false;
+      return val !== Math.trunc(val);
+    }
+    function isInteger(val) { return typeof val === "number" && Number.isInteger(val); }
+
+    show("value-demo", [
+      ["isNumber(3.14)", typeof 3.14 === "number"],
+      ["isNumber(NaN)", typeof NaN === "number"],
+      ["isBool(true)", typeof true === "boolean"],
+      ["isFloat(3.14)", isFloat(3.14)],
+      ["isFloat(3.0)", isFloat(3.0)],
+      ["isInteger(42)", isInteger(42)],
+      ["isInteger(3.14)", isInteger(3.14)],
+    ]);
+
+    // Dtype demo table output
+    const dtypes = {
+      isNumeric: name => ["int8","int16","int32","int64","uint8","uint16","uint32","uint64","float32","float64"].includes(name),
+      isFloat: name => ["float32","float64"].includes(name),
+      isInteger: name => ["int8","int16","int32","int64","uint8","uint16","uint32","uint64"].includes(name),
+    };
+    show("dtype-demo", [
+      ["isNumericDtype('float64')", dtypes.isNumeric("float64")],
+      ["isNumericDtype('int32')", dtypes.isNumeric("int32")],
+      ["isNumericDtype('string')", dtypes.isNumeric("string")],
+      ["isFloatDtype('float32')", dtypes.isFloat("float32")],
+      ["isIntegerDtype('int64')", dtypes.isInteger("int64")],
+    ]);
+  </script>
+</body>
+</html>

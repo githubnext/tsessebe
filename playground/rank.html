@@ -205,6 +205,12 @@ const s = new Series({ data: [3, 1, 4, 1, 5] });
 const r = rankSeries(s);
 console.log("ranks:", [...r.values]);
 // 1 appears twice → average rank (1+2)/2 = 1.5</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([3, 1, 4, 1, 5])
+r = s.rank()
+print("ranks:", r.tolist())
+# 1 appears twice → average rank (1+2)/2 = 1.5</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -233,6 +239,15 @@ console.log("min:    ", [...rankSeries(s, { method: "min"     }).values]);
 console.log("max:    ", [...rankSeries(s, { method: "max"     }).values]);
 console.log("first:  ", [...rankSeries(s, { method: "first"   }).values]);
 console.log("dense:  ", [...rankSeries(s, { method: "dense"   }).values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([3, 1, 4, 1, 5])
+
+print("average:", s.rank(method="average").tolist())
+print("min:    ", s.rank(method="min").tolist())
+print("max:    ", s.rank(method="max").tolist())
+print("first:  ", s.rank(method="first").tolist())
+print("dense:  ", s.rank(method="dense").tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -259,6 +274,15 @@ const scores = new Series({
 const rank = rankSeries(scores, { ascending: false });
 console.log("ranks:", [...rank.values]);
 // Dana (95) → rank 1, Bob (92) → rank 2, etc.</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+scores = pd.Series(
+    [85, 92, 78, 95, 88],
+    index=["Alice", "Bob", "Charlie", "Dana", "Eve"],
+)
+rank = scores.rank(ascending=False)
+print("ranks:", rank.tolist())
+# Dana (95) → rank 1, Bob (92) → rank 2, etc.</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -290,6 +314,18 @@ const bottom = rankSeries(s, { naOption: "bottom" });
 console.log("keep:  ", [...keep.values]);
 console.log("top:   ", [...top.values]);
 console.log("bottom:", [...bottom.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([3, None, 1, None, 2])
+
+keep   = s.rank(na_option="keep")
+top    = s.rank(na_option="top")
+bottom = s.rank(na_option="bottom")
+
+print("keep:  ", keep.tolist())
+print("top:   ", top.tolist())
+print("bottom:", bottom.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -312,6 +348,11 @@ console.log("bottom:", [...bottom.values]);</textarea>
 const s = new Series({ data: [10, 20, 30, 40, 50] });
 const pct = rankSeries(s, { pct: true });
 console.log("pct ranks:", [...pct.values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50])
+pct = s.rank(pct=True)
+print("pct ranks:", pct.tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -339,6 +380,16 @@ const df = DataFrame.fromColumns({
 const ranked = rankDataFrame(df);
 console.log("score ranks:", [...ranked.col("score").values]);
 console.log("time ranks: ", [...ranked.col("time").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "score": [85, 92, 78],
+    "time":  [12, 8,  15],
+}, index=["Alice", "Bob", "Charlie"])
+
+ranked = df.rank()
+print("score ranks:", ranked["score"].tolist())
+print("time ranks: ", ranked["time"].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -369,6 +420,19 @@ const ranked = rankDataFrame(df, { axis: 1 });
 console.log("math ranks:   ", [...ranked.col("math").values]);
 console.log("english ranks:", [...ranked.col("english").values]);
 console.log("science ranks:", [...ranked.col("science").values]);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "math":    [90, 70, 85],
+    "english": [80, 95, 75],
+    "science": [85, 80, 90],
+})
+
+# For each student, rank their three subject scores
+ranked = df.rank(axis=1)
+print("math ranks:   ", ranked["math"].tolist())
+print("english ranks:", ranked["english"].tolist())
+print("science ranks:", ranked["science"].tolist())</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -397,6 +461,16 @@ const points = new Series({
 const denseRank = rankSeries(points, { method: "dense", ascending: false });
 console.log("dense ranks:", [...denseRank.values]);
 // Tied players share the same position; no position is skipped</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+points = pd.Series(
+    [100, 85, 85, 72, 72, 60],
+    index=["A", "B", "C", "D", "E", "F"],
+)
+
+dense_rank = points.rank(method="dense", ascending=False)
+print("dense ranks:", dense_rank.tolist())
+# Tied players share the same position; no position is skipped</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

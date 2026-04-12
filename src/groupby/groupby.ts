@@ -20,7 +20,6 @@ import { Index } from "../core/index.ts";
 import { RangeIndex } from "../core/index.ts";
 import { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
-import { NamedAgg, type NamedAggSpec } from "./named_agg.ts";
 import type { Label, Scalar } from "../types.ts";
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -303,69 +302,6 @@ export class DataFrameGroupBy {
     const valueCols = this._valueCols();
     const colSpecs = this._resolveColSpecs(spec, valueCols);
     return this._runAgg(colSpecs, asIndex);
-  }
-
-  /**
-   * Aggregate using pandas-style named aggregation.
-   * Keys in `spec` become output column names.
-   */
-  aggNamed(spec: NamedAggSpec, asIndex = true): DataFrame {
-    const groupKeys = this._groups.map((g) => g.key);
-    const resultCols: Record<string, Scalar[]> = {};
-
-    if (!asIndex) {
-      if (this._by.length === 1) {
-        const byCol = this._by[0];
-        if (byCol !== undefined) {
-          resultCols[byCol] = groupKeys.slice();
-        }
-      } else {
-        for (const by of this._by) {
-          resultCols[by] = [];
-        }
-        for (const g of this._groups) {
-          const parts = String(g.key).split("__SEP__");
-          this._by.forEach((by, idx) => {
-            const byArr = resultCols[by];
-            if (byArr !== undefined) {
-              byArr.push(parts[idx] ?? null);
-            }
-          });
-        }
-      }
-    }
-
-    for (const [outCol, named] of Object.entries(spec)) {
-      if (!(named instanceof NamedAgg)) {
-        throw new TypeError(`aggNamed: "${outCol}" must be a NamedAgg`);
-      }
-      const src = named.column;
-      const aggSpec = named.aggfunc;
-      let fn: AggFn;
-      if (typeof aggSpec === "function") {
-        fn = resolveAgg(aggSpec);
-      } else if (
-        aggSpec === "sum" ||
-        aggSpec === "mean" ||
-        aggSpec === "min" ||
-        aggSpec === "max" ||
-        aggSpec === "count" ||
-        aggSpec === "std" ||
-        aggSpec === "first" ||
-        aggSpec === "last" ||
-        aggSpec === "size"
-      ) {
-        fn = resolveAgg(aggSpec);
-      } else {
-        throw new TypeError(`aggNamed: unsupported aggfunc "${aggSpec}" for column "${outCol}"`);
-      }
-      const srcSeries = this._df.col(src);
-      const srcVals = srcSeries.values as readonly Scalar[];
-      resultCols[outCol] = this._groups.map((g) => fn(g.positions.map((p) => srcVals[p] as Scalar)));
-    }
-
-    const rowIdx: Index<Label> = asIndex ? new Index<Label>(groupKeys) : defaultIndex(groupKeys.length);
-    return DataFrame.fromColumns(resultCols as Record<string, readonly Scalar[]>, { index: rowIdx });
   }
 
   /** Shorthand for `agg("sum")` — numeric columns only, like pandas. */

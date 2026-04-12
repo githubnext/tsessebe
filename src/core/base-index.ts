@@ -49,11 +49,6 @@ export class Index<T extends Label = Label> {
     return this._values.length;
   }
 
-  /** Alias for `size` to preserve array-like ergonomics. */
-  get length(): number {
-    return this._values.length;
-  }
-
   /** Shape tuple (always 1-D). */
   get shape(): [number] {
     return [this._values.length];
