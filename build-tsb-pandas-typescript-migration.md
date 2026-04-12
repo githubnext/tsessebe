@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T01:20:00Z |
-| Iteration Count | 217 |
-| Best Metric | 52 |
+| Last Run | 2026-04-12T02:19:36Z |
+| Iteration Count | 218 |
+| Best Metric | 53 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #120 |
@@ -40,15 +40,15 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- `stats/skew_kurt.ts` — skewness and kurtosis (pandas: Series.skew(), Series.kurt())
 - `stats/sem_var.ts` — standard error of mean and variance aggregations
 - `core/str_accessor` improvements or new string ops (findall, extractall)
+- `io/to_json_normalize.ts` — inverse of jsonNormalize
 
 ---
 
 ## 📚 Lessons Learned
 
-- **Iter 217**: `mode` — `stats/mode.ts`. `modeSeries`/`modeDataFrame`. `compareScalars` uses if/else chain (not nested ternary) for `noNestedTernary`. Remove unused `Index` import (`noUnusedImports`). Long function signatures need breaking across lines for formatter (100-col limit). `modeDataFrame` with `axis=1` preserves original row index; result columns are 0-indexed strings. `numericOnly` filters by `dtype.kind` being `"int"|"uint"|"float"`. Metric: 52 (+1). Commit: cf1270d.
+- **Iter 218**: `mode` + `skew_kurt` — Two features in one iteration (recovering from iter 217's lost push). `modeSeries`/`modeDataFrame`/`skewSeries`/`kurtSeries`/`skewDataFrame`/`kurtDataFrame`. `df.col(name)` throws (not undefined) for all cols from `df.columns.values` — remove `=== undefined` checks. `DataFrame.fromColumns(cols, { index: df.index })` for row-wise results with original index. Skewness: `n/((n-1)*(n-2)) * m3/s^3` (adjusted Fisher-Pearson, s=sample std). Kurtosis: `n*(n+1)/((n-1)*(n-2)*(n-3)) * m4/sampleVar^2 - 3*(n-1)^2/((n-2)*(n-3))` (bias-corrected excess). Metric: 53 (+2). Commit: 35e1521.
 - **Iter 216**: `jsonNormalize` — `io/json_normalize.ts`. Flatten nested JSON objects into DataFrames. `isJsonPrimitive` type guard for safe narrowing of `JsonValue` after `!isJsonObject && !Array.isArray` checks (avoids `as` casts). `navigatePath`: TypeScript narrows `cur` to `JsonObject` after `if (!isJsonObject(cur)) return null` guard, so `cur[key]` works without cast. `Array.isArray(data)` on `JsonObject | readonly JsonObject[]` gives `any[]`, assignable to `readonly JsonObject[]`. Helper decomposition: `flattenObject`, `flattenTopLevel`, `flattenRecordRows`, `buildMetaRecord`, `extractRecords`, `prefixRecord`, `primitiveOrStringify`, `navigatePath`. `DataFrame.fromRecords(flatRows)` works without cast (`Record<string,Scalar>[]` → `readonly Readonly<Record<string,Scalar>>[]` is covariant). Metric: 51 (+1). Commit: b26b44c.
 - **Iter 215**: `readExcel`/`xlsxSheetNames` — `io/read_excel.ts`. Full XLSX reader from scratch: ZIP binary parser (EOCD + central directory + local headers), DEFLATE via `node:zlib` `inflateRawSync` (biome-ignore noNodejsModules). XML parsing via `regexAll` generator (avoids `noAssignInExpressions`). `noExcessiveCognitiveComplexity`: extract `extractHeaderLabels`, `pivotToColumns`, `padHeaderLabels` helpers from `buildColumnarData`. `useNumberNamespace`: use `Number.parseInt`, `Number.isNaN`. Function signature `Uint8Array | ArrayBufferLike` (not `ArrayBuffer`) to accept `.buffer` property without casts. Property tests: use `fc.uniqueArray` to avoid duplicate headers causing shape mismatch. Metric: 50 (+1). Commit: 5748b07.
 - **Iter 214**: `selectDtypes` — `stats/select_dtypes.ts`. Use `import type` for DataFrame (it's only used as a type). Extract `validateNoOverlap` and `columnPasses` helpers to keep complexity under 15. `useExplicitLengthCheck`: use `(x?.length ?? 0) > 0` pattern for optional arrays. `fc.constantFrom<DtypeSpecifier>(...)` type param needed for property tests. Auto-format with `bunx biome format --write` to fix formatter diffs. Metric: 49 (+1). Commit: edf0fb4.
@@ -89,8 +89,11 @@ Next features to implement (prioritized by impact):
 
 ## 📊 Iteration History
 
+### Iteration 218 — 2026-04-12 02:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24296661989)
+- **Status**: ✅ Accepted — Add `stats/mode.ts` (modeSeries/modeDataFrame, all tied modes sorted, axis=0/1, dropna, numericOnly) and `stats/skew_kurt.ts` (skewSeries/kurtSeries/skewDataFrame/kurtDataFrame, adjusted Fisher-Pearson skew + bias-corrected excess kurtosis, skipna, axis, numericOnly). 16+18 unit tests, 3+3 property tests. Playground: mode.html, skew_kurt.html. Metric: 53 (+2). Commit: 35e1521.
+
 ### Iteration 217 — 2026-04-12 01:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24295557098)
-- **Status**: ✅ Accepted — Add `stats/mode.ts`: modeSeries/modeDataFrame. All tied modes returned sorted ascending. DataFrame axis=0 (column-wise, with null-padding) or axis=1 (row-wise). dropna option. numericOnly for column-wise. 25 unit + 6 property tests. Playground: mode.html. Metric: 52 (+1). Commit: cf1270d.
+- **Status**: ⚠️ Code lost — mode.ts was committed but push to canonical branch failed. State file updated but code not in branch. Recovered in iter 218.
 
 ### Iteration 216 — 2026-04-12 00:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24294949963)
 - **Status**: ✅ Accepted — Add `io/json_normalize.ts`: jsonNormalize(data, options?) — flatten nested JSON to DataFrame. recordPath, meta, metaPrefix, recordPrefix, sep, maxLevel, errors options. 26 tests (unit + fast-check property tests). Playground: json_normalize.html. Metric: 51 (+1). Commit: b26b44c.
