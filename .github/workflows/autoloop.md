@@ -437,30 +437,33 @@ steps:
       if selected:
           head_branch = f"autoloop/{selected}"
           owner = repo.split("/")[0] if "/" in repo else ""
-          try:
-              pr_api_url = (
-                  f"https://api.github.com/repos/{repo}/pulls"
-                  f"?state=open&head={owner}:{head_branch}&per_page=5"
-              )
-              pr_req = urllib.request.Request(pr_api_url, headers={
-                  "Authorization": f"token {github_token}",
-                  "Accept": "application/vnd.github.v3+json",
-              })
-              with urllib.request.urlopen(pr_req, timeout=30) as pr_resp:
-                  open_prs = json.loads(pr_resp.read().decode())
-              if open_prs:
-                  existing_pr = open_prs[0]["number"]
-                  print(f"  Found existing PR #{existing_pr} for branch {head_branch}")
-              else:
-                  print(f"  No existing PR found for branch {head_branch}")
-          except Exception as e:
-              print(f"  Warning: could not check for existing PRs: {e}")
+          if owner:
+              try:
+                  pr_api_url = (
+                      f"https://api.github.com/repos/{repo}/pulls"
+                      f"?state=open&head={owner}:{head_branch}&per_page=5"
+                  )
+                  pr_req = urllib.request.Request(pr_api_url, headers={
+                      "Authorization": f"token {github_token}",
+                      "Accept": "application/vnd.github.v3+json",
+                  })
+                  with urllib.request.urlopen(pr_req, timeout=30) as pr_resp:
+                      open_prs = json.loads(pr_resp.read().decode())
+                  if open_prs:
+                      existing_pr = open_prs[0]["number"]
+                      print(f"  Found existing PR #{existing_pr} for branch {head_branch}")
+                  else:
+                      print(f"  No existing PR found for branch {head_branch}")
+              except Exception as e:
+                  print(f"  Warning: could not check for existing PRs: {e}")
+          else:
+              print(f"  Warning: could not parse owner from GITHUB_REPOSITORY='{repo}'")
 
           # Also check the state file for a recorded PR number as fallback
           if existing_pr is None:
               state = read_program_state(selected)
               pr_field = state.get("pr") or ""
-              pr_match = re.match(r'#?(\d+)', pr_field.strip())
+              pr_match = re.match(r'^#?(\d+)$', pr_field.strip())
               if pr_match:
                   existing_pr = int(pr_match.group(1))
                   print(f"  Found PR #{existing_pr} from state file for {selected}")
