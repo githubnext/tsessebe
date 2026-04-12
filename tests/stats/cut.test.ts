@@ -38,7 +38,7 @@ describe("cut — basic", () => {
 
   it("returns null for out-of-range values", () => {
     // When using explicit bins, values outside are null
-    const result = cut([1, 2, 3, 100], { bins: [0, 2, 5] });
+    const result = cut([1, 2, 3, 100], [0, 2, 5]);
     const v = result.values as readonly (string | null)[];
     // 100 is outside the explicit bins [0,2,5], expect null
     expect(v[3]).toBe(null);
