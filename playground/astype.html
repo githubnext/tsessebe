@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — astype</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .playground-block { margin-top: 1rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: default; }
+    .playground-editor {
+      width: 100%;
+      min-height: 120px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      padding: 0.75rem 1rem;
+      resize: vertical;
+      outline: none;
+    }
+    .playground-output {
+      background: #0a0d12;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 0.5rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 0.6rem 1rem;
+      min-height: 2.4rem;
+      white-space: pre-wrap;
+      color: #8b949e;
+    }
+    .playground-output.success { color: var(--green); }
+    .playground-output.error { color: var(--red); }
+    .playground-hint {
+      font-size: 0.7rem;
+      color: #484f58;
+      margin-top: 0.3rem;
+      text-align: right;
+    }
+    pre.api-reference-code {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      overflow-x: auto;
+      color: var(--text);
+    }
+    footer { margin-top: 3rem; color: #484f58; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <p>Loading tsb runtime…</p>
+  </div>
+
+  <a class="back" href="index.html">← tsb playground</a>
+  <h1>astype — dtype coercion</h1>
+  <p>
+    Cast Series and DataFrame values to a different dtype.
+    Mirrors <code>pandas.Series.astype</code> and <code>pandas.DataFrame.astype</code>.
+  </p>
+
+  <!-- 1 · Series: cast floats to int -->
+  <div class="section">
+    <h2>1 · Series — float to int64</h2>
+    <p>
+      Cast floating-point values to integers via truncation (same as
+      <code>pandas.Series.astype("int64")</code>).
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, astypeSeries } from "tsb";
+
+const s = new Series({ data: [1.9, 2.1, 3.7, -0.5], name: "floats" });
+const si = astypeSeries(s, "int64");
+
+console.log("Original dtype:", s.dtype.name);        // float64
+console.log("Cast dtype:    ", si.dtype.name);        // int64
+console.log("Values:        ", [...si.values]);       // [1, 2, 3, 0]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+s = pd.Series([1.9, 2.1, 3.7, -0.5], name="floats")
+si = s.astype("int64")
+
+print("Original dtype:", s.dtype)     # float64
+print("Cast dtype:    ", si.dtype)    # int64
+print("Values:        ", si.tolist()) # [1, 2, 3, 0]</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 2 · Series: cast numbers to string -->
+  <div class="section">
+    <h2>2 · Series — numbers to string</h2>
+    <p>Convert every value to its string representation. Null/undefined values
+      become <code>null</code> (not the string <code>"null"</code>).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, astypeSeries } from "tsb";
+
+const s = new Series({ data: [100, 200, null, 400] });
+const ss = astypeSeries(s, "string");
+
+console.log("dtype:", ss.dtype.name);       // string
+console.log("values:", [...ss.values]);     // ["100", "200", null, "400"]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([100, 200, np.nan, 400])
+ss = s.astype("string")
+
+print("dtype:", ss.dtype)            # string
+print("values:", ss.tolist())        # ['100', '200', <NA>, '400']</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 3 · Series: integer clamping -->
+  <div class="section">
+    <h2>3 · Overflow clamping for bounded integer dtypes</h2>
+    <p>
+      Values that overflow the target integer dtype's range are clamped to
+      <code>[min, max]</code> — e.g. <code>uint8</code> is clamped to
+      <code>[0, 255]</code>.
+    </p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, astypeSeries } from "tsb";
+
+const s = new Series({ data: [-10, 0, 128, 300] });
+
+// uint8: [0, 255]
+const u8 = astypeSeries(s, "uint8");
+console.log("uint8:", [...u8.values]);   // [0, 0, 128, 255]
+
+// int8: [-128, 127]
+const i8 = astypeSeries(s, "int8");
+console.log("int8: ", [...i8.values]);   // [-10, 0, 127, 127]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([-10, 0, 128, 300])
+
+# pandas wraps on overflow (does not clamp)
+u8 = s.astype("uint8")
+print("uint8:", u8.tolist())  # [246, 0, 128, 44] — wraps around
+
+i8 = s.astype("int8")
+print("int8:", i8.tolist())   # [-10, 0, -128, 44] — wraps around</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 4 · DataFrame: cast all columns -->
+  <div class="section">
+    <h2>4 · DataFrame — cast all columns</h2>
+    <p>Pass a single dtype name to cast every column to the same type.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, astype } from "tsb";
+
+const df = DataFrame.fromColumns({
+  price:  [9.99, 24.95, 4.49],
+  qty:    [10.0, 3.0,   7.0],
+});
+
+const di = astype(df, "int64");
+
+console.log("price dtype:", di.col("price").dtype.name);  // int64
+console.log("prices:     ", [...di.col("price").values]); // [9, 24, 4]
+console.log("quantities: ", [...di.col("qty").values]);   // [10, 3, 7]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "price": [9.99, 24.95, 4.49],
+    "qty":   [10.0, 3.0,   7.0],
+})
+
+di = df.astype("int64")
+
+print("price dtype:", di["price"].dtype)       # int64
+print("prices:     ", di["price"].tolist())    # [9, 24, 4]
+print("quantities: ", di["qty"].tolist())      # [10, 3, 7]</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 5 · DataFrame: per-column mapping -->
+  <div class="section">
+    <h2>5 · DataFrame — per-column dtype mapping</h2>
+    <p>Pass a <code>Record&lt;string, DtypeName&gt;</code> to cast individual
+      columns. Columns not listed are carried over unchanged.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, astype } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:    ["1", "2", "3"],
+  score: ["85.5", "92.0", "78.3"],
+  label: ["A", "B", "C"],
+});
+
+// Cast id → int64, score → float64; leave label unchanged
+const di = astype(df, { id: "int64", score: "float64" });
+
+console.log("id dtype:    ", di.col("id").dtype.name);     // int64
+console.log("score dtype: ", di.col("score").dtype.name);  // float64
+console.log("label dtype: ", di.col("label").dtype.name);  // string (unchanged)
+console.log("ids:         ", [...di.col("id").values]);    // [1, 2, 3]
+console.log("scores:      ", [...di.col("score").values]); // [85.5, 92, 78.3]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame({
+    "id":    ["1", "2", "3"],
+    "score": ["85.5", "92.0", "78.3"],
+    "label": ["A", "B", "C"],
+})
+
+di = df.astype({"id": "int64", "score": "float64"})
+
+print("id dtype:    ", di["id"].dtype)        # int64
+print("score dtype: ", di["score"].dtype)     # float64
+print("label dtype: ", di["label"].dtype)     # object (unchanged)
+print("ids:         ", di["id"].tolist())     # [1, 2, 3]
+print("scores:      ", di["score"].tolist())  # [85.5, 92.0, 78.3]</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 6 · bool casting -->
+  <div class="section">
+    <h2>6 · Casting to bool</h2>
+    <p>Zero, empty string, and <code>NaN</code> become <code>false</code>;
+      everything else (including non-zero numbers and non-empty strings)
+      becomes <code>true</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, astypeSeries } from "tsb";
+
+const s = new Series({ data: [0, 1, -5, NaN, 42] });
+const sb = astypeSeries(s, "bool");
+
+console.log("bool values:", [...sb.values]); // [false, true, true, false, true]</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series([0, 1, -5, np.nan, 42])
+sb = s.astype("bool")
+
+print("bool values:", sb.tolist())  # [False, True, True, True, True]
+# Note: pandas treats NaN as truthy when casting to bool</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- API Reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <pre class="api-reference-code"><code>// Series cast
+astypeSeries(
+  series: Series,
+  dtype: DtypeName | Dtype,
+  options?: AstypeOptions,
+): Series
+
+// DataFrame cast (all columns or per-column mapping)
+astype(
+  df: DataFrame,
+  dtype: DtypeName | Dtype | Record&lt;string, DtypeName | Dtype&gt;,
+  options?: DataFrameAstypeOptions,
+): DataFrame
+
+// Low-level scalar cast
+castScalar(value: Scalar, dtype: Dtype): Scalar
+
+// Options
+interface AstypeOptions {
+  errors?: "raise" | "ignore";  // default "raise"
+}
+
+// Supported dtype names
+type DtypeName =
+  | "int8" | "int16" | "int32" | "int64"
+  | "uint8" | "uint16" | "uint32" | "uint64"
+  | "float32" | "float64"
+  | "bool" | "string" | "object"
+  | "datetime" | "timedelta" | "category"</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
