@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — selectDtypes</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
+    h1 { color: #4f46e5; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
+    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
+    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
+    .tag { display: inline-block; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 4px; }
+    a { color: #4f46e5; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #e5e7eb; padding: 6px 12px; text-align: left; font-size: 14px; }
+    th { background: #f3f4f6; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>🔍 selectDtypes</h1>
+  <p>
+    <strong><code>selectDtypes(df, { include, exclude })</code></strong> returns a new DataFrame
+    containing only columns whose dtype satisfies the filter — just like
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.select_dtypes.html"><code>DataFrame.select_dtypes()</code></a>.
+  </p>
+  <p>Equivalent Python: <code>df.select_dtypes(include=["number"])</code></p>
+
+  <h2>Generic type aliases</h2>
+  <table>
+    <thead><tr><th>Alias</th><th>Matches dtypes</th></tr></thead>
+    <tbody>
+      <tr><td><code>"number"</code></td><td>int*, uint*, float*</td></tr>
+      <tr><td><code>"integer"</code></td><td>int*, uint*</td></tr>
+      <tr><td><code>"signed"</code></td><td>int*</td></tr>
+      <tr><td><code>"unsigned"</code></td><td>uint*</td></tr>
+      <tr><td><code>"floating"</code></td><td>float*</td></tr>
+      <tr><td><code>"bool"</code></td><td>bool</td></tr>
+      <tr><td><code>"string"</code></td><td>string</td></tr>
+      <tr><td><code>"datetime"</code></td><td>datetime</td></tr>
+      <tr><td><code>"category"</code></td><td>category</td></tr>
+      <tr><td><code>"object"</code></td><td>object</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Demo 1: include number -->
+  <h2>1 · Include numeric columns only</h2>
+  <div class="demo">
+    <pre>const df = DataFrame.fromColumns({
+  age:    [25, 30, 35],
+  score:  [9.1, 8.2, 7.5],
+  name:   ["Alice", "Bob", "Carol"],
+  active: [true, false, true],
+});
+
+selectDtypes(df, { include: ["number"] }).columns.values;
+// → ["age", "score"]</pre>
+    <div class="output" id="demo1"></div>
+  </div>
+
+  <!-- Demo 2: exclude number -->
+  <h2>2 · Exclude numeric columns</h2>
+  <div class="demo">
+    <pre>selectDtypes(df, { exclude: ["number"] }).columns.values;
+// → ["name", "active"]</pre>
+    <div class="output" id="demo2"></div>
+  </div>
+
+  <!-- Demo 3: include + exclude -->
+  <h2>3 · Include number, exclude floating → integers only</h2>
+  <div class="demo">
+    <pre>selectDtypes(df, { include: ["number"], exclude: ["floating"] }).columns.values;
+// → ["age"]</pre>
+    <div class="output" id="demo3"></div>
+  </div>
+
+  <!-- Demo 4: exact dtype name -->
+  <h2>4 · Exact dtype name</h2>
+  <div class="demo">
+    <pre>selectDtypes(df, { include: ["bool"] }).columns.values;
+// → ["active"]</pre>
+    <div class="output" id="demo4"></div>
+  </div>
+
+  <!-- Demo 5: datetime -->
+  <h2>5 · Select datetime columns</h2>
+  <div class="demo">
+    <pre>const df2 = DataFrame.fromColumns({
+  created: [new Date("2024-01-01"), new Date("2024-06-01")],
+  value:   [100, 200],
+});
+
+selectDtypes(df2, { include: ["datetime"] }).columns.values;
+// → ["created"]</pre>
+    <div class="output" id="demo5"></div>
+  </div>
+
+  <!-- Demo 6: no options -->
+  <h2>6 · No options — returns DataFrame unchanged</h2>
+  <div class="demo">
+    <pre>selectDtypes(df).columns.values;
+// → ["age", "score", "name", "active"]  (all columns)</pre>
+    <div class="output" id="demo6"></div>
+  </div>
+
+  <script type="module">
+    import { DataFrame, selectDtypes, Series } from "./runtime.js";
+
+    function render(id, value) {
+      document.getElementById(id).textContent =
+        value instanceof DataFrame
+          ? JSON.stringify(value.toRecords(), null, 2)
+          : JSON.stringify(value, null, 2);
+    }
+
+    const df = DataFrame.fromColumns({
+      age:    [25, 30, 35],
+      score:  [9.1, 8.2, 7.5],
+      name:   ["Alice", "Bob", "Carol"],
+      active: [true, false, true],
+    });
+
+    // Demo 1
+    render("demo1", [...selectDtypes(df, { include: ["number"] }).columns.values]);
+
+    // Demo 2
+    render("demo2", [...selectDtypes(df, { exclude: ["number"] }).columns.values]);
+
+    // Demo 3
+    render("demo3", [...selectDtypes(df, { include: ["number"], exclude: ["floating"] }).columns.values]);
+
+    // Demo 4
+    render("demo4", [...selectDtypes(df, { include: ["bool"] }).columns.values]);
+
+    // Demo 5
+    const df2 = DataFrame.fromColumns({
+      created: [new Date("2024-01-01"), new Date("2024-06-01")],
+      value:   [100, 200],
+    });
+    render("demo5", [...selectDtypes(df2, { include: ["datetime"] }).columns.values]);
+
+    // Demo 6
+    render("demo6", [...selectDtypes(df).columns.values]);
+  </script>
+</body>
+</html>
