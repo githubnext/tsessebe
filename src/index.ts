@@ -241,3 +241,15 @@ export type {
   QuantileSeriesOptions,
   QuantileDataFrameOptions,
 } from "./stats/index.ts";
+export {
+  nancount,
+  nansum,
+  nanmean,
+  nanmedian,
+  nanvar,
+  nanstd,
+  nanmin,
+  nanmax,
+  nanprod,
+} from "./stats/index.ts";
+export type { NanInput, NanAggOptions } from "./stats/index.ts";
