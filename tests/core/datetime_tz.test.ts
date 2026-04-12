@@ -431,8 +431,8 @@ describe("TZDatetimeIndex [Symbol.iterator]", () => {
     const naive = date_range({ start: "2024-01-01", periods: 3, freq: "D" });
     const idx = tz_localize(naive, "UTC");
     const times = [...idx].map((d) => d.getTime());
-    expect(times[1] - times[0]).toBe(86_400_000);
-    expect(times[2] - times[1]).toBe(86_400_000);
+    expect(times[1]! - times[0]!).toBe(86_400_000);
+    expect(times[2]! - times[1]!).toBe(86_400_000);
   });
 });
 

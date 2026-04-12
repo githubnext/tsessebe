@@ -270,7 +270,7 @@ describe("NamedAgg property tests", () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 1 }),
-        fc.constantFrom("sum", "mean", "min", "max", "count" as const),
+        fc.constantFrom("sum" as const, "mean" as const, "min" as const, "max" as const, "count" as const),
         (col, agg) => {
           const spec = new NamedAgg(col, agg);
           expect(spec.column).toBe(col);

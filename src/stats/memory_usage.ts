@@ -176,11 +176,11 @@ export function dataFrameMemoryUsage(
     values.push(indexMemoryBytes(df.index, deep));
   }
 
-  for (const [colName, col] of df) {
+  for (const [colName, col] of df.items()) {
     names.push(colName);
     let mem: number;
     if (deep) {
-      mem = col.values.reduce((sum: number, v) => sum + deepScalarSize(v), 0);
+      mem = col.values.reduce((sum: number, v: Scalar) => sum + deepScalarSize(v), 0);
     } else {
       mem = col.size * shallowElemSize(col.dtype.itemsize);
     }

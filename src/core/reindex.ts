@@ -198,7 +198,7 @@ function applyNearest(values: Scalar[], present: readonly boolean[]): Scalar[] {
       out[i] = rightVal[i];
     } else if (rd === -1) {
       out[i] = leftVal[i];
-    } else if (rd <= ld) {
+    } else if (rd !== undefined && ld !== undefined && rd <= ld) {
       // prefer right on tie
       out[i] = rightVal[i];
     } else {
@@ -268,7 +268,10 @@ export function reindexSeries<T extends Scalar>(
     const key = String(newLabels[i]);
     const positions = labelMap.get(key);
     if (positions !== undefined && positions.length > 0) {
-      resultValues[i] = series.values[positions[0]] as Scalar;
+      const pos0 = positions[0];
+      if (pos0 !== undefined) {
+        resultValues[i] = series.values[pos0] as Scalar;
+      }
       present[i] = true;
     }
   }

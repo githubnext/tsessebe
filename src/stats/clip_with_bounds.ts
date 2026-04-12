@@ -39,8 +39,15 @@ export interface SeriesClipBoundsOptions {
   readonly upper?: BoundArg;
 }
 
+/** A bound that also accepts a DataFrame (for element-wise clipping). */
+export type DataFrameBoundArg = BoundArg | DataFrame;
+
 /** Options for {@link clipDataFrameWithBounds}. */
-export interface DataFrameClipBoundsOptions extends SeriesClipBoundsOptions {
+export interface DataFrameClipBoundsOptions {
+  /** Lower bound. May be any `BoundArg` or a `DataFrame` for element-wise clipping. */
+  readonly lower?: DataFrameBoundArg;
+  /** Upper bound. May be any `BoundArg` or a `DataFrame` for element-wise clipping. */
+  readonly upper?: DataFrameBoundArg;
   /**
    * Axis along which a Series bound is broadcast:
    * - `0` / `"index"` (default): Series is indexed on **row labels** — each row

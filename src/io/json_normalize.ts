@@ -310,6 +310,7 @@ export function jsonNormalize(
     let currentRecords: readonly JsonObject[] = records;
     for (let i = 0; i < pathList.length; i++) {
       const path = pathList[i];
+      if (path === undefined) continue;
       const isFinal = i === pathList.length - 1;
       if (isFinal) {
         rows = normalizeWithPath(
@@ -343,7 +344,7 @@ export function jsonNormalize(
 
   // ── Build column sets and DataFrame ───────────────────────────────────────
   if (rows.length === 0) {
-    return new DataFrame({});
+    return DataFrame.fromColumns({});
   }
 
   // Union of all column names (preserve first-seen insertion order)
@@ -364,22 +365,20 @@ export function jsonNormalize(
   }
 
   // Build Series columns and infer dtypes
-  const seriesMap: Record<string, Series> = {};
+  const colMap = new Map<string, Series<Scalar>>();
   for (const [col, vals] of Object.entries(colData)) {
     let dtype: Dtype;
     if (vals.every((v) => v === null || typeof v === "number")) {
       dtype = vals.some((v) => v !== null && !Number.isInteger(v))
-        ? new Dtype("float64")
-        : new Dtype("int64");
+        ? Dtype.float64
+        : Dtype.int64;
     } else if (vals.every((v) => v === null || typeof v === "boolean")) {
-      dtype = new Dtype("bool");
+      dtype = Dtype.bool;
     } else {
-      dtype = new Dtype("object");
+      dtype = Dtype.object;
     }
-    seriesMap[col] = new Series(vals, { name: col, dtype });
+    colMap.set(col, new Series({ data: vals, name: col, dtype }));
   }
 
-  return new DataFrame(seriesMap, {
-    index: new RangeIndex(rows.length),
-  });
+  return new DataFrame(colMap, new RangeIndex(rows.length));
 }

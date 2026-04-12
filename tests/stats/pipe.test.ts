@@ -76,7 +76,7 @@ describe("pipeSeries — basic usage", () => {
       received = x;
       return x;
     });
-    expect(received).toBe(s);
+    expect(received === s).toBe(true);
   });
 });
 
@@ -157,7 +157,7 @@ describe("dataFramePipe — basic usage", () => {
       received = d;
       return d;
     });
-    expect(received).toBe(df);
+    expect(received === df).toBe(true);
   });
 
   test("fn can return a new DataFrame", () => {

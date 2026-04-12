@@ -12,7 +12,15 @@ import {
   dataFrameMemoryUsage,
   seriesMemoryUsage,
 } from "../../src/index.ts";
-import type { Scalar } from "../../src/index.ts";
+import type { Label, Scalar } from "../../src/index.ts";
+
+/** Build a DataFrame from a record of named Series. */
+function dfFromSeries(cols: Record<string, Series<Scalar>>): DataFrame {
+  const entries = Object.entries(cols);
+  const colMap = new Map<string, Series<Scalar>>(entries);
+  const nRows = entries.length > 0 ? (entries[0]?.[1]?.length ?? 0) : 0;
+  return new DataFrame(colMap, new RangeIndex(nRows));
+}
 
 // ─── seriesMemoryUsage ────────────────────────────────────────────────────────
 
@@ -155,7 +163,7 @@ describe("seriesMemoryUsage", () => {
 
 describe("dataFrameMemoryUsage", () => {
   it("returns Series indexed by column names with Index entry", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       a: new Series<number>({ data: [1, 2, 3], dtype: Dtype.int32 }),
       b: new Series<number>({ data: [4, 5, 6], dtype: Dtype.float64 }),
     });
@@ -167,7 +175,7 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("Index row = 24 bytes (RangeIndex)", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       x: new Series<number>({ data: [1, 2], dtype: Dtype.int64 }),
     });
     const mu = dataFrameMemoryUsage(df);
@@ -175,7 +183,7 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("column bytes = n × itemsize for fixed-width", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       a: new Series<number>({ data: [10, 20, 30], dtype: Dtype.int32 }),
       b: new Series<number>({ data: [1.0, 2.0, 3.0], dtype: Dtype.float64 }),
     });
@@ -185,7 +193,7 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("string column = n × 8 bytes (pointers) when shallow", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       s: new Series<Scalar>({ data: ["hello", "world"], dtype: Dtype.string }),
     });
     const mu = dataFrameMemoryUsage(df);
@@ -193,7 +201,7 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("index=false excludes 'Index' row", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       a: new Series<number>({ data: [1, 2], dtype: Dtype.int32 }),
     });
     const mu = dataFrameMemoryUsage(df, { index: false });
@@ -203,7 +211,7 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("deep=true string column reflects actual string sizes", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       s: new Series<Scalar>({ data: ["hi", "hello"], dtype: Dtype.string }),
     });
     const mu = dataFrameMemoryUsage(df, { deep: true, index: false });
@@ -212,12 +220,12 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("result Series name is 'memory_usage'", () => {
-    const df = new DataFrame({ x: new Series<number>({ data: [1], dtype: Dtype.int64 }) });
+    const df = dfFromSeries({ x: new Series<number>({ data: [1], dtype: Dtype.int64 }) });
     expect(dataFrameMemoryUsage(df).name).toBe("memory_usage");
   });
 
   it("total() matches sum of all column bytes (no index)", () => {
-    const df = new DataFrame({
+    const df = dfFromSeries({
       a: new Series<number>({ data: [1, 2, 3, 4], dtype: Dtype.int32 }),
       b: new Series<number>({ data: [1.0, 2.0, 3.0, 4.0], dtype: Dtype.float64 }),
     });
@@ -227,7 +235,7 @@ describe("dataFrameMemoryUsage", () => {
   });
 
   it("empty DataFrame returns only Index row", () => {
-    const df = new DataFrame({});
+    const df = DataFrame.fromColumns({});
     const mu = dataFrameMemoryUsage(df);
     expect(mu.index.size).toBe(1);
     expect(mu.at("Index")).toBe(24);
@@ -245,7 +253,7 @@ describe("dataFrameMemoryUsage", () => {
               dtype: Dtype.int32,
             });
           });
-          const df = new DataFrame(cols);
+          const df = dfFromSeries(cols);
           const mu = dataFrameMemoryUsage(df);
           return mu.values.every((v) => v >= 0);
         },
@@ -265,7 +273,7 @@ describe("dataFrameMemoryUsage", () => {
               dtype: Dtype.int32,
             });
           });
-          const df = new DataFrame(cols);
+          const df = dfFromSeries(cols);
           const mu = dataFrameMemoryUsage(df, { index: false });
           const expected = colSizes.reduce((s, n) => s + n * 4, 0);
           return mu.sum() === expected;

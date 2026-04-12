@@ -149,8 +149,8 @@ export function combineFirstDataFrame(self: DataFrame, other: DataFrame): DataFr
   const resultColMap = new Map<string, Series<Scalar>>();
 
   for (const colName of unionCols) {
-    const selfHasCol = self.hasColumn(colName);
-    const otherHasCol = other.hasColumn(colName);
+    const selfHasCol = self.has(colName);
+    const otherHasCol = other.has(colName);
 
     const data: Scalar[] = [];
 

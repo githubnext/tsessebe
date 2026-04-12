@@ -17,6 +17,7 @@ import * as fc from "fast-check";
 import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
 import { Index } from "../../src/core/base-index.ts";
+import type { Label, Scalar } from "../../src/types.ts";
 import {
   combineFirstDataFrame,
   combineFirstSeries,
@@ -24,11 +25,11 @@ import {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function sv(s: Series<unknown>, idx: unknown[]): unknown[] {
+function sv(s: Series<Scalar>, idx: Scalar[]): Scalar[] {
   return idx.map((lbl) => {
-    const pos = s.index.getLoc(lbl as number | string | boolean | null);
+    const pos = s.index.getLoc(lbl as Label);
     const p = Array.isArray(pos) ? (pos[0] ?? 0) : pos;
-    return s.values[p];
+    return s.values[p] as Scalar;
   });
 }
 

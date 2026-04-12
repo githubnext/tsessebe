@@ -285,7 +285,7 @@ describe("explodeSeries — property-based", () => {
         (data) => {
           const s = new Series({ data: data as unknown as Scalar[] });
           const out = explodeSeries(s);
-          const expected = data.reduce((sum, v) => sum + elementCount(v), 0);
+          const expected = data.reduce((sum: number, v) => sum + elementCount(v), 0);
           return out.size === expected;
         },
       ),

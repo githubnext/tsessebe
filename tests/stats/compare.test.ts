@@ -226,7 +226,7 @@ describe("dataFrameNe — scalar", () => {
     const ne = [...dataFrameNe(df, 2).col("a").values];
     // For non-null values, ne is the negation of eq
     expect(ne).toEqual([true, false, true]);
-    expect(eq.map((v) => !v)).toEqual(ne);
+    expect(eq.map((v) => !v)).toEqual(ne as boolean[]);
   });
 });
 

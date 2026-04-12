@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, type Scalar } from "../../src/index.ts";
+import { DataFrame, type Label, type Scalar } from "../../src/index.ts";
 import { pivotTableFull } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@ function colValues(df: DataFrame, col: string): Scalar[] {
   return [...df.col(col).values];
 }
 
-function numCell(df: DataFrame, rowLabel: Scalar, col: string): number {
+function numCell(df: DataFrame, rowLabel: Label, col: string): number {
   const rowIdx = [...df.index.values].indexOf(rowLabel);
   if (rowIdx === -1) {
     throw new Error(`Row "${String(rowLabel)}" not found`);

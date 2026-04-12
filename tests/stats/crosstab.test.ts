@@ -43,8 +43,8 @@ describe("crosstab — basic counts", () => {
     const idx = ["foo", "foo", "bar", "bar"];
     const col = ["A", "B", "A", "B"];
     const ct = crosstab(idx, col);
-    expect(ct.columns.values.sort()).toEqual(["A", "B"]);
-    expect(ct.index.values.sort()).toEqual(["bar", "foo"]);
+    expect([...ct.columns.values].sort()).toEqual(["A", "B"]);
+    expect([...ct.index.values].sort()).toEqual(["bar", "foo"]);
     expect(cell(ct, "foo", "A")).toBe(1);
     expect(cell(ct, "foo", "B")).toBe(1);
     expect(cell(ct, "bar", "A")).toBe(1);

@@ -193,7 +193,7 @@ export function seriesFactorize<T extends Scalar>(
   const codesSeries = new Series<number>({
     data: result.codes as number[],
     index: codesIndex,
-    name: series.name ?? undefined,
+    name: series.name ?? null,
   });
   const uniquesSeries = new Series<T>({
     data: result.uniques as T[],

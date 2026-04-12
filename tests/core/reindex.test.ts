@@ -37,7 +37,7 @@ describe("reindexSeries — no method", () => {
 
   it("label absent in original → null by default", () => {
     const r = reindexSeries(s, ["a", "d", "c"]);
-    expect(r.toArray()).toEqual([10, null, 30]);
+    expect(r.toArray() as (number | null)[]).toEqual([10, null, 30]);
   });
 
   it("label absent in original → fillValue when provided", () => {
@@ -96,7 +96,7 @@ describe("reindexSeries — method=ffill", () => {
   it("leading missing not filled (no prior value)", () => {
     const s = makeNumericSeries([10, 20], ["b", "c"]);
     const r = reindexSeries(s, ["a", "b", "c"], { method: "ffill" });
-    expect(r.toArray()).toEqual([null, 10, 20]);
+    expect(r.toArray() as (number | null)[]).toEqual([null, 10, 20]);
   });
 
   it("interleaved missing filled from left", () => {
@@ -116,7 +116,7 @@ describe("reindexSeries — method=ffill", () => {
     const s = makeNumericSeries([1, 5], ["a", "e"]);
     const r = reindexSeries(s, ["a", "b", "c", "d", "e"], { method: "ffill", limit: 1 });
     // a→1, b→1 (1 fill), c→null (limit exceeded), d→null, e→5
-    expect(r.toArray()).toEqual([1, 1, null, null, 5]);
+    expect(r.toArray() as (number | null)[]).toEqual([1, 1, null, null, 5]);
   });
 });
 
@@ -132,7 +132,7 @@ describe("reindexSeries — method=bfill", () => {
   it("trailing missing not filled (no next value)", () => {
     const s = makeNumericSeries([1, 2], ["a", "b"]);
     const r = reindexSeries(s, ["a", "b", "c"], { method: "bfill" });
-    expect(r.toArray()).toEqual([1, 2, null]);
+    expect(r.toArray() as (number | null)[]).toEqual([1, 2, null]);
   });
 
   it("interleaved missing filled from right", () => {
@@ -152,7 +152,7 @@ describe("reindexSeries — method=bfill", () => {
     const s = makeNumericSeries([1, 5], ["a", "e"]);
     const r = reindexSeries(s, ["a", "b", "c", "d", "e"], { method: "bfill", limit: 1 });
     // a→1, b→null (bfill: e fills d, then stops), c→null, d→5 (1 fill), e→5
-    expect(r.toArray()).toEqual([1, null, null, 5, 5]);
+    expect(r.toArray() as (number | null)[]).toEqual([1, null, null, 5, 5]);
   });
 });
 
@@ -183,7 +183,7 @@ describe("reindexSeries — method=nearest", () => {
   it("all missing → all null", () => {
     const s = makeNumericSeries([1, 2], ["x", "y"]);
     const r = reindexSeries(s, ["a", "b", "c"], { method: "nearest" });
-    expect(r.toArray()).toEqual([null, null, null]);
+    expect(r.toArray() as (number | null)[]).toEqual([null, null, null]);
   });
 });
 

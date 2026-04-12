@@ -201,8 +201,8 @@ export function crosstab(
   // buckets[r][c] = collected numeric values for aggregation (when values+aggfunc provided).
   const buckets: Array<Array<number[] | undefined>> | null =
     values !== undefined
-      ? Array.from({ length: nRows }, () =>
-          Array.from<number[] | undefined>({ length: nCols }, () => undefined),
+      ? Array.from({ length: nRows }, (): Array<number[] | undefined> =>
+          new Array<number[] | undefined>(nCols).fill(undefined),
         )
       : null;
 
@@ -293,12 +293,12 @@ export function crosstab(
       const name = labelStr(colUniques[ci] as Scalar);
       const col = colData[name];
       if (col !== undefined) {
-        col.push(col.reduce((s, v) => s + (v as number), 0));
+        col.push(col.reduce((s: number, v) => s + (typeof v === "number" ? v : 0), 0));
       }
     }
     // Add an "All" column with row totals (and grand total in the last cell).
     const allCol: Scalar[] = cells.map((row) => row.reduce((s, v) => s + v, 0));
-    allCol.push(allCol.reduce((s, v) => s + (v as number), 0));
+    allCol.push(allCol.reduce((s: number, v) => s + (typeof v === "number" ? v : 0), 0));
     colData[marginsName] = allCol;
     finalRowLabels = [...rowLabels, marginsName as Label];
   }

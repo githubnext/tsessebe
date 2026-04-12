@@ -64,7 +64,7 @@ describe("sampleSeries — basic", () => {
   test("index is preserved by default", () => {
     const r = sampleSeries(s, { n: 2, randomState: 10 });
     for (const label of r.index.toArray()) {
-      expect(["a", "b", "c", "d", "e"]).toContain(label);
+      expect(["a", "b", "c", "d", "e"]).toContain(label as string);
     }
   });
 

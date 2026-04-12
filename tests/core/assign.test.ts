@@ -207,7 +207,7 @@ describe("dataFrameAssign — property tests", () => {
           }
 
           const df2 = dataFrameAssign(df, spec);
-          expect(df2.columns.length).toBe(1 + nNew);
+          expect(df2.columns.size).toBe(1 + nNew);
           expect(df2.shape[0]).toBe(nRows);
         },
       ),
@@ -256,10 +256,10 @@ describe("dataFrameAssign — property tests", () => {
         fc.array(fc.integer({ min: 0, max: 100 }), { minLength: 1, maxLength: 8 }),
         (arr) => {
           const df = DataFrame.fromColumns({ x: arr });
-          const origColCount = df.columns.length;
+          const origColCount = df.columns.size;
           dataFrameAssign(df, { y: arr, z: arr });
 
-          expect(df.columns.length).toBe(origColCount);
+          expect(df.columns.size).toBe(origColCount);
         },
       ),
     );
