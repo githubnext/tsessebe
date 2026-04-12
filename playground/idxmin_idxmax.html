@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — idxmin / idxmax</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: default; }
+    .playground-editor {
+      width: 100%;
+      min-height: 120px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      padding: 0.75rem 1rem;
+      resize: vertical;
+      outline: none;
+    }
+    .playground-output {
+      background: #0a0d12;
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 0.5rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      padding: 0.6rem 1rem;
+      min-height: 2.4rem;
+      white-space: pre-wrap;
+      color: #8b949e;
+    }
+    .playground-output.success { color: var(--green); }
+    .playground-output.error { color: var(--red); }
+    .playground-hint {
+      font-size: 0.7rem;
+      color: #484f58;
+      margin-top: 0.3rem;
+      text-align: right;
+    }
+    pre.api-reference-code {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      overflow-x: auto;
+      color: var(--text);
+    }
+    footer { margin-top: 3rem; color: #484f58; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Loading TypeScript compiler…</div>
+  </div>
+
+  <a class="back" href="index.html">← tsb playground</a>
+  <h1>idxmin / idxmax</h1>
+  <p>
+    Return the index label of the minimum or maximum value in a
+    <code>Series</code> or each column of a <code>DataFrame</code>.
+    Mirrors <code>pandas.Series.idxmin()</code>, <code>idxmax()</code>,
+    <code>pandas.DataFrame.idxmin()</code>, and <code>DataFrame.idxmax()</code>.
+  </p>
+
+  <!-- 1 · Series idxmin -->
+  <div class="section">
+    <h2>1 · Series.idxmin — label of the minimum value</h2>
+    <p>Returns the index label at the position of the minimum value.
+      NaN / null values are skipped by default.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, idxminSeries } from "tsb";
+
+const temps = new Series({
+  data:  [22, 18, 31, 15, 28],
+  index: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+  name:  "temperature",
+});
+
+console.log("Min label:", idxminSeries(temps));  // "Thu"
+console.log("Min value:", temps.at(idxminSeries(temps)));  // 15</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+temps = pd.Series(
+    [22, 18, 31, 15, 28],
+    index=["Mon", "Tue", "Wed", "Thu", "Fri"],
+    name="temperature",
+)
+
+print("Min label:", temps.idxmin())   # Thu
+print("Min value:", temps[temps.idxmin()])  # 15</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 2 · Series idxmax -->
+  <div class="section">
+    <h2>2 · Series.idxmax — label of the maximum value</h2>
+    <p>Returns the index label at the position of the maximum value.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, idxmaxSeries } from "tsb";
+
+const scores = new Series({
+  data:  [85, 92, 78, 96, 88],
+  index: ["Alice", "Bob", "Carol", "Dave", "Eve"],
+});
+
+console.log("Top scorer:", idxmaxSeries(scores));   // "Dave"
+console.log("Top score:", scores.at(idxmaxSeries(scores)));  // 96</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+scores = pd.Series(
+    [85, 92, 78, 96, 88],
+    index=["Alice", "Bob", "Carol", "Dave", "Eve"],
+)
+
+print("Top scorer:", scores.idxmax())        # Dave
+print("Top score:", scores[scores.idxmax()])  # 96</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 3 · NaN handling -->
+  <div class="section">
+    <h2>3 · NaN handling — skipna option</h2>
+    <p>By default NaN / null values are skipped. Set <code>skipna: false</code>
+      to propagate NaN (returns <code>null</code> if any value is NaN).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, idxminSeries, idxmaxSeries } from "tsb";
+
+const s = new Series({
+  data:  [NaN, 3, 1, NaN, 5],
+  index: ["a", "b", "c", "d", "e"],
+});
+
+// skipna=true (default) — NaN ignored
+console.log("idxmin (skipna=true):", idxminSeries(s));            // "c"
+console.log("idxmax (skipna=true):", idxmaxSeries(s));            // "e"
+
+// skipna=false — any NaN → null
+console.log("idxmin (skipna=false):", idxminSeries(s, { skipna: false }));  // null
+console.log("idxmax (skipna=false):", idxmaxSeries(s, { skipna: false }));  // null</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+s = pd.Series(
+    [np.nan, 3, 1, np.nan, 5],
+    index=["a", "b", "c", "d", "e"],
+)
+
+# skipna=True (default)
+print("idxmin (skipna=True):", s.idxmin(skipna=True))   # c
+print("idxmax (skipna=True):", s.idxmax(skipna=True))   # e
+
+# skipna=False — any NaN → NaN
+print("idxmin (skipna=False):", s.idxmin(skipna=False))  # nan
+print("idxmax (skipna=False):", s.idxmax(skipna=False))  # nan</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 4 · DataFrame idxmin -->
+  <div class="section">
+    <h2>4 · DataFrame.idxmin — row label of column minima</h2>
+    <p>Returns a Series indexed by column names.  Each value is the row label
+      where that column achieves its minimum.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, idxminDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns(
+  {
+    revenue: [120, 85, 200, 95],
+    cost:    [ 60, 30,  90, 45],
+  },
+  { index: ["Q1", "Q2", "Q3", "Q4"] },
+);
+
+const mins = idxminDataFrame(df);
+console.log("Quarter with lowest revenue:", mins.at("revenue"));  // "Q2"
+console.log("Quarter with lowest cost:",    mins.at("cost"));     // "Q2"</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame(
+    {
+        "revenue": [120, 85, 200, 95],
+        "cost":    [ 60, 30,  90, 45],
+    },
+    index=["Q1", "Q2", "Q3", "Q4"],
+)
+
+mins = df.idxmin()
+print("Quarter with lowest revenue:", mins["revenue"])  # Q2
+print("Quarter with lowest cost:",    mins["cost"])     # Q2</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 5 · DataFrame idxmax -->
+  <div class="section">
+    <h2>5 · DataFrame.idxmax — row label of column maxima</h2>
+    <p>Returns a Series indexed by column names, where each entry is the row
+      label of that column's maximum value.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, idxmaxDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns(
+  {
+    revenue: [120, 85, 200, 95],
+    cost:    [ 60, 30,  90, 45],
+  },
+  { index: ["Q1", "Q2", "Q3", "Q4"] },
+);
+
+const maxes = idxmaxDataFrame(df);
+console.log("Best revenue quarter:", maxes.at("revenue"));  // "Q3"
+console.log("Highest cost quarter:", maxes.at("cost"));     // "Q3"</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+df = pd.DataFrame(
+    {
+        "revenue": [120, 85, 200, 95],
+        "cost":    [ 60, 30,  90, 45],
+    },
+    index=["Q1", "Q2", "Q3", "Q4"],
+)
+
+maxes = df.idxmax()
+print("Best revenue quarter:", maxes["revenue"])  # Q3
+print("Highest cost quarter:", maxes["cost"])     # Q3</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- 6 · Edge cases -->
+  <div class="section">
+    <h2>6 · Edge cases — empty, all-NaN, all-equal</h2>
+    <p>Behavior for empty series, series where every value is NaN, and series
+      where all values are equal.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { Series, idxminSeries, idxmaxSeries } from "tsb";
+
+// Empty series → null
+const empty = new Series({ data: [] });
+console.log("empty idxmin:", idxminSeries(empty));  // null
+console.log("empty idxmax:", idxmaxSeries(empty));  // null
+
+// All-NaN → null (with skipna=true)
+const allNaN = new Series({ data: [NaN, NaN, NaN], index: ["a", "b", "c"] });
+console.log("all-NaN idxmin:", idxminSeries(allNaN));  // null
+
+// All equal → first label
+const equal = new Series({ data: [5, 5, 5], index: ["x", "y", "z"] });
+console.log("all-equal idxmin:", idxminSeries(equal));  // "x"
+console.log("all-equal idxmax:", idxmaxSeries(equal));  // "x"</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+import numpy as np
+
+# Empty series → raises ValueError in pandas (no valid observations)
+# (tsb returns null)
+
+# All-NaN → raises ValueError (skipna=True still no valid obs)
+# (tsb returns null)
+
+# All equal → first label
+equal = pd.Series([5, 5, 5], index=["x", "y", "z"])
+print("all-equal idxmin:", equal.idxmin())  # x
+print("all-equal idxmax:", equal.idxmax())  # x</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <!-- API reference -->
+  <div class="section">
+    <h2>API Reference</h2>
+    <pre class="api-reference-code"><code>// Series
+idxminSeries(series, { skipna?: boolean }): Label   // default skipna=true
+idxmaxSeries(series, { skipna?: boolean }): Label
+
+// DataFrame (axis=0 — min/max per column)
+idxminDataFrame(df, { skipna?: boolean }): Series   // indexed by column names
+idxmaxDataFrame(df, { skipna?: boolean }): Series</code></pre>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
