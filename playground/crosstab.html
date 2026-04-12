@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — crosstab</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; margin-top: 2rem; }
+      pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+      code { font-family: "Fira Code", monospace; font-size: 0.9rem; }
+      .demo { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; }
+      .label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+      table { border-collapse: collapse; margin: 0.5rem 0; }
+      th, td { border: 1px solid #ccc; padding: 0.3rem 0.7rem; text-align: right; }
+      th { background: #f0f0f0; }
+      a { color: #0070f3; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>crosstab</code></h1>
+    <p>
+      <strong>Cross-tabulation</strong> computes a frequency table of two (or more) categorical
+      variables. It mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html"><code>pandas.crosstab</code></a>.
+    </p>
+    <p><a href="index.html">← back to index</a></p>
+
+    <!-- ── Demo 1: basic count ──────────────────────────────────────────── -->
+    <h2>1 · Basic frequency count</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>import { crosstab, Series } from "tsb";
+
+const a = new Series({ data: ["foo","foo","bar","bar","foo"], name: "A" });
+const b = new Series({ data: ["one","two","one","two","one"], name: "B" });
+const ct = crosstab(a, b);
+// rows = unique A values, cols = unique B values, cells = counts</code></pre>
+      <div class="label">Result</div>
+      <div id="demo1"></div>
+    </div>
+
+    <!-- ── Demo 2: margins ───────────────────────────────────────────────── -->
+    <h2>2 · Margins (row / column totals)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const ct = crosstab(a, b, { margins: true, margins_name: "All" });</code></pre>
+      <div class="label">Result</div>
+      <div id="demo2"></div>
+    </div>
+
+    <!-- ── Demo 3: normalize all ─────────────────────────────────────────── -->
+    <h2>3 · Normalize — proportions over all cells</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const ct = crosstab(a, b, { normalize: "all" });</code></pre>
+      <div class="label">Result</div>
+      <div id="demo3"></div>
+    </div>
+
+    <!-- ── Demo 4: normalize index ───────────────────────────────────────── -->
+    <h2>4 · Normalize — row proportions (<code>normalize="index"</code>)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const ct = crosstab(a, b, { normalize: "index" });</code></pre>
+      <div class="label">Result</div>
+      <div id="demo4"></div>
+    </div>
+
+    <!-- ── Demo 5: normalize columns ─────────────────────────────────────── -->
+    <h2>5 · Normalize — column proportions (<code>normalize="columns"</code>)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const ct = crosstab(a, b, { normalize: "columns" });</code></pre>
+      <div class="label">Result</div>
+      <div id="demo5"></div>
+    </div>
+
+    <!-- ── Demo 6: values + aggfunc ──────────────────────────────────────── -->
+    <h2>6 · Values + aggfunc (aggregated cross-tab)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const sales = new Series({ data: [10, 20, 5, 15, 30], name: "sales" });
+const ct = crosstab(a, b, { values: sales, aggfunc: "sum" });</code></pre>
+      <div class="label">Result</div>
+      <div id="demo6"></div>
+    </div>
+
+    <!-- ── Demo 7: dropna ────────────────────────────────────────────────── -->
+    <h2>7 · dropna — exclude / include missing values</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>const x = ["a", null, "b", "a"];
+const y = ["x", "y",  "x", "y"];
+const withDropna  = crosstabSeries(x, y, { dropna: true  }); // default
+const withoutDrop = crosstabSeries(x, y, { dropna: false });</code></pre>
+      <div class="label">dropna=true</div>
+      <div id="demo7a"></div>
+      <div class="label" style="margin-top:0.5rem">dropna=false</div>
+      <div id="demo7b"></div>
+    </div>
+
+    <!-- ── Demo 8: array inputs ───────────────────────────────────────────── -->
+    <h2>8 · Plain array inputs (<code>crosstabSeries</code>)</h2>
+    <div class="demo">
+      <div class="label">Code</div>
+      <pre><code>import { crosstabSeries } from "tsb";
+const ct = crosstabSeries(
+  ["cat","dog","cat","dog","fish"],
+  ["male","male","female","female","female"],
+);</code></pre>
+      <div class="label">Result</div>
+      <div id="demo8"></div>
+    </div>
+
+    <script type="module">
+      // ── minimal tsb stubs so the page works standalone ──────────────────
+      // (In a real deployment, import from the built tsb package.)
+
+      function renderTable(df, targetId) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const cols = df.columns;
+        const rows = df.index;
+        let html = "<table><thead><tr><th></th>";
+        for (const c of cols) html += `<th>${c}</th>`;
+        html += "</tr></thead><tbody>";
+        rows.forEach((r, ri) => {
+          html += `<tr><th>${r}</th>`;
+          for (const c of cols) {
+            const v = df.data[c][ri];
+            html += `<td>${typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(3)) : v ?? "NaN"}</td>`;
+          }
+          html += "</tr>";
+        });
+        html += "</tbody></table>";
+        el.innerHTML = html;
+      }
+
+      // ── tiny in-page crosstab implementation for demo purposes ───────────
+      function crosstabDemo(rowArr, colArr, opts = {}) {
+        const dropna = opts.dropna !== false;
+        const margins = opts.margins === true;
+        const marginsName = opts.margins_name ?? "All";
+        const normalize = opts.normalize ?? false;
+        const aggfunc = opts.aggfunc ?? (opts.values ? "mean" : "count");
+        const valArr = opts.values ?? null;
+
+        const rowOrder = [], colOrder = [];
+        const seenR = new Set(), seenC = new Set();
+        const cellBuckets = {};
+
+        for (let i = 0; i < rowArr.length; i++) {
+          const rv = rowArr[i], cv = colArr[i];
+          if (dropna && (rv === null || rv === undefined)) continue;
+          const rk = String(rv), ck = String(cv);
+          if (!seenR.has(rk)) { seenR.add(rk); rowOrder.push(rk); }
+          if (!seenC.has(ck)) { seenC.add(ck); colOrder.push(ck); }
+          const key = `${rk}\0${ck}`;
+          if (!cellBuckets[key]) cellBuckets[key] = [];
+          cellBuckets[key].push(valArr ? valArr[i] : 1);
+        }
+
+        const agg = (nums) => {
+          if (aggfunc === "count") return nums.length;
+          if (!nums.length) return NaN;
+          if (aggfunc === "sum") return nums.reduce((s,v) => s+v, 0);
+          if (aggfunc === "mean") return nums.reduce((s,v) => s+v, 0) / nums.length;
+          if (aggfunc === "min") return Math.min(...nums);
+          return Math.max(...nums);
+        };
+
+        let matrix = rowOrder.map(rk =>
+          colOrder.map(ck => {
+            const b = cellBuckets[`${rk}\0${ck}`];
+            return b ? agg(b) : (aggfunc === "count" ? 0 : NaN);
+          })
+        );
+
+        if (margins) {
+          matrix = matrix.map(row => {
+            const s = row.reduce((a,v) => a + (isNaN(v)?0:v), 0);
+            return [...row, s];
+          });
+          const cs = colOrder.map((_, ci) =>
+            matrix.slice(0, matrix.length).reduce((a, row) => a + (isNaN(row[ci])?0:row[ci]), 0)
+          );
+          const gt = cs.reduce((a,v) => a+v, 0);
+          matrix.push([...cs, gt]);
+          rowOrder.push(marginsName);
+          colOrder.push(marginsName);
+        }
+
+        if (normalize) {
+          const mode = normalize === true ? "all" : normalize;
+          if (mode === "all") {
+            let total = 0;
+            for (const row of matrix) for (const v of row) total += isNaN(v)?0:v;
+            matrix = matrix.map(row => row.map(v => isNaN(v)?NaN:v/total));
+          } else if (mode === "index") {
+            matrix = matrix.map(row => {
+              const t = row.reduce((s,v) => s+(isNaN(v)?0:v), 0);
+              return row.map(v => isNaN(v)?NaN:v/t);
+            });
+          } else {
+            const nCols = colOrder.length;
+            const ct2 = new Array(nCols).fill(0);
+            for (const row of matrix) row.forEach((v,ci) => { if (!isNaN(v)) ct2[ci] += v; });
+            matrix = matrix.map(row => row.map((v,ci) => isNaN(v)?NaN:v/(ct2[ci]||1)));
+          }
+        }
+
+        const data = {};
+        colOrder.forEach((c, ci) => { data[c] = matrix.map(row => row[ci]); });
+        return { index: rowOrder, columns: colOrder, data };
+      }
+
+      // ── demos ────────────────────────────────────────────────────────────
+      const a = ["foo","foo","bar","bar","foo"];
+      const b = ["one","two","one","two","one"];
+
+      renderTable(crosstabDemo(a, b), "demo1");
+      renderTable(crosstabDemo(a, b, { margins: true }), "demo2");
+      renderTable(crosstabDemo(a, b, { normalize: "all" }), "demo3");
+      renderTable(crosstabDemo(a, b, { normalize: "index" }), "demo4");
+      renderTable(crosstabDemo(a, b, { normalize: "columns" }), "demo5");
+
+      const sales = [10, 20, 5, 15, 30];
+      renderTable(crosstabDemo(a, b, { values: sales, aggfunc: "sum" }), "demo6");
+
+      const x = ["a", null, "b", "a"];
+      const y = ["x", "y", "x", "y"];
+      renderTable(crosstabDemo(x, y, { dropna: true }), "demo7a");
+      renderTable(crosstabDemo(x, y, { dropna: false }), "demo7b");
+
+      renderTable(crosstabDemo(
+        ["cat","dog","cat","dog","fish"],
+        ["male","male","female","female","female"]
+      ), "demo8");
+    </script>
+  </body>
+</html>
