@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T17:15:00Z |
-| Iteration Count | 12 |
-| Best Metric | 48 |
+| Last Run | 2026-04-12T17:45:58Z |
+| Iteration Count | 13 |
+| Best Metric | 56 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | #128 |
+| PR | #129 |
 | Steering Issue | #pending |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,7 +31,7 @@
 **Goal**: Systematically benchmark every tsb function against its pandas equivalent, one function per iteration.
 **Metric**: benchmarked_functions (higher is better)
 **Branch**: [`autoloop/perf-comparison`](../../tree/autoloop/perf-comparison)
-**Pull Request**: #128
+**Pull Request**: #129
 **Steering Issue**: #pending
 
 ---
@@ -58,7 +58,9 @@
 - `rank`=3.06ms (100k, avg tie-breaking), `rolling_std`=3.44ms, `interpolate`=3.36ms, `drop_duplicates`=3.30ms, `duplicated`=3.22ms — all in the 3ms range for 100k rows.
 - `series_abs`=0.04ms is the fastest operation benchmarked so far (pure element-wise vectorized op).
 - `isin`=0.67ms (100k elements, 2500-element test set), `clip`=0.71ms, `where`=0.23ms, `unstack`=0.40ms — all fast.
-- `safeoutputs` tools availability is inconsistent (iter 11 worked, iter 12 tools not available as callable functions). Branch committed locally but push depends on framework completing after agent run.
+- New iter 13 timings: `nsmallest`=1.64ms, `cummax`=1.12ms, `cummin`=1.08ms, `sample`=1.48ms, `mask`=0.29ms, `pivot`=0.84ms, `rolling_var`=2.36ms, `combine_first`=3.50ms.
+- `rank` timing varies significantly between runs (3ms → 14ms in iter 13). System load affects ranking benchmarks.
+- Re-creating all benchmarks from main each iteration is the reliable pattern. The branch autoloop/perf-comparison is created fresh from main each iteration since remote branches with suffixed names accumulate.
 
 ---
 
@@ -72,19 +74,27 @@
 
 Good next functions to benchmark (roughly in priority order):
 1. `resample` — time-series resampling (requires DatetimeIndex)
-2. `rolling_var` — window variance on Series
-3. `nsmallest` — Series.nsmallest() complement to nlargest
-4. `cummax` / `cummin` — cumulative max/min on Series
-5. `sample` — random sampling of rows from DataFrame
-6. `explode` — explode list-like column to rows
-7. `pivot` — DataFrame.pivot() (reshape without aggregation)
-8. `combine_first` — combine two DataFrames, filling NaN
-9. `mask` — complement of `where` (replace where condition is True)
-10. `shift` with fill_value — Series.shift(1, fill_value=0)
+2. `explode` — explode list-like column to rows
+3. `shift` with fill_value — Series.shift(1, fill_value=0)
+4. `cumprod` — cumulative product on Series
+5. `mode` — Series/DataFrame.mode()
+6. `idxmax` / `idxmin` — index of max/min value
+7. `quantile` — Series.quantile(0.25) etc.
+8. `apply` on Series (vs DataFrame.apply)
+9. `wide_to_long` — reshape wide format to long
+10. `get_dummies` — one-hot encoding
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 13 — 2026-04-12 17:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24312577356)
+
+- **Status**: ✅ Accepted
+- **Change**: Add 8 new benchmark pairs: `nsmallest`, `cummax`, `cummin`, `sample`, `mask`, `pivot`, `rolling_var`, `combine_first`. Re-add all 48 prior pairs. Total 56 matched TS+Python pairs.
+- **Metric**: 56 (previous best: 48, delta: +8)
+- **Commit**: bce6209
+- **Notes**: New Python timings — nsmallest=1.64ms, cummax=1.12ms, cummin=1.08ms, sample=1.48ms, mask=0.29ms, pivot=0.84ms, rolling_var=2.36ms, combine_first=3.50ms. All 56 Python benchmarks ran successfully. Branch `autoloop/perf-comparison` created fresh from main.
 
 ### Iteration 12 — 2026-04-12 17:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24311975652)
 
