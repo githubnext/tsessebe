@@ -173,3 +173,5 @@ export {
 export type { NanInput, NanAggOptions } from "./nancumops.ts";
 export { toDatetime } from "./to_datetime.ts";
 export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./to_datetime.ts";
+export { toTimedelta, parseFrac, formatTimedelta, Timedelta } from "./to_timedelta.ts";
+export type { TimedeltaUnit, TimedeltaErrors, ToTimedeltaOptions } from "./to_timedelta.ts";
