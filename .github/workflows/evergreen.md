@@ -54,7 +54,7 @@ steps:
       FORCED_PR: ${{ github.event.inputs.pr_number }}
     run: |
       python3 - << 'PYEOF'
-      import os, json, re, sys
+      import os, json, re, subprocess, sys
       import urllib.request, urllib.error
 
       token = os.environ.get("GITHUB_TOKEN", "")
@@ -249,6 +249,10 @@ steps:
           json.dump(result, f, indent=2)
 
       if selected:
+          branch = selected["head_branch"]
+          print(f"Checking out PR branch before agent run: {branch}")
+          subprocess.check_call(["git", "checkout", "-B", branch, f"origin/{branch}"])
+          subprocess.check_call(["git", "branch", "--set-upstream-to", f"origin/{branch}", branch])
           print(f"\n>>> Selected PR #{selected['pr_number']}: {selected['title']}")
           print(f"    Issues: {selected['issues']}")
           print(f"    Attempt: {selected['attempts'] + 1}/{MAX_ATTEMPTS}")
@@ -279,11 +283,7 @@ A pre-flight step has already identified a PR that needs attention. Read the sel
    - `selected.base_branch` — the target branch (usually `main`)
    - `selected.attempts` — how many times we've already tried on this SHA
 
-2. **Check out the PR branch** as a local tracking branch so the push tool can find it:
-   ```bash
-   git checkout -b <head_branch> origin/<head_branch>
-   ```
-   where `<head_branch>` is `selected.head_branch` from the selection file. **Do not** use a detached HEAD checkout — the `push-to-pull-request-branch` tool requires a named local branch.
+2. The pre-flight step already checks out `selected.head_branch` as a named local tracking branch before you start. Keep working on that branch (do not switch back to `main` or use detached HEAD).
 
 3. **Fix the issues**:
 
