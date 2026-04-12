@@ -10,8 +10,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T08:19:44Z |
-| Iteration Count | 224 |
+| Last Run | 2026-04-12T08:48:19Z |
+| Iteration Count | 225 |
 | Best Metric | 58 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -21,8 +21,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 1 |
+| Recent Statuses | error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -40,7 +40,7 @@
 ## 🎯 Current Priorities
 
 Next features to implement (prioritized by impact):
-- **RECOVER**: `stats/to_datetime.ts` — push failed in iter 224 (MCP blocked). See Lessons Learned for implementation details. Re-implement on canonical branch.
+- **RECOVER**: `stats/to_datetime.ts` — push failed in iter 225 (safeoutputs MCP blocked by policy). Code committed locally as 96e60bd. Re-implement on canonical branch.
 - `core/str_accessor` improvements or new string ops (findall, extractall)
 - `io/to_json_normalize.ts` — inverse of jsonNormalize (nested records from flat DataFrame)
 - `stats/to_timedelta.ts` — pd.to_timedelta() for duration parsing
@@ -49,6 +49,7 @@ Next features to implement (prioritized by impact):
 
 ## 📚 Lessons Learned
 
+- **Iter 225**: `to_datetime` — PUSH FAILED (safeoutputs MCP blocked by policy). Code committed locally as 96e60bd on autoloop/build-tsb-pandas-typescript-migration. `toDatetime(scalar|array|Series, opts?)`. Top-level regex: RE_ISO/RE_MDY/RE_DMY_DASH/RE_COMPACT/RE_INT. Helpers: `convertSeries`, `convertOne`, `convertNumber`, `convertString`, `tryParseString`, `parseCompact`, `parseMDY`, `parseDMY`, `expandYear`, `handleFailure`. `unit=s/ms/us/ns`, `errors=raise/coerce/ignore`, `utc`, `dayfirst`. 42 unit + 4 property tests. Playground: to_datetime.html. Metric would be 59 (+1). Recovery: re-implement on canonical branch next iter.
 - **Iter 224**: `to_datetime` — PUSH FAILED (MCP blocked). Code ready: `toDatetime(scalar|array|Series, opts?)`. Move all regex to top-level constants (RE_MDY, RE_DMY_DASH, etc.) for `useTopLevelRegex`. Use `../core/index.ts` for Series/Dtype imports. Overload: scalar→`Date|null`, array→`(Date|null)[]`, Series→`Series<Date|null>`. `errors='ignore'` returns original scalar (tests use `as unknown as string`). 42 unit + 4 property tests. Recover by re-implementing this file on canonical branch next iteration.
 - **Iter 223**: `nancumops` — 9 top-level nan-ignoring aggregate functions: nansum/nanmean/nanmedian/nanvar/nanstd/nanmin/nanmax/nanprod/nancount. All accept `readonly Scalar[] | Series<Scalar>`. `toValues()` helper dispatches via `Array.isArray`. `sortedAsc` for median. `as number` casts for noUncheckedIndexedAccess. 36 unit + 4 property tests. Playground: nancumops.html. Canonical branch restored. Metric: 58 (+1). Commit: f7ab898.
 - **Iter 222**: `to_numeric` — overloaded `toNumeric(scalar|array|Series, opts?)`. Extracts `convertString`/`convertUnknown` helpers to keep `convertScalar` ≤15 complexity. `useBlockStatements`: all if-branches wrapped. `convertUnknown` signature stays single-line for biome format. Remove unused type imports in tests. Export `Scalar` from `src/index.ts` for test imports. `import type { Index }` for value-unused imports. Metric: 57 (+1). Commit: 576ddbb.
@@ -87,6 +88,9 @@ Next features to implement (prioritized by impact):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 225 — 2026-04-12 08:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24302775343)
+- **Status**: ⚠️ Push failed — safeoutputs MCP blocked by policy. Code committed locally (96e60bd on autoloop/build-tsb-pandas-typescript-migration, not pushed). toDatetime() fully implemented: scalar/array/Series overloads, unit=s/ms/us/ns, errors=raise/coerce/ignore, utc, dayfirst, ISO/US/European/compact formats. 42 unit + 4 property tests. Metric would be 59 (+1). Recovery needed next iteration.
 
 ### Iteration 224 — 2026-04-12 08:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24302289084)
 - **Status**: ⚠️ Push failed — MCP servers blocked by policy. Code implemented locally (commit 81dfb68 on local branch, not pushed). toDatetime() fully implemented: scalar/array/Series overloads, unit=s/ms/us/ns, errors=raise/coerce/ignore, utc flag, ISO/US/compact formats. 42 unit + 4 property tests. Metric would be 59 (+1) if pushed. Recovery needed next iteration: re-implement stats/to_datetime.ts on the canonical branch.
