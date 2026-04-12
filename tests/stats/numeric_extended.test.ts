@@ -438,7 +438,7 @@ describe("property: histogram counts match input count", () => {
   it("sum of counts equals number of in-range finite values", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 100 }), {
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true, min: Math.fround(0), max: Math.fround(100) }), {
           minLength: 1,
           maxLength: 100,
         }),
@@ -457,8 +457,8 @@ describe("property: linspace endpoints", () => {
   it("first element is start, last element is stop", () => {
     fc.assert(
       fc.property(
-        fc.float({ noNaN: true, noDefaultInfinity: true, min: -100, max: 0 }),
-        fc.float({ noNaN: true, noDefaultInfinity: true, min: 1, max: 100 }),
+        fc.float({ noNaN: true, noDefaultInfinity: true, min: Math.fround(-100), max: Math.fround(0) }),
+        fc.float({ noNaN: true, noDefaultInfinity: true, min: Math.fround(1), max: Math.fround(100) }),
         fc.integer({ min: 2, max: 200 }),
         (start, stop, num) => {
           const r = linspace(start, stop, num);

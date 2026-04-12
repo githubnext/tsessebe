@@ -401,8 +401,8 @@ describe("Interval — property tests", () => {
   it("closed='both': any interior point is always contained", () => {
     fc.assert(
       fc.property(
-        fc.float({ noNaN: true, min: -100, max: 100 }),
-        fc.float({ noNaN: true, min: 0.01, max: 10 }),
+        fc.float({ noNaN: true, min: Math.fround(-100), max: Math.fround(100) }),
+        fc.float({ noNaN: true, min: Math.fround(0.01), max: Math.fround(10) }),
         (left, delta) => {
           const right = left + delta;
           const iv = new Interval(left, right, "both");
@@ -416,8 +416,8 @@ describe("Interval — property tests", () => {
   it("closed='neither': endpoints are never contained", () => {
     fc.assert(
       fc.property(
-        fc.float({ noNaN: true, min: -100, max: 100 }),
-        fc.float({ noNaN: true, min: 0.01, max: 10 }),
+        fc.float({ noNaN: true, min: Math.fround(-100), max: Math.fround(100) }),
+        fc.float({ noNaN: true, min: Math.fround(0.01), max: Math.fround(10) }),
         (left, delta) => {
           const right = left + delta;
           const iv = new Interval(left, right, "neither");

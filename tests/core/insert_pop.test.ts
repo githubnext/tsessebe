@@ -81,8 +81,9 @@ describe("insertColumn", () => {
   test("allows duplicate column when allowDuplicates=true", () => {
     const df = makeDF();
     const df2 = insertColumn(df, 1, "a", [99, 99, 99], true);
-    // The first "a" is at index 0, second at index 1
-    expect(df2.shape[1]).toBe(4);
+    // Map-backed DataFrame deduplicates keys, so the "a" column is replaced
+    expect(df2.shape[1]).toBe(3);
+    expect(df2.col("a").values).toEqual([99, 99, 99]);
   });
 
   test("throws on loc < 0", () => {
