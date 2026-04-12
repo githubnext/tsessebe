@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T22:46:29Z |
-| Iteration Count | 21 |
-| Best Metric | 104 |
+| Last Run | 2026-04-12T23:12:43Z |
+| Iteration Count | 22 |
+| Best Metric | 112 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -58,16 +58,22 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (for iter 21+):
-1. `dataframe_info`, `series_str_extract`, `dataframe_select_dtypes`, `wide_to_long`
-2. `read_json`, `series_combine_first`, `dataframe_unstack`, `ewm_std/var`
-3. `series_mask`, `series_where`, `series_sample`, `dataframe_sample`
-4. `cut`, `qcut`, `series_str_pad`, `series_str_zfill`
-5. `series_str_extract`, `series_resample`, `dataframe_resample`
+Next functions to benchmark (for iter 23+):
+1. `read_json`, `series_rename`, `dataframe_sort_index`, `series_idxmax`, `series_idxmin`
+2. `dataframe_select_dtypes`, `wide_to_long`, `dataframe_info`
+3. `series_le`, `series_ge`, `series_ne`, `series_var`
+4. `ewm_var`, `rolling_apply`, `expanding_apply`
+5. `dataframe_cumsum`, `dataframe_abs`, `dataframe_round`
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 22 — 2026-04-12 23:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24318679108)
+- **Status**: ✅ Accepted
+- **Change**: Created canonical branch from main (22 pairs), copied 62 from iter-14, added 50 new: 18 str/, 11 series, 7 groupby, 5 rolling, 5 expanding, 3 dataframe, 1 ewm_std
+- **Metric**: 112 (previous best: 104, delta: +8) | **Commit**: af9ed55
+- **Notes**: Canonical branch created fresh; safe-output MCP tools unavailable so PR push pending next run.
 
 ### Iteration 20 — 2026-04-12 22:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24317571938)
 - **Status**: ✅ Accepted
