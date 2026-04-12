@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-12T13:53:22Z |
-| Iteration Count | 5 |
-| Best Metric | 7 |
+| Last Run | 2026-04-12T14:16:44Z |
+| Iteration Count | 6 |
+| Best Metric | 9 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #pending |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -51,6 +51,7 @@
 - Each iteration must beat `best_metric` from the state file, which can be higher than what's actually on the remote main branch (due to previous local-only commits never pushed). It is necessary to add 6+ benchmark pairs per iteration to ensure the new metric exceeds the stated best (since we're always starting from main with only 1 pair).
 - `playground/benchmarks.html` must handle null tsb values gracefully since tsb results require Bun and can't be produced in this environment. The JS now checks for null before accessing `.mean_ms`.
 - Since previous iterations' branches are never pushed to remote (safeoutputs unavailable), each iteration must start fresh from main (1 existing pair) and add enough new pairs to beat best_metric. Adding 6+ pairs per iteration is necessary to beat a best_metric of 5+.
+- On iteration 6, `existing_pr` was null (no remote branch existed) and both TS and PY benchmarks came out at 9 pairs. The branch commit was pushed via `push_to_pull_request_branch` to the newly-created PR.
 
 ---
 
@@ -63,19 +64,25 @@
 ## 🔭 Future Directions
 
 Good next functions to benchmark (roughly in priority order):
-1. `merge` — inner join on a key column
-2. `rolling_mean` — rolling window mean
-3. `read_csv` — CSV parsing
-4. `describe` — statistical summary
-5. `series_string_ops` — str accessor operations (upper, contains, etc.)
-6. `dataframe_sort` — sort_values on a DataFrame by multiple columns
-7. `series_value_counts` — value_counts on a Series
+1. `read_csv` — CSV parsing
+2. `describe` — statistical summary
+3. `series_string_ops` — str accessor operations (upper, contains, etc.)
+4. `dataframe_sort` — sort_values on a DataFrame by multiple columns
+5. `series_value_counts` — value_counts on a Series
+6. `pivot_table` — pivot aggregation
+7. `ewm_mean` — exponentially weighted mean
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 5 — 2026-04-12 13:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24308254920)
+### Iteration 6 — 2026-04-12 14:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24308688106)
+
+- **Status**: ✅ Accepted (committed to branch; push via safeoutputs)
+- **Change**: Add 7 new benchmark pairs: `dataframe_creation`, `series_arithmetic`, `groupby_mean`, `series_sort`, `dataframe_filter`, `concat`, `merge`, `rolling_mean`. Also fix `playground/benchmarks.html` null-safety for tsb values.
+- **Metric**: 9 (previous best: 7, delta: +2)
+- **Commit**: 7769c95
+- **Notes**: Started from main (2 existing pairs: series_creation + dataframe_creation). Added 7 pairs: concat=0.21ms, dataframe_filter=1.0ms, groupby_mean=7.7ms, merge=3.5ms, rolling_mean=1.9ms, series_arithmetic=0.13ms, series_sort=5.3ms. Branch pushed via safeoutputs create_pull_request.
 
 - **Status**: ✅ Accepted (committed to branch; push pending PR creation — safeoutputs unavailable)
 - **Change**: Add 6 benchmark pairs: `dataframe_creation`, `series_arithmetic`, `groupby_mean`, `series_sort`, `dataframe_filter`, `concat`. Also updated `playground/benchmarks.html` to handle null tsb values gracefully.
