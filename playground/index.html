@@ -379,6 +379,16 @@
           <p>Filter DataFrame columns by dtype. Accepts exact dtype names or generic aliases: <code>number</code>, <code>integer</code>, <code>floating</code>, <code>bool</code>, <code>string</code>, <code>datetime</code>, <code>category</code>. Supports <code>include</code> and <code>exclude</code>. Mirrors <code>DataFrame.select_dtypes()</code>.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3><a href="mode.html" style="color: var(--accent); text-decoration: none;">📊 mode</a></h3>
+          <p>Most-frequent value(s) in a Series or DataFrame. Returns all tied modes sorted ascending. Supports <code>dropna</code>, <code>axis</code>, and <code>numericOnly</code>. Mirrors <code>Series.mode()</code> / <code>DataFrame.mode()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="skew_kurt.html" style="color: var(--accent); text-decoration: none;">📐 skew / kurt</a></h3>
+          <p>Adjusted Fisher–Pearson skewness and bias-corrected excess kurtosis for Series and DataFrame. Supports <code>skipna</code>, <code>axis</code>, and <code>numericOnly</code>. Mirrors <code>Series.skew()</code> / <code>Series.kurt()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
       </div>
     </section>
   </main>

@@ -130,3 +130,10 @@ export type {
 } from "./interpolate.ts";
 export { selectDtypes } from "./select_dtypes.ts";
 export type { SelectDtypesOptions, DtypeSpecifier, DtypeAlias } from "./select_dtypes.ts";
+export { modeSeries, modeDataFrame } from "./mode.ts";
+export type { ModeSeriesOptions, ModeDataFrameOptions } from "./mode.ts";
+export { skewSeries, kurtSeries, skewDataFrame, kurtDataFrame } from "./skew_kurt.ts";
+export type {
+  SkewKurtSeriesOptions,
+  SkewKurtDataFrameOptions,
+} from "./skew_kurt.ts";

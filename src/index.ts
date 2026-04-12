@@ -212,3 +212,10 @@ export type {
 } from "./stats/index.ts";
 export { selectDtypes } from "./stats/index.ts";
 export type { SelectDtypesOptions, DtypeSpecifier, DtypeAlias } from "./stats/index.ts";
+export { modeSeries, modeDataFrame } from "./stats/index.ts";
+export type { ModeSeriesOptions, ModeDataFrameOptions } from "./stats/index.ts";
+export { skewSeries, kurtSeries, skewDataFrame, kurtDataFrame } from "./stats/index.ts";
+export type {
+  SkewKurtSeriesOptions,
+  SkewKurtDataFrameOptions,
+} from "./stats/index.ts";
