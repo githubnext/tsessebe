@@ -8,14 +8,14 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T12:52:43Z |
-| Iteration Count | 37 |
-| Best Metric | 173 |
+| Last Run | 2026-04-13T14:37:00Z |
+| Iteration Count | 38 |
+| Best Metric | 183 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | — (new PR created this run) |
+| PR | — (new PR this run, #135 was previous) |
 | Steering Issue | #131 |
-| Paused | false |
+| Experiment Log | #130 |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
@@ -57,7 +57,7 @@
 - `coefficientOfVariation(s)` and `zscore(s)` are standalone functions exported from tsb.
 - `formatScientific(v, precision)` and `formatThousands(v, precision)` take (value, precision) args, not options objects.
 - Safe-output tools (create_pull_request, add_comment, etc.) are called via safe-output tool calls; sub-agent task tool can invoke them.
-- Best metric has been repeatedly inflated due to branches not persisting to remote. Current true remote best is 126 (iter 32). Always verify actual remote state at start of iteration.
+- Best metric has been repeatedly inflated due to branches not persisting to remote. True remote best was 126 (iter 32). In iter 38, metric 183 was achieved fresh from d8a2a7 base.
 
 ---
 
@@ -69,21 +69,24 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (iter 38+):
-1. `DataFrameRolling` / `DataFrameExpanding` / `DataFrameEwm` — DataFrame-level rolling/expanding/ewm agg methods
-2. `dataFrameRollingAgg` / `dataFrameRollingApply` — DataFrame rolling apply/agg ops
-3. `MultiIndex` — multi-index creation and operations
-4. `dataFrameTransformRows` — row-wise transform
-5. `moveColumn`, `dataFrameFromPairs` — remaining column ops
-6. `strExtractAll`, `strTranslate`, `strCharWidth`, `strByteLength` — remaining string standalone fns
-7. `catEqualCategories`, `catCrossTab` — remaining categorical ops
-8. `makeFloatFormatter`, `makePercentFormatter`, `makeCurrencyFormatter` — formatter factory fns
-9. `getAttrs`, `setAttrs`, `updateAttrs` — attrs ops
-10. Type check functions: `isScalar`, `isListLike`, etc.
+Next functions to benchmark (iter 39+):
+1. `DatetimeAccessor` — `dt.day/hour/minute/second/dayofweek/dayofyear/quarter/normalize` ops
+2. `strExtractAll`, `strTranslate`, `strCharWidth`, `strByteLength` — remaining string standalone fns
+3. `pearsonCorr`, `getAttr`, `setAttr`, `deleteAttr`, `attrsCount`, `attrsKeys`, `mergeAttrs` — misc ops
+4. `dropna`, `countna`, `countValid`, `notnull`, `isnull` — more isna/notna variants
+5. `DataFrameGroupBy` apply with custom function
+6. `RangeIndex` creation and operations
+7. Type utilities: `isFloat`, `isInteger`, `isBool`, `isDate`, `isStringValue`
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 38 — 2026-04-13 14:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24349232936)
+- **Status**: ✅ Accepted
+- **Change**: Added 121 new benchmark pairs from d8a2a7 (62-pair base) to reach 183 total. Rolling(sum/min/max/count/sem/skew/kurt/quantile/apply), Expanding(sum/std/var/max/min/count), EWM(std/var), Groupby(sum/count/std/min/max/size/transform), Series(apply/transform/cumprod/quantile/round/idxmax/idxmin/where/mask), DataFrame(abs/round/clip/cumsum/cummax/cummin/cumprod/apply_map/value_counts/where/mask/transform), Stats(zscore/normalize/cv/percentile/digitize/histogram/linspace/arange/series_digitize), Categorical(10 fns), Format(10 fns+factories), Strings(20 fns), Misc(15 fns), New(DataFrameRolling/Expanding/EWM, MultiIndex, attrs, type checks, pipe, formatter factories).
+- **Metric**: 183 (previous best: 173, delta: +10) | **Commit**: 3ea9bc9
+- **Notes**: All Future Directions from iter 37 addressed. New exports confirmed: makeFloatFormatter, makePercentFormatter, makeCurrencyFormatter, dataFrameTransformRows, moveColumn, dataFrameFromPairs, MultiIndex, isScalar, pipe, getAttrs, updateAttrs.
 
 ### Iteration 37 — 2026-04-13 12:52 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24344306981)
 - **Status**: ✅ Accepted
