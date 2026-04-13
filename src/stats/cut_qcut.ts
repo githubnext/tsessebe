@@ -242,7 +242,7 @@ export function cut(
     right = true,
     include_lowest = false,
     precision = 3,
-    duplicates = "raise",
+    duplicates: _duplicates = "raise",
   } = options;
 
   // ── build bin edges ─────────────────────────────────────────────────────────

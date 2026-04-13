@@ -411,7 +411,9 @@ describe("strDedent — property tests", () => {
     fc.assert(
       fc.property(
         fc.array(
-          fc.string({ minLength: 1 }).filter((s) => !s.includes("\n") && s.trim().length > 0 && s.trimStart() === s),
+          fc
+            .string({ minLength: 1 })
+            .filter((s) => !s.includes("\n") && s.trim().length > 0 && s.trimStart() === s),
           {
             minLength: 1,
             maxLength: 5,
