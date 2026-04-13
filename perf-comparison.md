@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T02:20:00Z |
-| Iteration Count | 26 |
-| Best Metric | 77 |
+| Last Run | 2026-04-13T03:46:16Z |
+| Iteration Count | 27 |
+| Best Metric | 80 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (pending creation) |
@@ -49,9 +49,12 @@
 - push_repo_memory total file size limit ~12KB; keep state files compact.
 - `wideToLong` signature: `wideToLong(df, stubnames, i_cols, j_colname, options)`.
 - Many Series stats like skew/kurt/kurtosis/sem/idxmax/idxmin don't exist as direct methods — implement manually using s.std(), s.mean(), s.count(), s.values.
-- Canonical branch was failing to push in prior iterations. Iter 25 claimed 133 pairs but the push never succeeded — canonical branch did not exist remotely. Iter 26 created canonical branch from d8a2a7627f8ec4eb (62 pairs) and reset best_metric to 77 (actual verified remote state).
-- rollingApply, rollingSkew, rollingKurt, rollingSem, rollingQuantile all exported from tsb; use standalone function calls not method chaining.
-- strPartition, strSplitExpand, histogram, minMaxNormalize all exported from tsb directly.
+- Canonical branch `autoloop/perf-comparison` appears to not persist between runs — must be re-created each iteration from the most recent hash-suffixed branch. The PR creation step is essential to push it.
+- `catFromCodes` is the correct tsb API for creating categorical series (codes + categories arrays).
+- `strRPartition` works on Series directly (no `.str.` accessor needed in tsb).
+- `percentileOfScore` in tsb takes (arr, score) without scipy — pure JS implementation.
+- `s.dt.year()`, `s.dt.month()` are methods (not properties) in tsb DatetimeAccessor.
+- `coefficientOfVariation(s)` and `zscore(s)` are standalone functions exported from tsb.
 
 ---
 
@@ -63,20 +66,27 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (for iter 27+):
-1. `merge_left`, `merge_outer` — different join types
-2. `ewm_corr`, `ewm_cov` — EWM correlation/covariance
-3. `str_rpartition` — strRPartition from string_ops_extended
-4. `catCrossTab`, `catFreqTable` — categorical ops
-5. `rolling_corr`, `rolling_cov` — rolling correlation/covariance
-6. `dataframe_apply_map` — element-wise apply on DataFrame
-7. `digitize`, `percentile_of_score` — numeric extended functions
-8. `linspace`, `arange` — numeric array generators
-9. `datetime_year`, `datetime_month` — datetime accessor ops
+Next functions to benchmark (for iter 28+):
+1. `rolling_corr`, `rolling_cov` — rolling correlation/covariance (if API exists)
+2. `dataframe_apply_map` — element-wise apply on DataFrame
+3. `cat_recode` — catRecode function
+4. `cat_sort_by_freq` — catSortByFreq function
+5. `cat_to_ordinal` — catToOrdinal function
+6. `format_percent` — formatPercent/applySeriesFormatter
+7. `str_indent` — strIndent function
+8. `reorder_columns`, `insert_column` — DataFrame column ops
+9. `to_dict`, `from_dict` — toDictOriented/fromDictOriented
+10. `dataframe_corr`, `dataframe_cov` — DataFrame-level correlation/covariance
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 27 — 2026-04-13 03:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24324666311)
+- **Status**: ✅ Accepted
+- **Change**: Recreated canonical `autoloop/perf-comparison` branch from d8a2a7 (62 pairs, iter 26 push apparently failed). Added 18 new pairs: merge_outer, merge_left, ewm_corr, ewm_cov, str_rpartition, cat_freq_table, cat_crosstab, linspace, arange, digitize, percentile_of_score, datetime_year, datetime_month, coeff_of_variation, zscore, str_multi_replace, str_extract_groups, format_float.
+- **Metric**: 80 (previous best: 77, delta: +3) | **Commit**: 0bb979c
+- **Notes**: Canonical branch recreation needed again — iter 26 state file claimed push succeeded but remote showed no `autoloop/perf-comparison`. New approach: branch created locally and pushed via create_pull_request tool. catFromCodes is the correct API for creating categorical series in tsb.
 
 ### Iteration 26 — 2026-04-13 02:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24322645000)
 - **Status**: ✅ Accepted
