@@ -431,11 +431,50 @@ steps:
           if selected in issue_programs:
               selected_issue = issue_programs[selected]["issue_number"]
 
+      # Look up existing PR for the selected program's canonical branch
+      existing_pr = None
+      head_branch = None
+      if selected:
+          head_branch = f"autoloop/{selected}"
+          owner = repo.split("/")[0] if "/" in repo else ""
+          if owner:
+              try:
+                  pr_api_url = (
+                      f"https://api.github.com/repos/{repo}/pulls"
+                      f"?state=open&head={owner}:{head_branch}&per_page=5"
+                  )
+                  pr_req = urllib.request.Request(pr_api_url, headers={
+                      "Authorization": f"token {github_token}",
+                      "Accept": "application/vnd.github.v3+json",
+                  })
+                  with urllib.request.urlopen(pr_req, timeout=30) as pr_resp:
+                      open_prs = json.loads(pr_resp.read().decode())
+                  if open_prs:
+                      existing_pr = open_prs[0]["number"]
+                      print(f"  Found existing PR #{existing_pr} for branch {head_branch}")
+                  else:
+                      print(f"  No existing PR found for branch {head_branch}")
+              except Exception as e:
+                  print(f"  Warning: could not check for existing PRs: {e}")
+          else:
+              print(f"  Warning: could not parse owner from GITHUB_REPOSITORY='{repo}'")
+
+          # Also check the state file for a recorded PR number as fallback
+          if existing_pr is None:
+              state = read_program_state(selected)
+              pr_field = state.get("pr") or ""
+              pr_match = re.match(r'^#?(\d+)$', pr_field.strip())
+              if pr_match:
+                  existing_pr = int(pr_match.group(1))
+                  print(f"  Found PR #{existing_pr} from state file for {selected}")
+
       result = {
           "selected": selected,
           "selected_file": selected_file,
           "selected_issue": selected_issue,
           "selected_target_metric": selected_target_metric,
+          "existing_pr": existing_pr,
+          "head_branch": head_branch,
           "issue_programs": {name: info["issue_number"] for name, info in issue_programs.items()},
           "deferred": deferred,
           "skipped": skipped,
@@ -449,6 +488,10 @@ steps:
 
       print("=== Autoloop Program Check ===")
       print(f"Selected program:      {selected or '(none)'} ({selected_file or 'n/a'})")
+      if existing_pr:
+          print(f"Existing PR:           #{existing_pr} (branch: {head_branch})")
+      else:
+          print(f"Existing PR:           (none — will create on first accepted iteration)")
       print(f"Deferred (next run):   {deferred or '(none)'}")
       print(f"Programs skipped:      {[s['name'] for s in skipped] or '(none)'}")
       print(f"Programs unconfigured: {unconfigured or '(none)'}")
@@ -538,6 +581,8 @@ The pre-step has already determined which program to run. Read `/tmp/gh-aw/autol
 - **`selected_file`**: The full path to the program's markdown file (either `.autoloop/programs/<name>/program.md`, `.autoloop/programs/<name>.md`, or `/tmp/gh-aw/issue-programs/<name>.md` for issue-based programs).
 - **`selected_issue`**: The GitHub issue number if the selected program came from an issue, or `null` if it came from a file.
 - **`selected_target_metric`**: The `target-metric` value from the program's frontmatter (a number), or `null` if the program is open-ended. Used to check the [halting condition](#halting-condition) after each accepted iteration.
+- **`existing_pr`**: The PR number (e.g., `42`) of an already-open PR for this program's branch, or `null` if no open PR exists. **If this is not null, you MUST use `push-to-pull-request-branch` to push to this PR — do NOT call `create-pull-request`.**
+- **`head_branch`**: The canonical branch name for this program (e.g., `autoloop/coverage`). Always use this exact branch name — never append suffixes.
 - **`issue_programs`**: A mapping of program name → issue number for all discovered issue-based programs.
 - **`deferred`**: Other programs that were due but will be handled in future runs.
 - **`unconfigured`**: Programs that still have the sentinel or placeholder content.
@@ -550,6 +595,7 @@ If `selected` is not null:
 3. Read the current state of all target files.
 4. Read the state file `{selected}.md` from the repo-memory folder for all state: the ⚙️ Machine State table (scheduling fields) plus the research sections (priorities, lessons, foreclosed avenues, iteration history).
 5. If `selected_issue` is not null, this is an issue-based program — also read the issue comments for any human steering input.
+6. **Check `existing_pr`**: if it is not null, a PR already exists — use `push-to-pull-request-branch` to push commits to it. Only call `create-pull-request` when `existing_pr` is null.
 
 ## Multiple Programs
 
@@ -694,7 +740,7 @@ Each run executes **one iteration for the single selected program**:
    
    If the state file does not yet exist, create it in the repo-memory folder using the template defined in the [Repo Memory](#repo-memory) section.
 
-3. Note the `PR` field from the Machine State table. If it contains a PR number (e.g., `#42`), that is the **existing draft PR** for this program — you must update it, not create a new one.
+3. Note the `existing_pr` field from `/tmp/gh-aw/autoloop.json`. If it is not null, that is the **existing draft PR** for this program — you must push to it using `push-to-pull-request-branch`, not create a new one. Also check the `PR` field from the Machine State table as a fallback.
 
 ### Step 2: Analyze and Propose
 
@@ -743,15 +789,15 @@ Each run executes **one iteration for the single selected program**:
    - Commit message body (after a blank line): `Run: {run_url}` referencing the GitHub Actions run URL.
 2. Push the commit to the long-running branch `autoloop/{program-name}`.
 3. **Find the existing PR or create one** — follow these steps in order:
-   a. Check the `PR` field in the state file's **⚙️ Machine State** table. If it contains a PR number (e.g., `#42`), that is the existing draft PR.
-   b. If the state file has no PR number, search GitHub for open PRs with head branch `autoloop/{program-name}`. Use the GitHub API: `GET /repos/{owner}/{repo}/pulls?state=open&head={owner}:autoloop/{program-name}`.
-   c. **If an existing PR is found** (from either step a or b): use `push-to-pull-request-branch` to push additional commits to the existing PR. Update the PR body with the latest metric and a summary of the most recent accepted iteration. Add a comment to the PR summarizing the iteration: what changed, old metric, new metric, improvement delta, and a link to the actions run. **Do NOT call `create-pull-request`.**
-   d. **If NO PR exists** for `autoloop/{program-name}`: create one using `create-pull-request`:
+   a. **First, check `existing_pr` from `/tmp/gh-aw/autoloop.json`.** The pre-step has already looked up the open PR for this program. If `existing_pr` is not null, that is the existing draft PR — skip to step (c).
+   b. If `existing_pr` is null, also check the `PR` field in the state file's **⚙️ Machine State** table as a fallback. If it contains a PR number (e.g., `#42`), verify it is still open via the GitHub API.
+   c. **If an existing PR is found** (from step a or b): use `push-to-pull-request-branch` to push additional commits to the existing PR. Update the PR body with the latest metric and a summary of the most recent accepted iteration. Add a comment to the PR summarizing the iteration: what changed, old metric, new metric, improvement delta, and a link to the actions run. **Do NOT call `create-pull-request`.**
+   d. **If NO PR exists** for `autoloop/{program-name}` (both `existing_pr` is null AND the state file has no PR): create one using `create-pull-request`:
       - Branch: `autoloop/{program-name}` (the branch you already created in Step 3 — do NOT let the framework auto-generate a branch name)
       - Title: `[Autoloop: {program-name}]`
       - Body includes: a summary of the program goal, link to the steering issue, the current best metric, and AI disclosure: `🤖 *This PR is maintained by Autoloop. Each accepted iteration adds a commit to this branch.*`
 
-   > ⚠️ **Never create a new PR if one already exists for `autoloop/{program-name}`.** Each program must have exactly one draft PR at any time. If you are unsure whether a PR exists, check the GitHub API before calling `create-pull-request`.
+   > ⚠️ **Never create a new PR if one already exists for `autoloop/{program-name}`.** Each program must have exactly one draft PR at any time. The pre-step provides `existing_pr` in autoloop.json — always check it first. Only call `create-pull-request` when `existing_pr` is null AND the state file has no PR number.
 4. Ensure the steering issue exists (see [Steering Issue](#steering-issue) below). Add a comment to the steering issue linking to the commit and actions run.
 5. Add an entry to the experiment log issue.
 6. Update the state file `{program-name}.md` in the repo-memory folder:
@@ -790,6 +836,13 @@ Maintain a single open issue **per program** titled `[Autoloop: {program-name}] 
 ```markdown
 🤖 *Autoloop — an iterative optimization agent for this repository.*
 
+| | |
+|---|---|
+| **Branch** | [`autoloop/{program-name}`](https://github.com/{owner}/{repo}/tree/autoloop/{program-name}) |
+| **Pull Request** | #{pr_number} |
+| **Steering Issue** | #{steering_issue_number} |
+| **State File** | [`{program-name}.md`](https://github.com/{owner}/{repo}/blob/memory/autoloop/{program-name}.md) |
+
 ## Program
 
 **Goal**: {one-line summary from program.md}
@@ -817,6 +870,7 @@ Maintain a single open issue **per program** titled `[Autoloop: {program-name}] 
 - Iterations in **reverse chronological order** (newest first).
 - Each iteration heading links to its GitHub Actions run.
 - Use `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` for the current run URL.
+- The **links table at the top** must always show the current branch, PR, steering issue, and state file. Update the PR number when a new PR is created. When creating a continuation issue for a new month, copy the links table from the previous issue.
 - Close the previous month's issue and create a new one at month boundaries.
 - Maximum 50 iterations per issue; create a continuation issue if exceeded.
 
@@ -1148,9 +1202,10 @@ After each iteration, prepend an entry to the **📊 Iteration History** section
 > ❌ **Do NOT create a new branch with a suffix for each iteration.**
 > Correct: `autoloop/coverage`
 > Wrong: `autoloop/coverage-abc123`, `autoloop/coverage-iter42`, `autoloop/coverage-deadbeef1234`
+> Use the `head_branch` field from `autoloop.json` — it is always the canonical name.
 
 > ❌ **Do NOT create a new PR if one already exists for `autoloop/{program-name}`.**
-> Always check the state file's `PR` field and the GitHub API before calling `create-pull-request`. If a PR exists, use `push-to-pull-request-branch` instead.
+> The pre-step provides `existing_pr` in `autoloop.json`. If it is not null, **always** use `push-to-pull-request-branch` — never call `create-pull-request`. Only create a PR when `existing_pr` is null AND the state file has no PR number.
 
 > ❌ **Do NOT let the gh-aw framework auto-generate a branch name when creating a PR.**
 > Always specify the branch explicitly as `autoloop/{program-name}` when calling `create-pull-request`.

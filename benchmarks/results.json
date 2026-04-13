@@ -1,0 +1,247 @@
+{
+  "benchmarks": [
+    {
+      "function": "concat",
+      "tsb": null,
+      "pandas": {
+        "function": "concat",
+        "mean_ms": 0.11375509999993483,
+        "iterations": 20,
+        "total_ms": 2.2751019999986966
+      },
+      "ratio": null
+    },
+    {
+      "function": "dataframe_apply",
+      "tsb": null,
+      "pandas": {
+        "function": "dataframe_apply",
+        "mean_ms": 47.161531699998704,
+        "iterations": 10,
+        "total_ms": 471.61531699998704
+      },
+      "ratio": null
+    },
+    {
+      "function": "dataframe_creation",
+      "tsb": null,
+      "pandas": {
+        "function": "dataframe_creation",
+        "mean_ms": 5.148059900000135,
+        "iterations": 10,
+        "total_ms": 51.48059900000135
+      },
+      "ratio": null
+    },
+    {
+      "function": "dataframe_dropna",
+      "tsb": null,
+      "pandas": {
+        "function": "dataframe_dropna",
+        "mean_ms": 2.42739894999886,
+        "iterations": 20,
+        "total_ms": 48.547978999977204
+      },
+      "ratio": null
+    },
+    {
+      "function": "dataframe_filter",
+      "tsb": null,
+      "pandas": {
+        "function": "dataframe_filter",
+        "mean_ms": 0.4964389500003108,
+        "iterations": 20,
+        "total_ms": 9.928779000006216
+      },
+      "ratio": null
+    },
+    {
+      "function": "dataframe_rename",
+      "tsb": null,
+      "pandas": {
+        "function": "dataframe_rename",
+        "mean_ms": 0.17103454999869427,
+        "iterations": 20,
+        "total_ms": 3.4206909999738855
+      },
+      "ratio": null
+    },
+    {
+      "function": "dataframe_sort",
+      "tsb": null,
+      "pandas": {
+        "function": "dataframe_sort",
+        "mean_ms": 33.301584399998774,
+        "iterations": 10,
+        "total_ms": 333.01584399998774
+      },
+      "ratio": null
+    },
+    {
+      "function": "describe",
+      "tsb": null,
+      "pandas": {
+        "function": "describe",
+        "mean_ms": 5.521558600003118,
+        "iterations": 10,
+        "total_ms": 55.21558600003118
+      },
+      "ratio": null
+    },
+    {
+      "function": "ewm_mean",
+      "tsb": null,
+      "pandas": {
+        "function": "ewm_mean",
+        "mean_ms": 1.7652839999982461,
+        "iterations": 10,
+        "total_ms": 17.65283999998246
+      },
+      "ratio": null
+    },
+    {
+      "function": "groupby_mean",
+      "tsb": null,
+      "pandas": {
+        "function": "groupby_mean",
+        "mean_ms": 8.079756900002621,
+        "iterations": 10,
+        "total_ms": 80.79756900002621
+      },
+      "ratio": null
+    },
+    {
+      "function": "merge",
+      "tsb": null,
+      "pandas": {
+        "function": "merge",
+        "mean_ms": 60.42320619999941,
+        "iterations": 10,
+        "total_ms": 604.2320619999941
+      },
+      "ratio": null
+    },
+    {
+      "function": "pivot_table",
+      "tsb": null,
+      "pandas": {
+        "function": "pivot_table",
+        "mean_ms": 22.500251999997545,
+        "iterations": 10,
+        "total_ms": 225.00251999997545
+      },
+      "ratio": null
+    },
+    {
+      "function": "read_csv",
+      "tsb": null,
+      "pandas": {
+        "function": "read_csv",
+        "mean_ms": 29.951929399999244,
+        "iterations": 5,
+        "total_ms": 149.75964699999622
+      },
+      "ratio": null
+    },
+    {
+      "function": "rolling_mean",
+      "tsb": null,
+      "pandas": {
+        "function": "rolling_mean",
+        "mean_ms": 1.71982609999759,
+        "iterations": 10,
+        "total_ms": 17.1982609999759
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_arithmetic",
+      "tsb": null,
+      "pandas": {
+        "function": "series_arithmetic",
+        "mean_ms": 0.764571400000591,
+        "iterations": 20,
+        "total_ms": 15.29142800001182
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_creation",
+      "tsb": null,
+      "pandas": {
+        "function": "series_creation",
+        "mean_ms": 7.607,
+        "iterations": 50,
+        "total_ms": 380.349
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_cumsum",
+      "tsb": null,
+      "pandas": {
+        "function": "series_cumsum",
+        "mean_ms": 1.1250383499998406,
+        "iterations": 20,
+        "total_ms": 22.500766999996813
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_fillna",
+      "tsb": null,
+      "pandas": {
+        "function": "series_fillna",
+        "mean_ms": 0.18527670000025864,
+        "iterations": 20,
+        "total_ms": 3.705534000005173
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_shift",
+      "tsb": null,
+      "pandas": {
+        "function": "series_shift",
+        "mean_ms": 0.07249699999931636,
+        "iterations": 20,
+        "total_ms": 1.4499399999863272
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_sort",
+      "tsb": null,
+      "pandas": {
+        "function": "series_sort",
+        "mean_ms": 5.127767300001551,
+        "iterations": 10,
+        "total_ms": 51.27767300001551
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_string_ops",
+      "tsb": null,
+      "pandas": {
+        "function": "series_string_ops",
+        "mean_ms": 34.08206670000027,
+        "iterations": 10,
+        "total_ms": 340.8206670000027
+      },
+      "ratio": null
+    },
+    {
+      "function": "series_value_counts",
+      "tsb": null,
+      "pandas": {
+        "function": "series_value_counts",
+        "mean_ms": 9.212644899997713,
+        "iterations": 10,
+        "total_ms": 92.12644899997713
+      },
+      "ratio": null
+    }
+  ],
+  "timestamp": "2026-04-12T15:46:00Z"
+}

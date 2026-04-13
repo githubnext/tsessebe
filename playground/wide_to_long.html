@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — wideToLong</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .note { background: #fffbea; border-left: 4px solid #f5a623; padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f0f4f8; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+
+  <h1><code>wideToLong</code></h1>
+  <p>
+    Reshape a wide-format DataFrame to long format by collapsing stub-prefixed column
+    groups into rows — mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.wide_to_long.html" target="_blank">
+    <code>pandas.wide_to_long()</code></a>.
+  </p>
+
+  <h2>Concept</h2>
+  <p>
+    Given a wide DataFrame where repeated measurements are spread across columns with a
+    common stub prefix and a numeric (or other) suffix — e.g. <code>score_2021</code>,
+    <code>score_2022</code> — <code>wideToLong</code> pivots those column groups into rows.
+    One row per original row per unique suffix is produced.
+  </p>
+
+  <h2>Example — numeric suffixes</h2>
+  <pre><code>import { DataFrame } from "tsb";
+import { wideToLong } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:  ["x", "y"],
+  A1:  [1, 2],
+  A2:  [3, 4],
+  B1:  [5, 6],
+  B2:  [7, 8],
+});
+
+const long = wideToLong(df, ["A", "B"], "id", "num");
+
+// long.columns.values → ["id", "num", "A", "B"]
+// long.shape          → [4, 4]
+//
+// id  num   A   B
+//  x    1   1   5
+//  y    1   2   6
+//  x    2   3   7
+//  y    2   4   8
+</code></pre>
+
+  <h2>Example — separator and custom suffix</h2>
+  <pre><code>const df = DataFrame.fromColumns({
+  country: ["US", "UK"],
+  gdp_2020: [21e12, 2.7e12],
+  gdp_2021: [23e12, 3.1e12],
+  pop_2020: [331e6, 67e6],
+  pop_2021: [332e6, 68e6],
+});
+
+const long = wideToLong(df, ["gdp", "pop"], "country", "year", { sep: "_" });
+// long.shape → [4, 4]  — 2 countries × 2 years
+// Columns: ["country", "year", "gdp", "pop"]
+</code></pre>
+
+  <h2>API reference</h2>
+  <pre><code>function wideToLong(
+  df: DataFrame,
+  stubnames: string | string[],
+  i: string | string[],
+  j: string,
+  options?: WideToLongOptions,
+): DataFrame;
+
+interface WideToLongOptions {
+  sep?: string;      // separator between stub and suffix, default ""
+  suffix?: string;   // regex string matching suffix, default "\\d+"
+}
+</code></pre>
+
+  <h2>Parameters</h2>
+  <table>
+    <thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>df</code></td><td><code>DataFrame</code></td><td>Source DataFrame (not mutated)</td></tr>
+      <tr><td><code>stubnames</code></td><td><code>string | string[]</code></td><td>Prefix(es) shared by the wide column groups</td></tr>
+      <tr><td><code>i</code></td><td><code>string | string[]</code></td><td>Column(s) to keep as id variables (repeated per suffix)</td></tr>
+      <tr><td><code>j</code></td><td><code>string</code></td><td>Name of the new column holding the suffix values</td></tr>
+      <tr><td><code>options.sep</code></td><td><code>string</code></td><td>Separator between stub and suffix (default: <code>""</code>)</td></tr>
+      <tr><td><code>options.suffix</code></td><td><code>string</code></td><td>Regex string matching the suffix (default: <code>"\\d+"</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Output layout</h2>
+  <div class="note">
+    Output columns are always ordered: <strong>id cols</strong>, <strong>j</strong>, <strong>stub cols</strong>
+    (in the same order the stubs were passed).  Suffixes are sorted numerically when they are all
+    integers, otherwise lexicographically.  Wide columns that are absent from the DataFrame are
+    filled with <code>null</code>.
+  </div>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — format_ops: Number Formatting</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a2e; }
+    h1 { color: #16213e; }
+    h2 { color: #0f3460; border-bottom: 2px solid #e94560; padding-bottom: 0.25rem; }
+    pre { background: #f4f4f8; border-left: 4px solid #e94560; padding: 1rem; overflow-x: auto; border-radius: 4px; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 0.9em; }
+    .demo { background: #eef2ff; border-radius: 6px; padding: 1rem 1.25rem; margin: 1rem 0; }
+    .demo label { font-weight: 600; display: block; margin-bottom: 0.3rem; }
+    .demo input, .demo select { padding: 0.3rem 0.5rem; border: 1px solid #aaa; border-radius: 4px; margin-right: 0.5rem; }
+    .demo button { background: #e94560; color: white; border: none; padding: 0.4rem 0.9rem; border-radius: 4px; cursor: pointer; }
+    .demo button:hover { background: #c73652; }
+    .output { font-family: monospace; background: white; border: 1px solid #ccc; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem; min-height: 2rem; white-space: pre; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #16213e; color: white; }
+    tr:nth-child(even) { background: #f8f8fc; }
+    a { color: #e94560; }
+  </style>
+</head>
+<body>
+<h1>🔢 <code>format_ops</code> — Number Formatting</h1>
+<p>
+  <strong>tsb</strong> provides a suite of number-formatting helpers that mirror pandas'
+  <code>style.format()</code> and <code>Series.map()</code> patterns.
+  Every function is zero-dependency and fully typed.
+</p>
+<p><a href="index.html">← Back to index</a></p>
+
+<h2>Scalar formatters</h2>
+
+<table>
+  <thead><tr><th>Function</th><th>Example input</th><th>Example output</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>formatFloat(n, d)</code></td><td><code>3.14159, 2</code></td><td><code>"3.14"</code></td><td>Fixed decimal places</td></tr>
+    <tr><td><code>formatPercent(n, d)</code></td><td><code>0.1234, 1</code></td><td><code>"12.3%"</code></td><td>Multiplies by 100</td></tr>
+    <tr><td><code>formatScientific(n, d)</code></td><td><code>12345.678, 3</code></td><td><code>"1.235e+4"</code></td><td>Exponential notation</td></tr>
+    <tr><td><code>formatEngineering(n, d)</code></td><td><code>12345.678, 3</code></td><td><code>"12.346e+3"</code></td><td>Exponent multiple of 3</td></tr>
+    <tr><td><code>formatThousands(n, d, sep)</code></td><td><code>1234567.89, 2</code></td><td><code>"1,234,567.89"</code></td><td>Thousands separator</td></tr>
+    <tr><td><code>formatCurrency(n, sym, d)</code></td><td><code>1234.5, "$"</code></td><td><code>"$1,234.50"</code></td><td>Currency prefix + thousands</td></tr>
+    <tr><td><code>formatCompact(n, d)</code></td><td><code>1_234_567, 2</code></td><td><code>"1.23M"</code></td><td>K / M / B / T suffixes</td></tr>
+  </tbody>
+</table>
+
+<h2>Interactive demo — scalar formatting</h2>
+<div class="demo">
+  <label>Number: <input id="numInput" type="number" value="1234567.89" style="width:180px" /></label>
+  <label>Format:
+    <select id="fmtSelect">
+      <option value="float">formatFloat(n, decimals)</option>
+      <option value="percent">formatPercent(n, decimals)</option>
+      <option value="scientific">formatScientific(n, decimals)</option>
+      <option value="engineering">formatEngineering(n, decimals)</option>
+      <option value="thousands">formatThousands(n, decimals)</option>
+      <option value="currency">formatCurrency(n, "$", decimals)</option>
+      <option value="compact">formatCompact(n, decimals)</option>
+    </select>
+  </label>
+  <label>Decimals: <input id="decInput" type="number" value="2" min="0" max="10" style="width:60px" /></label>
+  <button onclick="runFmt()">Format</button>
+  <div class="output" id="fmtOutput"></div>
+</div>
+
+<h2>Formatter factories</h2>
+<pre><code>import {
+  makeFloatFormatter,
+  makePercentFormatter,
+  makeCurrencyFormatter,
+} from "tsb";
+
+const fmtFloat   = makeFloatFormatter(3);      // (v) => formatFloat(v, 3)
+const fmtPct     = makePercentFormatter(1);     // (v) => formatPercent(v, 1)
+const fmtDollar  = makeCurrencyFormatter("$");  // (v) => formatCurrency(v, "$", 2)
+
+fmtFloat(3.14159);   // "3.142"
+fmtPct(0.0825);      // "8.3%"
+fmtDollar(9999.99);  // "$9,999.99"
+</code></pre>
+
+<h2>Apply to a Series</h2>
+<pre><code>import { Series, applySeriesFormatter, makePercentFormatter } from "tsb";
+
+const returns = new Series({ data: [0.05, -0.02, 0.134, 0.007], name: "returns" });
+
+const formatted = applySeriesFormatter(returns, makePercentFormatter(1));
+// Series&lt;string&gt; ["5.0%", "-2.0%", "13.4%", "0.7%"]
+</code></pre>
+
+<h2>Apply to a DataFrame</h2>
+<pre><code>import { DataFrame, applyDataFrameFormatter, makeCurrencyFormatter, makePercentFormatter } from "tsb";
+
+const df = DataFrame.fromColumns({
+  price:   [1_299.99, 899.50, 45.00],
+  change:  [0.025, -0.031, 0.102],
+  volume:  [15_000, 8_200, 230_000],
+});
+
+const formatted = applyDataFrameFormatter(df, {
+  price:  makeCurrencyFormatter("$", 2),
+  change: makePercentFormatter(2),
+});
+
+// formatted = {
+//   price:  ["$1,299.99", "$899.50", "$45.00"],
+//   change: ["2.50%", "-3.10%", "10.20%"],
+//   volume: ["15000", "8200", "230000"],      // no formatter → String(v)
+// }
+</code></pre>
+
+<h2>Interactive demo — DataFrame formatting</h2>
+<div class="demo">
+  <button onclick="runDfFmt()">Run DataFrame example</button>
+  <div class="output" id="dfOutput"></div>
+</div>
+
+<h2>String rendering</h2>
+<pre><code>import { Series, DataFrame, seriesToString, dataFrameToString, makeFloatFormatter } from "tsb";
+
+const s = new Series({ data: [1.2, 3.4, 5.6], name: "value" });
+console.log(seriesToString(s, { formatter: makeFloatFormatter(1) }));
+// 0    1.2
+// 1    3.4
+// 2    5.6
+// Name: value, dtype: float64
+
+const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4.0, 5.0, 6.0] });
+console.log(dataFrameToString(df));
+//    a    b
+// 0  1  4.0
+// 1  2  5.0
+// 2  3  6.0
+</code></pre>
+
+<h2>Interactive demo — seriesToString / dataFrameToString</h2>
+<div class="demo">
+  <button onclick="runToString()">Run toString example</button>
+  <div class="output" id="tsOutput"></div>
+</div>
+
+<script type="module">
+// Inline implementations for the playground (mirrors the real tsb exports)
+
+function formatFloat(value, decimals = 2) {
+  if (!Number.isFinite(value)) return String(value);
+  return value.toFixed(decimals);
+}
+function formatPercent(value, decimals = 2) {
+  if (!Number.isFinite(value)) return String(value);
+  return `${(value * 100).toFixed(decimals)}%`;
+}
+function formatScientific(value, decimals = 3) {
+  if (!Number.isFinite(value)) return String(value);
+  return value.toExponential(decimals);
+}
+function formatEngineering(value, decimals = 3) {
+  if (!Number.isFinite(value)) return String(value);
+  if (value === 0) return `0.${"0".repeat(decimals)}e+0`;
+  const sign = value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+  const exp = Math.floor(Math.log10(abs));
+  const engExp = Math.floor(exp / 3) * 3;
+  const mantissa = abs / 10 ** engExp;
+  const expSign = engExp >= 0 ? "+" : "-";
+  return `${sign}${mantissa.toFixed(decimals)}e${expSign}${Math.abs(engExp)}`;
+}
+function formatThousands(value, decimals = 2, separator = ",") {
+  if (!Number.isFinite(value)) return String(value);
+  const fixed = value.toFixed(decimals);
+  const [intPart, fracPart] = fixed.split(".");
+  const intStr = intPart ?? "";
+  const isNeg = intStr.startsWith("-");
+  const digits = isNeg ? intStr.slice(1) : intStr;
+  const withSep = digits.replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+  const sign = isNeg ? "-" : "";
+  return fracPart !== undefined ? `${sign}${withSep}.${fracPart}` : `${sign}${withSep}`;
+}
+function formatCurrency(value, symbol = "$", decimals = 2) {
+  if (!Number.isFinite(value)) return `${symbol}${String(value)}`;
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+  return `${sign}${symbol}${formatThousands(abs, decimals)}`;
+}
+function formatCompact(value, decimals = 2) {
+  if (!Number.isFinite(value)) return String(value);
+  const sign = value < 0 ? "-" : "";
+  const abs = Math.abs(value);
+  if (abs >= 1e12) return `${sign}${(abs / 1e12).toFixed(decimals)}T`;
+  if (abs >= 1e9)  return `${sign}${(abs / 1e9).toFixed(decimals)}B`;
+  if (abs >= 1e6)  return `${sign}${(abs / 1e6).toFixed(decimals)}M`;
+  if (abs >= 1e3)  return `${sign}${(abs / 1e3).toFixed(decimals)}K`;
+  return `${sign}${abs.toFixed(decimals)}`;
+}
+
+window.runFmt = function() {
+  const n = parseFloat(document.getElementById("numInput").value);
+  const d = parseInt(document.getElementById("decInput").value, 10);
+  const fmt = document.getElementById("fmtSelect").value;
+  let result;
+  switch (fmt) {
+    case "float":       result = formatFloat(n, d); break;
+    case "percent":     result = formatPercent(n, d); break;
+    case "scientific":  result = formatScientific(n, d); break;
+    case "engineering": result = formatEngineering(n, d); break;
+    case "thousands":   result = formatThousands(n, d); break;
+    case "currency":    result = formatCurrency(n, "$", d); break;
+    case "compact":     result = formatCompact(n, d); break;
+    default: result = "?";
+  }
+  document.getElementById("fmtOutput").textContent = `"${result}"`;
+};
+
+window.runDfFmt = function() {
+  const data = [
+    { price: 1299.99, change: 0.025, volume: 15000 },
+    { price: 899.50,  change: -0.031, volume: 8200 },
+    { price: 45.00,   change: 0.102, volume: 230000 },
+  ];
+  const cols = ["price", "change", "volume"];
+  const fmts = {
+    price:  (v) => formatCurrency(v, "$", 2),
+    change: (v) => formatPercent(v, 2),
+  };
+  const lines = [cols.map(c => c.padStart(12)).join("")];
+  data.forEach((row, i) => {
+    const cells = cols.map(c => {
+      const fmt = fmts[c] ?? String;
+      return fmt(row[c]).padStart(12);
+    });
+    lines.push(`${i} ${cells.join("")}`);
+  });
+  document.getElementById("dfOutput").textContent = lines.join("\n");
+};
+
+window.runToString = function() {
+  const data = [0.05, -0.02, 0.134, 0.007, 0.089];
+  const lines = [];
+  lines.push("=== seriesToString (percent formatter) ===");
+  data.forEach((v, i) => {
+    lines.push(`${String(i).padEnd(3)} ${formatPercent(v, 1).padStart(8)}`);
+  });
+  lines.push("Name: returns, dtype: float64");
+  lines.push("");
+  lines.push("=== dataFrameToString ===");
+  const df = [
+    { a: 1, b: 4.0 },
+    { a: 2, b: 5.0 },
+    { a: 3, b: 6.0 },
+  ];
+  lines.push("   a    b");
+  df.forEach((row, i) => {
+    lines.push(`${i}  ${String(row.a).padEnd(4)} ${String(row.b)}`);
+  });
+  document.getElementById("tsOutput").textContent = lines.join("\n");
+};
+</script>
+</body>
+</html>

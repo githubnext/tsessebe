@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Performance Benchmarks: tsb vs pandas</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 2rem; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p, .desc { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+
+    /* Benchmark table */
+    .bench-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+    }
+    .bench-table th, .bench-table td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+    }
+    .bench-table th {
+      background: var(--surface);
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .bench-table td {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+    }
+    .bench-table tr:nth-child(even) {
+      background: rgba(22, 27, 34, 0.5);
+    }
+    .faster-tsb { color: var(--green); font-weight: 600; }
+    .faster-pandas { color: var(--orange); font-weight: 600; }
+    .ratio-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 0.3rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .ratio-badge.fast { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+    .ratio-badge.slow { background: rgba(210, 153, 34, 0.15); color: var(--orange); }
+
+    /* Bar chart */
+    .bar-chart { margin: 1.5rem 0; }
+    .bar-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      gap: 0.75rem;
+    }
+    .bar-label {
+      width: 160px;
+      text-align: right;
+      font-size: 0.85rem;
+      color: #8b949e;
+      flex-shrink: 0;
+    }
+    .bar-container {
+      flex: 1;
+      display: flex;
+      gap: 4px;
+      flex-direction: column;
+    }
+    .bar {
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      min-width: 50px;
+      transition: width 0.3s ease;
+    }
+    .bar.tsb { background: var(--accent); color: #0d1117; }
+    .bar.pandas { background: var(--orange); color: #0d1117; }
+
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .info-box h3 {
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    .info-box p, .info-box li {
+      color: #8b949e;
+      font-size: 0.875rem;
+    }
+    .info-box ul {
+      margin-left: 1.25rem;
+      margin-top: 0.5rem;
+    }
+    .info-box li { margin-bottom: 0.25rem; }
+
+    .timestamp {
+      color: #484f58;
+      font-size: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+
+    #no-data {
+      text-align: center;
+      padding: 3rem;
+      color: #8b949e;
+    }
+    #no-data p { color: #8b949e; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← back to index</a>
+  <h1>⚡ Performance Benchmarks</h1>
+  <p class="desc">
+    Side-by-side performance comparison of <code>tsb</code> (TypeScript/Bun) vs
+    <code>pandas</code> (Python). Each function is benchmarked with identical datasets
+    and the same number of iterations.
+  </p>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: var(--accent);"></div>
+      <span>tsb (TypeScript)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-swatch" style="background: var(--orange);"></div>
+      <span>pandas (Python)</span>
+    </div>
+  </div>
+
+  <div id="no-data" style="display: none;">
+    <p>📊 No benchmark data available yet.</p>
+    <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+      Benchmarks are added automatically by the
+      <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+      perf-comparison program. Each iteration adds a new function benchmark.
+    </p>
+  </div>
+
+  <!-- Chart section -->
+  <h2 id="chart-heading" style="display: none;">Visual Comparison</h2>
+  <div id="bar-chart" class="bar-chart"></div>
+
+  <!-- Table section -->
+  <h2 id="table-heading" style="display: none;">Detailed Results</h2>
+  <table id="bench-table" class="bench-table" style="display: none;">
+    <thead>
+      <tr>
+        <th>Function</th>
+        <th>tsb (ms)</th>
+        <th>pandas (ms)</th>
+        <th>Ratio</th>
+        <th>Faster</th>
+      </tr>
+    </thead>
+    <tbody id="bench-tbody"></tbody>
+  </table>
+  <p id="bench-timestamp" class="timestamp" style="display: none;"></p>
+
+  <!-- Methodology -->
+  <div class="info-box">
+    <h3>📐 Methodology</h3>
+    <p>Each benchmark follows a consistent protocol:</p>
+    <ul>
+      <li><strong>Dataset</strong>: 100,000 elements, deterministic generation</li>
+      <li><strong>Warm-up</strong>: 5 untimed iterations</li>
+      <li><strong>Measured</strong>: 50 timed iterations, mean reported</li>
+      <li><strong>tsb runtime</strong>: Bun (latest)</li>
+      <li><strong>pandas runtime</strong>: CPython + pandas (latest)</li>
+      <li><strong>Ratio</strong>: tsb_time / pandas_time — below 1.0 means tsb is faster</li>
+    </ul>
+  </div>
+
+  <div class="info-box">
+    <h3>🤖 About</h3>
+    <p>
+      These benchmarks are generated automatically by the Autoloop
+      <code>perf-comparison</code> program. Each iteration adds a new function
+      comparison. Results are updated on every accepted iteration and deployed
+      to this page.
+    </p>
+  </div>
+
+  <footer>
+    <p>
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+
+  <script>
+    // Load benchmark results and render
+    (async function () {
+      const noData = document.getElementById("no-data");
+      const chartHeading = document.getElementById("chart-heading");
+      const barChart = document.getElementById("bar-chart");
+      const tableHeading = document.getElementById("table-heading");
+      const benchTable = document.getElementById("bench-table");
+      const benchTbody = document.getElementById("bench-tbody");
+      const benchTimestamp = document.getElementById("bench-timestamp");
+
+      let data;
+      try {
+        const resp = await fetch("../benchmarks/results.json");
+        if (!resp.ok) throw new Error("fetch failed");
+        data = await resp.json();
+      } catch {
+        // Try alternate path (deployed from playground/)
+        try {
+          const resp2 = await fetch("benchmarks/results.json");
+          if (!resp2.ok) throw new Error("fetch failed");
+          data = await resp2.json();
+        } catch {
+          noData.style.display = "block";
+          return;
+        }
+      }
+
+      const benchmarks = data.benchmarks || [];
+      if (benchmarks.length === 0) {
+        noData.style.display = "block";
+        return;
+      }
+
+      // Show sections
+      chartHeading.style.display = "";
+      tableHeading.style.display = "";
+      benchTable.style.display = "";
+      if (data.timestamp) {
+        benchTimestamp.style.display = "";
+        benchTimestamp.textContent = "Last updated: " + data.timestamp;
+      }
+
+      // Find max time for scaling bars
+      let maxTime = 0;
+      for (const b of benchmarks) {
+        if (b.tsb != null) maxTime = Math.max(maxTime, b.tsb.mean_ms);
+        if (b.pandas != null) maxTime = Math.max(maxTime, b.pandas.mean_ms);
+      }
+
+      // Render bar chart
+      for (const b of benchmarks) {
+        const label = b.function.replace(/_/g, " ");
+        const pyPct = b.pandas != null ? (b.pandas.mean_ms / maxTime) * 100 : 0;
+        const tsPct = b.tsb != null ? (b.tsb.mean_ms / maxTime) * 100 : 0;
+
+        const tsBar = b.tsb != null
+          ? '<div class="bar tsb" style="width: ' + Math.max(tsPct, 5) + '%">' + b.tsb.mean_ms.toFixed(3) + ' ms</div>'
+          : '<div class="bar tsb" style="width: 5%; opacity: 0.4;">pending</div>';
+        const pyBar = b.pandas != null
+          ? '<div class="bar pandas" style="width: ' + Math.max(pyPct, 5) + '%">' + b.pandas.mean_ms.toFixed(3) + ' ms</div>'
+          : '<div class="bar pandas" style="width: 5%; opacity: 0.4;">pending</div>';
+
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        row.innerHTML =
+          '<div class="bar-label">' + label + '</div>' +
+          '<div class="bar-container">' + tsBar + pyBar + '</div>';
+        barChart.appendChild(row);
+      }
+
+      // Render table
+      for (const b of benchmarks) {
+        const ratio = (b.tsb != null && b.pandas != null && b.pandas.mean_ms > 0)
+          ? b.tsb.mean_ms / b.pandas.mean_ms
+          : null;
+        const faster = ratio != null ? (ratio < 1 ? "tsb" : "pandas") : "—";
+        const badgeClass = ratio != null ? (ratio < 1 ? "fast" : "slow") : "";
+        const fasterClass = ratio != null ? (ratio < 1 ? "faster-tsb" : "faster-pandas") : "";
+        const ratioDisplay = ratio != null
+          ? '<span class="ratio-badge ' + badgeClass + '">' + ratio.toFixed(3) + "x</span>"
+          : "—";
+        const displayRatio = ratio != null
+          ? (ratio < 1
+              ? (1 / ratio).toFixed(2) + "x faster"
+              : ratio.toFixed(2) + "x slower")
+          : "";
+        const fasterDisplay = ratio != null ? faster + " (" + displayRatio + ")" : "—";
+        const tsMsDisplay = b.tsb != null ? b.tsb.mean_ms.toFixed(3) : "—";
+        const pyMsDisplay = b.pandas != null ? b.pandas.mean_ms.toFixed(3) : "—";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + b.function.replace(/_/g, " ") + "</td>" +
+          "<td>" + tsMsDisplay + "</td>" +
+          "<td>" + pyMsDisplay + "</td>" +
+          "<td>" + ratioDisplay + "</td>" +
+          '<td class="' + fasterClass + '">' + fasterDisplay + "</td>";
+        benchTbody.appendChild(tr);
+      }
+    })();
+  </script>
+</body>
+</html>

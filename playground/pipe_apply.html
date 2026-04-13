@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — pipe_apply: functional pipeline &amp; apply utilities</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .note { background: #fffbea; border-left: 4px solid #f5a623; padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f0f4f8; }
+    a { color: #0066cc; }
+    .api-table td:first-child { font-family: monospace; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+
+  <h1><code>pipe_apply</code> — Functional Pipeline &amp; Apply Utilities</h1>
+  <p>
+    Standalone equivalents of the pandas
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.pipe.html" target="_blank"><code>DataFrame.pipe()</code></a>
+    /
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.pipe.html" target="_blank"><code>Series.pipe()</code></a>
+    chaining pattern plus various
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html" target="_blank"><code>apply()</code></a>
+    /
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.applymap.html" target="_blank"><code>applymap()</code></a>
+    operations — usable without method-call syntax.
+  </p>
+
+  <div class="note">
+    <strong>Why standalone?</strong>  pandas chains operations via methods:
+    <code>df.pipe(fn1).pipe(fn2)</code>.  tsb provides a module-level
+    <code>pipe(value, fn1, fn2, …)</code> that works on <em>any</em> value,
+    not just DataFrames.  All functions are <strong>pure</strong> — inputs are never mutated.
+  </div>
+
+  <h2>API Summary</h2>
+  <table class="api-table">
+    <thead>
+      <tr><th>Function</th><th>Pandas equivalent</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>pipe(value, fn1, fn2, …)</td>
+        <td>df.pipe(fn).pipe(fn2)</td>
+        <td>Variadic type-safe pipeline — passes value through fns left-to-right</td>
+      </tr>
+      <tr>
+        <td>seriesApply(s, fn)</td>
+        <td>s.apply(fn)</td>
+        <td>Element-wise; fn receives (value, label, position)</td>
+      </tr>
+      <tr>
+        <td>seriesTransform(s, fn)</td>
+        <td>s.transform(fn)</td>
+        <td>Element-wise scalar→scalar; simpler than seriesApply</td>
+      </tr>
+      <tr>
+        <td>dataFrameApply(df, fn, axis?)</td>
+        <td>df.apply(fn, axis=0|1)</td>
+        <td>Apply fn to each column (axis=0) or row (axis=1) → Series of results</td>
+      </tr>
+      <tr>
+        <td>dataFrameApplyMap(df, fn)</td>
+        <td>df.applymap(fn) / df.map(fn)</td>
+        <td>Apply fn to every cell; fn receives (value, rowLabel, colName)</td>
+      </tr>
+      <tr>
+        <td>dataFrameTransform(df, fn)</td>
+        <td>df.transform(fn)</td>
+        <td>Replace each column with fn(col) — must return same-length Series</td>
+      </tr>
+      <tr>
+        <td>dataFrameTransformRows(df, fn)</td>
+        <td>df.apply(fn, axis=1, result_type='expand')</td>
+        <td>Replace each row with fn(rowRecord) — partial updates allowed</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>pipe — functional pipeline</h2>
+
+  <pre><code>import { pipe } from "tsb";
+import { DataFrame } from "tsb";
+
+// Type-safe pipeline with up to 8 steps (return type inferred at each step)
+const result = pipe(
+  rawData,
+  (df) => df.dropna(),                                  // DataFrame → DataFrame
+  (df) => df.assign({ z: df.col("x").add(df.col("y")).values }), // DataFrame → DataFrame
+  (df) => df.head(10),                                  // DataFrame → DataFrame
+  (df) => df.sum(),                                     // DataFrame → Series
+);
+
+// Works on any value — not just DataFrames
+const n = pipe(
+  3,
+  (x) => x + 1,   // 4
+  (x) => x * x,   // 16
+  (x) => x - 1,   // 15
+);
+// n === 15</code></pre>
+
+  <h2>seriesApply — element-wise apply</h2>
+
+  <pre><code>import { seriesApply, seriesTransform } from "tsb";
+import { Series } from "tsb";
+
+const temps = new Series({ data: [22.1, 23.5, null, 21.8], name: "temp_C" });
+
+// Element-wise with (value, label, position) context
+const fahrenheit = seriesApply(temps, (v) => v === null ? null : (v as number) * 9/5 + 32);
+// [71.78, 74.3, null, 71.24]
+
+// Simple scalar transform (no label/position needed)
+const rounded = seriesTransform(temps, (v) => v === null ? null : Math.round(v as number));
+// [22, 24, null, 22]
+
+// Using position to build cumulative logic
+const withPos = seriesApply(
+  new Series({ data: [10, 20, 30] }),
+  (v, _label, pos) => (v as number) + pos * 100,
+);
+// [10, 120, 230]</code></pre>
+
+  <h2>dataFrameApply — column/row aggregation</h2>
+
+  <pre><code>import { dataFrameApply } from "tsb";
+import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  score: [85, 92, 78, 95],
+  weight: [1.0, 1.2, 0.8, 1.5],
+});
+
+// axis=0 (default): apply fn to each column → Series indexed by column names
+const colMax = dataFrameApply(df, (col) => col.max() ?? null);
+// colMax.at("score")  === 95
+// colMax.at("weight") === 1.5
+
+// axis=1: apply fn to each row → Series indexed by row labels
+const weightedScore = dataFrameApply(
+  df,
+  (row) => (row.at("score") as number) * (row.at("weight") as number),
+  1,
+);
+// [85, 110.4, 62.4, 142.5]</code></pre>
+
+  <h2>dataFrameApplyMap — element-wise cell transform</h2>
+
+  <pre><code>import { dataFrameApplyMap } from "tsb";
+import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, -2, 3],
+  b: [-4, 5, -6],
+});
+
+// Zero out all negative values (like pandas df.applymap(lambda x: max(x, 0)))
+const clipped = dataFrameApplyMap(df, (v) => {
+  return typeof v === "number" && v < 0 ? 0 : v;
+});
+// a: [1, 0, 3]
+// b: [0, 5, 0]
+
+// fn receives full context: (value, rowLabel, colName)
+const tagged = dataFrameApplyMap(df, (v, row, col) => `${col}[${row}]=${v}`);
+// a: ["a[0]=1", "a[1]=-2", "a[2]=3"]
+// b: ["b[0]=-4", "b[1]=5", "b[2]=-6"]</code></pre>
+
+  <h2>dataFrameTransform — column-wise transform</h2>
+
+  <pre><code>import { dataFrameTransform, seriesTransform } from "tsb";
+import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  x: [1, 2, 3, 4, 5],
+  y: [10, 20, 30, 40, 50],
+});
+
+// Z-score normalize each column
+const normalized = dataFrameTransform(df, (col) => {
+  const mu = col.mean();
+  const sd = col.std();
+  return seriesTransform(col, (v) =>
+    typeof v === "number" && sd > 0 ? (v - mu) / sd : v
+  );
+});
+
+// Bin each column into quartiles
+const binned = dataFrameTransform(df, (col) => {
+  const q1 = col.quantile(0.25);
+  const q2 = col.quantile(0.5);
+  const q3 = col.quantile(0.75);
+  return seriesTransform(col, (v) => {
+    const n = v as number;
+    if (n <= q1) return "Q1";
+    if (n <= q2) return "Q2";
+    if (n <= q3) return "Q3";
+    return "Q4";
+  });
+});</code></pre>
+
+  <h2>dataFrameTransformRows — row-wise transform</h2>
+
+  <pre><code>import { dataFrameTransformRows } from "tsb";
+import { DataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  first: ["alice", "bob", "carol"],
+  last:  ["smith", "jones", "white"],
+  score: [88, 75, 92],
+});
+
+// Normalise scores relative to the row's position (illustrative)
+const updated = dataFrameTransformRows(df, (row, _label, pos) => ({
+  // Only return keys you want to change — others are preserved as-is
+  score: (row["score"] as number) + pos,
+}));
+// scores become [88, 76, 94]
+// first and last columns are unchanged
+
+// Full row transformation (compute full name)
+const withFull = dataFrameTransformRows(df, (row) => ({
+  first: row["first"],
+  last:  row["last"],
+  score: row["score"],
+  full:  `${row["first"]} ${row["last"]}`,
+}));</code></pre>
+
+  <h2>Combining pipe + apply</h2>
+
+  <pre><code>import { pipe, dataFrameApplyMap, dataFrameTransform, seriesTransform } from "tsb";
+import { DataFrame } from "tsb";
+
+const raw = DataFrame.fromColumns({
+  price:    [9.99, -1, 24.5, null, 49.0],
+  quantity: [3, 5, null, 2, 1],
+});
+
+// Clean → impute → normalise in one readable pipeline
+const clean = pipe(
+  raw,
+  // 1. zero out invalid prices/quantities
+  (df) => dataFrameApplyMap(df, (v) =>
+    v === null || (typeof v === "number" && v &lt; 0) ? 0 : v
+  ),
+  // 2. add derived revenue column
+  (df) => df.assign({
+    revenue: df.col("price").mul(df.col("quantity")).values,
+  }),
+  // 3. round everything to 2 dp
+  (df) => dataFrameTransform(df, (col) =>
+    seriesTransform(col, (v) =>
+      typeof v === "number" ? Math.round(v * 100) / 100 : v
+    )
+  ),
+);</code></pre>
+
+  <hr />
+  <p>
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.pipe.html" target="_blank">pandas DataFrame.pipe docs</a>
+    ·
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html" target="_blank">pandas DataFrame.apply docs</a>
+    ·
+    <a href="https://github.com/githubnext/tsessebe" target="_blank">tsb on GitHub</a>
+  </p>
+</body>
+</html>

@@ -25,7 +25,7 @@ steps:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     run: |
       python3 - << 'PYEOF'
-      import os, subprocess, sys
+      import os, re, subprocess, sys
 
       token = os.environ.get("GITHUB_TOKEN", "")
       repo = os.environ.get("GITHUB_REPOSITORY", "")
@@ -40,13 +40,23 @@ steps:
           print(f"Failed to list remote branches: {result.stderr}")
           sys.exit(0)
 
-      branches = [b.strip().replace("origin/", "") for b in result.stdout.strip().split("\n") if b.strip()]
+      all_branches = [b.strip().replace("origin/", "") for b in result.stdout.strip().split("\n") if b.strip()]
+
+      # Filter to canonical branches only: autoloop/{name} without hash suffixes.
+      # Stale branches created by the framework (e.g. autoloop/name-a1b2c3d4e5f6g7h8)
+      # are skipped — they are not the long-running program branches.
+      _hash_suffix = re.compile(r'-[0-9a-f]{16}$')
+      branches = [b for b in all_branches if not _hash_suffix.search(b)]
+      skipped_branches = [b for b in all_branches if _hash_suffix.search(b)]
+
+      if skipped_branches:
+          print(f"Skipping {len(skipped_branches)} stale branch(es) with hash suffixes: {skipped_branches}")
 
       if not branches:
-          print("No autoloop/* branches found. Nothing to sync.")
+          print("No canonical autoloop/* branches found. Nothing to sync.")
           sys.exit(0)
 
-      print(f"Found {len(branches)} autoloop branch(es) to sync: {branches}")
+      print(f"Found {len(branches)} canonical autoloop branch(es) to sync: {branches}")
 
       failed = []
       for branch in branches:

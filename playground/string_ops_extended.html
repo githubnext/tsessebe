@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Extended String Operations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.6; }
+    header { background: #161b22; border-bottom: 1px solid #30363d; padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header .badge { background: #388bfd22; color: #58a6ff; border: 1px solid #388bfd55; border-radius: 2rem; padding: 0.2rem 0.8rem; font-size: 0.75rem; }
+    main { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+    h2 { font-size: 1.1rem; color: #58a6ff; margin: 2rem 0 0.5rem; }
+    p { color: #8b949e; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .section h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+    .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 0.75rem; }
+    label { display: block; font-size: 0.8rem; color: #8b949e; margin-bottom: 0.25rem; }
+    input, select, textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.5rem 0.75rem; color: #e6edf3; font-size: 0.9rem; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    textarea { resize: vertical; min-height: 70px; }
+    button { background: #238636; border: none; border-radius: 6px; color: #fff; cursor: pointer; font-size: 0.9rem; padding: 0.5rem 1.25rem; margin-top: 0.75rem; }
+    button:hover { background: #2ea043; }
+    pre { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; margin-top: 0.5rem; color: #7ee787; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    .error { color: #f85149; }
+    .info { font-size: 0.82rem; color: #8b949e; margin-top: 0.4rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+    th, td { border: 1px solid #30363d; padding: 0.35rem 0.75rem; text-align: left; }
+    th { background: #21262d; color: #8b949e; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>tsb</h1>
+  <span class="badge">string_ops_extended</span>
+  <span style="color:#8b949e; font-size:0.9rem;">Advanced standalone string operations: split-expand, extract, partition, multi-replace, indent, dedent</span>
+</header>
+<main>
+  <p>
+    <strong>string_ops_extended</strong> adds advanced string utilities that complement
+    <code>string_ops</code> and the <code>Series.str</code> accessor. All functions accept
+    a <code>Series</code>, an array, or a scalar string.
+  </p>
+
+  <!-- strSplitExpand -->
+  <div class="section">
+    <h3>strSplitExpand — split and expand to DataFrame columns</h3>
+    <p>
+      Split each element by a delimiter and expand the parts into a <code>DataFrame</code>
+      with one column per position. Mirrors <code>pandas.Series.str.split(expand=True)</code>.
+      Shorter rows are padded with <code>null</code>.
+    </p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="split-input">2024-01-15
+2025-12-31
+1999-07-04</textarea>
+      </div>
+      <div>
+        <label>Separator</label>
+        <input id="split-sep" value="-" />
+        <label style="margin-top:0.75rem">Max splits (–1 = unlimited)</label>
+        <input id="split-n" type="number" value="-1" />
+      </div>
+    </div>
+    <button onclick="runSplitExpand()">Run strSplitExpand</button>
+    <pre id="split-out"></pre>
+  </div>
+
+  <!-- strExtractGroups -->
+  <div class="section">
+    <h3>strExtractGroups — extract regex capture groups</h3>
+    <p>
+      Extract regex capture groups from each element into a <code>DataFrame</code>.
+      Named groups (<code>(?&lt;name&gt;...)</code>) become column names; unnamed groups
+      become <code>0</code>, <code>1</code>, …  Non-matching rows produce <code>null</code>.
+    </p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="extract-input">John 42
+Alice 30
+Bob invalid</textarea>
+      </div>
+      <div>
+        <label>Pattern (supports named groups)</label>
+        <input id="extract-pat" value="(?&lt;name&gt;\w+) (?&lt;age&gt;\d+)" />
+        <div class="info">Use <code>(?&lt;name&gt;...)</code> for named capture groups.</div>
+      </div>
+    </div>
+    <button onclick="runExtractGroups()">Run strExtractGroups</button>
+    <pre id="extract-out"></pre>
+  </div>
+
+  <!-- strPartition / strRPartition -->
+  <div class="section">
+    <h3>strPartition / strRPartition — split into (before, sep, after)</h3>
+    <p>
+      <strong>strPartition</strong> splits at the <em>first</em> occurrence of the separator;
+      <strong>strRPartition</strong> splits at the <em>last</em>. When the separator is not
+      found, <code>strPartition</code> returns <code>[s, "", ""]</code> and
+      <code>strRPartition</code> returns <code>["", "", s]</code>.
+    </p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="part-input">hello.world.foo
+example.com
+no-separator-here</textarea>
+      </div>
+      <div>
+        <label>Separator</label>
+        <input id="part-sep" value="." />
+      </div>
+    </div>
+    <button onclick="runPartition()">Run strPartition &amp; strRPartition</button>
+    <pre id="part-out"></pre>
+  </div>
+
+  <!-- strMultiReplace -->
+  <div class="section">
+    <h3>strMultiReplace — apply multiple replacements in sequence</h3>
+    <p>
+      Apply an ordered list of <code>{pat, repl}</code> pairs to each element.
+      Each replacement is applied to the result of the previous one.
+      Patterns can be string literals (replaced globally) or <code>RegExp</code> objects.
+    </p>
+    <div class="row">
+      <div>
+        <label>Input strings (one per line)</label>
+        <textarea id="mr-input">Hello World
+foo bar baz
+123-456-7890</textarea>
+      </div>
+      <div>
+        <label>Replacements (JSON array of {pat, repl} pairs)</label>
+        <textarea id="mr-rules">[
+  {"pat": "Hello", "repl": "Hi"},
+  {"pat": "World", "repl": "Earth"},
+  {"pat": "foo", "repl": "qux"}
+]</textarea>
+      </div>
+    </div>
+    <button onclick="runMultiReplace()">Run strMultiReplace</button>
+    <pre id="mr-out"></pre>
+  </div>
+
+  <!-- strIndent / strDedent -->
+  <div class="section">
+    <h3>strIndent / strDedent — line-level indentation utilities</h3>
+    <p>
+      <strong>strIndent</strong> adds a prefix to every non-empty line (mirrors
+      <code>textwrap.indent</code>).
+      <strong>strDedent</strong> removes the common leading whitespace from all lines
+      (mirrors <code>textwrap.dedent</code>).
+    </p>
+    <div class="row">
+      <div>
+        <label>Input text (use literal \n for newlines)</label>
+        <textarea id="indent-input">    def hello():
+        print("world")
+        return 42</textarea>
+      </div>
+      <div>
+        <label>Indent prefix (for strIndent)</label>
+        <input id="indent-prefix" value="# " />
+      </div>
+    </div>
+    <button onclick="runIndentDedent()">Run strIndent &amp; strDedent</button>
+    <pre id="indent-out"></pre>
+  </div>
+
+</main>
+
+<script type="module">
+// ─── mini inline tsb implementation ──────────────────────────────────────────
+// (polyfill-level implementations for playground purposes)
+
+function escapeRegex(s) {
+  return s.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+}
+
+function toStrOrNull(v) {
+  if (v == null || (typeof v === "number" && isNaN(v))) return null;
+  return String(v);
+}
+
+function strSplitExpand(arr, sep = " ", n = -1) {
+  function splitOne(s) {
+    if (s === null) return [null];
+    if (n < 0) {
+      const pat = sep instanceof RegExp ? sep : new RegExp(escapeRegex(sep));
+      return s.split(pat);
+    }
+    const parts = [];
+    let rest = s;
+    for (let i = 0; i < n; i++) {
+      let idx, sepLen;
+      if (typeof sep === "string") {
+        idx = rest.indexOf(sep);
+        sepLen = sep.length;
+      } else {
+        const m = rest.match(sep);
+        if (!m || m.index === undefined) break;
+        idx = m.index;
+        sepLen = m[0]?.length ?? 0;
+      }
+      if (idx === -1) break;
+      parts.push(rest.slice(0, idx));
+      rest = rest.slice(idx + sepLen);
+    }
+    parts.push(rest);
+    return parts;
+  }
+  const rows = arr.map(splitOne);
+  const width = rows.reduce((m, r) => Math.max(m, r.length), 0);
+  const cols = {};
+  for (let c = 0; c < width; c++) {
+    cols[c] = rows.map(r => c < r.length ? r[c] ?? null : null);
+  }
+  return { rows: arr.length, cols: width, data: cols };
+}
+
+function strExtractGroups(arr, pat, flags = "") {
+  const re = pat instanceof RegExp ? (flags ? new RegExp(pat.source, pat.flags + flags) : pat) : new RegExp(pat, flags);
+  function getGroupNames(re) {
+    const ngp = /\(\?<([^>]+)>/g;
+    const names = [];
+    let m;
+    while ((m = ngp.exec(re.source)) !== null) names.push(m[1]);
+    return names;
+  }
+  const groupNames = getGroupNames(re);
+  const rows = arr.map(v => {
+    const s = toStrOrNull(v);
+    if (!s) return [];
+    const m = re.exec(s);
+    if (!m) return [];
+    return Array.from({length: m.length - 1}, (_, i) => m[i + 1] ?? null);
+  });
+  const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
+  const colNames = groupNames.length === width && width > 0
+    ? groupNames
+    : Array.from({length: width}, (_, i) => String(i));
+  const cols = {};
+  for (let c = 0; c < width; c++) {
+    cols[colNames[c]] = rows.map(r => c < r.length ? r[c] ?? null : null);
+  }
+  return { rows: arr.length, cols: width, colNames, data: cols };
+}
+
+function strPartition(arr, sep) {
+  return arr.map(v => {
+    const s = toStrOrNull(v);
+    if (!s) return [null, null, null];
+    const idx = s.indexOf(sep);
+    if (idx === -1) return [s, "", ""];
+    return [s.slice(0, idx), sep, s.slice(idx + sep.length)];
+  });
+}
+
+function strRPartition(arr, sep) {
+  return arr.map(v => {
+    const s = toStrOrNull(v);
+    if (!s) return [null, null, null];
+    const idx = s.lastIndexOf(sep);
+    if (idx === -1) return ["", "", s];
+    return [s.slice(0, idx), sep, s.slice(idx + sep.length)];
+  });
+}
+
+function strMultiReplace(arr, rules) {
+  return arr.map(v => {
+    let s = toStrOrNull(v);
+    if (!s) return null;
+    for (const {pat, repl} of rules) {
+      s = s.replace(
+        pat instanceof RegExp ? pat : new RegExp(escapeRegex(pat), "g"),
+        repl
+      );
+    }
+    return s;
+  });
+}
+
+function strIndent(s, prefix) {
+  return s.split("\n").map(line => line.trim().length > 0 ? prefix + line : line).join("\n");
+}
+
+function strDedent(s) {
+  const lines = s.split("\n");
+  let minIndent = Infinity;
+  for (const line of lines) {
+    if (line.trim().length === 0) continue;
+    const leading = line.length - line.trimStart().length;
+    if (leading < minIndent) minIndent = leading;
+  }
+  if (!isFinite(minIndent) || minIndent === 0) return s;
+  return lines.map(line => line.trim().length === 0 ? "" : line.slice(minIndent)).join("\n");
+}
+
+// ─── render helpers ────────────────────────────────────────────────────────────
+
+function renderDF(result) {
+  if (!result || result.rows === 0) return "(empty)";
+  const { data, colNames } = result;
+  const cols = colNames || Object.keys(data);
+  let lines = ["  " + cols.join("  |  ")];
+  lines.push("-".repeat(lines[0].length));
+  for (let r = 0; r < result.rows; r++) {
+    const row = cols.map(c => String(data[c]?.[r] ?? "null").padEnd(8));
+    lines.push(row.join("  |  "));
+  }
+  return lines.join("\n");
+}
+
+// ─── event handlers ────────────────────────────────────────────────────────────
+
+window.runSplitExpand = function() {
+  const out = document.getElementById("split-out");
+  try {
+    const arr = document.getElementById("split-input").value.split("\n");
+    const sep = document.getElementById("split-sep").value;
+    const n = parseInt(document.getElementById("split-n").value, 10);
+    const result = strSplitExpand(arr, sep, n);
+    const colKeys = Object.keys(result.data);
+    out.textContent = "strSplitExpand(input, " + JSON.stringify(sep) + ", { n: " + n + " })\n\n" + renderDF({...result, colNames: colKeys});
+    out.className = "";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "error";
+  }
+};
+
+window.runExtractGroups = function() {
+  const out = document.getElementById("extract-out");
+  try {
+    const arr = document.getElementById("extract-input").value.split("\n");
+    const pat = document.getElementById("extract-pat").value;
+    const result = strExtractGroups(arr, pat);
+    out.textContent = "strExtractGroups(input, /" + pat + "/)\n\n" + renderDF(result);
+    out.className = "";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "error";
+  }
+};
+
+window.runPartition = function() {
+  const out = document.getElementById("part-out");
+  try {
+    const arr = document.getElementById("part-input").value.split("\n");
+    const sep = document.getElementById("part-sep").value;
+    const partRows = strPartition(arr, sep);
+    const rpartRows = strRPartition(arr, sep);
+    let txt = "strPartition(input, " + JSON.stringify(sep) + ")\n";
+    txt += "  [0=before, 1=sep, 2=after]\n";
+    partRows.forEach((r, i) => {
+      txt += "  " + JSON.stringify(arr[i]) + " → " + JSON.stringify(r) + "\n";
+    });
+    txt += "\nstrRPartition(input, " + JSON.stringify(sep) + ")\n";
+    txt += "  [0=before, 1=sep, 2=after]\n";
+    rpartRows.forEach((r, i) => {
+      txt += "  " + JSON.stringify(arr[i]) + " → " + JSON.stringify(r) + "\n";
+    });
+    out.textContent = txt;
+    out.className = "";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "error";
+  }
+};
+
+window.runMultiReplace = function() {
+  const out = document.getElementById("mr-out");
+  try {
+    const arr = document.getElementById("mr-input").value.split("\n");
+    const rules = JSON.parse(document.getElementById("mr-rules").value);
+    const result = strMultiReplace(arr, rules);
+    let txt = "strMultiReplace(input, rules)\n\n";
+    arr.forEach((s, i) => {
+      txt += "  " + JSON.stringify(s) + " → " + JSON.stringify(result[i]) + "\n";
+    });
+    out.textContent = txt;
+    out.className = "";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "error";
+  }
+};
+
+window.runIndentDedent = function() {
+  const out = document.getElementById("indent-out");
+  try {
+    const raw = document.getElementById("indent-input").value;
+    const prefix = document.getElementById("indent-prefix").value;
+    const indented = strIndent(raw, prefix);
+    const dedented = strDedent(raw);
+    let txt = "Original:\n" + raw + "\n\n";
+    txt += "strIndent(text, " + JSON.stringify(prefix) + "):\n" + indented + "\n\n";
+    txt += "strDedent(text):\n" + dedented;
+    out.textContent = txt;
+    out.className = "";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "error";
+  }
+};
+</script>
+</body>
+</html>
