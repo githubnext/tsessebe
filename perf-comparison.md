@@ -8,12 +8,12 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T07:17:14Z |
-| Iteration Count | 30 |
-| Best Metric | 123 |
+| Last Run | 2026-04-13T08:16:44Z |
+| Iteration Count | 31 |
+| Best Metric | 132 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | (pending creation) |
+| PR | (created this iteration) |
 | Steering Issue | #131 |
 | Paused | false |
 | Pause Reason | — |
@@ -56,7 +56,7 @@
 - `s.dt.year()`, `s.dt.month()` are methods (not properties) in tsb DatetimeAccessor.
 - `coefficientOfVariation(s)` and `zscore(s)` are standalone functions exported from tsb.
 - `formatScientific(v, precision)` and `formatThousands(v, precision)` take (value, precision) args, not options objects.
-- Safe-output tools (create_pull_request, add_comment, etc.) are not available as function calls in this environment; must use noop to signal completion.
+- Safe-output tools (create_pull_request, add_comment, etc.) ARE available as function calls (lesson from iter 30 was wrong).
 
 ---
 
@@ -68,25 +68,27 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (for iter 31+):
+Next functions to benchmark (for iter 32+):
 1. `cut` / `qcut` — binning functions
 2. `series_mask` / `series_where` — conditional masking
 3. `dataframe_where` / `dataframe_mask` — DataFrame masking
-4. `value_counts` — standalone valueCounts function
-5. `dataframe_value_counts` — DataFrame.valueCounts
-6. `dataframe_assign` — DataFrame.assign (add new columns)
-7. `percentile_of_score` — percentileOfScore function
-8. `dataframe_select` — DataFrame.select (select columns)
-9. `dataframe_head_tail` — DataFrame.head() / DataFrame.tail()
-10. `series_apply` — seriesApply function (element-wise lambda)
-11. `cat_sort_by_freq` — catSortByFreq function
-12. `cat_recode` — catRecode function
-13. `cat_freq_table` — catFreqTable function
-14. `ewm_corr` / `ewm_cov` — EWM correlation/covariance
+4. `dataframe_assign` — DataFrame.assign (add new columns)
+5. `dataframe_select` — DataFrame.select (select columns)
+6. `dataframe_head_tail` — DataFrame.head() / DataFrame.tail()
+7. `ewm_corr` / `ewm_cov` — EWM correlation/covariance
+8. `cat_crosstab` — categorical cross-tabulation
+9. `read_json` / `to_csv` / `to_json` — I/O functions
+10. `series_nsmallest` / `series_nlargest` — nsmallest/nlargest
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 31 — 2026-04-13 08:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24332969247)
+- **Status**: ✅ Accepted
+- **Change**: Recreated canonical branch from d8a2a7 (62 base). Added 70 new pairs: str_normalize/get_dummies/remove_prefix/remove_suffix/split_expand/partition/rpartition/extract_groups/translate/extract_all/multi_replace/indent, linspace/arange/digitize/histogram/percentile_of_score/zscore/min_max_normalize/coefficient_of_variation/quantile_stat, cat_from_codes/union/sort_by_freq/recode/freq_table/to_ordinal, format_float/percent/scientific/thousands/currency/engineering/compact/apply_series_formatter, value_counts/dataframe_value_counts/series_apply/series_transform/insert_column/reorder_columns/to_dict/wide_to_long/isna/series_cumprod/dataframe_cumsum/dataframe_corr/dataframe_cov/series_to_string/dataframe_to_string/dataframe_apply_map, rolling_sem/skew/kurt/quantile/apply, expanding_sum/std/max/min/count, ewm_std/var, groupby_transform/sum/count/std/size, concat_axis1/merge_outer.
+- **Metric**: 132 (previous best: 123, delta: +9) | **Commit**: b80da12
+- **Notes**: Branch recreated from d8a2a7627f8ec4eb (62-pair base). 70 new pairs added via Python generator script. PR created via create_pull_request safe-output tool.
 
 ### Iteration 30 — 2026-04-13 07:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24330654914)
 - **Status**: ✅ Accepted
