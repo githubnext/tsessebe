@@ -190,7 +190,7 @@ export function strExtractGroups(
     });
   });
 
-  const width = groupCount > 0 ? groupCount : rows.reduce((w, r) => Math.max(w, r.length), 0);
+  const width = groupCount;
 
   // Use named groups if available and count matches; otherwise use 0-indexed strings.
   const colNames: string[] =
