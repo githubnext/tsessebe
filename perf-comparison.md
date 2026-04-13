@@ -8,12 +8,12 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T11:56:42Z |
-| Iteration Count | 35 |
-| Best Metric | 159 |
+| Last Run | 2026-04-13T12:26:14Z |
+| Iteration Count | 36 |
+| Best Metric | 171 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | — |
+| PR | — (new PR created this run) |
 | Steering Issue | #131 |
 | Paused | false |
 | Pause Reason | — |
@@ -69,21 +69,27 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (iter 35+):
-1. `dataframe_abs` / `dataframe_round` — `dataFrameAbs`, `dataFrameRound` (stats)
-2. `series_round` — `seriesRound` (stats)
-3. `pipe` — pipe operator benchmark
-4. `dataframe_transform` / `dataframe_transform_rows` — `dataFrameTransform`, `dataFrameTransformRows`
-5. `cat_diff` — `catDiffCategories`
-6. `cumsum`/`cummax`/`cummin` (standalone series functions) — already have `series_cumsum` but standalone `cumsum` etc.
-7. `nlargestDataFrame` / `nsmallestDataFrame` — larger df variants
-8. `rankDataFrame` — DataFrame ranking
-9. `dataFrameRolling` / `DataFrameExpanding` — DataFrame-level rolling/expanding ops
-10. `str_extract_all` / `str_partition` / `str_rpartition` / `str_dedent` / `str_indent` — remaining string standalone fns
+Next functions to benchmark (iter 37+):
+1. `dataFrameRolling` / `DataFrameExpanding` / `DataFrameEwm` — DataFrame-level rolling/expanding/ewm agg methods
+2. `rollingApply` / `rollingAgg` / `dataFrameRollingApply` / `dataFrameRollingAgg` — rolling apply/agg ops
+3. `MultiIndex` — multi-index creation and operations
+4. `dataFrameTransformRows` — row-wise transform
+5. `popColumn`, `moveColumn`, `dataFrameFromPairs` — remaining column ops
+6. `strExtractAll`, `strTranslate`, `strCharWidth`, `strByteLength` — remaining string standalone fns
+7. `catEqualCategories`, `catCrossTab` — remaining categorical ops
+8. `makeFloatFormatter`, `makePercentFormatter`, `makeCurrencyFormatter` — formatter factory fns
+9. `getAttrs`, `setAttrs`, `updateAttrs` — attrs ops
+10. Type check functions: `isScalar`, `isListLike`, etc.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 36 — 2026-04-13 12:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24343174388)
+- **Status**: ✅ Accepted
+- **Change**: Added 109 new benchmark pairs from d8a2a7 (62-pair base) to reach 171 total. Categories: rolling (sum/count/min/max/sem/skew/kurt/quantile), expanding (sum/std/var/max/min/count), ewm (std/var), groupby (sum/count/std/min/max/size/transform), series (apply/transform/cumprod/quantile/round/idxmax/idxmin/where/mask), dataframe (abs/round/clip/cumsum/cummax/cummin/cumprod/apply_map/value_counts/where/mask/transform), numeric stats (zscore/normalize/cv/percentile/digitize/histogram/linspace/arange/series_digitize), categorical (from_codes/sort_by_freq/recode/freq_table/to_ordinal/union/intersect/diff), format (float/percent/scientific/thousands/engineering/currency/compact/series+df formatters/to_string), string (upper/lower/len/strip/startswith/endswith/replace/split/pad/normalize/get_dummies/remove_prefix/remove_suffix/split_expand/extract_groups/partition/rpartition/multi_replace/indent/dedent), rank_df/nlargest_df/nsmallest_df, insert_column/reorder_columns, to_dict/from_dict, wide_to_long, concat_axis1, merge_outer/left, isna_fillna, to_json/read_json/to_csv, pipe.
+- **Metric**: 171 (previous best: 159, delta: +12) | **Commit**: 6f8d497
+- **Notes**: Branch built from d8a2a7 (62-pair base). Used Python generator script to create 109 new pairs. existing_pr was null, new PR created via safe-output.
 
 ### Iteration 35 — 2026-04-13 11:56 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24341980375)
 - **Status**: ✅ Accepted
