@@ -133,7 +133,8 @@ describe("rollingSkew", () => {
   });
 
   it("left-skewed data → negative skew", () => {
-    const out = vals(rollingSkew(s([10, 2, 1]), 3));
+    // [1, 9, 10] has a long left tail (low outlier) → negative skewness
+    const out = vals(rollingSkew(s([1, 9, 10]), 3));
     const v = out[2];
     expect(typeof v).toBe("number");
     expect((v as number) < 0).toBe(true);
@@ -221,7 +222,8 @@ describe("rollingQuantile", () => {
     expect(close(out[2] as number, 1)).toBe(true);
     expect(close(out[3] as number, 1)).toBe(true);
     expect(close(out[4] as number, 1)).toBe(true);
-    expect(close(out[5] as number, 5)).toBe(true);
+    // window [1,5,9] → min is 1
+    expect(close(out[5] as number, 1)).toBe(true);
   });
 
   it("q=1 is rolling maximum", () => {

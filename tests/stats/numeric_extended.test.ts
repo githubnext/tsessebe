@@ -309,10 +309,10 @@ describe("zscore", () => {
     const s = ns([1, 2, 3, 4, 5]);
     const z0 = vals(zscore(s, { ddof: 0 })).filter((v): v is number => typeof v === "number");
     const z1 = vals(zscore(s, { ddof: 1 })).filter((v): v is number => typeof v === "number");
-    // ddof=0 produces smaller values (divided by larger std denominator)
+    // ddof=0 divides by n (not n-1), producing smaller std → larger z-scores
     const range0 = Math.max(...z0) - Math.min(...z0);
     const range1 = Math.max(...z1) - Math.min(...z1);
-    expect(range0).toBeLessThan(range1);
+    expect(range0).toBeGreaterThan(range1);
   });
 
   it("preserves index labels", () => {
@@ -463,8 +463,9 @@ describe("property: linspace endpoints", () => {
         (start, stop, num) => {
           const r = linspace(start, stop, num);
           expect(r.length).toBe(num);
-          expect(r[0]).toBe(start);
-          expect(r.at(-1)).toBe(stop);
+          // Use toEqual to handle -0 === 0 correctly
+          expect(r[0]).toEqual(start);
+          expect(r.at(-1)).toEqual(stop);
         },
       ),
     );

@@ -170,14 +170,19 @@ export function strExtractGroups(
   const groupNames = extractGroupNames(re);
   const vals = toValues(input);
 
+  // Determine number of capture groups by adding an empty-string alternative.
+  // This always matches, and (matchResult.length - 1) gives the group count.
+  const groupCountMatch = new RegExp(`${re.source}|`).exec("");
+  const groupCount = groupCountMatch !== null ? groupCountMatch.length - 1 : 0;
+
   const rows: (string | null)[][] = vals.map((v) => {
     const s = toStrOrNull(v);
     if (s === null) {
-      return [];
+      return Array.from({ length: groupCount }, (): null => null);
     }
     const m = re.exec(s);
     if (m === null) {
-      return [];
+      return Array.from({ length: groupCount }, (): null => null);
     }
     return Array.from({ length: m.length - 1 }, (_, i) => {
       const captured = m[i + 1];
@@ -185,7 +190,7 @@ export function strExtractGroups(
     });
   });
 
-  const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
+  const width = groupCount > 0 ? groupCount : rows.reduce((w, r) => Math.max(w, r.length), 0);
 
   // Use named groups if available and count matches; otherwise use 0-indexed strings.
   const colNames: string[] =

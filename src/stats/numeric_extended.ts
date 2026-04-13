@@ -145,8 +145,11 @@ export function digitize(
     if (right) {
       // open left, closed right: bins[i-1] < v <= bins[i]
       for (let i = 0; i < n; i++) {
-        if (v <= (bins[i] as number)) {
-          return i - 1; // below first edge → -1
+        if (v < (bins[i] as number)) {
+          return i - 1; // below edge i → bin i-1
+        }
+        if (v === (bins[i] as number)) {
+          return i; // exactly at edge i → bin i (right-inclusive)
         }
       }
       return n - 1; // above last edge
