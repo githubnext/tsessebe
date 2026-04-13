@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T19:31:27Z |
-| Iteration Count | 43 |
-| Best Metric | 28 |
+| Last Run | 2026-04-13T19:58:37Z |
+| Iteration Count | 44 |
+| Best Metric | 30 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (new PR this run) |
@@ -48,17 +48,26 @@
 - Safe-output tools via MCP HTTP (host.docker.internal:80/mcp/safeoutputs) with session auth.
 - push_repo_memory limit ~10KB total across all files in repo-memory/default.
 - Bun is not installed in this environment; benchmark TS files are validated by file-count metric only.
-- Previous high metric claims (>100) were from PRs that got merged and reset; actual baseline was 22.
+- rankSeries, zscore, nlargestSeries, Expanding, melt, pearsonCorr, toCsv, readJson are all available in src/index.ts.
+- After merges reset the baseline to 22, each run creates autoloop/perf-comparison fresh from main.
 
 ---
 
 ## 🔭 Future Directions
 
 - More describe/melt variants, additional rolling/ewm fns, any unexported tsb functions.
+- toJson, dataFrameCorr, dataFrameCov, rolling variants (std/sum/max), ewm (std/var), histogram, digitize.
+- coefficientOfVariation, minMaxNormalize, catFromCodes, catSortByFreq, formatFloat.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 44 — 2026-04-13 19:58 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24363866146)
+- **Status**: ✅ Accepted
+- **Change**: Added 8 benchmark pairs: melt, rank, zscore, nlargest, expanding_mean, pearson_corr, to_csv, read_json
+- **Metric**: 30 (previous best: 28, delta: +2)
+- **Commit**: 0893b05
 
 ### Iteration 43 — 2026-04-13 19:31 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24362668145)
 - accepted metric=28 commit=2a51f22 | Added 6 pairs: melt, rank, pearsonCorr, zscore, toCsv, nlargest
