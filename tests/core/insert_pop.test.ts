@@ -20,8 +20,8 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
 import { insertColumn, moveColumn, popColumn, reorderColumns } from "../../src/core/insert_pop.ts";
+import { DataFrame, Series } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

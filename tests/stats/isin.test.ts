@@ -25,11 +25,11 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame } from "../../src/core/frame.ts";
 import { Index } from "../../src/core/base-index.ts";
+import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
+import { dataFrameIsin, isin } from "../../src/stats/isin.ts";
 import type { Label, Scalar } from "../../src/types.ts";
-import { isin, dataFrameIsin } from "../../src/stats/isin.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -80,14 +80,14 @@ describe("isin — Series", () => {
   });
 
   test("NaN in series never matches, even when NaN in values", () => {
-    const s = new Series<Scalar>({ data: [1, NaN, 3] });
-    const result = isin(s, [1, NaN, 3]);
+    const s = new Series<Scalar>({ data: [1, Number.NaN, 3] });
+    const result = isin(s, [1, Number.NaN, 3]);
     expect(bvals(result)).toEqual([true, false, true]);
   });
 
   test("NaN in series always false", () => {
-    const s = new Series<Scalar>({ data: [NaN, NaN] });
-    expect(bvals(isin(s, [NaN]))).toEqual([false, false]);
+    const s = new Series<Scalar>({ data: [Number.NaN, Number.NaN] });
+    expect(bvals(isin(s, [Number.NaN]))).toEqual([false, false]);
   });
 
   test("null matches null", () => {
@@ -171,8 +171,8 @@ describe("dataFrameIsin — shared values", () => {
   });
 
   test("NaN cells always false", () => {
-    const df = DataFrame.fromColumns({ a: [NaN, 1], b: [2, NaN] });
-    const result = dataFrameIsin(df, [NaN, 1, 2]);
+    const df = DataFrame.fromColumns({ a: [Number.NaN, 1], b: [2, Number.NaN] });
+    const result = dataFrameIsin(df, [Number.NaN, 1, 2]);
     expect(dfCol(result, "a")).toEqual([false, true]);
     expect(dfCol(result, "b")).toEqual([true, false]);
   });
@@ -180,7 +180,10 @@ describe("dataFrameIsin — shared values", () => {
   test("preserves index", () => {
     const df = new DataFrame(
       new Map([
-        ["a", new Series<Scalar>({ data: [1, 2], index: new Index<Label>(["r1", "r2"]), name: "a" })],
+        [
+          "a",
+          new Series<Scalar>({ data: [1, 2], index: new Index<Label>(["r1", "r2"]), name: "a" }),
+        ],
       ]),
       new Index<Label>(["r1", "r2"]),
     );
@@ -245,8 +248,8 @@ describe("dataFrameIsin — IsinDict (per-column)", () => {
   });
 
   test("NaN in column never matches even with NaN in dict", () => {
-    const df = DataFrame.fromColumns({ a: [NaN, 2, NaN] });
-    const result = dataFrameIsin(df, { a: [NaN, 2] });
+    const df = DataFrame.fromColumns({ a: [Number.NaN, 2, Number.NaN] });
+    const result = dataFrameIsin(df, { a: [Number.NaN, 2] });
     expect(dfCol(result, "a")).toEqual([false, true, false]);
   });
 

@@ -29,9 +29,13 @@ function nanEq(a: Scalar, b: Scalar): boolean {
 }
 
 function arrEq(a: readonly Scalar[], b: readonly Scalar[]): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   for (let i = 0; i < a.length; i++) {
-    if (!nanEq(a[i] as Scalar, b[i] as Scalar)) return false;
+    if (!nanEq(a[i] as Scalar, b[i] as Scalar)) {
+      return false;
+    }
   }
   return true;
 }
@@ -170,9 +174,7 @@ describe("clipSeriesWithBounds — array bounds", () => {
   });
 
   it("throws when array length mismatches Series length", () => {
-    expect(() =>
-      clipSeriesWithBounds(s([1, 2, 3]), { lower: [0, 0] }),
-    ).toThrow(RangeError);
+    expect(() => clipSeriesWithBounds(s([1, 2, 3]), { lower: [0, 0] })).toThrow(RangeError);
   });
 });
 
@@ -311,7 +313,10 @@ describe("clipSeriesWithBounds — property tests", () => {
   it("scalar bounds: all output values satisfy [lower, upper]", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         fc.double({ noNaN: true, noDefaultInfinity: true }),
         fc.double({ noNaN: true, noDefaultInfinity: true }),
         (data, a, b) => {
@@ -320,8 +325,8 @@ describe("clipSeriesWithBounds — property tests", () => {
           const ser = new Series<Scalar>({ data });
           const r = clipSeriesWithBounds(ser, { lower: lo, upper: hi });
           for (const v of r.values) {
-            if (typeof v === "number" && !Number.isNaN(v)) {
-              if (v < lo || v > hi) return false;
+            if (typeof v === "number" && !Number.isNaN(v) && (v < lo || v > hi)) {
+              return false;
             }
           }
           return true;
@@ -362,8 +367,13 @@ describe("clipSeriesWithBounds — property tests", () => {
           for (let i = 0; i < n; i++) {
             const rv = r.values[i];
             const lv = loData[i];
-            if (typeof rv === "number" && !Number.isNaN(rv) && typeof lv === "number") {
-              if (rv < lv - 1e-12) return false;
+            if (
+              typeof rv === "number" &&
+              !Number.isNaN(rv) &&
+              typeof lv === "number" &&
+              rv < lv - 1e-12
+            ) {
+              return false;
             }
           }
           return true;
@@ -375,7 +385,10 @@ describe("clipSeriesWithBounds — property tests", () => {
   it("idempotent: clipping twice with the same bounds is the same as clipping once", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         fc.double({ noNaN: true, noDefaultInfinity: true }),
         fc.double({ noNaN: true, noDefaultInfinity: true }),
         (data, a, b) => {

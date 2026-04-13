@@ -97,7 +97,9 @@ function applyFill(
   method: PctChangeFillMethod | null | undefined,
   limit: number | null | undefined,
 ): Scalar[] {
-  if (!method) return [...vals];
+  if (!method) {
+    return [...vals];
+  }
   return method === "pad" ? padFill(vals, limit) : bfillFill(vals, limit);
 }
 
@@ -114,7 +116,8 @@ function computePct(vals: readonly Scalar[], periods: number): Scalar[] {
         out[i] = curr / prev - 1;
       } else if (isNum(curr) && isNum(prev) && prev === 0) {
         // 0 denominator → Infinity (same as pandas)
-        out[i] = curr === 0 ? Number.NaN : curr > 0 ? Infinity : -Infinity;
+        out[i] =
+          curr === 0 ? Number.NaN : curr > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
       } else {
         out[i] = null;
       }
@@ -128,7 +131,8 @@ function computePct(vals: readonly Scalar[], periods: number): Scalar[] {
       if (isNum(curr) && isNum(fwd) && curr !== 0) {
         out[i] = fwd / curr - 1;
       } else if (isNum(curr) && isNum(fwd) && curr === 0) {
-        out[i] = fwd === 0 ? Number.NaN : fwd > 0 ? Infinity : -Infinity;
+        out[i] =
+          fwd === 0 ? Number.NaN : fwd > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
       } else {
         out[i] = null;
       }
@@ -151,7 +155,10 @@ function computePct(vals: readonly Scalar[], periods: number): Scalar[] {
  * pctChangeSeries(s); // [null, 0.1, -0.1, 0.2222…]
  * ```
  */
-export function pctChangeSeries(series: Series<Scalar>, options: PctChangeOptions = {}): Series<Scalar> {
+export function pctChangeSeries(
+  series: Series<Scalar>,
+  options: PctChangeOptions = {},
+): Series<Scalar> {
   const periods = options.periods ?? 1;
   const fillMethod = options.fillMethod !== undefined ? options.fillMethod : "pad";
   const limit = options.limit ?? null;

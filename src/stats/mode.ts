@@ -13,7 +13,7 @@
  * @module
  */
 
-import { DataFrame, Dtype, Index, Series } from "../core/index.ts";
+import { DataFrame, type Dtype, Index, Series } from "../core/index.ts";
 import type { DtypeKind } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 

@@ -80,7 +80,9 @@ function buildSet(values: IsinValues): ReadonlySet<Scalar> {
  *   (`null === null`, `-0 === +0`, etc.).
  */
 function memberOf(value: Scalar, lookup: ReadonlySet<Scalar>): boolean {
-  if (typeof value === "number" && Number.isNaN(value)) return false;
+  if (typeof value === "number" && Number.isNaN(value)) {
+    return false;
+  }
   return lookup.has(value);
 }
 

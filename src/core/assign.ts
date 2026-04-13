@@ -105,9 +105,7 @@ function _addOrReplaceColumn(
   resolved: readonly Scalar[] | Series<Scalar>,
 ): DataFrame {
   const series: Series<Scalar> =
-    resolved instanceof Series
-      ? resolved
-      : new Series<Scalar>({ data: resolved, index: df.index });
+    resolved instanceof Series ? resolved : new Series<Scalar>({ data: resolved, index: df.index });
 
   // Rebuild the column map preserving insertion order.
   const colMap = new Map<string, Series<Scalar>>();

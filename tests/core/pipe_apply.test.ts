@@ -114,19 +114,13 @@ describe("pipe", () => {
 
   test("works with Series", () => {
     const s = makeSeries([1, 2, 3]);
-    const result = pipe(
-      s,
-      (s2: Series<Scalar>) => s2.sum(),
-    );
+    const result = pipe(s, (s2: Series<Scalar>) => s2.sum());
     expect(result).toBe(6);
   });
 
   test("works with DataFrame", () => {
     const df = makeDF({ a: [1, 2], b: [3, 4] });
-    const result = pipe(
-      df,
-      (d: DataFrame) => d.sum(),
-    );
+    const result = pipe(df, (d: DataFrame) => d.sum());
     expect(result.at("a")).toBe(3);
     expect(result.at("b")).toBe(7);
   });
@@ -135,8 +129,14 @@ describe("pipe", () => {
     const calls: string[] = [];
     pipe(
       10,
-      (x: number) => { calls.push(`fn1:${x}`); return x + 1; },
-      (x: number) => { calls.push(`fn2:${x}`); return x * 2; },
+      (x: number) => {
+        calls.push(`fn1:${x}`);
+        return x + 1;
+      },
+      (x: number) => {
+        calls.push(`fn2:${x}`);
+        return x * 2;
+      },
     );
     expect(calls).toEqual(["fn1:10", "fn2:11"]);
   });
@@ -181,7 +181,7 @@ describe("seriesApply", () => {
 
   test("null values are passed to fn", () => {
     const s = makeSeries([1, null, 3]);
-    const out = seriesApply(s, (v) => v === null ? 0 : (v as number) + 1);
+    const out = seriesApply(s, (v) => (v === null ? 0 : (v as number) + 1));
     expect(out.values).toEqual([2, 0, 4]);
   });
 
@@ -217,7 +217,10 @@ describe("seriesTransform", () => {
   test("fn only receives value (no label/pos)", () => {
     const callCount = { n: 0 };
     const s = makeSeries([1, 2]);
-    seriesTransform(s, (v) => { callCount.n++; return v; });
+    seriesTransform(s, (v) => {
+      callCount.n++;
+      return v;
+    });
     expect(callCount.n).toBe(2);
   });
 });
@@ -236,7 +239,10 @@ describe("dataFrameApply", () => {
 
   test("axis=0: fn receives column Series and column name", () => {
     const received: string[] = [];
-    dataFrameApply(df, (_s, name) => { received.push(name as string); return 0; });
+    dataFrameApply(df, (_s, name) => {
+      received.push(name as string);
+      return 0;
+    });
     expect(received).toEqual(["a", "b"]);
   });
 
@@ -254,7 +260,14 @@ describe("dataFrameApply", () => {
 
   test("axis=1: row Series has column names as index", () => {
     const colNames: string[][] = [];
-    dataFrameApply(df, (s) => { colNames.push([...s.index.values] as string[]); return 0; }, 1);
+    dataFrameApply(
+      df,
+      (s) => {
+        colNames.push([...s.index.values] as string[]);
+        return 0;
+      },
+      1,
+    );
     expect(colNames[0]).toEqual(["a", "b"]);
     expect(colNames[1]).toEqual(["a", "b"]);
   });
@@ -262,7 +275,14 @@ describe("dataFrameApply", () => {
   test("axis=1: fn receives row label as second arg", () => {
     const dfLabeled = makeDF({ x: [1, 2] }, ["row0", "row1"]);
     const labels: Label[] = [];
-    dataFrameApply(dfLabeled, (_s, lbl) => { labels.push(lbl); return 0; }, 1);
+    dataFrameApply(
+      dfLabeled,
+      (_s, lbl) => {
+        labels.push(lbl);
+        return 0;
+      },
+      1,
+    );
     expect(labels).toEqual(["row0", "row1"]);
   });
 
@@ -286,10 +306,15 @@ describe("dataFrameApplyMap", () => {
 
   test("fn receives (value, rowLabel, colName)", () => {
     const calls: Array<[Scalar, Label, string]> = [];
-    dataFrameApplyMap(df, (v, row, col) => { calls.push([v, row, col]); return v; });
+    dataFrameApplyMap(df, (v, row, col) => {
+      calls.push([v, row, col]);
+      return v;
+    });
     expect(calls).toEqual([
-      [1, "r0", "x"], [2, "r1", "x"],
-      [3, "r0", "y"], [4, "r1", "y"],
+      [1, "r0", "x"],
+      [2, "r1", "x"],
+      [3, "r0", "y"],
+      [4, "r1", "y"],
     ]);
   });
 
@@ -317,16 +342,17 @@ describe("dataFrameTransform", () => {
   const df = makeDF({ a: [1, 2, 3], b: [4, 5, 6] });
 
   test("replaces each column with fn(col)", () => {
-    const out = dataFrameTransform(df, (col) =>
-      seriesTransform(col, (v) => -(v as number)),
-    );
+    const out = dataFrameTransform(df, (col) => seriesTransform(col, (v) => -(v as number)));
     expect(out.col("a").values).toEqual([-1, -2, -3]);
     expect(out.col("b").values).toEqual([-4, -5, -6]);
   });
 
   test("fn receives (col, colName)", () => {
     const names: string[] = [];
-    dataFrameTransform(df, (col, name) => { names.push(name); return col; });
+    dataFrameTransform(df, (col, name) => {
+      names.push(name);
+      return col;
+    });
     expect(names).toEqual(["a", "b"]);
   });
 
@@ -337,9 +363,7 @@ describe("dataFrameTransform", () => {
   });
 
   test("throws RangeError when fn returns wrong length", () => {
-    expect(() =>
-      dataFrameTransform(df, (_col) => makeSeries([1])),
-    ).toThrow(RangeError);
+    expect(() => dataFrameTransform(df, (_col) => makeSeries([1]))).toThrow(RangeError);
   });
 });
 
@@ -349,7 +373,10 @@ describe("dataFrameTransformRows", () => {
   const df = makeDF({ a: [1, 2, 3], b: [10, 20, 30] });
 
   test("applies fn to each row record", () => {
-    const out = dataFrameTransformRows(df, (row) => ({ a: (row["a"] as number) + 100, b: row["b"] }));
+    const out = dataFrameTransformRows(df, (row) => ({
+      a: (row["a"] as number) + 100,
+      b: row["b"],
+    }));
     expect(out.col("a").values).toEqual([101, 102, 103]);
     expect(out.col("b").values).toEqual([10, 20, 30]);
   });
@@ -418,14 +445,11 @@ describe("seriesApply — property tests", () => {
 describe("seriesTransform — property tests", () => {
   test("identity fn produces identical values", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { minLength: 0, maxLength: 20 }),
-        (data) => {
-          const s = makeSeries(data as Scalar[]);
-          const out = seriesTransform(s, (v) => v);
-          expect([...out.values]).toEqual([...s.values]);
-        },
-      ),
+      fc.property(fc.array(fc.integer(), { minLength: 0, maxLength: 20 }), (data) => {
+        const s = makeSeries(data as Scalar[]);
+        const out = seriesTransform(s, (v) => v);
+        expect([...out.values]).toEqual([...s.values]);
+      }),
     );
   });
 });

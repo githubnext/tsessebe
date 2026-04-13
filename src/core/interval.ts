@@ -91,9 +91,7 @@ export class Interval {
 
   constructor(left: number, right: number, closed: IntervalClosed = "right") {
     if (left > right) {
-      throw new RangeError(
-        `Interval left (${left}) must be ≤ right (${right})`,
-      );
+      throw new RangeError(`Interval left (${left}) must be ≤ right (${right})`);
     }
     this.left = left;
     this.right = right;
@@ -376,9 +374,7 @@ export class IntervalIndex {
    * Returns a boolean array of the same length as this index.
    */
   contains(value: number): boolean[] {
-    return this.left.map((l, i) =>
-      pointInInterval(value, l, this.right[i] as number, this.closed),
-    );
+    return this.left.map((l, i) => pointInInterval(value, l, this.right[i] as number, this.closed));
   }
 
   /**

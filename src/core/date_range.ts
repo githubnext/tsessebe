@@ -125,7 +125,9 @@ export interface DateRangeOptions {
 
 /** Parse a `Date | string` into a `Date`. */
 function toDate(val: Date | string): Date {
-  if (val instanceof Date) return new Date(val.getTime());
+  if (val instanceof Date) {
+    return new Date(val.getTime());
+  }
   const d = new Date(val);
   if (Number.isNaN(d.getTime())) {
     throw new RangeError(`Cannot parse date: "${val}"`);
@@ -143,7 +145,9 @@ function normDate(d: Date): Date {
  * `DateOffset` with multiplier `n`.
  */
 function freqToOffset(freq: DateRangeFreq | DateOffset, n = 1): DateOffset {
-  if (typeof freq === "object") return freq;
+  if (typeof freq === "object") {
+    return freq;
+  }
   switch (freq) {
     case "D":
       return new Day(n);
@@ -224,10 +228,7 @@ export class DatetimeIndex {
    * DatetimeIndex.fromTimestamps([0, 86_400_000]); // 1970-01-01, 1970-01-02
    * ```
    */
-  static fromTimestamps(
-    timestamps: readonly number[],
-    name: string | null = null,
-  ): DatetimeIndex {
+  static fromTimestamps(timestamps: readonly number[], name: string | null = null): DatetimeIndex {
     return new DatetimeIndex(
       timestamps.map((ms) => new Date(ms)),
       name,
@@ -293,10 +294,14 @@ export class DatetimeIndex {
    * ```
    */
   min(): Date | null {
-    if (this._dates.length === 0) return null;
+    if (this._dates.length === 0) {
+      return null;
+    }
     let best = this._dates[0] as Date;
     for (const d of this._dates) {
-      if (d.getTime() < best.getTime()) best = d;
+      if (d.getTime() < best.getTime()) {
+        best = d;
+      }
     }
     return best;
   }
@@ -311,10 +316,14 @@ export class DatetimeIndex {
    * ```
    */
   max(): Date | null {
-    if (this._dates.length === 0) return null;
+    if (this._dates.length === 0) {
+      return null;
+    }
     let best = this._dates[0] as Date;
     for (const d of this._dates) {
-      if (d.getTime() > best.getTime()) best = d;
+      if (d.getTime() > best.getTime()) {
+        best = d;
+      }
     }
     return best;
   }
@@ -353,7 +362,10 @@ export class DatetimeIndex {
    * Return a new index with elements that satisfy `predicate`.
    */
   filter(predicate: (d: Date, i: number) => boolean): DatetimeIndex {
-    return new DatetimeIndex(this._dates.filter((d, i) => predicate(d, i)), this.name);
+    return new DatetimeIndex(
+      this._dates.filter((d, i) => predicate(d, i)),
+      this.name,
+    );
   }
 
   /**
@@ -381,7 +393,9 @@ export class DatetimeIndex {
    * ```
    */
   shift(n: number, freq: DateRangeFreq | DateOffset): DatetimeIndex {
-    if (n === 0) return new DatetimeIndex(this._dates, this.name);
+    if (n === 0) {
+      return new DatetimeIndex(this._dates, this.name);
+    }
     const offset = freqToOffset(freq, n);
     return new DatetimeIndex(
       this._dates.map((d) => offset.apply(d)),
@@ -529,8 +543,12 @@ function buildRange(options: DateRangeOptions, defaultFreq: DateRangeFreq): Date
   let endDate = end !== undefined ? toDate(end) : null;
 
   if (normalize) {
-    if (startDate !== null) startDate = normDate(startDate);
-    if (endDate !== null) endDate = normDate(endDate);
+    if (startDate !== null) {
+      startDate = normDate(startDate);
+    }
+    if (endDate !== null) {
+      endDate = normDate(endDate);
+    }
   }
 
   let dates: Date[];
@@ -542,9 +560,7 @@ function buildRange(options: DateRangeOptions, defaultFreq: DateRangeFreq): Date
   } else if (endDate !== null && periods !== undefined) {
     dates = rangeEndPeriods(endDate, periods, offset);
   } else {
-    throw new Error(
-      "date_range: provide at least two of 'start', 'end', 'periods'",
-    );
+    throw new Error("date_range: provide at least two of 'start', 'end', 'periods'");
   }
 
   return DatetimeIndex.fromDates(dates, name);
@@ -552,13 +568,19 @@ function buildRange(options: DateRangeOptions, defaultFreq: DateRangeFreq): Date
 
 /** Forward from start; stop when next date would exceed end. */
 function rangeStartEnd(start: Date, end: Date, offset: DateOffset): Date[] {
-  if (start.getTime() > end.getTime()) return [];
+  if (start.getTime() > end.getTime()) {
+    return [];
+  }
   const out: Date[] = [start];
   let cur = start;
   for (let i = 0; i < MAX_ITER; i++) {
     const next = offset.apply(cur);
-    if (next.getTime() > end.getTime()) break;
-    if (next.getTime() === cur.getTime()) break; // non-progressing guard
+    if (next.getTime() > end.getTime()) {
+      break;
+    }
+    if (next.getTime() === cur.getTime()) {
+      break; // non-progressing guard
+    }
     out.push(next);
     cur = next;
   }
@@ -567,12 +589,16 @@ function rangeStartEnd(start: Date, end: Date, offset: DateOffset): Date[] {
 
 /** Forward from start for exactly `periods` dates. */
 function rangeStartPeriods(start: Date, periods: number, offset: DateOffset): Date[] {
-  if (periods <= 0) return [];
+  if (periods <= 0) {
+    return [];
+  }
   const out: Date[] = [start];
   let cur = start;
   while (out.length < periods) {
     const next = offset.apply(cur);
-    if (next.getTime() === cur.getTime()) break; // non-progressing guard
+    if (next.getTime() === cur.getTime()) {
+      break; // non-progressing guard
+    }
     out.push(next);
     cur = next;
   }
@@ -581,14 +607,18 @@ function rangeStartPeriods(start: Date, periods: number, offset: DateOffset): Da
 
 /** Backward from end for exactly `periods` dates, then reverse. */
 function rangeEndPeriods(end: Date, periods: number, offset: DateOffset): Date[] {
-  if (periods <= 0) return [];
+  if (periods <= 0) {
+    return [];
+  }
   // Create a negated offset: same class, n negated
   const negOffset = negateOffset(offset);
   const out: Date[] = [end];
   let cur = end;
   while (out.length < periods) {
     const prev = negOffset.apply(cur);
-    if (prev.getTime() === cur.getTime()) break; // non-progressing guard
+    if (prev.getTime() === cur.getTime()) {
+      break; // non-progressing guard
+    }
     out.push(prev);
     cur = prev;
   }
@@ -626,8 +656,7 @@ function negateOffset(offset: DateOffset): DateOffset {
     default:
       // For unknown offset types (custom user-provided), negate n heuristically
       throw new RangeError(
-        `negateOffset: unsupported offset type "${name}". ` +
-          "Provide 'start' + 'periods' instead of 'end' + 'periods'.",
+        `negateOffset: unsupported offset type "${name}". Provide 'start' + 'periods' instead of 'end' + 'periods'.`,
       );
   }
 }

@@ -117,10 +117,7 @@ const _add = (a: number, b: number): number => a + b;
  * seriesAdd(s, new Series({ data: [4, 5, 6] })).values;      // [5, 7, 9]
  * ```
  */
-export function seriesAdd(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesAdd(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _add)
@@ -151,10 +148,7 @@ export function dataFrameAdd(df: DataFrame, other: number | DataFrame): DataFram
  * For a commutative operation this is equivalent to `seriesAdd`, but it is
  * provided for API parity with `pandas.Series.radd`.
  */
-export function seriesRadd(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesRadd(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   // addition is commutative
   return seriesAdd(series, other);
 }
@@ -187,10 +181,7 @@ const _rsub = (a: number, b: number): number => b - a;
  * seriesSub(s, 5).values;   // [5, 15, 25]
  * ```
  */
-export function seriesSub(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesSub(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _sub)
@@ -210,10 +201,7 @@ export function seriesSub(
  * seriesRsub(s, 10).values;  // [9, 8, 7]   (10 - 1, 10 - 2, 10 - 3)
  * ```
  */
-export function seriesRsub(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesRsub(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _rsub)
@@ -255,10 +243,7 @@ const _mul = (a: number, b: number): number => a * b;
  * seriesMul(s, 3).values;  // [3, 6, 9]
  * ```
  */
-export function seriesMul(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesMul(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _mul)
@@ -271,10 +256,7 @@ export function seriesMul(
  * For a commutative operation this is equivalent to `seriesMul`.
  * Mirrors `pandas.Series.rmul`.
  */
-export function seriesRmul(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesRmul(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   return seriesMul(series, other);
 }
 
@@ -322,10 +304,7 @@ const _rdiv = (a: number, b: number): number => b / a;
  * seriesDiv(s, 2).values;  // [2, 4.5, 8]
  * ```
  */
-export function seriesDiv(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesDiv(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _div)
@@ -344,10 +323,7 @@ export function seriesDiv(
  * seriesRdiv(s, 16).values;  // [8, 4, 2]   (16/2, 16/4, 16/8)
  * ```
  */
-export function seriesRdiv(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesRdiv(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _rdiv)

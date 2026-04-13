@@ -24,8 +24,12 @@ function vals(series: ReturnType<typeof rollingSem>): (number | null)[] {
 }
 
 function close(a: Scalar, b: number, tol = 1e-9): boolean {
-  if (a === null || a === undefined) return false;
-  if (typeof a !== "number") return false;
+  if (a === null || a === undefined) {
+    return false;
+  }
+  if (typeof a !== "number") {
+    return false;
+  }
   return Math.abs(a - b) < tol;
 }
 
@@ -234,31 +238,23 @@ describe("rollingQuantile", () => {
 
   it("interpolation=lower", () => {
     // [1,3] q=0.5 lower → 1
-    const out = vals(
-      rollingQuantile(s([1, 3]), 0.5, 2, { interpolation: "lower" }),
-    );
+    const out = vals(rollingQuantile(s([1, 3]), 0.5, 2, { interpolation: "lower" }));
     expect(close(out[1] as number, 1)).toBe(true);
   });
 
   it("interpolation=higher", () => {
-    const out = vals(
-      rollingQuantile(s([1, 3]), 0.5, 2, { interpolation: "higher" }),
-    );
+    const out = vals(rollingQuantile(s([1, 3]), 0.5, 2, { interpolation: "higher" }));
     expect(close(out[1] as number, 3)).toBe(true);
   });
 
   it("interpolation=midpoint", () => {
-    const out = vals(
-      rollingQuantile(s([1, 3]), 0.5, 2, { interpolation: "midpoint" }),
-    );
+    const out = vals(rollingQuantile(s([1, 3]), 0.5, 2, { interpolation: "midpoint" }));
     expect(close(out[1] as number, 2)).toBe(true);
   });
 
   it("interpolation=nearest", () => {
     // q=0.25 with [1,2,3,4]: virtual=0.75 → lo=0(1), hi=1(2), frac=0.75>0.5 → 2
-    const out = vals(
-      rollingQuantile(s([1, 2, 3, 4]), 0.25, 4, { interpolation: "nearest" }),
-    );
+    const out = vals(rollingQuantile(s([1, 2, 3, 4]), 0.25, 4, { interpolation: "nearest" }));
     expect(close(out[3] as number, 2)).toBe(true);
   });
 
@@ -269,9 +265,7 @@ describe("rollingQuantile", () => {
 
   it("null values skipped in window", () => {
     // [1, null, 3]: 2 valid [1,3]; minPeriods=2 → quantile(0.5)=2
-    const out = vals(
-      rollingQuantile(s([1, null, 3]), 0.5, 3, { minPeriods: 2 }),
-    );
+    const out = vals(rollingQuantile(s([1, null, 3]), 0.5, 3, { minPeriods: 2 }));
     expect(close(out[2] as number, 2)).toBe(true);
   });
 
@@ -286,9 +280,7 @@ describe("rollingQuantile", () => {
   });
 
   it("minPeriods=1 gives results for single-element windows", () => {
-    const out = vals(
-      rollingQuantile(s([5, 3, 8]), 0.5, 3, { minPeriods: 1 }),
-    );
+    const out = vals(rollingQuantile(s([5, 3, 8]), 0.5, 3, { minPeriods: 1 }));
     // index 0: window=[5] → quantile=5
     expect(close(out[0] as number, 5)).toBe(true);
     // index 2: window=[5,3,8] → sorted=[3,5,8] → median=5
@@ -311,8 +303,12 @@ describe("window_extended — property tests", () => {
           const result = vals(rollingSem(s(data), window));
           for (const v of result) {
             if (v !== null && v !== undefined) {
-              if (typeof v !== "number") return false;
-              if (v < -1e-12) return false;
+              if (typeof v !== "number") {
+                return false;
+              }
+              if (v < -1e-12) {
+                return false;
+              }
             }
           }
           return true;
@@ -337,9 +333,15 @@ describe("window_extended — property tests", () => {
             const l = lo[i];
             const m = med[i];
             const h = hi[i];
-            if (l === null || m === null || h === null) continue;
-            if ((l as number) > (m as number) + 1e-9) return false;
-            if ((m as number) > (h as number) + 1e-9) return false;
+            if (l === null || m === null || h === null) {
+              continue;
+            }
+            if ((l as number) > (m as number) + 1e-9) {
+              return false;
+            }
+            if ((m as number) > (h as number) + 1e-9) {
+              return false;
+            }
           }
           return true;
         },

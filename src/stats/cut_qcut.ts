@@ -98,7 +98,10 @@ export interface QCutOptions {
 
 /** Format a numeric edge to at most `precision` decimal places. */
 function fmt(v: number, precision: number): string {
-  return v.toFixed(precision).replace(/\.?0+$/, "").replace(/^-0$/, "0");
+  return v
+    .toFixed(precision)
+    .replace(/\.?0+$/, "")
+    .replace(/^-0$/, "0");
 }
 
 /** Build interval label string from two edges. */
@@ -110,13 +113,21 @@ function intervalLabel(lo: number, hi: number, right: boolean, precision: number
 
 /** Compute the k-th quantile (0–1) of a sorted (non-NaN) array using linear interpolation. */
 function quantileOfSorted(sorted: readonly number[], q: number): number {
-  if (sorted.length === 0) return Number.NaN;
-  if (q <= 0) return sorted[0] as number;
-  if (q >= 1) return sorted[sorted.length - 1] as number;
+  if (sorted.length === 0) {
+    return Number.NaN;
+  }
+  if (q <= 0) {
+    return sorted[0] as number;
+  }
+  if (q >= 1) {
+    return sorted.at(-1) as number;
+  }
   const idx = q * (sorted.length - 1);
   const lo = Math.floor(idx);
   const hi = Math.ceil(idx);
-  if (lo === hi) return sorted[lo] as number;
+  if (lo === hi) {
+    return sorted[lo] as number;
+  }
   const frac = idx - lo;
   return (sorted[lo] as number) * (1 - frac) + (sorted[hi] as number) * frac;
 }
@@ -125,7 +136,7 @@ function quantileOfSorted(sorted: readonly number[], q: number): number {
 function deduplicateEdges(edges: number[], duplicates: "raise" | "drop"): number[] {
   const deduped: number[] = [edges[0] as number];
   for (let i = 1; i < edges.length; i++) {
-    if ((edges[i] as number) === deduped[deduped.length - 1]) {
+    if ((edges[i] as number) === deduped.at(-1)) {
       if (duplicates === "raise") {
         throw new Error(
           `Duplicate bin edge ${edges[i]}. Pass duplicates="drop" to silently remove duplicates.`,
@@ -148,22 +159,30 @@ function assignBins(
 ): Array<number | null> {
   const n = edges.length - 1; // number of bins
   return values.map((v) => {
-    if (!Number.isFinite(v) || Number.isNaN(v)) return null;
+    if (!Number.isFinite(v) || Number.isNaN(v)) {
+      return null;
+    }
     // Binary search for the bin
     let lo = 0;
     let hi = n - 1;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
       const binHi = edges[mid + 1] as number;
-      const binLo = edges[mid] as number;
+      const _binLo = edges[mid] as number;
       if (right) {
         // (binLo, binHi]
-        if (v <= binHi) hi = mid;
-        else lo = mid + 1;
+        if (v <= binHi) {
+          hi = mid;
+        } else {
+          lo = mid + 1;
+        }
       } else {
         // [binLo, binHi)
-        if (v < binHi) hi = mid;
-        else lo = mid + 1;
+        if (v < binHi) {
+          hi = mid;
+        } else {
+          lo = mid + 1;
+        }
       }
     }
     // Validate the found bin
@@ -171,17 +190,23 @@ function assignBins(
     const binHi = edges[lo + 1] as number;
     if (right) {
       // (binLo, binHi] — but first bin may be [binLo, binHi] if include_lowest
-      if (v > binHi) return null;
+      if (v > binHi) {
+        return null;
+      }
       if (lo === 0 && include_lowest) {
-        if (v < binLo) return null;
-      } else {
-        if (v <= binLo) return null;
+        if (v < binLo) {
+          return null;
+        }
+      } else if (v <= binLo) {
+        return null;
       }
     } else {
       // [binLo, binHi)
       if (v < binLo || v >= binHi) {
         // Last bin includes the right edge
-        if (lo === n - 1 && v === binHi) return lo;
+        if (lo === n - 1 && v === binHi) {
+          return lo;
+        }
         return null;
       }
     }
@@ -329,7 +354,7 @@ export function qcut(
         throw new Error("Quantile probabilities must be monotonically increasing.");
       }
     }
-    if ((quantiles[0] as number) < 0 || (quantiles[quantiles.length - 1] as number) > 1) {
+    if ((quantiles[0] as number) < 0 || (quantiles.at(-1) as number) > 1) {
       throw new Error("Quantile probabilities must be in [0, 1].");
     }
   }
@@ -349,7 +374,7 @@ export function qcut(
   const numBins = edges.length - 1;
   if (numBins < 1) {
     throw new Error(
-      "Not enough unique quantile edges. Try passing duplicates=\"drop\" or reducing `q`.",
+      'Not enough unique quantile edges. Try passing duplicates="drop" or reducing `q`.',
     );
   }
 

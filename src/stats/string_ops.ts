@@ -22,7 +22,7 @@
  */
 
 import { DataFrame, Series } from "../core/index.ts";
-import type { Label, Scalar } from "../types.ts";
+import type { Scalar } from "../types.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
 
@@ -67,8 +67,12 @@ export interface ExtractAllOptions {
 
 /** Extract a plain string from a Scalar value; returns `""` for non-strings. */
 function scalarToStr(v: Scalar): string {
-  if (typeof v === "string") return v;
-  if (v === null || v === undefined) return "";
+  if (typeof v === "string") {
+    return v;
+  }
+  if (v === null || v === undefined) {
+    return "";
+  }
   return String(v);
 }
 
@@ -77,7 +81,9 @@ function scalarToStr(v: Scalar): string {
  * Scalars are wrapped in a single-element array.
  */
 function toStringArray(input: StrInput): string[] {
-  if (typeof input === "string") return [input];
+  if (typeof input === "string") {
+    return [input];
+  }
   if (input instanceof Series) {
     return input.values.map(scalarToStr);
   }
@@ -124,7 +130,9 @@ export function strNormalize(
   input: StrInput,
   form: NormalizeForm = "NFC",
 ): Series<Scalar> | string {
-  if (typeof input === "string") return input.normalize(form);
+  if (typeof input === "string") {
+    return input.normalize(form);
+  }
   const strs = toStringArray(input);
   const data: Scalar[] = strs.map((s) => s.normalize(form));
   return buildSeries(data, input);
@@ -240,7 +248,9 @@ export function strExtractAll(
     re.lastIndex = 0;
     while ((m = re.exec(s)) !== null) {
       matches.push([...m]);
-      if (!re.global) break;
+      if (!re.global) {
+        break;
+      }
     }
     // Store as JSON string so it fits in Scalar; consumers can JSON.parse
     return JSON.stringify(matches);
@@ -272,17 +282,12 @@ export function strRemovePrefix(
   input: readonly string[] | Series<Scalar>,
   prefix: string,
 ): Series<Scalar>;
-export function strRemovePrefix(
-  input: StrInput,
-  prefix: string,
-): Series<Scalar> | string {
+export function strRemovePrefix(input: StrInput, prefix: string): Series<Scalar> | string {
   if (typeof input === "string") {
     return input.startsWith(prefix) ? input.slice(prefix.length) : input;
   }
   const strs = toStringArray(input);
-  const data: Scalar[] = strs.map((s) =>
-    s.startsWith(prefix) ? s.slice(prefix.length) : s,
-  );
+  const data: Scalar[] = strs.map((s) => (s.startsWith(prefix) ? s.slice(prefix.length) : s));
   return buildSeries(data, input);
 }
 
@@ -308,10 +313,7 @@ export function strRemoveSuffix(
   input: readonly string[] | Series<Scalar>,
   suffix: string,
 ): Series<Scalar>;
-export function strRemoveSuffix(
-  input: StrInput,
-  suffix: string,
-): Series<Scalar> | string {
+export function strRemoveSuffix(input: StrInput, suffix: string): Series<Scalar> | string {
   if (typeof input === "string") {
     return input.endsWith(suffix) ? input.slice(0, input.length - suffix.length) : input;
   }
@@ -356,7 +358,9 @@ export function strTranslate(
     for (const ch of s) {
       if (table.has(ch)) {
         const repl = table.get(ch);
-        if (repl !== null && repl !== undefined) result += repl;
+        if (repl !== null && repl !== undefined) {
+          result += repl;
+        }
         // null → delete: skip
       } else {
         result += ch;
@@ -365,7 +369,9 @@ export function strTranslate(
     return result;
   };
 
-  if (typeof input === "string") return translate(input);
+  if (typeof input === "string") {
+    return translate(input);
+  }
   const strs = toStringArray(input);
   const data: Scalar[] = strs.map(translate);
   return buildSeries(data, input);
@@ -390,12 +396,8 @@ export function strTranslate(
  * ```
  */
 export function strCharWidth(input: string): number;
-export function strCharWidth(
-  input: readonly string[] | Series<Scalar>,
-): Series<Scalar>;
-export function strCharWidth(
-  input: StrInput,
-): Series<Scalar> | number {
+export function strCharWidth(input: readonly string[] | Series<Scalar>): Series<Scalar>;
+export function strCharWidth(input: StrInput): Series<Scalar> | number {
   const width = (s: string): number => {
     let w = 0;
     for (const ch of s) {
@@ -429,7 +431,9 @@ export function strCharWidth(
     return w;
   };
 
-  if (typeof input === "string") return width(input);
+  if (typeof input === "string") {
+    return width(input);
+  }
   const strs = toStringArray(input);
   const data: Scalar[] = strs.map((s) => width(s));
   return buildSeries(data, input);
@@ -453,15 +457,13 @@ export function strCharWidth(
  * ```
  */
 export function strByteLength(input: string): number;
-export function strByteLength(
-  input: readonly string[] | Series<Scalar>,
-): Series<Scalar>;
-export function strByteLength(
-  input: StrInput,
-): Series<Scalar> | number {
+export function strByteLength(input: readonly string[] | Series<Scalar>): Series<Scalar>;
+export function strByteLength(input: StrInput): Series<Scalar> | number {
   const byteLen = (s: string): number => new TextEncoder().encode(s).length;
 
-  if (typeof input === "string") return byteLen(input);
+  if (typeof input === "string") {
+    return byteLen(input);
+  }
   const strs = toStringArray(input);
   const data: Scalar[] = strs.map((s) => byteLen(s));
   return buildSeries(data, input);

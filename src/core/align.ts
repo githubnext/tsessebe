@@ -41,11 +41,11 @@
  * @module
  */
 
-import { Index } from "./base-index.ts";
-import { Series } from "./series.ts";
-import { DataFrame } from "./frame.ts";
-import { reindexSeries, reindexDataFrame } from "./reindex.ts";
-import type { Label, Scalar, JoinHow, Axis } from "../types.ts";
+import type { Axis, JoinHow, Label, Scalar } from "../types.ts";
+import type { Index } from "./base-index.ts";
+import type { DataFrame } from "./frame.ts";
+import { reindexDataFrame, reindexSeries } from "./reindex.ts";
+import type { Series } from "./series.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
 
@@ -82,11 +82,7 @@ export interface AlignDataFrameOptions extends AlignSeriesOptions {
 /**
  * Compute the target index from `left` and `right` according to `join`.
  */
-function resolveIndex(
-  left: Index<Label>,
-  right: Index<Label>,
-  join: JoinHow,
-): Index<Label> {
+function resolveIndex(left: Index<Label>, right: Index<Label>, join: JoinHow): Index<Label> {
   switch (join) {
     case "outer":
       return left.union(right);
@@ -166,11 +162,7 @@ export function alignDataFrame(
 
   // Normalise axis: null/undefined → align both
   const normalised: 0 | 1 | null =
-    axis === null || axis === undefined
-      ? null
-      : axis === 0 || axis === "index"
-        ? 0
-        : 1;
+    axis === null || axis === undefined ? null : axis === 0 || axis === "index" ? 0 : 1;
 
   const alignRows = normalised === null || normalised === 0;
   const alignCols = normalised === null || normalised === 1;

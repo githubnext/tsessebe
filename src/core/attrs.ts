@@ -227,7 +227,9 @@ export function setAttr(obj: object, key: string, value: unknown): void {
  */
 export function deleteAttr(obj: object, key: string): void {
   const existing = registry.get(obj);
-  if (existing === undefined) return;
+  if (existing === undefined) {
+    return;
+  }
   const { [key]: _removed, ...rest } = existing;
   if (Object.keys(rest).length === 0) {
     registry.delete(obj);

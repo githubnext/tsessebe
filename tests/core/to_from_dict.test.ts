@@ -23,11 +23,8 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
+import { fromDictOriented, toDictOriented } from "../../src/core/to_from_dict.ts";
 import { DataFrame, Index, Series } from "../../src/index.ts";
-import {
-  fromDictOriented,
-  toDictOriented,
-} from "../../src/core/to_from_dict.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -36,10 +33,7 @@ function makeDF(): DataFrame {
 }
 
 function makeIndexedDF(): DataFrame {
-  return DataFrame.fromColumns(
-    { x: [10, 20], y: [30, 40] },
-    { index: new Index(["r0", "r1"]) },
-  );
+  return DataFrame.fromColumns({ x: [10, 20], y: [30, 40] }, { index: new Index(["r0", "r1"]) });
 }
 
 // ─── toDictOriented ───────────────────────────────────────────────────────────
@@ -99,14 +93,21 @@ describe("toDictOriented — split", () => {
     const result = toDictOriented(df, "split");
     expect(result.columns).toEqual(["a", "b"]);
     expect(result.index).toEqual([0, 1, 2]);
-    expect(result.data).toEqual([[1, 4], [2, 5], [3, 6]]);
+    expect(result.data).toEqual([
+      [1, 4],
+      [2, 5],
+      [3, 6],
+    ]);
   });
 
   test("split with custom index", () => {
     const df = makeIndexedDF();
     const result = toDictOriented(df, "split");
     expect(result.index).toEqual(["r0", "r1"]);
-    expect(result.data).toEqual([[10, 30], [20, 40]]);
+    expect(result.data).toEqual([
+      [10, 30],
+      [20, 40],
+    ]);
   });
 });
 
@@ -117,7 +118,11 @@ describe("toDictOriented — tight", () => {
     expect(result.index_names).toEqual([null]);
     expect(result.column_names).toEqual([null]);
     expect(result.columns).toEqual(["a", "b"]);
-    expect(result.data).toEqual([[1, 4], [2, 5], [3, 6]]);
+    expect(result.data).toEqual([
+      [1, 4],
+      [2, 5],
+      [3, 6],
+    ]);
   });
 });
 
@@ -166,10 +171,7 @@ describe("fromDictOriented — columns", () => {
 
 describe("fromDictOriented — index", () => {
   test("reconstructs from rowLabel→col→value mapping", () => {
-    const df = fromDictOriented(
-      { r0: { x: 10, y: 30 }, r1: { x: 20, y: 40 } },
-      "index",
-    );
+    const df = fromDictOriented({ r0: { x: 10, y: 30 }, r1: { x: 20, y: 40 } }, "index");
     expect(df.index.values).toEqual(["r0", "r1"]);
     expect(df.col("x").values).toEqual([10, 20]);
     expect(df.col("y").values).toEqual([30, 40]);
@@ -191,7 +193,14 @@ describe("fromDictOriented — index", () => {
 describe("fromDictOriented — split", () => {
   test("reconstructs from split structure", () => {
     const df = fromDictOriented(
-      { columns: ["a", "b"], data: [[1, 4], [2, 5], [3, 6]] },
+      {
+        columns: ["a", "b"],
+        data: [
+          [1, 4],
+          [2, 5],
+          [3, 6],
+        ],
+      },
       "split",
     );
     expect(df.shape).toEqual([3, 2]);

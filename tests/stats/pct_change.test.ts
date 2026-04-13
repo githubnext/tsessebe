@@ -3,12 +3,7 @@
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  pctChangeDataFrame,
-  pctChangeSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series, pctChangeDataFrame, pctChangeSeries } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -25,24 +20,38 @@ function nanEq(a: Scalar, b: Scalar): boolean {
 }
 
 function arrEq(a: readonly Scalar[], b: readonly Scalar[]): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   for (let i = 0; i < a.length; i++) {
-    if (!nanEq(a[i] as Scalar, b[i] as Scalar)) return false;
+    if (!nanEq(a[i] as Scalar, b[i] as Scalar)) {
+      return false;
+    }
   }
   return true;
 }
 
 function close(a: Scalar, b: Scalar, eps = 1e-9): boolean {
-  if (a === null && b === null) return true;
-  if (typeof a !== "number" || typeof b !== "number") return false;
-  if (Number.isNaN(a) && Number.isNaN(b)) return true;
+  if (a === null && b === null) {
+    return true;
+  }
+  if (typeof a !== "number" || typeof b !== "number") {
+    return false;
+  }
+  if (Number.isNaN(a) && Number.isNaN(b)) {
+    return true;
+  }
   return Math.abs(a - b) < eps;
 }
 
 function arrClose(a: readonly Scalar[], b: readonly Scalar[], eps = 1e-9): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   for (let i = 0; i < a.length; i++) {
-    if (!close(a[i] as Scalar, b[i] as Scalar, eps)) return false;
+    if (!close(a[i] as Scalar, b[i] as Scalar, eps)) {
+      return false;
+    }
   }
   return true;
 }
@@ -121,7 +130,7 @@ describe("pctChangeSeries", () => {
 
   it("zero denominator returns Infinity", () => {
     const result = pctChangeSeries(s([0, 10]), { fillMethod: null });
-    expect(result.values[1]).toBe(Infinity);
+    expect(result.values[1]).toBe(Number.POSITIVE_INFINITY);
   });
 
   it("zero/zero denominator returns NaN", () => {
@@ -211,13 +220,10 @@ describe("pctChangeSeries — property tests", () => {
 
   it("first element is always null for periods=1", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.float({ noNaN: true }), { minLength: 1, maxLength: 50 }),
-        (arr) => {
-          const result = pctChangeSeries(s(arr));
-          return result.values[0] === null;
-        },
-      ),
+      fc.property(fc.array(fc.float({ noNaN: true }), { minLength: 1, maxLength: 50 }), (arr) => {
+        const result = pctChangeSeries(s(arr));
+        return result.values[0] === null;
+      }),
     );
   });
 

@@ -129,9 +129,9 @@ describe("dataFrameAssign", () => {
       sum: (d) => d.col("a").values.map((v, i) => (v as number) + (d.col("b").values[i] as number)),
       double_sum: (d) => d.col("sum").values.map((v) => (v as number) * 2),
       diff: (d) =>
-        d.col("double_sum").values.map(
-          (v, i) => (v as number) - (d.col("sum").values[i] as number),
-        ),
+        d
+          .col("double_sum")
+          .values.map((v, i) => (v as number) - (d.col("sum").values[i] as number)),
     });
 
     // sum: [11, 22, 33], double_sum: [22, 44, 66], diff: [11, 22, 33]
@@ -216,20 +216,17 @@ describe("dataFrameAssign — property tests", () => {
 
   test("replacing all columns keeps shape identical", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 8 }),
-        (nRows) => {
-          const vals = Array.from({ length: nRows }, (_, i) => i);
-          const df = DataFrame.fromColumns({ a: vals, b: vals });
-          const df2 = dataFrameAssign(df, {
-            a: vals.map((v) => v + 1),
-            b: vals.map((v) => v + 2),
-          });
+      fc.property(fc.integer({ min: 1, max: 8 }), (nRows) => {
+        const vals = Array.from({ length: nRows }, (_, i) => i);
+        const df = DataFrame.fromColumns({ a: vals, b: vals });
+        const df2 = dataFrameAssign(df, {
+          a: vals.map((v) => v + 1),
+          b: vals.map((v) => v + 2),
+        });
 
-          expect(df2.shape).toEqual(df.shape);
-          expect(df2.columns.values).toEqual(df.columns.values);
-        },
-      ),
+        expect(df2.shape).toEqual(df.shape);
+        expect(df2.columns.values).toEqual(df.columns.values);
+      }),
     );
   });
 

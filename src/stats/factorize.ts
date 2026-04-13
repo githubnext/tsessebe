@@ -65,9 +65,15 @@ function isMissing(v: Scalar): boolean {
  * - If the types differ (e.g. number vs. string), numbers come first.
  */
 function scalarCompare(a: Scalar, b: Scalar): number {
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  if (typeof a === "number") return -1;
-  if (typeof b === "number") return 1;
+  if (typeof a === "number" && typeof b === "number") {
+    return a - b;
+  }
+  if (typeof a === "number") {
+    return -1;
+  }
+  if (typeof b === "number") {
+    return 1;
+  }
   const sa = String(a);
   const sb = String(b);
   return sa < sb ? -1 : sa > sb ? 1 : 0;
@@ -111,9 +117,15 @@ export function factorize<T extends Scalar>(
 
   /** Returns a stable string key for a scalar value. */
   function mapKey(v: T): string {
-    if (typeof v === "number" && Number.isNaN(v)) return "__NaN__";
-    if (v === null) return "__null__";
-    if (v === undefined) return "__undefined__";
+    if (typeof v === "number" && Number.isNaN(v)) {
+      return "__NaN__";
+    }
+    if (v === null) {
+      return "__null__";
+    }
+    if (v === undefined) {
+      return "__undefined__";
+    }
     return `${typeof v}:${String(v)}`;
   }
 
@@ -183,12 +195,8 @@ export function seriesFactorize<T extends Scalar>(
 ): { codes: Series<number>; uniques: Series<T> } {
   const result = factorize<T>(series.values as readonly T[], options);
 
-  const codesIndex = new Index<Label>(
-    Array.from({ length: result.codes.length }, (_, i) => i),
-  );
-  const uniquesIndex = new Index<Label>(
-    Array.from({ length: result.uniques.length }, (_, i) => i),
-  );
+  const codesIndex = new Index<Label>(Array.from({ length: result.codes.length }, (_, i) => i));
+  const uniquesIndex = new Index<Label>(Array.from({ length: result.uniques.length }, (_, i) => i));
 
   const codesSeries = new Series<number>({
     data: result.codes as number[],

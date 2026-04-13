@@ -422,7 +422,9 @@ describe("TZDatetimeIndex [Symbol.iterator]", () => {
     const naive = date_range({ start: "2024-01-01", periods: 3 });
     const idx = tz_localize(naive, "UTC");
     const collected: Date[] = [];
-    for (const d of idx) collected.push(d);
+    for (const d of idx) {
+      collected.push(d);
+    }
     expect(collected.length).toBe(3);
     expect(collected[0] instanceof Date).toBe(true);
   });
@@ -463,16 +465,13 @@ describe("tz_localize — DST: fall-back (America/New_York 2024-11-03)", () => {
 describe("property tests", () => {
   it("UTC round-trip: tz_localize('UTC').at(i) equals naive.at(i)", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 364 }),
-        (offset) => {
-          const baseMs = new Date("2024-01-01T00:00:00.000Z").getTime();
-          const ms = baseMs + offset * 86_400_000;
-          const naive = DatetimeIndex.fromDates([new Date(ms)]);
-          const aware = tz_localize(naive, "UTC");
-          return aware.at(0).getTime() === ms;
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 364 }), (offset) => {
+        const baseMs = new Date("2024-01-01T00:00:00.000Z").getTime();
+        const ms = baseMs + offset * 86_400_000;
+        const naive = DatetimeIndex.fromDates([new Date(ms)]);
+        const aware = tz_localize(naive, "UTC");
+        return aware.at(0).getTime() === ms;
+      }),
     );
   });
 
@@ -484,17 +483,14 @@ describe("property tests", () => {
     ];
     for (const [fromTz, toTz] of tzPairs) {
       fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 364 }),
-          (offset) => {
-            const baseMs = new Date("2024-01-01T00:00:00.000Z").getTime();
-            const ms = baseMs + offset * 86_400_000;
-            const naive = DatetimeIndex.fromDates([new Date(ms)]);
-            const src = tz_localize(naive, fromTz);
-            const dst = tz_convert(src, toTz);
-            return dst.at(0).getTime() === src.at(0).getTime();
-          },
-        ),
+        fc.property(fc.integer({ min: 0, max: 364 }), (offset) => {
+          const baseMs = new Date("2024-01-01T00:00:00.000Z").getTime();
+          const ms = baseMs + offset * 86_400_000;
+          const naive = DatetimeIndex.fromDates([new Date(ms)]);
+          const src = tz_localize(naive, fromTz);
+          const dst = tz_convert(src, toTz);
+          return dst.at(0).getTime() === src.at(0).getTime();
+        }),
       );
     }
   });

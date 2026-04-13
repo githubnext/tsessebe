@@ -36,7 +36,7 @@
  * ```
  */
 
-import { DataFrame } from "../core/index.ts";
+import type { DataFrame } from "../core/index.ts";
 import { Index } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
@@ -83,8 +83,12 @@ export interface DuplicatedSeriesOptions {
 function rowKey(values: readonly (Scalar | undefined)[]): string {
   return values
     .map((v) => {
-      if (v === null || v === undefined) return "\x00null";
-      if (typeof v === "number" && Number.isNaN(v)) return "\x00nan";
+      if (v === null || v === undefined) {
+        return "\x00null";
+      }
+      if (typeof v === "number" && Number.isNaN(v)) {
+        return "\x00nan";
+      }
       return JSON.stringify(v);
     })
     .join("\x01");
@@ -198,12 +202,12 @@ export function dropDuplicatesSeries<T extends Scalar>(
   const dupMask = duplicatedSeries(series, options);
   const keepPositions: number[] = [];
   for (let i = 0; i < dupMask.size; i++) {
-    if (!dupMask.values[i]) keepPositions.push(i);
+    if (!dupMask.values[i]) {
+      keepPositions.push(i);
+    }
   }
   const newData = keepPositions.map((i) => (series.values as readonly T[])[i] as T);
-  const newIndex = new Index<Label>(
-    keepPositions.map((i) => series.index.at(i) as Label),
-  );
+  const newIndex = new Index<Label>(keepPositions.map((i) => series.index.at(i) as Label));
   return new Series<T>({ data: newData, index: newIndex, name: series.name });
 }
 

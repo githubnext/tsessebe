@@ -22,8 +22,7 @@ import type { DateOffset } from "../../src/index.ts";
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 /** Build a UTC Date from an ISO date string (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ). */
-const utc = (s: string): Date =>
-  new Date(s.includes("T") ? s : `${s}T00:00:00Z`);
+const utc = (s: string): Date => new Date(s.includes("T") ? s : `${s}T00:00:00Z`);
 
 /** Format a UTC date as YYYY-MM-DD. */
 function isoDate(d: Date): string {
@@ -100,9 +99,7 @@ describe("Day", () => {
 
 describe("Hour", () => {
   it("applies positive hours", () => {
-    expect(isoDateTime(new Hour(2).apply(utc("2024-01-01T10:00:00Z")))).toBe(
-      "2024-01-01 12:00:00",
-    );
+    expect(isoDateTime(new Hour(2).apply(utc("2024-01-01T10:00:00Z")))).toBe("2024-01-01 12:00:00");
   });
 
   it("crosses day boundary", () => {
@@ -460,7 +457,9 @@ describe("YearEnd", () => {
       fc.property(
         fc.date({ min: new Date("2000-01-01"), max: new Date("2099-12-31") }),
         (rawDate) => {
-          const d = new Date(Date.UTC(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()));
+          const d = new Date(
+            Date.UTC(rawDate.getFullYear(), rawDate.getMonth(), rawDate.getDate()),
+          );
           const rf = new YearEnd(1).rollforward(d);
           return rf.getUTCMonth() === 11 && rf.getUTCDate() === 31;
         },
@@ -633,15 +632,12 @@ describe("BusinessDay", () => {
 
   it("property: business days are symmetric across week boundaries", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 50 }),
-        (n) => {
-          const d = utc("2024-06-03"); // Monday
-          const forward = new BusinessDay(n).apply(d);
-          const back = new BusinessDay(-n).apply(forward);
-          return back.getTime() === d.getTime();
-        },
-      ),
+      fc.property(fc.integer({ min: 1, max: 50 }), (n) => {
+        const d = utc("2024-06-03"); // Monday
+        const forward = new BusinessDay(n).apply(d);
+        const back = new BusinessDay(-n).apply(forward);
+        return back.getTime() === d.getTime();
+      }),
     );
   });
 });

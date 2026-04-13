@@ -38,7 +38,6 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
 import {
   attrsCount,
   attrsKeys,
@@ -54,6 +53,7 @@ import {
   updateAttrs,
   withAttrs,
 } from "../../src/core/attrs.ts";
+import { DataFrame, Series } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -485,7 +485,10 @@ describe("property: setAttrs/getAttrs round-trip", () => {
   test("any record can be stored and retrieved intact", () => {
     fc.assert(
       fc.property(
-        fc.dictionary(fc.string({ minLength: 1, maxLength: 10 }), fc.oneof(fc.integer(), fc.string(), fc.boolean())),
+        fc.dictionary(
+          fc.string({ minLength: 1, maxLength: 10 }),
+          fc.oneof(fc.integer(), fc.string(), fc.boolean()),
+        ),
         (attrs) => {
           const obj = freshObj();
           setAttrs(obj, attrs);

@@ -89,9 +89,15 @@ function isMissing(v: Scalar): boolean {
  * `"null"` apart.
  */
 function scalarKey(v: Scalar): string {
-  if (v === null) return "object:null";
-  if (v === undefined) return "undefined:undefined";
-  if (typeof v === "number" && Number.isNaN(v)) return "number:NaN";
+  if (v === null) {
+    return "object:null";
+  }
+  if (v === undefined) {
+    return "undefined:undefined";
+  }
+  if (typeof v === "number" && Number.isNaN(v)) {
+    return "number:NaN";
+  }
   return `${typeof v}:${String(v)}`;
 }
 
@@ -108,7 +114,9 @@ function collectUniques(vals: readonly Scalar[], dropna: boolean): Scalar[] {
   const seen = new Set<string>();
   const out: Scalar[] = [];
   for (const v of vals) {
-    if (dropna && isMissing(v)) continue;
+    if (dropna && isMissing(v)) {
+      continue;
+    }
     const key = scalarKey(v);
     if (!seen.has(key)) {
       seen.add(key);
@@ -158,15 +166,13 @@ export function crosstab(
   } = options;
 
   // Flatten Series to plain arrays.
-  const rowVals: readonly Scalar[] =
-    index instanceof Series ? (index.values as Scalar[]) : index;
+  const rowVals: readonly Scalar[] = index instanceof Series ? (index.values as Scalar[]) : index;
   const colVals: readonly Scalar[] =
     columns instanceof Series ? (columns.values as Scalar[]) : columns;
 
   if (rowVals.length !== colVals.length) {
     throw new RangeError(
-      `crosstab: index and columns must have the same length ` +
-        `(got ${rowVals.length} vs ${colVals.length})`,
+      `crosstab: index and columns must have the same length (got ${rowVals.length} vs ${colVals.length})`,
     );
   }
 
@@ -195,14 +201,13 @@ export function crosstab(
 
   // Initialize accumulator structures.
   // counts[r][c] = frequency of (rowUniques[r], colUniques[c]) pairs.
-  const counts: number[][] = Array.from({ length: nRows }, () =>
-    new Array<number>(nCols).fill(0),
-  );
+  const counts: number[][] = Array.from({ length: nRows }, () => new Array<number>(nCols).fill(0));
   // buckets[r][c] = collected numeric values for aggregation (when values+aggfunc provided).
   const buckets: Array<Array<number[] | undefined>> | null =
     values !== undefined
-      ? Array.from({ length: nRows }, (): Array<number[] | undefined> =>
-          new Array<number[] | undefined>(nCols).fill(undefined),
+      ? Array.from(
+          { length: nRows },
+          (): Array<number[] | undefined> => new Array<number[] | undefined>(nCols).fill(undefined),
         )
       : null;
 
@@ -210,10 +215,14 @@ export function crosstab(
   for (let i = 0; i < n; i++) {
     const rv = rowVals[i] as Scalar;
     const cv = colVals[i] as Scalar;
-    if (dropna && (isMissing(rv) || isMissing(cv))) continue;
+    if (dropna && (isMissing(rv) || isMissing(cv))) {
+      continue;
+    }
     const ri = rowPos.get(scalarKey(rv));
     const ci = colPos.get(scalarKey(cv));
-    if (ri === undefined || ci === undefined) continue;
+    if (ri === undefined || ci === undefined) {
+      continue;
+    }
 
     if (buckets !== null && values !== undefined) {
       const sv = values[i] as Scalar;
@@ -230,7 +239,9 @@ export function crosstab(
       }
     } else {
       const row = counts[ri];
-      if (row !== undefined) row[ci] = (row[ci] ?? 0) + 1;
+      if (row !== undefined) {
+        row[ci] = (row[ci] ?? 0) + 1;
+      }
     }
   }
 
@@ -250,26 +261,38 @@ export function crosstab(
     const mode: "all" | "index" | "columns" = normalize === true ? "all" : normalize;
     if (mode === "all") {
       let grand = 0;
-      for (const row of cells) for (const v of row) grand += v;
+      for (const row of cells) {
+        for (const v of row) {
+          grand += v;
+        }
+      }
       if (grand !== 0) {
         for (const row of cells) {
-          for (let c = 0; c < row.length; c++) row[c] = (row[c] ?? 0) / grand;
+          for (let c = 0; c < row.length; c++) {
+            row[c] = (row[c] ?? 0) / grand;
+          }
         }
       }
     } else if (mode === "index") {
       for (const row of cells) {
         const total = row.reduce((s, v) => s + v, 0);
         if (total !== 0) {
-          for (let c = 0; c < row.length; c++) row[c] = (row[c] ?? 0) / total;
+          for (let c = 0; c < row.length; c++) {
+            row[c] = (row[c] ?? 0) / total;
+          }
         }
       }
     } else {
       // "columns": divide by column totals
       for (let c = 0; c < nCols; c++) {
         let total = 0;
-        for (const row of cells) total += row[c] ?? 0;
+        for (const row of cells) {
+          total += row[c] ?? 0;
+        }
         if (total !== 0) {
-          for (const row of cells) row[c] = (row[c] ?? 0) / total;
+          for (const row of cells) {
+            row[c] = (row[c] ?? 0) / total;
+          }
         }
       }
     }

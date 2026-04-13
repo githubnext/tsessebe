@@ -13,19 +13,11 @@ import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
 import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
-import { Index } from "../../src/core/base-index.ts";
-import {
-  dropna,
-  dropnaDataFrame,
-  dropnaSeries,
-} from "../../src/stats/dropna.ts";
+import { dropna, dropnaDataFrame, dropnaSeries } from "../../src/stats/dropna.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function makeDf(
-  a: (number | null)[],
-  b: (number | null)[],
-): DataFrame {
+function makeDf(a: (number | null)[], b: (number | null)[]): DataFrame {
   return DataFrame.fromColumns({ a, b });
 }
 
@@ -33,7 +25,7 @@ function makeDf(
 
 describe("dropna — Series", () => {
   test("drops null and undefined and NaN", () => {
-    const s = new Series({ data: [1, null, undefined, NaN, 5] });
+    const s = new Series({ data: [1, null, undefined, Number.NaN, 5] });
     const result = dropnaSeries(s);
     expect([...result.values]).toEqual([1, 5]);
   });
@@ -215,16 +207,21 @@ describe("dropna — property-based", () => {
   test("result is always a subset of input (Series)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.option(fc.double({ noNaN: false }), { nil: null }), { minLength: 0, maxLength: 50 }),
+        fc.array(fc.option(fc.double({ noNaN: false }), { nil: null }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
         (data) => {
           const s = new Series({ data: data as (number | null)[] });
           const r = dropnaSeries(s);
           // Every value in result is not null/NaN
           for (const v of r.values) {
-            if (typeof v === "number") {
-              if (Number.isNaN(v as number)) return false;
+            if (typeof v === "number" && Number.isNaN(v as number)) {
+              return false;
             }
-            if (v === null || v === undefined) return false;
+            if (v === null || v === undefined) {
+              return false;
+            }
           }
           return true;
         },
@@ -276,7 +273,9 @@ describe("dropna — property-based", () => {
           const r = dropnaDataFrame(df, { how: "any" });
           for (const col of r.columns.toArray() as string[]) {
             for (const v of r.col(col).values) {
-              if (v === null || v === undefined) return false;
+              if (v === null || v === undefined) {
+                return false;
+              }
             }
           }
           return true;

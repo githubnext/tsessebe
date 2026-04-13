@@ -57,7 +57,7 @@ function isComparable(v: Scalar): boolean {
 
 /** Apply comparison `op` to two values; returns `false` when either is missing. */
 function compareScalars(a: Scalar, b: Scalar, op: CompareOp): boolean {
-  if (!isComparable(a) || !isComparable(b)) {
+  if (!(isComparable(a) && isComparable(b))) {
     // eq is special: null eq null → false (pandas NaN != NaN convention)
     return false;
   }
@@ -82,7 +82,11 @@ function compareScalars(a: Scalar, b: Scalar, op: CompareOp): boolean {
  * against `other` (resolved to a scalar array of the same length).
  * Returns `Scalar[]` so it can be directly used in Series/DataFrame constructors.
  */
-function buildBoolArray(vals: readonly Scalar[], others: readonly Scalar[], op: CompareOp): Scalar[] {
+function buildBoolArray(
+  vals: readonly Scalar[],
+  others: readonly Scalar[],
+  op: CompareOp,
+): Scalar[] {
   const n = vals.length;
   const out: Scalar[] = new Array<Scalar>(n);
   for (let i = 0; i < n; i++) {

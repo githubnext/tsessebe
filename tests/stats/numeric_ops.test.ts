@@ -11,8 +11,8 @@ import {
   dataFrameExp,
   dataFrameFloor,
   dataFrameLog,
-  dataFrameLog10,
   dataFrameLog2,
+  dataFrameLog10,
   dataFrameSign,
   dataFrameSqrt,
   dataFrameTrunc,
@@ -20,8 +20,8 @@ import {
   seriesExp,
   seriesFloor,
   seriesLog,
-  seriesLog10,
   seriesLog2,
+  seriesLog10,
   seriesSign,
   seriesSqrt,
   seriesTrunc,
@@ -42,23 +42,35 @@ function nanEq(a: Scalar, b: Scalar): boolean {
 }
 
 function arrEq(a: readonly Scalar[], b: readonly Scalar[]): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   for (let i = 0; i < a.length; i++) {
-    if (!nanEq(a[i] as Scalar, b[i] as Scalar)) return false;
+    if (!nanEq(a[i] as Scalar, b[i] as Scalar)) {
+      return false;
+    }
   }
   return true;
 }
 
 function approx(a: Scalar, b: Scalar, eps = 1e-9): boolean {
-  if (typeof a !== "number" || typeof b !== "number") return a === b;
-  if (Number.isNaN(a) && Number.isNaN(b)) return true;
+  if (typeof a !== "number" || typeof b !== "number") {
+    return a === b;
+  }
+  if (Number.isNaN(a) && Number.isNaN(b)) {
+    return true;
+  }
   return Math.abs(a - b) < eps;
 }
 
 function arrApprox(a: readonly Scalar[], b: readonly Scalar[], eps = 1e-9): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {
+    return false;
+  }
   for (let i = 0; i < a.length; i++) {
-    if (!approx(a[i] as Scalar, b[i] as Scalar, eps)) return false;
+    if (!approx(a[i] as Scalar, b[i] as Scalar, eps)) {
+      return false;
+    }
   }
   return true;
 }
@@ -530,9 +542,7 @@ describe("cross-function round-trips", () => {
   });
   it("ceil(x) = floor(x) for integers", () => {
     const data = [0, 1, 2, -3, -4, 100];
-    expect(
-      arrEq(seriesCeil(s(data)).values, seriesFloor(s(data)).values),
-    ).toBe(true);
+    expect(arrEq(seriesCeil(s(data)).values, seriesFloor(s(data)).values)).toBe(true);
   });
   it("floor(x) <= trunc(x) for negative fractions", () => {
     const data = [-1.5, -2.9, -0.1];

@@ -16,11 +16,11 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame } from "../../src/core/frame.ts";
 import { Index } from "../../src/core/base-index.ts";
+import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
-import type { Label, Scalar } from "../../src/types.ts";
 import { explodeDataFrame, explodeSeries } from "../../src/stats/explode.ts";
+import type { Label, Scalar } from "../../src/types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -140,7 +140,10 @@ describe("explodeSeries", () => {
 describe("explodeDataFrame", () => {
   test("single column explode, other columns repeat", () => {
     const df = DataFrame.fromColumns({
-      a: [[1, 2], [3, 4]] as unknown as Scalar[],
+      a: [
+        [1, 2],
+        [3, 4],
+      ] as unknown as Scalar[],
       b: [10, 20] as Scalar[],
     });
     const out = explodeDataFrame(df, "a");
@@ -219,8 +222,14 @@ describe("explodeDataFrame", () => {
 
   test("multi-column explode: two columns exploded simultaneously", () => {
     const df = DataFrame.fromColumns({
-      a: [[1, 2], [3, 4]] as unknown as Scalar[],
-      b: [["x", "y"], ["p", "q"]] as unknown as Scalar[],
+      a: [
+        [1, 2],
+        [3, 4],
+      ] as unknown as Scalar[],
+      b: [
+        ["x", "y"],
+        ["p", "q"],
+      ] as unknown as Scalar[],
       c: [100, 200] as Scalar[],
     });
     const out = explodeDataFrame(df, ["a", "b"]);
@@ -246,7 +255,10 @@ describe("explodeDataFrame", () => {
   });
 
   test("single-row DataFrame with list column", () => {
-    const df = DataFrame.fromColumns({ a: [[10, 20, 30]] as unknown as Scalar[], b: [99] as Scalar[] });
+    const df = DataFrame.fromColumns({
+      a: [[10, 20, 30]] as unknown as Scalar[],
+      b: [99] as Scalar[],
+    });
     const out = explodeDataFrame(df, "a");
     expect(colVals(out, "a")).toEqual([10, 20, 30]);
     expect(colVals(out, "b")).toEqual([99, 99, 99]);
@@ -295,16 +307,18 @@ describe("explodeSeries — property-based", () => {
   test("ignoreIndex produces contiguous RangeIndex", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.oneof(fc.integer(), fc.array(fc.integer(), { minLength: 1, maxLength: 4 })),
-          { minLength: 1, maxLength: 15 },
-        ),
+        fc.array(fc.oneof(fc.integer(), fc.array(fc.integer(), { minLength: 1, maxLength: 4 })), {
+          minLength: 1,
+          maxLength: 15,
+        }),
         (data) => {
           const s = new Series({ data: data as unknown as Scalar[] });
           const out = explodeSeries(s, { ignoreIndex: true });
           const idxArr = idxVals(out);
           for (let i = 0; i < idxArr.length; i++) {
-            if (idxArr[i] !== i) return false;
+            if (idxArr[i] !== i) {
+              return false;
+            }
           }
           return true;
         },
@@ -331,7 +345,9 @@ describe("explodeSeries — property-based", () => {
           const out = explodeSeries(s);
           const idx = idxVals(out) as number[];
           for (let i = 1; i < idx.length; i++) {
-            if ((idx[i] as number) < (idx[i - 1] as number)) return false;
+            if ((idx[i] as number) < (idx[i - 1] as number)) {
+              return false;
+            }
           }
           return true;
         },
@@ -349,10 +365,7 @@ describe("explodeSeries — property-based", () => {
         (data) => {
           const s = new Series({ data: data as Scalar[] });
           const out = explodeSeries(s);
-          return (
-            out.size === s.size &&
-            out.values.every((v, i) => v === s.values[i])
-          );
+          return out.size === s.size && out.values.every((v, i) => v === s.values[i]);
         },
       ),
     );

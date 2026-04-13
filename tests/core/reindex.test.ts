@@ -1,17 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame } from "../../src/core/frame.ts";
 import { Index } from "../../src/core/base-index.ts";
-import { Series } from "../../src/core/series.ts";
+import { DataFrame } from "../../src/core/frame.ts";
 import { reindexDataFrame, reindexSeries } from "../../src/core/reindex.ts";
+import { Series } from "../../src/core/series.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function makeNumericSeries(
-  data: number[],
-  labels: string[],
-  name?: string,
-): Series<number> {
+function makeNumericSeries(data: number[], labels: string[], name?: string): Series<number> {
   return new Series<number>({
     data,
     index: new Index<string>(labels),
@@ -314,9 +310,11 @@ describe("reindexSeries — property tests", () => {
           maxLength: 20,
         }),
         (data, labels) => {
-          const trimmed = data.slice(0, labels.length);
+          const _trimmed = data.slice(0, labels.length);
           const uniqueLabels = [...new Set(labels)];
-          if (uniqueLabels.length === 0) return true;
+          if (uniqueLabels.length === 0) {
+            return true;
+          }
           const dataForUnique = uniqueLabels.map((_, i) => i);
           const s = makeNumericSeries(dataForUnique, uniqueLabels);
           // reindex with same labels → all values preserved
@@ -324,7 +322,9 @@ describe("reindexSeries — property tests", () => {
           const orig = s.toArray();
           const res = r.toArray();
           for (let i = 0; i < uniqueLabels.length; i++) {
-            if (orig[i] !== res[i]) return false;
+            if (orig[i] !== res[i]) {
+              return false;
+            }
           }
           return true;
         },
@@ -357,14 +357,13 @@ describe("reindexSeries — property tests", () => {
     fc.assert(
       fc.property(
         fc.array(fc.integer({ min: 1, max: 100 }), { minLength: 1, maxLength: 10 }),
-        fc.array(
-          fc.string({ minLength: 1, maxLength: 3 }),
-          { minLength: 3, maxLength: 12 },
-        ),
+        fc.array(fc.string({ minLength: 1, maxLength: 3 }), { minLength: 3, maxLength: 12 }),
         (data, allLabels) => {
           // Ensure srcLabels matches data length (allLabels may be shorter than data)
           const srcLen = Math.min(data.length, allLabels.length);
-          if (srcLen === 0) return true;
+          if (srcLen === 0) {
+            return true;
+          }
           const srcData = data.slice(0, srcLen);
           const srcLabels = allLabels.slice(0, srcLen);
           const s = makeNumericSeries(srcData, srcLabels);
@@ -373,8 +372,12 @@ describe("reindexSeries — property tests", () => {
           // Once we pass a non-null, all subsequent values (from ffill) must be non-null
           let seenValue = false;
           for (const v of arr) {
-            if (v !== null) seenValue = true;
-            if (seenValue && v === null) return false;
+            if (v !== null) {
+              seenValue = true;
+            }
+            if (seenValue && v === null) {
+              return false;
+            }
           }
           return true;
         },

@@ -100,7 +100,10 @@ describe("Timestamp — construction", () => {
 
   it("fromComponents — with microseconds", () => {
     const ts = Timestamp.fromComponents({
-      year: 2024, month: 1, day: 1, microsecond: 500,
+      year: 2024,
+      month: 1,
+      day: 1,
+      microsecond: 500,
     });
     expect(ts.microsecond).toBe(500);
   });
@@ -580,13 +583,10 @@ describe("Timestamp — day_name / month_name", () => {
 describe("Timestamp — property tests", () => {
   it("round-trip: fromtimestamp → timestamp()", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: -2_000_000_000, max: 4_000_000_000 }),
-        (secs) => {
-          const ts = Timestamp.fromtimestamp(secs);
-          expect(Math.round(ts.timestamp())).toBe(secs);
-        },
-      ),
+      fc.property(fc.integer({ min: -2_000_000_000, max: 4_000_000_000 }), (secs) => {
+        const ts = Timestamp.fromtimestamp(secs);
+        expect(Math.round(ts.timestamp())).toBe(secs);
+      }),
     );
   });
 
@@ -621,54 +621,42 @@ describe("Timestamp — property tests", () => {
 
   it("floor(D) always gives hour=0", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10_000_000_000_000 }),
-        (ms) => {
-          const ts = new Timestamp(ms);
-          expect(ts.floor("D").hour).toBe(0);
-          expect(ts.floor("D").minute).toBe(0);
-          expect(ts.floor("D").second).toBe(0);
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 10_000_000_000_000 }), (ms) => {
+        const ts = new Timestamp(ms);
+        expect(ts.floor("D").hour).toBe(0);
+        expect(ts.floor("D").minute).toBe(0);
+        expect(ts.floor("D").second).toBe(0);
+      }),
     );
   });
 
   it("dayofweek is in [0,6]", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10_000_000_000_000 }),
-        (ms) => {
-          const dow = new Timestamp(ms).dayofweek;
-          expect(dow).toBeGreaterThanOrEqual(0);
-          expect(dow).toBeLessThanOrEqual(6);
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 10_000_000_000_000 }), (ms) => {
+        const dow = new Timestamp(ms).dayofweek;
+        expect(dow).toBeGreaterThanOrEqual(0);
+        expect(dow).toBeLessThanOrEqual(6);
+      }),
     );
   });
 
   it("dayofyear is in [1,366]", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10_000_000_000_000 }),
-        (ms) => {
-          const doy = new Timestamp(ms).dayofyear;
-          expect(doy).toBeGreaterThanOrEqual(1);
-          expect(doy).toBeLessThanOrEqual(366);
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 10_000_000_000_000 }), (ms) => {
+        const doy = new Timestamp(ms).dayofyear;
+        expect(doy).toBeGreaterThanOrEqual(1);
+        expect(doy).toBeLessThanOrEqual(366);
+      }),
     );
   });
 
   it("quarter is in [1,4]", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10_000_000_000_000 }),
-        (ms) => {
-          const q = new Timestamp(ms).quarter;
-          expect(q).toBeGreaterThanOrEqual(1);
-          expect(q).toBeLessThanOrEqual(4);
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 10_000_000_000_000 }), (ms) => {
+        const q = new Timestamp(ms).quarter;
+        expect(q).toBeGreaterThanOrEqual(1);
+        expect(q).toBeLessThanOrEqual(4);
+      }),
     );
   });
 
@@ -688,15 +676,12 @@ describe("Timestamp — property tests", () => {
 
   it("normalize is idempotent", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10_000_000_000_000 }),
-        (ms) => {
-          const ts = new Timestamp(ms);
-          const n1 = ts.normalize();
-          const n2 = n1.normalize();
-          expect(n1._utcMs).toBe(n2._utcMs);
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 10_000_000_000_000 }), (ms) => {
+        const ts = new Timestamp(ms);
+        const n1 = ts.normalize();
+        const n2 = n1.normalize();
+        expect(n1._utcMs).toBe(n2._utcMs);
+      }),
     );
   });
 });

@@ -150,15 +150,14 @@ export function digitize(
         }
       }
       return n - 1; // above last edge
-    } else {
-      // closed left, open right: bins[i-1] <= v < bins[i]
-      for (let i = 0; i < n; i++) {
-        if (v < (bins[i] as number)) {
-          return i - 1;
-        }
-      }
-      return n - 1; // at or above last edge
     }
+    // closed left, open right: bins[i-1] <= v < bins[i]
+    for (let i = 0; i < n; i++) {
+      if (v < (bins[i] as number)) {
+        return i - 1;
+      }
+    }
+    return n - 1; // at or above last edge
   });
 }
 
@@ -432,10 +431,7 @@ export function percentileOfScore(
  * // approximately [−1.5, −0.5, −0.5, −0.5, 0, 0, 1, 2] (normalised)
  * ```
  */
-export function zscore(
-  series: Series<Scalar>,
-  options?: ZscoreOptions,
-): Series<Scalar> {
+export function zscore(series: Series<Scalar>, options?: ZscoreOptions): Series<Scalar> {
   const ddof = options?.ddof ?? 1;
   const vals = series.values as readonly Scalar[];
   const nums = finiteNums(vals);
@@ -455,7 +451,7 @@ export function zscore(
     return series.withValues(nanVals) as Series<Scalar>;
   }
 
-  const zVals = vals.map((v) => (isNum(v) ? ((v - mean) / std) as Scalar : v));
+  const zVals = vals.map((v) => (isNum(v) ? (((v - mean) / std) as Scalar) : v));
   return series.withValues(zVals) as Series<Scalar>;
 }
 
@@ -481,10 +477,7 @@ export function zscore(
  * // → Series([0, 0.5, 1])
  * ```
  */
-export function minMaxNormalize(
-  series: Series<Scalar>,
-  options?: MinMaxOptions,
-): Series<Scalar> {
+export function minMaxNormalize(series: Series<Scalar>, options?: MinMaxOptions): Series<Scalar> {
   const rMin = options?.featureRangeMin ?? 0;
   const rMax = options?.featureRangeMax ?? 1;
   if (rMin >= rMax) {
@@ -508,7 +501,7 @@ export function minMaxNormalize(
   }
 
   const scaled = vals.map((v) =>
-    isNum(v) ? (((v - min) / span) * (rMax - rMin) + rMin) as Scalar : v,
+    isNum(v) ? ((((v - min) / span) * (rMax - rMin) + rMin) as Scalar) : v,
   );
   return series.withValues(scaled) as Series<Scalar>;
 }
@@ -532,10 +525,7 @@ export function minMaxNormalize(
  * // ≈ 0.5
  * ```
  */
-export function coefficientOfVariation(
-  series: Series<Scalar>,
-  options?: CvOptions,
-): number {
+export function coefficientOfVariation(series: Series<Scalar>, options?: CvOptions): number {
   const ddof = options?.ddof ?? 1;
   const vals = series.values as readonly Scalar[];
   const nums = finiteNums(vals);

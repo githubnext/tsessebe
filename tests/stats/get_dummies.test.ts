@@ -8,10 +8,10 @@
 
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
-import { dataFrameGetDummies, getDummies } from "../../src/stats/get_dummies.ts";
 import { RangeIndex } from "../../src/core/range-index.ts";
+import { DataFrame, Series } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
+import { dataFrameGetDummies, getDummies } from "../../src/stats/get_dummies.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,7 +54,7 @@ describe("getDummies — basic Series", () => {
   });
 
   it("missing values are encoded as 0 by default", () => {
-    const df = getDummies(s(["a", null, "b", NaN]));
+    const df = getDummies(s(["a", null, "b", Number.NaN]));
     expect(df.columns.values).toEqual(["a", "b"]);
     expect(df.col("a").values).toEqual([1, 0, 0, 0]);
     expect(df.col("b").values).toEqual([0, 0, 1, 0]);
@@ -102,7 +102,7 @@ describe("getDummies — dummyNa option", () => {
   });
 
   it("NaN column reflects NaN values too", () => {
-    const df = getDummies(s(["a", NaN, "b"]), { dummyNa: true });
+    const df = getDummies(s(["a", Number.NaN, "b"]), { dummyNa: true });
     expect(df.col("NaN").values).toEqual([0, 1, 0]);
   });
 
@@ -256,7 +256,7 @@ describe("getDummies — property tests", () => {
         (data, pfx) => {
           const df = getDummies(s(data), { prefix: pfx });
           for (const c of df.columns.values as string[]) {
-            expect((c as string).startsWith(pfx + "_")).toBe(true);
+            expect((c as string).startsWith(`${pfx}_`)).toBe(true);
           }
         },
       ),

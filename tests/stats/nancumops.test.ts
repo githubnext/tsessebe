@@ -151,10 +151,7 @@ describe("nanstd", () => {
   });
 
   it("ignores NaN/null", () => {
-    expect(nanstd([2, Number.NaN, 4, null, 6], { ddof: 0 })).toBeCloseTo(
-      Math.sqrt(8 / 3),
-      10,
-    );
+    expect(nanstd([2, Number.NaN, 4, null, 6], { ddof: 0 })).toBeCloseTo(Math.sqrt(8 / 3), 10);
   });
 
   it("returns NaN for insufficient data", () => {

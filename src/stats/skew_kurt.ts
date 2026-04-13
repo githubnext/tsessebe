@@ -187,10 +187,7 @@ function computeKurtosis(xs: readonly number[]): number {
  * skewSeries(s); // approx 2.02
  * ```
  */
-export function skewSeries(
-  series: Series<Scalar>,
-  options: SkewKurtSeriesOptions = {},
-): number {
+export function skewSeries(series: Series<Scalar>, options: SkewKurtSeriesOptions = {}): number {
   const skipna = options.skipna ?? true;
   const xs = extractNumbers(series.values as readonly Scalar[], skipna);
   return computeSkewness(xs);
@@ -209,10 +206,7 @@ export function skewSeries(
  * kurtSeries(s); // approx -0.44
  * ```
  */
-export function kurtSeries(
-  series: Series<Scalar>,
-  options: SkewKurtSeriesOptions = {},
-): number {
+export function kurtSeries(series: Series<Scalar>, options: SkewKurtSeriesOptions = {}): number {
   const skipna = options.skipna ?? true;
   const xs = extractNumbers(series.values as readonly Scalar[], skipna);
   return computeKurtosis(xs);

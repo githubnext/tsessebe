@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist/**", "node_modules/**", "*.d.ts", "playground/**/*.js", "playground/serve.ts"]
+    "ignore": [
+      "dist/**",
+      "node_modules/**",
+      "*.d.ts",
+      "playground/**/*.js",
+      "playground/serve.ts",
+      "benchmarks/**"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -20,17 +27,24 @@
     "rules": {
       "recommended": true,
       "complexity": {
-        "all": true
+        "all": true,
+        "noExcessiveCognitiveComplexity": "warn",
+        "noForEach": "warn",
+        "useLiteralKeys": "warn",
+        "noUselessSwitchCase": "warn"
       },
       "correctness": {
-        "all": true
+        "all": true,
+        "noNodejsModules": "warn",
+        "noUnusedVariables": "warn"
       },
       "nursery": {
         "all": true
       },
       "performance": {
         "all": true,
-        "noBarrelFile": "off"
+        "noBarrelFile": "off",
+        "useTopLevelRegex": "warn"
       },
       "security": {
         "all": true
@@ -38,10 +52,18 @@
       "style": {
         "all": true,
         "noDefaultExport": "off",
-        "useNamingConvention": "off"
+        "useNamingConvention": "off",
+        "noNonNullAssertion": "warn",
+        "noNamespaceImport": "warn",
+        "noParameterProperties": "warn",
+        "useDefaultSwitchClause": "warn",
+        "useCollapsedElseIf": "warn"
       },
       "suspicious": {
-        "all": true
+        "all": true,
+        "noAssignInExpressions": "warn",
+        "noMisplacedAssertion": "warn",
+        "noApproximativeNumericConstant": "warn"
       }
     }
   },

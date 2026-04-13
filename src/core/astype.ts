@@ -8,10 +8,10 @@
  * @module
  */
 
+import type { DtypeName, Scalar } from "../types.ts";
+import { Dtype } from "./dtype.ts";
 import { DataFrame } from "./frame.ts";
 import { Series } from "./series.ts";
-import { Dtype } from "./dtype.ts";
-import type { DtypeName, Scalar } from "../types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -20,9 +20,7 @@ function isNull(v: Scalar): v is null | undefined {
 }
 
 /** Integer clamp ranges for each integer dtype name. */
-const INT_RANGES: Readonly<
-  Record<string, { lo: number; hi: number; unsigned: boolean }>
-> = {
+const INT_RANGES: Readonly<Record<string, { lo: number; hi: number; unsigned: boolean }>> = {
   int8: { lo: -128, hi: 127, unsigned: false },
   int16: { lo: -32768, hi: 32767, unsigned: false },
   int32: { lo: -2147483648, hi: 2147483647, unsigned: false },
@@ -215,16 +213,12 @@ export interface DataFrameAstypeOptions extends AstypeOptions {
  */
 export function astype(
   df: DataFrame,
-  dtype:
-    | DtypeName
-    | Dtype
-    | Readonly<Record<string, DtypeName | Dtype>>,
+  dtype: DtypeName | Dtype | Readonly<Record<string, DtypeName | Dtype>>,
   options: DataFrameAstypeOptions = {},
 ): DataFrame {
   const colMap = new Map<string, Series<Scalar>>();
 
-  const isSingleDtype =
-    typeof dtype === "string" || dtype instanceof Dtype;
+  const isSingleDtype = typeof dtype === "string" || dtype instanceof Dtype;
 
   for (const name of df.columns.values) {
     const col = df.col(name);

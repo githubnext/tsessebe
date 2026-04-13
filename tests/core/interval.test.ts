@@ -114,13 +114,13 @@ describe("Interval — overlaps", () => {
 
   it("adjacent right-closed / left-open intervals: no overlap", () => {
     const a = new Interval(0, 1, "right"); // (0,1]
-    const b = new Interval(1, 2, "left");  // [1,2)
+    const b = new Interval(1, 2, "left"); // [1,2)
     // they share the point 1 — right includes 1, left includes 1 → overlap!
     expect(a.overlaps(b)).toBe(true);
   });
 
   it("adjacent with no shared point", () => {
-    const a = new Interval(0, 1, "right");   // (0,1]
+    const a = new Interval(0, 1, "right"); // (0,1]
     const b = new Interval(1, 2, "neither"); // (1,2)
     expect(a.overlaps(b)).toBe(false);
   });
@@ -421,7 +421,7 @@ describe("Interval — property tests", () => {
         (left, delta) => {
           const right = left + delta;
           const iv = new Interval(left, right, "neither");
-          return !iv.contains(left) && !iv.contains(right);
+          return !(iv.contains(left) || iv.contains(right));
         },
       ),
     );
@@ -448,10 +448,10 @@ describe("IntervalIndex — property tests", () => {
   it("fromBreaks: size = breaks.length - 1", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 100 }),
-          { minLength: 2, maxLength: 20 },
-        ),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 100 }), {
+          minLength: 2,
+          maxLength: 20,
+        }),
         (raw) => {
           const sorted = [...raw].sort((a, b) => a - b);
           const idx = IntervalIndex.fromBreaks(sorted);
@@ -464,10 +464,10 @@ describe("IntervalIndex — property tests", () => {
   it("fromBreaks: left[i] = breaks[i], right[i] = breaks[i+1]", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 100 }),
-          { minLength: 2, maxLength: 10 },
-        ),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 100 }), {
+          minLength: 2,
+          maxLength: 10,
+        }),
         (raw) => {
           const sorted = [...raw].sort((a, b) => a - b);
           const idx = IntervalIndex.fromBreaks(sorted);
@@ -487,31 +487,25 @@ describe("IntervalIndex — property tests", () => {
 
   it("get_loc returns index within [0, size) or -1", () => {
     fc.assert(
-      fc.property(
-        fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 10 }),
-        (v) => {
-          const idx = IntervalIndex.fromBreaks([0, 1, 2, 3, 4, 5]);
-          const loc = idx.get_loc(v);
-          return loc === -1 || (loc >= 0 && loc < idx.size);
-        },
-      ),
+      fc.property(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 10 }), (v) => {
+        const idx = IntervalIndex.fromBreaks([0, 1, 2, 3, 4, 5]);
+        const loc = idx.get_loc(v);
+        return loc === -1 || (loc >= 0 && loc < idx.size);
+      }),
     );
   });
 
   it("contains[i] === true implies get_loc === i (for non-overlapping index)", () => {
     fc.assert(
-      fc.property(
-        fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 5 }),
-        (v) => {
-          const idx = IntervalIndex.fromBreaks([0, 1, 2, 3, 4, 5]);
-          const mask = idx.contains(v);
-          const loc = idx.get_loc(v);
-          if (loc === -1) {
-            return mask.every((b) => !b);
-          }
-          return mask[loc] === true;
-        },
-      ),
+      fc.property(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 5 }), (v) => {
+        const idx = IntervalIndex.fromBreaks([0, 1, 2, 3, 4, 5]);
+        const mask = idx.contains(v);
+        const loc = idx.get_loc(v);
+        if (loc === -1) {
+          return mask.every((b) => !b);
+        }
+        return mask[loc] === true;
+      }),
     );
   });
 });

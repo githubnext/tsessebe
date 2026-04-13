@@ -43,7 +43,7 @@ describe("replaceSeries: scalar → scalar", () => {
   it("does NOT replace NaN when matchNaN=false", () => {
     const s = new Series({ data: [1, Number.NaN, 3] });
     const r = replaceSeries(s, { toReplace: Number.NaN, value: 0 }, { matchNaN: false });
-    expect(Number.isNaN((r.values[1] as number))).toBe(true);
+    expect(Number.isNaN(r.values[1] as number)).toBe(true);
   });
 
   it("preserves index", () => {
@@ -107,7 +107,7 @@ describe("replaceSeries: Record mapping", () => {
 
   it("leaves values with no mapping entry unchanged", () => {
     const s = new Series({ data: ["a", "b", "c"] });
-    const r = replaceSeries(s, { toReplace: { "a": "A" } });
+    const r = replaceSeries(s, { toReplace: { a: "A" } });
     expect([...r.values]).toEqual(["A", "b", "c"]);
   });
 });
@@ -117,7 +117,13 @@ describe("replaceSeries: Record mapping", () => {
 describe("replaceSeries: Map mapping", () => {
   it("replaces using a Map", () => {
     const s = new Series({ data: [1, 2, 3, 2, 1] });
-    const map = new Map<number | string | boolean | bigint | null | undefined | Date, number | string | boolean | bigint | null | undefined | Date>([[1, 100], [2, 200]]);
+    const map = new Map<
+      number | string | boolean | bigint | null | undefined | Date,
+      number | string | boolean | bigint | null | undefined | Date
+    >([
+      [1, 100],
+      [2, 200],
+    ]);
     const r = replaceSeries(s, { toReplace: map });
     expect([...r.values]).toEqual([100, 200, 3, 200, 100]);
   });
@@ -188,9 +194,11 @@ describe("replaceSeries: properties", () => {
           const r = replaceSeries(s, { toReplace: old, value: newVal });
           for (let i = 0; i < s.size; i++) {
             if (s.values[i] === old) {
-              if (r.values[i] !== newVal) return false;
-            } else {
-              if (r.values[i] !== s.values[i]) return false;
+              if (r.values[i] !== newVal) {
+                return false;
+              }
+            } else if (r.values[i] !== s.values[i]) {
+              return false;
             }
           }
           return true;

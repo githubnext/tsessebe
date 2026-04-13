@@ -122,7 +122,7 @@ describe("skewDataFrame", () => {
     const result = skewDataFrame(df);
     expect(result.index.values).toEqual(["a", "b"]);
     expect(Math.abs(result.values[0] as number)).toBeLessThan(1e-9); // symmetric
-    expect((result.values[1] as number)).toBeGreaterThan(0); // right-skewed
+    expect(result.values[1] as number).toBeGreaterThan(0); // right-skewed
   });
 
   it("axis=1 computes per-row skew", () => {

@@ -13,12 +13,7 @@ import {
   YearBegin,
   YearEnd,
 } from "../../src/core/date_offset.ts";
-import {
-  DatetimeIndex,
-  bdate_range,
-  date_range,
-  resolveFreq,
-} from "../../src/core/date_range.ts";
+import { DatetimeIndex, bdate_range, date_range, resolveFreq } from "../../src/core/date_range.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -294,10 +289,7 @@ describe("DatetimeIndex.contains", () => {
 describe("DatetimeIndex.toStrings", () => {
   it("produces ISO strings", () => {
     const idx = date_range({ start: "2024-01-01", periods: 2 });
-    expect(idx.toStrings()).toEqual([
-      "2024-01-01T00:00:00.000Z",
-      "2024-01-02T00:00:00.000Z",
-    ]);
+    expect(idx.toStrings()).toEqual(["2024-01-01T00:00:00.000Z", "2024-01-02T00:00:00.000Z"]);
   });
 });
 
@@ -561,55 +553,50 @@ describe("bdate_range", () => {
 describe("date_range — property tests", () => {
   it("size matches periods (start+periods)", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 50 }),
-        (n) => {
-          const idx = date_range({ start: "2024-01-01", periods: n });
-          return idx.size === n;
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 50 }), (n) => {
+        const idx = date_range({ start: "2024-01-01", periods: n });
+        return idx.size === n;
+      }),
     );
   });
 
   it("first element equals start (start+periods, non-zero)", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 30 }),
-        (n) => {
-          const start = "2024-06-15";
-          const idx = date_range({ start, periods: n });
-          return idx.at(0).toISOString().startsWith("2024-06-15");
-        },
-      ),
+      fc.property(fc.integer({ min: 1, max: 30 }), (n) => {
+        const start = "2024-06-15";
+        const idx = date_range({ start, periods: n });
+        return idx.at(0).toISOString().startsWith("2024-06-15");
+      }),
     );
   });
 
   it("last element equals end (start+end, daily)", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 29 }),
-        (extraDays) => {
-          const start = new Date("2024-01-01T00:00:00Z");
-          const end = new Date(start.getTime() + extraDays * 86_400_000);
-          const idx = date_range({ start, end });
-          if (idx.size === 0) return true; // empty when start > end
-          const last = idx.at(idx.size - 1);
-          return last.getTime() === end.getTime();
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 29 }), (extraDays) => {
+        const start = new Date("2024-01-01T00:00:00Z");
+        const end = new Date(start.getTime() + extraDays * 86_400_000);
+        const idx = date_range({ start, end });
+        if (idx.size === 0) {
+          return true; // empty when start > end
+        }
+        const last = idx.at(idx.size - 1);
+        return last.getTime() === end.getTime();
+      }),
     );
   });
 
   it("sorted ascending after sort()", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: 0, max: 100 }), { minLength: 0, maxLength: 20 }).map((arr) =>
-          arr.map((n) => new Date(n * 86_400_000)),
-        ),
+        fc
+          .array(fc.integer({ min: 0, max: 100 }), { minLength: 0, maxLength: 20 })
+          .map((arr) => arr.map((n) => new Date(n * 86_400_000))),
         (dates) => {
           const idx = DatetimeIndex.fromDates(dates).sort();
           for (let i = 1; i < idx.size; i++) {
-            if ((idx.at(i).getTime() ?? 0) < (idx.at(i - 1).getTime() ?? 0)) return false;
+            if ((idx.at(i).getTime() ?? 0) < (idx.at(i - 1).getTime() ?? 0)) {
+              return false;
+            }
           }
           return true;
         },
@@ -620,9 +607,9 @@ describe("date_range — property tests", () => {
   it("unique has no duplicates", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 10 }).map((arr) =>
-          arr.map((n) => new Date(n * 86_400_000)),
-        ),
+        fc
+          .array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 10 })
+          .map((arr) => arr.map((n) => new Date(n * 86_400_000))),
         (dates) => {
           const idx = DatetimeIndex.fromDates(dates).unique();
           const ms = idx.toArray().map((d) => d.getTime());
@@ -634,46 +621,40 @@ describe("date_range — property tests", () => {
 
   it("concat(a, b).size === a.size + b.size", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 10 }),
-        fc.integer({ min: 0, max: 10 }),
-        (p1, p2) => {
-          const a = date_range({ start: "2024-01-01", periods: p1 });
-          const b = date_range({ start: "2025-01-01", periods: p2 });
-          return a.concat(b).size === p1 + p2;
-        },
-      ),
+      fc.property(fc.integer({ min: 0, max: 10 }), fc.integer({ min: 0, max: 10 }), (p1, p2) => {
+        const a = date_range({ start: "2024-01-01", periods: p1 });
+        const b = date_range({ start: "2025-01-01", periods: p2 });
+        return a.concat(b).size === p1 + p2;
+      }),
     );
   });
 
   it("bdate_range contains only weekdays (Mon–Fri)", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 30 }),
-        (n) => {
-          const idx = bdate_range({ start: "2024-01-01", periods: n });
-          for (const d of idx) {
-            const dow = d.getUTCDay();
-            if (dow === 0 || dow === 6) return false; // weekend
+      fc.property(fc.integer({ min: 0, max: 30 }), (n) => {
+        const idx = bdate_range({ start: "2024-01-01", periods: n });
+        for (const d of idx) {
+          const dow = d.getUTCDay();
+          if (dow === 0 || dow === 6) {
+            return false; // weekend
           }
-          return true;
-        },
-      ),
+        }
+        return true;
+      }),
     );
   });
 
   it("daily consecutive elements differ by exactly 1 day", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 2, max: 20 }),
-        (n) => {
-          const idx = date_range({ start: "2024-06-01", periods: n });
-          for (let i = 1; i < idx.size; i++) {
-            if (idx.at(i).getTime() - idx.at(i - 1).getTime() !== 86_400_000) return false;
+      fc.property(fc.integer({ min: 2, max: 20 }), (n) => {
+        const idx = date_range({ start: "2024-06-01", periods: n });
+        for (let i = 1; i < idx.size; i++) {
+          if (idx.at(i).getTime() - idx.at(i - 1).getTime() !== 86_400_000) {
+            return false;
           }
-          return true;
-        },
-      ),
+        }
+        return true;
+      }),
     );
   });
 
@@ -686,7 +667,9 @@ describe("date_range — property tests", () => {
           const idx = date_range({ start: "2024-01-15", periods });
           const shifted = idx.shift(n, "D").shift(-n, "D");
           for (let i = 0; i < idx.size; i++) {
-            if (shifted.at(i).getTime() !== idx.at(i).getTime()) return false;
+            if (shifted.at(i).getTime() !== idx.at(i).getTime()) {
+              return false;
+            }
           }
           return true;
         },
@@ -698,7 +681,7 @@ describe("date_range — property tests", () => {
 // ─── extra coverage: freq aliases ─────────────────────────────────────────────
 
 describe("date_range freq aliases", () => {
-  const aliases: Array<[string, number]> = [
+  const aliases: [string, number][] = [
     ["T", 3],
     ["min", 3],
     ["S", 3],

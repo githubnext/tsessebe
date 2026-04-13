@@ -274,9 +274,16 @@ s = pd.Series(
 print("idxmin (skipna=True):", s.idxmin(skipna=True))   # c
 print("idxmax (skipna=True):", s.idxmax(skipna=True))   # e
 
-# skipna=False — any NaN → NaN
-print("idxmin (skipna=False):", s.idxmin(skipna=False))  # nan
-print("idxmax (skipna=False):", s.idxmax(skipna=False))  # nan</textarea>
+# skipna=False — in pandas 3.x raises ValueError when NaN present
+# (tsb returns null instead)
+try:
+    print("idxmin (skipna=False):", s.idxmin(skipna=False))
+except ValueError as e:
+    print("idxmin (skipna=False): ValueError —", e)
+try:
+    print("idxmax (skipna=False):", s.idxmax(skipna=False))
+except ValueError as e:
+    print("idxmax (skipna=False): ValueError —", e)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

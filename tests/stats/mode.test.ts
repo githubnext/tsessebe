@@ -138,7 +138,10 @@ describe("modeDataFrame axis=1", () => {
   });
 
   it("preserves original row index", () => {
-    const df = DataFrame.fromColumns({ a: [10, 20, 30], b: [10, 10, 30] }, { index: ["x", "y", "z"] });
+    const df = DataFrame.fromColumns(
+      { a: [10, 20, 30], b: [10, 10, 30] },
+      { index: ["x", "y", "z"] },
+    );
     const result = modeDataFrame(df, { axis: 1 });
     expect(result.index.values).toEqual(["x", "y", "z"]);
   });

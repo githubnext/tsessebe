@@ -256,7 +256,10 @@ describe("strRemoveSuffix", () => {
 
 describe("strTranslate", () => {
   it("replaces characters according to table", () => {
-    const table = new Map<string, string | null>([["a", "A"], ["e", "E"]]);
+    const table = new Map<string, string | null>([
+      ["a", "A"],
+      ["e", "E"],
+    ]);
     expect(strTranslate("hello", table)).toBe("hEllo");
     expect(strTranslate("abc", table)).toBe("Abc");
   });
@@ -297,7 +300,11 @@ describe("strTranslate", () => {
 
   it("delete all vowels", () => {
     const table = new Map<string, string | null>([
-      ["a", null], ["e", null], ["i", null], ["o", null], ["u", null],
+      ["a", null],
+      ["e", null],
+      ["i", null],
+      ["o", null],
+      ["u", null],
     ]);
     expect(strTranslate("hello world", table)).toBe("hll wrld");
   });
@@ -412,7 +419,7 @@ describe("strRemovePrefix — properties", () => {
     fc.assert(
       fc.property(fc.asciiString(), fc.asciiString({ minLength: 1 }), (str, prefix) => {
         const result = strRemovePrefix(str, prefix);
-        return !result.startsWith(prefix) || !str.startsWith(prefix);
+        return !(result.startsWith(prefix) && str.startsWith(prefix));
       }),
     );
   });

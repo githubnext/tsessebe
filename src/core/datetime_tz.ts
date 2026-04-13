@@ -331,10 +331,14 @@ export class TZDatetimeIndex {
    * ```
    */
   min(): Date | null {
-    if (this._utcMs.length === 0) return null;
+    if (this._utcMs.length === 0) {
+      return null;
+    }
     let best = this._utcMs[0] as number;
     for (const ms of this._utcMs) {
-      if (ms < best) best = ms;
+      if (ms < best) {
+        best = ms;
+      }
     }
     return new Date(best);
   }
@@ -350,10 +354,14 @@ export class TZDatetimeIndex {
    * ```
    */
   max(): Date | null {
-    if (this._utcMs.length === 0) return null;
+    if (this._utcMs.length === 0) {
+      return null;
+    }
     let best = this._utcMs[0] as number;
     for (const ms of this._utcMs) {
-      if (ms > best) best = ms;
+      if (ms > best) {
+        best = ms;
+      }
     }
     return new Date(best);
   }
@@ -392,7 +400,9 @@ export class TZDatetimeIndex {
   filter(predicate: (d: Date, i: number) => boolean): TZDatetimeIndex {
     const out: number[] = [];
     this._utcMs.forEach((ms, i) => {
-      if (predicate(new Date(ms), i)) out.push(ms);
+      if (predicate(new Date(ms), i)) {
+        out.push(ms);
+      }
     });
     return new TZDatetimeIndex(out, this.tz, this.name);
   }
@@ -416,8 +426,7 @@ export class TZDatetimeIndex {
   concat(other: TZDatetimeIndex): TZDatetimeIndex {
     if (other.tz !== this.tz) {
       throw new RangeError(
-        `concat: timezone mismatch ("${this.tz}" vs "${other.tz}"). ` +
-          "Convert to the same timezone first with tz_convert.",
+        `concat: timezone mismatch ("${this.tz}" vs "${other.tz}"). Convert to the same timezone first with tz_convert.`,
       );
     }
     return new TZDatetimeIndex([...this._utcMs, ...other._utcMs], this.tz, this.name);

@@ -109,21 +109,21 @@ function cmpTokens(a: Token, b: Token, ignoreCase: boolean): number {
  * @param options - Sort options (ignoreCase, reverse).
  * @returns Negative, zero, or positive number as expected by `Array.sort`.
  */
-export function natCompare(
-  a: string,
-  b: string,
-  options: NatSortOptions = {},
-): number {
+export function natCompare(a: string, b: string, options: NatSortOptions = {}): number {
   const { ignoreCase = false, reverse = false } = options;
   const ta = tokenize(a);
   const tb = tokenize(b);
   const len = Math.min(ta.length, tb.length);
   for (let i = 0; i < len; i++) {
     const c = cmpTokens(ta[i]!, tb[i]!, ignoreCase);
-    if (c !== 0) return reverse ? -c : c;
+    if (c !== 0) {
+      return reverse ? -c : c;
+    }
   }
   const lenCmp = ta.length - tb.length;
-  if (lenCmp === 0) return 0;
+  if (lenCmp === 0) {
+    return 0;
+  }
   return reverse ? -lenCmp : lenCmp;
 }
 
@@ -150,10 +150,7 @@ export function natCompare(
  * @param options - Sort options (ignoreCase, reverse, key).
  * @returns New array in natural order.
  */
-export function natSorted<T>(
-  arr: readonly T[],
-  options: NatSortedOptions<T> = {},
-): T[] {
+export function natSorted<T>(arr: readonly T[], options: NatSortedOptions<T> = {}): T[] {
   const { key, ...cmpOpts } = options;
   const copy = [...arr];
   if (key !== undefined) {
@@ -194,7 +191,9 @@ export function natSortKey(
 ): readonly Token[] {
   const { ignoreCase = false } = options;
   const tokens = tokenize(s);
-  if (!ignoreCase) return tokens;
+  if (!ignoreCase) {
+    return tokens;
+  }
   return tokens.map((t) => (typeof t === "string" ? t.toLowerCase() : t));
 }
 
@@ -212,10 +211,7 @@ export function natSortKey(
  * @param options - Sort options (ignoreCase, reverse).
  * @returns Array of original indices in sorted order.
  */
-export function natArgSort(
-  arr: readonly string[],
-  options: NatSortOptions = {},
-): number[] {
+export function natArgSort(arr: readonly string[], options: NatSortOptions = {}): number[] {
   const indices = arr.map((_, i) => i);
   const { ignoreCase = false, reverse = false } = options;
   const keys = arr.map((s) => tokenize(ignoreCase ? s.toLowerCase() : s));
@@ -225,7 +221,9 @@ export function natArgSort(
     const len = Math.min(ta.length, tb.length);
     for (let k = 0; k < len; k++) {
       const c = cmpTokens(ta[k]!, tb[k]!, false); // already case-folded
-      if (c !== 0) return reverse ? -c : c;
+      if (c !== 0) {
+        return reverse ? -c : c;
+      }
     }
     const lc = ta.length - tb.length;
     return reverse ? -lc : lc;

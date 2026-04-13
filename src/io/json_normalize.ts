@@ -103,7 +103,9 @@ function getPath(obj: JsonObject, path: readonly string[]): JsonValue | undefine
       return undefined;
     }
     cur = (cur as JsonObject)[key] as JsonValue;
-    if (cur === undefined) return undefined;
+    if (cur === undefined) {
+      return undefined;
+    }
   }
   return cur;
 }
@@ -169,14 +171,11 @@ function normalizeWithPath(
     // Extract meta values from this parent record
     const metaValues: Record<string, Scalar> = {};
     for (const metaPath of meta) {
-      const colName =
-        metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
+      const colName = metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
       const val = getPath(record, metaPath);
       if (val === undefined) {
         if (errors === "raise") {
-          throw new Error(
-            `jsonNormalize: meta key "${metaPath.join(".")}" not found in record`,
-          );
+          throw new Error(`jsonNormalize: meta key "${metaPath.join(".")}" not found in record`);
         }
         metaValues[colName] = null;
       } else if (typeof val === "object") {
@@ -271,14 +270,11 @@ export function jsonNormalize(
       }
       // Attach meta (from same record)
       for (const metaPath of metaPaths) {
-        const colName =
-          metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
+        const colName = metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
         const val = getPath(record, metaPath);
         if (val === undefined) {
           if (errors === "raise") {
-            throw new Error(
-              `jsonNormalize: meta key "${metaPath.join(".")}" not found in record`,
-            );
+            throw new Error(`jsonNormalize: meta key "${metaPath.join(".")}" not found in record`);
           }
           row[colName] = null;
         } else if (typeof val === "object") {
@@ -293,11 +289,7 @@ export function jsonNormalize(
     // recordPath provided
     // Normalise to array of (single) paths
     const pathList: readonly (readonly string[])[] = (() => {
-      if (
-        Array.isArray(recordPath) &&
-        recordPath.length > 0 &&
-        Array.isArray(recordPath[0])
-      ) {
+      if (Array.isArray(recordPath) && recordPath.length > 0 && Array.isArray(recordPath[0])) {
         // Array of paths
         return (recordPath as readonly JsonPath[]).map(toPathArray);
       }
@@ -310,7 +302,9 @@ export function jsonNormalize(
     let currentRecords: readonly JsonObject[] = records;
     for (let i = 0; i < pathList.length; i++) {
       const path = pathList[i];
-      if (path === undefined) continue;
+      if (path === undefined) {
+        continue;
+      }
       const isFinal = i === pathList.length - 1;
       if (isFinal) {
         rows = normalizeWithPath(
@@ -369,9 +363,7 @@ export function jsonNormalize(
   for (const [col, vals] of Object.entries(colData)) {
     let dtype: Dtype;
     if (vals.every((v) => v === null || typeof v === "number")) {
-      dtype = vals.some((v) => v !== null && !Number.isInteger(v))
-        ? Dtype.float64
-        : Dtype.int64;
+      dtype = vals.some((v) => v !== null && !Number.isInteger(v)) ? Dtype.float64 : Dtype.int64;
     } else if (vals.every((v) => v === null || typeof v === "boolean")) {
       dtype = Dtype.bool;
     } else {

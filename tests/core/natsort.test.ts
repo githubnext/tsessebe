@@ -113,11 +113,7 @@ describe("natSorted", () => {
 
   it("ignoreCase option", () => {
     const words = ["Banana", "apple", "Cherry"];
-    expect(natSorted(words, { ignoreCase: true })).toEqual([
-      "apple",
-      "Banana",
-      "Cherry",
-    ]);
+    expect(natSorted(words, { ignoreCase: true })).toEqual(["apple", "Banana", "Cherry"]);
   });
 
   it("key function extracts sort key from objects", () => {
@@ -155,23 +151,11 @@ describe("natSorted", () => {
   });
 
   it("numeric-only strings", () => {
-    expect(natSorted(["10", "9", "2", "1", "20"])).toEqual([
-      "1",
-      "2",
-      "9",
-      "10",
-      "20",
-    ]);
+    expect(natSorted(["10", "9", "2", "1", "20"])).toEqual(["1", "2", "9", "10", "20"]);
   });
 
   it("mixed alpha-numeric", () => {
-    expect(natSorted(["b1", "a20", "a3", "a1", "b2"])).toEqual([
-      "a1",
-      "a3",
-      "a20",
-      "b1",
-      "b2",
-    ]);
+    expect(natSorted(["b1", "a20", "a3", "a1", "b2"])).toEqual(["a1", "a3", "a20", "b1", "b2"]);
   });
 });
 
@@ -199,11 +183,7 @@ describe("natSortKey", () => {
   });
 
   it("ignoreCase folds text tokens", () => {
-    expect(natSortKey("File10.TXT", { ignoreCase: true })).toEqual([
-      "file",
-      10,
-      ".txt",
-    ]);
+    expect(natSortKey("File10.TXT", { ignoreCase: true })).toEqual(["file", 10, ".txt"]);
   });
 
   it("ignoreCase does not affect digit tokens", () => {

@@ -12,9 +12,9 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
+import { Index } from "../../src/core/base-index.ts";
 import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
-import { Index } from "../../src/core/base-index.ts";
 import { isna, isnull, notna, notnull } from "../../src/stats/notna.ts";
 
 // ─── scalar ───────────────────────────────────────────────────────────────────
@@ -22,14 +22,14 @@ import { isna, isnull, notna, notnull } from "../../src/stats/notna.ts";
 describe("isna — scalar", () => {
   test("null → true", () => expect(isna(null)).toBe(true));
   test("undefined → true", () => expect(isna(undefined)).toBe(true));
-  test("NaN → true", () => expect(isna(NaN)).toBe(true));
+  test("NaN → true", () => expect(isna(Number.NaN)).toBe(true));
   test("0 → false", () => expect(isna(0)).toBe(false));
   test("'' → false", () => expect(isna("")).toBe(false));
   test("false → false", () => expect(isna(false)).toBe(false));
   test("0n → false", () => expect(isna(0n)).toBe(false));
   test("new Date → false", () => expect(isna(new Date())).toBe(false));
-  test("Infinity → false", () => expect(isna(Infinity)).toBe(false));
-  test("-Infinity → false", () => expect(isna(-Infinity)).toBe(false));
+  test("Infinity → false", () => expect(isna(Number.POSITIVE_INFINITY)).toBe(false));
+  test("-Infinity → false", () => expect(isna(Number.NEGATIVE_INFINITY)).toBe(false));
   test("42 → false", () => expect(isna(42)).toBe(false));
   test('"hello" → false', () => expect(isna("hello")).toBe(false));
   test("true → false", () => expect(isna(true)).toBe(false));
@@ -38,7 +38,7 @@ describe("isna — scalar", () => {
 describe("notna — scalar", () => {
   test("null → false", () => expect(notna(null)).toBe(false));
   test("undefined → false", () => expect(notna(undefined)).toBe(false));
-  test("NaN → false", () => expect(notna(NaN)).toBe(false));
+  test("NaN → false", () => expect(notna(Number.NaN)).toBe(false));
   test("0 → true", () => expect(notna(0)).toBe(true));
   test("'' → true", () => expect(notna("")).toBe(true));
   test("false → true", () => expect(notna(false)).toBe(true));
@@ -63,11 +63,16 @@ describe("isna — array", () => {
     expect(isna([1, 2, 3])).toEqual([false, false, false]);
   });
   test("all missing → all true", () => {
-    expect(isna([null, undefined, NaN])).toEqual([true, true, true]);
+    expect(isna([null, undefined, Number.NaN])).toEqual([true, true, true]);
   });
   test("mixed → correct mask", () => {
-    expect(isna([1, null, NaN, "x", undefined, false])).toEqual([
-      false, true, true, false, true, false,
+    expect(isna([1, null, Number.NaN, "x", undefined, false])).toEqual([
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
     ]);
   });
   test("empty array → []", () => {
@@ -77,7 +82,7 @@ describe("isna — array", () => {
 
 describe("notna — array", () => {
   test("mixed → inverted mask", () => {
-    expect(notna([1, null, NaN, "x"])).toEqual([true, false, false, true]);
+    expect(notna([1, null, Number.NaN, "x"])).toEqual([true, false, false, true]);
   });
   test("empty → []", () => {
     expect(notna([])).toEqual([]);
@@ -88,7 +93,7 @@ describe("notna — array", () => {
 
 describe("isna — Series", () => {
   test("returns boolean Series", () => {
-    const s = new Series({ data: [1, null, NaN, "x", undefined] });
+    const s = new Series({ data: [1, null, Number.NaN, "x", undefined] });
     const result = isna(s);
     expect([...result.values]).toEqual([false, true, true, false, true]);
   });
@@ -112,7 +117,7 @@ describe("isna — Series", () => {
   });
 
   test("all missing → all true", () => {
-    const s = new Series({ data: [null, undefined, NaN] });
+    const s = new Series({ data: [null, undefined, Number.NaN] });
     const result = isna(s);
     expect([...result.values]).toEqual([true, true, true]);
   });
@@ -126,7 +131,7 @@ describe("isna — Series", () => {
 
 describe("notna — Series", () => {
   test("inverts isna result", () => {
-    const s = new Series({ data: [1, null, NaN, "x"] });
+    const s = new Series({ data: [1, null, Number.NaN, "x"] });
     const na = isna(s);
     const nna = notna(s);
     for (let i = 0; i < s.size; i++) {
@@ -141,7 +146,7 @@ describe("isna — DataFrame", () => {
   test("basic mask", () => {
     const df = DataFrame.fromColumns({
       a: [1, null, 3],
-      b: [NaN, 2, undefined],
+      b: [Number.NaN, 2, undefined],
     });
     const result = isna(df);
     const records = result.toRecords();
@@ -153,7 +158,7 @@ describe("isna — DataFrame", () => {
   });
 
   test("preserves column order", () => {
-    const df = DataFrame.fromColumns({ x: [1], y: [null], z: [NaN] });
+    const df = DataFrame.fromColumns({ x: [1], y: [null], z: [Number.NaN] });
     const result = isna(df);
     expect([...result.columns]).toEqual(["x", "y", "z"]);
   });
@@ -175,7 +180,7 @@ describe("isna — DataFrame", () => {
   });
 
   test("all-missing DataFrame → all true", () => {
-    const df = DataFrame.fromColumns({ a: [null, null], b: [NaN, undefined] });
+    const df = DataFrame.fromColumns({ a: [null, null], b: [Number.NaN, undefined] });
     const result = isna(df);
     for (const rec of result.toRecords()) {
       expect(rec["a"]).toBe(true);
@@ -192,7 +197,7 @@ describe("isna — DataFrame", () => {
 
 describe("notna — DataFrame", () => {
   test("inverts isna for DataFrame", () => {
-    const df = DataFrame.fromColumns({ a: [1, null], b: [NaN, 3] });
+    const df = DataFrame.fromColumns({ a: [1, null], b: [Number.NaN, 3] });
     const na = isna(df);
     const nna = notna(df);
     for (const colName of df.columns) {
@@ -214,7 +219,7 @@ describe("isna — property-based", () => {
         fc.oneof(
           fc.constant(null),
           fc.constant(undefined),
-          fc.constant(NaN),
+          fc.constant(Number.NaN),
           fc.double({ noNaN: true }),
           fc.string(),
           fc.boolean(),
@@ -258,9 +263,7 @@ describe("isna — property-based", () => {
   test("isna(arr) + notna(arr) all true (complement)", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.oneof(fc.double(), fc.constant(null), fc.constant(undefined), fc.string()),
-        ),
+        fc.array(fc.oneof(fc.double(), fc.constant(null), fc.constant(undefined), fc.string())),
         (arr) => {
           const na = isna(arr);
           const nna = notna(arr);
@@ -274,17 +277,14 @@ describe("isna — property-based", () => {
 
   test("Series: isna.values complement of notna.values", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.oneof(fc.double(), fc.constant(null))),
-        (arr) => {
-          const s = new Series({ data: arr });
-          const na = isna(s).values;
-          const nna = notna(s).values;
-          for (let i = 0; i < arr.length; i++) {
-            expect(na[i]).toBe(!nna[i]);
-          }
-        },
-      ),
+      fc.property(fc.array(fc.oneof(fc.double(), fc.constant(null))), (arr) => {
+        const s = new Series({ data: arr });
+        const na = isna(s).values;
+        const nna = notna(s).values;
+        for (let i = 0; i < arr.length; i++) {
+          expect(na[i]).toBe(!nna[i]);
+        }
+      }),
     );
   });
 });

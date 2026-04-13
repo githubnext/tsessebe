@@ -16,12 +16,8 @@ import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
 import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
-import { Index } from "../../src/core/base-index.ts";
+import { combineFirstDataFrame, combineFirstSeries } from "../../src/stats/combine_first.ts";
 import type { Label, Scalar } from "../../src/types.ts";
-import {
-  combineFirstDataFrame,
-  combineFirstSeries,
-} from "../../src/stats/combine_first.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -161,7 +157,7 @@ describe("combineFirstDataFrame", () => {
     const labels = [...result.index.values] as string[];
     const r1i = labels.indexOf("r1");
     expect(x[r1i]).toBe(20); // was null, filled from b
-    expect(y[r1i]).toBe(4);  // was 4, kept from a
+    expect(y[r1i]).toBe(4); // was 4, kept from a
   });
 
   test("self values take priority", () => {
@@ -258,9 +254,7 @@ describe("combineFirstSeries — property tests", () => {
           const a = new Series({ data: aVals, index: aIdx });
           const b = new Series({ data: bVals, index: bIdx });
           const result = combineFirstSeries(a, b);
-          return (
-            result.index.size >= Math.max(a.index.size, b.index.size)
-          );
+          return result.index.size >= Math.max(a.index.size, b.index.size);
         },
       ),
     );
@@ -290,7 +284,7 @@ describe("combineFirstSeries — property tests", () => {
             const lbl = sharedIdx[i];
             const aVal = aVals[i];
             const bVal = bVals[i];
-            const expected = (aVal === null || aVal === undefined) ? bVal ?? null : aVal;
+            const expected = aVal === null || aVal === undefined ? (bVal ?? null) : aVal;
             const pos = result.index.getLoc(lbl as Label);
             const p = Array.isArray(pos) ? (pos[0] ?? 0) : pos;
             const actual = result.values[p];

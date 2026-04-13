@@ -13,12 +13,7 @@
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  fillnaDataFrame,
-  fillnaSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series, fillnaDataFrame, fillnaSeries } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -162,7 +157,10 @@ describe("fillnaSeries — no-op", () => {
 
 describe("fillnaDataFrame — scalar value", () => {
   it("fills all missing cells with constant 0", () => {
-    const df = DataFrame.fromColumns({ a: [1, null, 3] as Scalar[], b: [null, 2, null] as Scalar[] });
+    const df = DataFrame.fromColumns({
+      a: [1, null, 3] as Scalar[],
+      b: [null, 2, null] as Scalar[],
+    });
     const result = fillnaDataFrame(df, { value: 0 });
     expect(result.col("a").values).toEqual([1, 0, 3]);
     expect(result.col("b").values).toEqual([0, 2, 0]);
@@ -439,14 +437,14 @@ describe("fillnaSeries — property tests", () => {
             const rv = result.values[i] as Scalar;
             if (!isMissing(ov)) {
               runFilled = 0;
-            } else if (!isMissing(rv)) {
+            } else if (isMissing(rv)) {
+              // still missing after limit — ok
+              runFilled = 0;
+            } else {
               runFilled++;
               if (runFilled > limit) {
                 return false;
               }
-            } else {
-              // still missing after limit — ok
-              runFilled = 0;
             }
           }
           return true;

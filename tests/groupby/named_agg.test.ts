@@ -140,7 +140,9 @@ describe("DataFrameGroupBy.aggNamed", () => {
     const df = makeDf();
     const range = (vals: readonly Scalar[]) => {
       const nums = vals.filter((v): v is number => typeof v === "number");
-      if (nums.length === 0) return 0;
+      if (nums.length === 0) {
+        return 0;
+      }
       return Math.max(...nums) - Math.min(...nums);
     };
     const result = df.groupby("dept").aggNamed({
@@ -152,10 +154,7 @@ describe("DataFrameGroupBy.aggNamed", () => {
 
   it("supports asIndex=false to include group key as column", () => {
     const df = makeDf();
-    const result = df.groupby("dept").aggNamed(
-      { total_salary: namedAgg("salary", "sum") },
-      false,
-    );
+    const result = df.groupby("dept").aggNamed({ total_salary: namedAgg("salary", "sum") }, false);
     expect(result.columns.toArray()).toContain("dept");
     expect(result.columns.toArray()).toContain("total_salary");
   });
@@ -270,7 +269,13 @@ describe("NamedAgg property tests", () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 1 }),
-        fc.constantFrom("sum" as const, "mean" as const, "min" as const, "max" as const, "count" as const),
+        fc.constantFrom(
+          "sum" as const,
+          "mean" as const,
+          "min" as const,
+          "max" as const,
+          "count" as const,
+        ),
         (col, agg) => {
           const spec = new NamedAgg(col, agg);
           expect(spec.column).toBe(col);

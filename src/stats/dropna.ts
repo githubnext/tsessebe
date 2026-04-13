@@ -41,19 +41,15 @@
  * ```
  */
 
-import { DataFrame } from "../core/frame.ts";
+import type { DataFrame } from "../core/frame.ts";
 import { Series } from "../core/series.ts";
-import type { Label, Scalar } from "../types.ts";
+import type { Scalar } from "../types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 /** True when a scalar value is considered missing (null, undefined, or NaN). */
 function missing(v: unknown): boolean {
-  return (
-    v === null ||
-    v === undefined ||
-    (typeof v === "number" && Number.isNaN(v))
-  );
+  return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
 }
 
 // ─── public types ─────────────────────────────────────────────────────────────
@@ -113,10 +109,7 @@ export function dropnaSeries<T extends Scalar>(s: Series<T>): Series<T> {
  * @param options - Control axis, how, thresh, and subset.
  * @returns New DataFrame with missing rows/columns removed.
  */
-export function dropnaDataFrame(
-  df: DataFrame,
-  options: DropnaDataFrameOptions = {},
-): DataFrame {
+export function dropnaDataFrame(df: DataFrame, options: DropnaDataFrameOptions = {}): DataFrame {
   const { axis = 0, how = "any", thresh, subset } = options;
   const axisNum = axis === "columns" ? 1 : axis === "index" ? 0 : axis;
 
@@ -166,14 +159,18 @@ function _keepRow(
   how: DropnaHow,
   thresh: number | undefined,
 ): boolean {
-  if (checkCols.length === 0) return true;
+  if (checkCols.length === 0) {
+    return true;
+  }
 
   let nullCount = 0;
   let nonNullCount = 0;
 
   for (const col of checkCols) {
     const vals = colValues.get(col);
-    if (vals === undefined) continue;
+    if (vals === undefined) {
+      continue;
+    }
     const v = vals[i];
     if (missing(v)) {
       nullCount++;
@@ -220,11 +217,15 @@ function _keepColumn(
   how: DropnaHow,
   thresh: number | undefined,
 ): boolean {
-  if (nRows === 0) return true;
+  if (nRows === 0) {
+    return true;
+  }
 
   let nullCount = 0;
   for (const v of vals) {
-    if (missing(v)) nullCount++;
+    if (missing(v)) {
+      nullCount++;
+    }
   }
   const nonNullCount = nRows - nullCount;
 

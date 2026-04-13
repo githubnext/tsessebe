@@ -66,18 +66,30 @@ function isMissing(v: Scalar): v is null | undefined {
 function defaultCompare(a: Scalar, b: Scalar): number {
   const aMiss = isMissing(a);
   const bMiss = isMissing(b);
-  if (aMiss && bMiss) return 0;
-  if (aMiss) return -1;
-  if (bMiss) return 1;
+  if (aMiss && bMiss) {
+    return 0;
+  }
+  if (aMiss) {
+    return -1;
+  }
+  if (bMiss) {
+    return 1;
+  }
 
   // Same type fast-paths
   if (typeof a === "number" && typeof b === "number") {
     // NaN sorts last (treat NaN as greater than everything)
     const aNaN = Number.isNaN(a);
     const bNaN = Number.isNaN(b);
-    if (aNaN && bNaN) return 0;
-    if (aNaN) return 1;
-    if (bNaN) return -1;
+    if (aNaN && bNaN) {
+      return 0;
+    }
+    if (aNaN) {
+      return 1;
+    }
+    if (bNaN) {
+      return -1;
+    }
     return a - b;
   }
 
@@ -202,8 +214,7 @@ export function searchsortedMany(
 ): number[] {
   const { side = "left", sorter, compareFn = defaultCompare } = options;
   const n = a.length;
-  const get: (i: number) => Scalar =
-    sorter !== undefined ? (i) => a[sorter[i]!]! : (i) => a[i]!;
+  const get: (i: number) => Scalar = sorter !== undefined ? (i) => a[sorter[i]!]! : (i) => a[i]!;
   return vs.map((v) => bisect(n, get, v, side, compareFn));
 }
 

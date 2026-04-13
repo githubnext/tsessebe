@@ -23,8 +23,8 @@
  * @module
  */
 
-import { Dtype } from "./dtype.ts";
 import type { DtypeName } from "../types.ts";
+import { Dtype } from "./dtype.ts";
 
 // ─── internal helper ──────────────────────────────────────────────────────────
 
@@ -95,7 +95,12 @@ export function isListLike(val: unknown): boolean {
     return false;
   }
   // Has Symbol.iterator and is not a plain number/boolean/bigint/symbol
-  if (typeof val === "number" || typeof val === "boolean" || typeof val === "bigint" || typeof val === "symbol") {
+  if (
+    typeof val === "number" ||
+    typeof val === "boolean" ||
+    typeof val === "bigint" ||
+    typeof val === "symbol"
+  ) {
     return false;
   }
   if (typeof val === "object" || typeof val === "function") {

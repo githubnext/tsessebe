@@ -438,11 +438,11 @@ describe("pivotTableFull — property tests", () => {
           // "All" col for row "A" should equal sum of all v where r="A"
           for (const rLabel of ["A", "B"]) {
             const hasRow = [...result.index.values].includes(rLabel);
-            if (!hasRow) continue;
+            if (!hasRow) {
+              continue;
+            }
             const rowTotal = numCell(result, rLabel, "All");
-            const expected = rows
-              .filter((x) => x.r === rLabel)
-              .reduce((s, x) => s + x.v, 0);
+            const expected = rows.filter((x) => x.r === rLabel).reduce((s, x) => s + x.v, 0);
             expect(rowTotal).toBeCloseTo(expected, 5);
           }
         },

@@ -105,10 +105,22 @@ export {
   mergeAttrs,
 } from "./attrs.ts";
 export type { Attrs } from "./attrs.ts";
-export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./insert_pop.ts";
+export {
+  insertColumn,
+  popColumn,
+  reorderColumns,
+  moveColumn,
+  dataFrameFromPairs,
+} from "./insert_pop.ts";
 export type { PopResult } from "./insert_pop.ts";
 export { toDictOriented, fromDictOriented } from "./to_from_dict.ts";
-export type { ToDictOrient, FromDictOrient, DictSplit, DictTight, SplitInput } from "./to_from_dict.ts";
+export type {
+  ToDictOrient,
+  FromDictOrient,
+  DictSplit,
+  DictTight,
+  SplitInput,
+} from "./to_from_dict.ts";
 export {
   pipe,
   seriesApply,
@@ -118,4 +130,3 @@ export {
   dataFrameTransform,
   dataFrameTransformRows,
 } from "./pipe_apply.ts";
-
