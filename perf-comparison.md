@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T12:26:14Z |
-| Iteration Count | 36 |
-| Best Metric | 171 |
+| Last Run | 2026-04-13T12:52:43Z |
+| Iteration Count | 37 |
+| Best Metric | 173 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — (new PR created this run) |
@@ -69,12 +69,12 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (iter 37+):
-1. `dataFrameRolling` / `DataFrameExpanding` / `DataFrameEwm` — DataFrame-level rolling/expanding/ewm agg methods
-2. `rollingApply` / `rollingAgg` / `dataFrameRollingApply` / `dataFrameRollingAgg` — rolling apply/agg ops
+Next functions to benchmark (iter 38+):
+1. `DataFrameRolling` / `DataFrameExpanding` / `DataFrameEwm` — DataFrame-level rolling/expanding/ewm agg methods
+2. `dataFrameRollingAgg` / `dataFrameRollingApply` — DataFrame rolling apply/agg ops
 3. `MultiIndex` — multi-index creation and operations
 4. `dataFrameTransformRows` — row-wise transform
-5. `popColumn`, `moveColumn`, `dataFrameFromPairs` — remaining column ops
+5. `moveColumn`, `dataFrameFromPairs` — remaining column ops
 6. `strExtractAll`, `strTranslate`, `strCharWidth`, `strByteLength` — remaining string standalone fns
 7. `catEqualCategories`, `catCrossTab` — remaining categorical ops
 8. `makeFloatFormatter`, `makePercentFormatter`, `makeCurrencyFormatter` — formatter factory fns
@@ -84,6 +84,12 @@ Next functions to benchmark (iter 37+):
 ---
 
 ## 📊 Iteration History
+
+### Iteration 37 — 2026-04-13 12:52 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24344306981)
+- **Status**: ✅ Accepted
+- **Change**: Added 111 new benchmark pairs from d8a2a7 (62-pair base) to reach 173 total. Rolling (sum/count/min/max/sem/skew/kurt/quantile/apply), expanding (sum/std/var/max/min/count), ewm (std/var), groupby (sum/count/std/min/max/size/transform), series (apply/transform/cumprod/quantile/round/idxmax/idxmin/where/mask), dataframe (abs/round/clip/cumsum/cummax/cummin/cumprod/apply_map/value_counts/where/mask/transform), stats (zscore/min_max_normalize/coeff_of_variation/percentile_of_score/digitize/histogram/linspace/arange/series_digitize), categorical (from_codes/sort_by_freq/recode/freq_table/to_ordinal/union/intersect/diff), formatters, strings, and misc ops.
+- **Metric**: 173 (previous best: 171, delta: +2) | **Commit**: e8638e4
+- **Notes**: Branch recreated from d8a2a7 (62-pair base). Python generator script created 111 new pairs. existing_pr was null, new PR created via safe-output.
 
 ### Iteration 36 — 2026-04-13 12:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24343174388)
 - **Status**: ✅ Accepted
