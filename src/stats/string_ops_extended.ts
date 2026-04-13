@@ -208,15 +208,15 @@ export function strExtractGroups(
 
 /** Parse named capture group names from a regex source string. */
 function extractGroupNames(re: RegExp): string[] {
-  const namedGroupPattern = /\(\?<([^>]+)>/g;
+  // Match named capture groups: (?<name>...)
+  // Use matchAll for safety — it creates a fresh iterator with its own state.
+  const matches = re.source.matchAll(/\(\?<([^>]+)>/g);
   const names: string[] = [];
-  let m: RegExpExecArray | null = namedGroupPattern.exec(re.source);
-  while (m !== null) {
+  for (const m of matches) {
     const name = m[1];
     if (name !== undefined) {
       names.push(name);
     }
-    m = namedGroupPattern.exec(re.source);
   }
   return names;
 }
