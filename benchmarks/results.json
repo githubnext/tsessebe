@@ -241,7 +241,95 @@
         "total_ms": 92.12644899997713
       },
       "ratio": null
+    },
+    {
+      "function": "melt",
+      "tsb": null,
+      "pandas": {
+        "function": "melt",
+        "mean_ms": 1.232,
+        "iterations": 50,
+        "total_ms": 61.579
+      },
+      "ratio": null
+    },
+    {
+      "function": "rank",
+      "tsb": null,
+      "pandas": {
+        "function": "rank",
+        "mean_ms": 2.319,
+        "iterations": 50,
+        "total_ms": 115.947
+      },
+      "ratio": null
+    },
+    {
+      "function": "zscore",
+      "tsb": null,
+      "pandas": {
+        "function": "zscore",
+        "mean_ms": 0.717,
+        "iterations": 50,
+        "total_ms": 35.832
+      },
+      "ratio": null
+    },
+    {
+      "function": "nlargest",
+      "tsb": null,
+      "pandas": {
+        "function": "nlargest",
+        "mean_ms": 0.661,
+        "iterations": 50,
+        "total_ms": 33.043
+      },
+      "ratio": null
+    },
+    {
+      "function": "expanding_mean",
+      "tsb": null,
+      "pandas": {
+        "function": "expanding_mean",
+        "mean_ms": 0.579,
+        "iterations": 50,
+        "total_ms": 28.939
+      },
+      "ratio": null
+    },
+    {
+      "function": "pearson_corr",
+      "tsb": null,
+      "pandas": {
+        "function": "pearson_corr",
+        "mean_ms": 0.502,
+        "iterations": 50,
+        "total_ms": 25.122
+      },
+      "ratio": null
+    },
+    {
+      "function": "to_csv",
+      "tsb": null,
+      "pandas": {
+        "function": "to_csv",
+        "mean_ms": 21.541,
+        "iterations": 50,
+        "total_ms": 1077.048
+      },
+      "ratio": null
+    },
+    {
+      "function": "read_json",
+      "tsb": null,
+      "pandas": {
+        "function": "read_json",
+        "mean_ms": 7.39,
+        "iterations": 50,
+        "total_ms": 369.487
+      },
+      "ratio": null
     }
   ],
-  "timestamp": "2026-04-12T15:46:00Z"
+  "timestamp": "2026-04-13T19:58:00Z"
 }
