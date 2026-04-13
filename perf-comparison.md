@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T21:56:00Z |
-| Iteration Count | 48 |
-| Best Metric | 51 |
+| Last Run | 2026-04-13T22:30:00Z |
+| Iteration Count | 49 |
+| Best Metric | 75 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (created this run) |
@@ -56,20 +56,27 @@
 - dataFrameCov, wideToLong, cut, qcut all confirmed exported; rolling has min/max/median/count/var methods.
 - rollingSem/rollingSkew/rollingKurt/rollingQuantile, Expanding.std/var/sum, EWM.var, seriesWhere/seriesMask, dataFrameWhere/Mask, catFromCodes, insertColumn, toDictOriented, stack all confirmed exported and benchmarkable.
 - Can add many pairs per iteration by combining re-added pairs from last iter + new ones (baseline resets to 22 each time).
+- Best strategy: always include ALL known pairs (iter46+iter47+iter48 = 41 pairs) when creating fresh branch, plus add new ones. Iter49 achieved 75 (22+53) vs iter48's 51 (22+29) by including iter46 pairs that were missing.
 
 ---
 
 ## 🔭 Future Directions
 
-- unstack (small DataFrame), series abs, dataframe abs.
-- catSortByFreq, catFreqTable, formatFloat, formatPercent.
-- popColumn, fromDictOriented, dataFrameFromPairs, reorderColumns.
-- dataFrameValueCounts, valueCounts, groupby agg variants.
-- seriesApply, seriesTransform, pipe.
+- catFreqTable, formatFloat, formatPercent.
+- dataFrameFromPairs, seriesApply, pipe.
+- groupby agg variants (groupby_sum, groupby_count, etc.).
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 49 — 2026-04-13 22:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24369734912)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 53 benchmark pairs (all 41 from iters 46–48 + 14 new): unstack, series_abs, dataframe_abs, pop_column, from_dict_oriented, reorder_columns, value_counts, dataframe_value_counts, rank_dataframe, cat_sort_by_freq, move_column, plus re-added all iter46 pairs (zscore, min_max_normalize, melt, pearson_corr, etc.) that were missing from iter48
+- **Metric**: 75 (previous best: 51, delta: +24)
+- **Commit**: d7fdb93
+- **Notes**: Included all iter46 pairs that were previously lost (12 pairs) plus all iter47-48 pairs (29) plus 14 new ones. Strategy: always include ALL known pairs when starting fresh from baseline 22.
 
 ### Iteration 48 — 2026-04-13 21:56 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24368561859)
 
