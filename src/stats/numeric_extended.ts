@@ -144,9 +144,12 @@ export function digitize(
     const n = bins.length;
     if (right) {
       // open left, closed right: bins[i-1] < v <= bins[i]
+      if (v < (bins[0] as number)) {
+        return -1;
+      }
       for (let i = 0; i < n; i++) {
         if (v <= (bins[i] as number)) {
-          return i - 1; // below first edge → -1
+          return i;
         }
       }
       return n - 1; // above last edge
@@ -299,7 +302,13 @@ export function linspace(start: number, stop: number, num = 50): number[] {
   const step = (stop - start) / (num - 1);
   const result: number[] = [];
   for (let i = 0; i < num; i++) {
-    result.push(i === num - 1 ? stop : start + i * step);
+    if (i === num - 1) {
+      result.push(stop);
+    } else if (i === 0) {
+      result.push(start);
+    } else {
+      result.push(start + i * step);
+    }
   }
   return result;
 }

@@ -94,7 +94,7 @@ describe("rollingApply", () => {
 
   test("custom min function", () => {
     const out = rollingApply(s(3, 1, 4, 1, 5, 9), 3, numMin);
-    expect(out.toArray()).toEqual([null, null, 1, 1, 1, 5]);
+    expect(out.toArray()).toEqual([null, null, 1, 1, 1, 1]);
   });
 
   test("raw=true passes valid nums only (same as default)", () => {
@@ -145,7 +145,7 @@ describe("rollingApply", () => {
   test("count function behaves correctly", () => {
     const count = (nums: readonly number[]) => nums.length;
     const out = rollingApply(s(1, null, 3, null, 5), 3, count, { minPeriods: 1 });
-    expect(out.toArray()).toEqual([1, 1, 2, 2, 2]);
+    expect(out.toArray()).toEqual([1, 1, 2, 1, 2]);
   });
 
   test("range function over window", () => {

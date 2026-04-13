@@ -260,11 +260,27 @@ export function cut(
     if (mn === mx) {
       throw new Error("Cannot cut constant array (all values identical).");
     }
-    const step = (mx - mn) / bins;
-    edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
-    // Slightly extend the lower edge so the minimum value is included
-    edges[0] = mn - step * 0.001;
-    edges = deduplicateEdges(edges, duplicates);
+    if (right) {
+      const step = (mx - mn) / bins;
+      edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
+      // Extend the lower edge so the minimum is inside the first (a, b] interval
+      edges[0] = mn - step * 0.001;
+      // Pin the upper edge to the exact max (avoids floating-point drift)
+      edges[edges.length - 1] = mx;
+    } else {
+      // For left-closed [a, b) intervals, extend the upper end so the max is included;
+      // linspace from mn to adjustedMx distributes the extension across all edges,
+      // keeping boundary values in the lower bin (matching pandas behaviour).
+      const adjustedMx = mx + (mx - mn) * 0.001;
+      const step = (adjustedMx - mn) / bins;
+      edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
+    }
+    // Auto-computed edges may have floating-point duplicates for tiny ranges;
+    // silently drop them to avoid spurious errors.
+    edges = deduplicateEdges(edges, "drop");
+    if (edges.length < 2) {
+      throw new Error("Cannot cut constant array (all values identical).");
+    }
   } else {
     if (bins.length < 2) {
       throw new Error("At least 2 bin edges must be supplied.");

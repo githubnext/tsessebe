@@ -259,6 +259,7 @@ describe("property-based", () => {
         fc.array(fc.integer({ min: 1, max: 10 }), { minLength: 1, maxLength: 4 }),
         fc.array(fc.integer({ min: 1, max: 10 }), { minLength: 1, maxLength: 4 }),
         (colA, colB) => {
+          if (colB.length < colA.length) return true;
           const df = DataFrame.fromColumns({ a: colA, b: colB.slice(0, colA.length) });
           const split = toDictOriented(df, "split");
           const df2 = fromDictOriented(split, "split");

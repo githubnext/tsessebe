@@ -312,7 +312,7 @@ describe("zscore", () => {
     // ddof=0 produces smaller values (divided by larger std denominator)
     const range0 = Math.max(...z0) - Math.min(...z0);
     const range1 = Math.max(...z1) - Math.min(...z1);
-    expect(range0).toBeLessThan(range1);
+    expect(range0).toBeGreaterThan(range1);
   });
 
   it("preserves index labels", () => {

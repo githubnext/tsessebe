@@ -184,7 +184,11 @@ export function strExtractGroups(
     });
   });
 
-  const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
+  const numGroups = countCaptureGroups(re);
+  const width = Math.max(
+    rows.reduce((w, r) => Math.max(w, r.length), 0),
+    numGroups,
+  );
 
   // Use named groups if available and count matches; otherwise use 0-indexed strings.
   const colNames: string[] =
@@ -203,6 +207,21 @@ export function strExtractGroups(
   }
 
   return DataFrame.fromColumns(columns, { index: rowIndex(input) });
+}
+
+/** Count the number of capture groups in a regex (excluding non-capturing groups). */
+function countCaptureGroups(re: RegExp): number {
+  let count = 0;
+  const src = re.source;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "\\") {
+      i++; // skip escaped char
+    } else if (ch === "(" && src[i + 1] !== "?") {
+      count++;
+    }
+  }
+  return count;
 }
 
 /** Parse named capture group names from a regex source string. */
