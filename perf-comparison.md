@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T18:55:55Z |
-| Iteration Count | 42 |
-| Best Metric | 239 |
+| Last Run | 2026-04-13T19:31:27Z |
+| Iteration Count | 43 |
+| Best Metric | 28 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (new PR this run) |
@@ -47,6 +47,8 @@
 - s.dt.year() is a method (not property); coefficientOfVariation(s)/zscore(s) are standalone fns.
 - Safe-output tools via MCP HTTP (host.docker.internal:80/mcp/safeoutputs) with session auth.
 - push_repo_memory limit ~10KB total across all files in repo-memory/default.
+- Bun is not installed in this environment; benchmark TS files are validated by file-count metric only.
+- Previous high metric claims (>100) were from PRs that got merged and reset; actual baseline was 22.
 
 ---
 
@@ -57,6 +59,9 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 43 — 2026-04-13 19:31 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24362668145)
+- accepted metric=28 commit=2a51f22 | Added 6 pairs: melt, rank, pearsonCorr, zscore, toCsv, nlargest
 
 ### Iteration 42 — 2026-04-13 18:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24361105902)
 - accepted metric=239 commit=d5ff255 | Added 217 new pairs (Index set ops, Series.str variants)
