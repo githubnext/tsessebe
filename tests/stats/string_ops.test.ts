@@ -84,7 +84,7 @@ describe("strGetDummies", () => {
   it("basic | separator", () => {
     const df = strGetDummies(s(["a|b", "b|c", "a"]));
     expect(df.shape[0]).toBe(3);
-    expect(df.columns.values.sort()).toEqual(["a", "b", "c"]);
+    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
     expect(df.col("a").values[0]).toBe(1);
     expect(df.col("a").values[1]).toBe(0);
     expect(df.col("a").values[2]).toBe(1);
@@ -98,12 +98,12 @@ describe("strGetDummies", () => {
 
   it("custom separator", () => {
     const df = strGetDummies(s(["a,b", "b,c"]), { sep: "," });
-    expect(df.columns.values.sort()).toEqual(["a", "b", "c"]);
+    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
   });
 
   it("prefix option", () => {
     const df = strGetDummies(s(["x|y"]), { prefix: "tag", prefixSep: "-" });
-    expect(df.columns.values.sort()).toEqual(["tag-x", "tag-y"]);
+    expect([...df.columns.values].sort()).toEqual(["tag-x", "tag-y"]);
   });
 
   it("empty string element maps to no tokens", () => {
@@ -136,7 +136,7 @@ describe("strGetDummies", () => {
   it("array input (not Series)", () => {
     const df = strGetDummies(["a|b", "c"]);
     expect(df.shape[0]).toBe(2);
-    expect(df.columns.values.sort()).toEqual(["a", "b", "c"]);
+    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
   });
 });
 

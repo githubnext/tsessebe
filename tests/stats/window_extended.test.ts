@@ -20,7 +20,7 @@ function s(data: readonly (number | null)[]): Series<Scalar> {
 }
 
 function vals(series: ReturnType<typeof rollingSem>): (number | null)[] {
-  return [...series.toArray()] as (number | null)[];
+  return [...series.values] as (number | null)[];
 }
 
 function close(a: Scalar, b: number, tol = 1e-9): boolean {

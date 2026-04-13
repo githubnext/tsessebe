@@ -100,11 +100,14 @@ export class DataFrame {
    * Low-level constructor.  Prefer the static factory methods for typical use.
    *
    * @param columns - Ordered map of column name → Series (all same length and index).
-   * @param index   - Row index (must match each Series' length).
+   * @param index   - Row index (must match each Series' length). Defaults to a
+   *                  `RangeIndex` derived from the first Series when omitted.
    */
-  constructor(columns: ReadonlyMap<string, Series<Scalar>>, index: Index<Label>) {
+  constructor(columns: ReadonlyMap<string, Series<Scalar>>, index?: Index<Label>) {
+    const firstSeries = [...columns.values()][0];
+    const nRows = firstSeries !== undefined ? firstSeries.values.length : 0;
     this._columns = columns;
-    this.index = index;
+    this.index = index ?? defaultRowIndex(nRows);
     this.columns = new Index<string>([...columns.keys()]);
   }
 

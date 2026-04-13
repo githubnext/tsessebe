@@ -191,7 +191,7 @@ function resolveDataFrameCond(
   const rowLabels = df.index.values as readonly Label[];
 
   for (const colName of df.columns.values) {
-    const condColIdx = condDf.columns.indexOf(colName);
+    const condColIdx = condDf.columns.values.indexOf(colName);
     if (condColIdx === -1) {
       // Column absent from condition → treat entire column as false
       result.set(colName, rowLabels.map(() => false));

@@ -88,7 +88,7 @@ export function toDictOriented(df: DataFrame, orient: "index"): Record<string, R
 export function toDictOriented(
   df: DataFrame,
   orient: ToDictOrient = "dict",
-): Record<string, unknown> | unknown[] {
+): Record<string, Record<string, Scalar>> | Record<string, Scalar[]> | Record<string, Series<Scalar>> | DictSplit | DictTight | Record<string, Scalar>[] {
   const colNames = [...df.columns.values];
   const rowLabels = [...(df.index.values as Label[])];
   const nRows = df.index.size;
@@ -266,8 +266,9 @@ function buildFromSplit(input: SplitInput): DataFrame {
   for (const row of data) {
     for (let j = 0; j < columns.length; j++) {
       const col = columns[j];
+      if (col === undefined) continue;
       const arr = colArrays[col];
-      if (col !== undefined && arr !== undefined) {
+      if (arr !== undefined) {
         arr.push(row[j] ?? null);
       }
     }

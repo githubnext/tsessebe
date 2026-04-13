@@ -30,7 +30,7 @@ import type { Label, Scalar } from "../types.ts";
 export type NormalizeForm = "NFC" | "NFD" | "NFKC" | "NFKD";
 
 /** Input accepted by all string-op functions. */
-export type StrInput = Series<Scalar> | readonly string[] | string;
+export type StrInput = Series<Scalar> | readonly Scalar[] | string;
 
 /** Options for {@link strGetDummies}. */
 export interface GetDummiesOptions {
