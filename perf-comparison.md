@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T03:46:16Z |
-| Iteration Count | 27 |
-| Best Metric | 80 |
+| Last Run | 2026-04-13T05:06:32Z |
+| Iteration Count | 28 |
+| Best Metric | 82 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (pending creation) |
@@ -66,21 +66,32 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (for iter 28+):
-1. `rolling_corr`, `rolling_cov` — rolling correlation/covariance (if API exists)
+Next functions to benchmark (for iter 29+):
+1. `rolling_corr`, `rolling_cov` — rolling correlation/covariance (if API exists — not found in rolling.ts yet)
 2. `dataframe_apply_map` — element-wise apply on DataFrame
-3. `cat_recode` — catRecode function
-4. `cat_sort_by_freq` — catSortByFreq function
-5. `cat_to_ordinal` — catToOrdinal function
-6. `format_percent` — formatPercent/applySeriesFormatter
-7. `str_indent` — strIndent function
+3. `cat_to_ordinal` — catToOrdinal function
+4. `str_dedent` — strDedent function
+5. `str_remove_suffix` — strRemoveSuffix function
+6. `str_get_dummies` — strGetDummies function
+7. `str_extract_all` — strExtractAll function
 8. `reorder_columns`, `insert_column` — DataFrame column ops
 9. `to_dict`, `from_dict` — toDictOriented/fromDictOriented
-10. `dataframe_corr`, `dataframe_cov` — DataFrame-level correlation/covariance
+10. `series_transform` — Series.transform() if available
+11. `format_scientific` — formatScientific
+12. `format_thousands` — formatThousands
+13. `rolling_count` — Rolling.count()
+14. `rolling_min`, `rolling_max` — already in rolling.ts
+15. `expanding_count` — Expanding.count()
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 28 — 2026-04-13 05:06 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24326604994)
+- **Status**: ✅ Accepted
+- **Change**: Recreated canonical `autoloop/perf-comparison` from d8a2a7627f8ec4eb (62 pairs). Added 20 new pairs: dataframe_corr, dataframe_cov, cat_freq_table, cat_sort_by_freq, cat_recode, format_float, format_percent, str_normalize, str_remove_prefix, series_cumprod, expanding_sum, expanding_std, expanding_max, expanding_min, groupby_count, groupby_std, groupby_min, groupby_max, dataframe_cumsum, series_quantile.
+- **Metric**: 82 (previous best: 80, delta: +2) | **Commit**: e240a51
+- **Notes**: Branch recreated from d8a2a7 (last known good 62-pair base). The claimed 80-pair state from iter 27 was never persisted on remote, so started from 62 again and added 20 to reach 82.
 
 ### Iteration 27 — 2026-04-13 03:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24324666311)
 - **Status**: ✅ Accepted
