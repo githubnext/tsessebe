@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T01:30:00Z |
-| Iteration Count | 25 |
-| Best Metric | 133 |
+| Last Run | 2026-04-13T02:20:00Z |
+| Iteration Count | 26 |
+| Best Metric | 77 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (pending creation) |
@@ -49,7 +49,9 @@
 - push_repo_memory total file size limit ~12KB; keep state files compact.
 - `wideToLong` signature: `wideToLong(df, stubnames, i_cols, j_colname, options)`.
 - Many Series stats like skew/kurt/kurtosis/sem/idxmax/idxmin don't exist as direct methods — implement manually using s.std(), s.mean(), s.count(), s.values.
-- Canonical branch was failing to push in prior iterations (25 iters used). Iter 25 created branch from main with 133 pairs successfully.
+- Canonical branch was failing to push in prior iterations. Iter 25 claimed 133 pairs but the push never succeeded — canonical branch did not exist remotely. Iter 26 created canonical branch from d8a2a7627f8ec4eb (62 pairs) and reset best_metric to 77 (actual verified remote state).
+- rollingApply, rollingSkew, rollingKurt, rollingSem, rollingQuantile all exported from tsb; use standalone function calls not method chaining.
+- strPartition, strSplitExpand, histogram, minMaxNormalize all exported from tsb directly.
 
 ---
 
@@ -61,19 +63,26 @@
 
 ## 🔭 Future Directions
 
-Next functions to benchmark (for iter 26+):
-1. `concat_series` — concat multiple Series objects
-2. `merge_left`, `merge_outer` — different join types
-3. `str_normalize`, `strPartition`, `strRPartition`, `strSplitExpand` — advanced string ops
-4. `ewm_corr`, `ewm_cov` — EWM correlation/covariance
-5. `dataFrameApplyMap` — element-wise apply on DataFrame
-6. `catCrossTab`, `catFreqTable` — categorical ops
-7. `rolling_corr`, `rolling_cov` — rolling correlation/covariance
-8. `dataFrameTransformRows` — row-wise DataFrame transform
+Next functions to benchmark (for iter 27+):
+1. `merge_left`, `merge_outer` — different join types
+2. `ewm_corr`, `ewm_cov` — EWM correlation/covariance
+3. `str_rpartition` — strRPartition from string_ops_extended
+4. `catCrossTab`, `catFreqTable` — categorical ops
+5. `rolling_corr`, `rolling_cov` — rolling correlation/covariance
+6. `dataframe_apply_map` — element-wise apply on DataFrame
+7. `digitize`, `percentile_of_score` — numeric extended functions
+8. `linspace`, `arange` — numeric array generators
+9. `datetime_year`, `datetime_month` — datetime accessor ops
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 26 — 2026-04-13 02:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24322645000)
+- **Status**: ✅ Accepted
+- **Change**: Created canonical `autoloop/perf-comparison` branch from d8a2a7627f8ec4eb (62 pairs). Added 15 new pairs: rolling_apply, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile, ewm_std, ewm_var, expanding_sum, expanding_std, expanding_max, wide_to_long, str_split_expand, str_partition, histogram, min_max_normalize.
+- **Metric**: 77 (reset from inflated 133 — prior canonical branch never pushed; actual remote best was 62) | **Commit**: 416f455
+- **Notes**: Canonical branch now exists on remote. best_metric corrected to 77 (77 actual pairs on remote).
 
 ### Iteration 25 — 2026-04-13 01:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24321043182)
 - **Status**: ✅ Accepted
