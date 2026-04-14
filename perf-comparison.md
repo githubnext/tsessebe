@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T15:58:18Z |
-| Iteration Count | 70 |
-| Best Metric | 244 |
+| Last Run | 2026-04-14T16:34:10Z |
+| Iteration Count | 71 |
+| Best Metric | 246 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -62,16 +62,24 @@
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - Series-level dropna/fillna separate benchmarks.
 - More str_* ops: strftime on datetime accessor.
-- Series arithmetic edge cases: floordiv, mod, pow operators — ✅ Done (iter 70)
-- Index operations: sort, nunique (Index has these methods) — ✅ Done (iter 70)
+- Series arithmetic edge cases: floordiv, mod, pow operators — ✅ Done (iter 70/71)
+- Index operations: sort, nunique (Index has these methods) — ✅ Done (iter 71)
 - DataFrame shift/diff if added to API.
 - GroupBy nunique if API exists.
 - DataFrame str accessor on columns.
-- DataFrameExpanding min/max/count/median variants.
+- DataFrameExpanding min/max/count/median — ✅ Done (iter 71)
+- EWM apply with custom function — ✅ Done (iter 71)
+- DataFrameEwm std/var — ✅ Done (iter 71)
+- Series comparison operators — ✅ Done (iter 71)
+- Index set ops — ✅ Done (iter 71)
+- DataFrame rank — ✅ Done (iter 71)
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 71 — 2026-04-14 16:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24410938209)
+- ✅ Accepted metric=246 (+2 vs prev best 244) | Branched from 3c596789 (220 pairs) + merge main (234 after conflict resolution) + 12 new: expanding_min/max/count/median, series_compare, index_ops, dataframe_rank, ewm_cov, series_floordiv_mod_pow, dataframe_ewm_std_var, ewm_apply, dataframe_expanding_min_max | Commit: 96338a8
 
 ### Iteration 70 — 2026-04-14 15:58 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24409238476)
 - ✅ Accepted metric=244 (+3 vs prev best 241) | Branched from 3c596789 (220 pairs) + merge main (234 after conflict resolution) + 10 new: expanding_min, expanding_max, expanding_count, expanding_median, series_compare, index_ops, dataframe_rank, ewm_cov, series_floordiv_mod_pow, dataframe_ewm_std_var | Commit: 55972b2
