@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T14:37:41Z |
-| Iteration Count | 68 |
-| Best Metric | 234 |
+| Last Run | 2026-04-14T15:29:25Z |
+| Iteration Count | 69 |
+| Best Metric | 241 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -47,9 +47,10 @@
 - MCP: push_to_pull_request_branch needs remote tracking ref; create via `git update-ref refs/remotes/origin/autoloop/perf-comparison $(git rev-parse HEAD~1)`.
 - push_repo_memory limit ~10KB total; compress iteration history when needed.
 - API notes: seriesRound, s.dt.year() is method; groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only; rollingApply(s, window, fn); Series({data,name,index}); df.assign({c: series}) direct.
-- All iter 46–67 pairs accepted (except 66 error); 3c596789 has 172 pairs, main has 51. Pipeline: branch from 3c596789 → merge main (186) → add new pairs → commit.
+- All iter 46–69 pairs accepted (except 66 error); 3c596789 has 172 pairs initially, main has 51. Pipeline: branch from 3c596789 → merge main (234 after conflict resolution) → add new pairs → commit.
 - groupby.first()/last() on both GroupBy types; dataFrameCummin/Cumprod exported; EWM.corr takes EwmSeriesLike.
 - Iter 68: 234 pairs achieved (+4 vs iter 67). Branched from 3c596789 (172) + merge main (186) + 48 new: series_median/min_max/sum_mean/unique/corr/std_var/filter/count/toobject/resetindex/isin/quantile/sort_index/loc/iloc/describe/copy/rename/dropna/isna_notna/groupby, dataframe_set_index/sort_index/iloc/loc/drop/resetindex/count/sum_mean/assign/select/to_array/to_records/to_dict/fillna/isna/notna/min_max/std_var/describe, concat_axis1, merge_left/right/outer/inner, ewm_corr, groupby_median, groupby_std_df. Commit: b728240
+- Iter 69: 241 pairs (+7 vs 234). Added: expanding_min/max/count/median, series_compare (eq/ne/lt/gt/le/ge), index_ops (union/intersection/difference), dataframe_rank. Merge from main brings in 14 extra pairs and requires conflict resolution (use `git checkout --ours`). Commit: 1508581
 
 ---
 
@@ -61,10 +62,16 @@
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - Series-level dropna/fillna separate benchmarks.
 - More str_* ops: strftime on datetime accessor.
+- Series arithmetic edge cases: floordiv, mod, pow operators.
+- Index operations: sort, nunique (Index has these methods).
+- DataFrame shift/diff if added to API.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 69 — 2026-04-14 15:29 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24407809452)
+- ✅ Accepted metric=241 (+7 vs prev best 234) | Branched from 3c596789 (220 pairs) + merge main (234 after conflict resolution) + 7 new: expanding_min, expanding_max, expanding_count, expanding_median, series_compare (eq/ne/lt/gt/le/ge), index_ops (union/intersection/difference), dataframe_rank (rankDataFrame) | Commit: 1508581
 
 ### Iteration 68 — 2026-04-14 14:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24405116522)
 - ✅ Accepted metric=234 (+4 vs prev best 230) | Branched from 3c596789 (172 pairs) + merge main (186) + 48 new pairs across Series (median/min_max/sum_mean/unique/corr/std_var/filter/count/toobject/resetindex/isin/quantile/sort_index/loc/iloc/describe/copy/rename/dropna/isna_notna/groupby), DataFrame (set_index/sort_index/iloc/loc/drop/resetindex/count/sum_mean/assign/select/to_array/to_records/to_dict/fillna/isna/notna/min_max/std_var/describe), concat_axis1, merge_left/right/outer/inner, ewm_corr, groupby_median, groupby_std_df | Commit: b728240
