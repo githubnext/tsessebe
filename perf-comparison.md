@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T05:25:00Z |
-| Iteration Count | 57 |
-| Best Metric | 157 |
+| Last Run | 2026-04-14T06:10:00Z |
+| Iteration Count | 58 |
+| Best Metric | 167 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -55,6 +55,8 @@
 - fromDictOriented accepts `{orient: "records", data: [...]}` or `{columns: [...], data: [...]}`.
 - Iter-56: Pipeline stable: checkout main → union 8 hashed branches (97 pairs) → reconstruct 48 from iters 52-55 → add new. Total 150 after iter-56. New: series_to_string, dataframe_to_string, notna_isna, move_column, series_digitize, cat_set_ops. Branch resets to 22 on every merge; all work rebuilt each run.
 - Iter-57: Same pipeline, but 60 new files created (all iter52-56 recovery + new: dataframe_transform, dataframe_apply_map, count_valid, dataframe_transform_rows, cat_equal_categories, groupby_apply). Total 157 pairs.
+- Iter-58: After PR #142 merge, main had 51 pairs. Unified from 143-branch (3c596789) + 10 new: dataframe_abs, dataframe_round, dataframe_clip, dataframe_cumsum, dataframe_cummax, percentile_of_score, quantile, str_byte_length, dataframe_value_counts, attrs_ops. Total 167.
+- Functions not yet benchmarked: dataFrameCummin/Cumprod, dataFrameMask/Where (as DF-level), groupby_nunique/first/last, dt accessor ops.
 
 ---
 
@@ -68,6 +70,9 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 58 — 2026-04-14 06:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24383841023)
+- ✅ Accepted metric=167 (+10 vs prev best 157) | Union 143-branch (106 new pairs) + 10 brand-new: dataframe_abs, dataframe_round, dataframe_clip, dataframe_cumsum, dataframe_cummax, percentile_of_score, quantile, str_byte_length, dataframe_value_counts, attrs_ops | Commit: 8da9620
 
 ### Iteration 57 — 2026-04-14 05:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24382472700)
 - ✅ Accepted metric=157 (+7 vs prev best 150) | Union 8 hashed branches (97 pairs) + 60 new: all iter52-56 pairs recovered + new (dataframe_transform, dataframe_apply_map, count_valid, dataframe_transform_rows, cat_equal_categories, groupby_apply) | Commit: ba7eebd
