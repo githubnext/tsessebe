@@ -4,7 +4,11 @@
 
 | Field | Value |
 |:---|:---|
-| head_sha | 806c87ee0d5628fcb89b17b1bb31df9f40f0be90 |
+| head_sha | 685e68b |
 | attempts | 0 |
-| last_run | 2026-04-14T15:37:30.000Z |
+| last_run | 2026-04-14T20:09:32.867Z |
 | last_result | success |
+
+## Notes
+
+Resolved merge conflict in `src/index.ts`. The conflict was a duplicate export block from `origin/main` adding exports already present in the PR branch. Removed the duplicate block and pushed the fix.
