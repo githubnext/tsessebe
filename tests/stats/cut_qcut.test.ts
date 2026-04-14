@@ -24,10 +24,10 @@ describe("cut — integer bins", () => {
 
   it("right=false uses left-closed intervals", () => {
     const { codes, labels } = cut([1, 2, 3, 4, 5], 2, { right: false });
-    // [lo, hi)
+    // [lo, hi) — bin 0 is [min-ε, 3), bin 1 is [3, 5]
     expect(labels[0]).toMatch(/^\[/);
     expect(labels[0]).toMatch(/\)$/);
-    expect(codes).toEqual([0, 0, 0, 1, 1]);
+    expect(codes).toEqual([0, 0, 1, 1, 1]);
   });
 
   it("include_lowest labels the first bin with [ on both sides", () => {
@@ -208,12 +208,12 @@ describe("cut — property tests", () => {
           for (let i = 0; i < xs.length; i++) {
             const v = xs[i] as number;
             const c = codes[i];
-            if (!Number.isFinite(v)) {
-              expect(c).toBeNull();
-            } else {
+            if (Number.isFinite(v)) {
               expect(c).not.toBeNull();
               expect(c).toBeGreaterThanOrEqual(0);
               expect(c).toBeLessThan(labels.length);
+            } else {
+              expect(c).toBeNull();
             }
           }
         },
@@ -258,13 +258,13 @@ describe("qcut — property tests", () => {
             for (let i = 0; i < xs.length; i++) {
               const v = xs[i] as number;
               const c = codes[i];
-              if (!Number.isFinite(v)) {
-                expect(c).toBeNull();
-              } else {
+              if (Number.isFinite(v)) {
                 if (c !== null) {
                   expect(c).toBeGreaterThanOrEqual(0);
                   expect(c).toBeLessThan(labels.length);
                 }
+              } else {
+                expect(c).toBeNull();
               }
             }
           } catch {

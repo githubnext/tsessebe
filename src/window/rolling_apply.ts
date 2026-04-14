@@ -27,7 +27,7 @@
  */
 
 import { DataFrame } from "../core/index.ts";
-import { Index } from "../core/index.ts";
+import type { Index } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
@@ -172,9 +172,7 @@ export function rollingApply(
     if (!met) {
       result.push(null);
     } else if (useRaw) {
-      const validOnly = (raw as readonly (number | null)[]).filter(
-        (v): v is number => v !== null,
-      );
+      const validOnly = (raw as readonly (number | null)[]).filter((v): v is number => v !== null);
       result.push(fn(validOnly));
     } else {
       result.push(fn(nums));

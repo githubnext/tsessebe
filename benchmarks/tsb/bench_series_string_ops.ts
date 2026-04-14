@@ -8,7 +8,7 @@ const WARMUP = 3;
 const ITERATIONS = 10;
 
 const data = Array.from({ length: ROWS }, (_, i) => `hello_world_${i % 200}`);
-const s = new Series(data);
+const s = new Series({ data });
 
 for (let i = 0; i < WARMUP; i++) {
   s.str.upper();

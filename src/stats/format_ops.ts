@@ -23,7 +23,7 @@
  * @module
  */
 
-import { DataFrame } from "../core/index.ts";
+import type { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Scalar } from "../types.ts";
 
@@ -300,7 +300,10 @@ export interface SeriesToStringOptions {
  * @param series  The Series to render.
  * @param options Optional rendering options.
  */
-export function seriesToString(series: Series<Scalar>, options: SeriesToStringOptions = {}): string {
+export function seriesToString(
+  series: Series<Scalar>,
+  options: SeriesToStringOptions = {},
+): string {
   const maxRows = options.maxRows ?? 60;
   const fmt: Formatter = options.formatter ?? ((v: Scalar) => String(v ?? "NaN"));
   const displayName = options.name !== undefined ? options.name : series.name;
@@ -326,7 +329,7 @@ export function seriesToString(series: Series<Scalar>, options: SeriesToStringOp
   }
 
   if (truncated) {
-    lines.push(`...`);
+    lines.push("...");
   }
 
   const footer: string[] = [];

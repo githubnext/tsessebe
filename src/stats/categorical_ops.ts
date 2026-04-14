@@ -110,9 +110,7 @@ export function catFromCodes(
   const values: Scalar[] = codes.map((code) => {
     if (code === -1) return null;
     if (code < -1 || code >= cats.length) {
-      throw new RangeError(
-        `catFromCodes: code ${code} is out of range [0, ${cats.length - 1}]`,
-      );
+      throw new RangeError(`catFromCodes: code ${code} is out of range [0, ${cats.length - 1}]`);
     }
     return cats[code] as Scalar;
   });
@@ -169,9 +167,7 @@ export function catUnionCategories(a: CatSeriesLike, b: CatSeriesLike): CatSerie
  */
 export function catIntersectCategories(a: CatSeriesLike, b: CatSeriesLike): CatSeriesLike {
   const bSet = new Set((b.cat.categories.values as Scalar[]).map(String));
-  const intersected = (a.cat.categories.values as Scalar[]).filter((c) =>
-    bSet.has(String(c)),
-  );
+  const intersected = (a.cat.categories.values as Scalar[]).filter((c) => bSet.has(String(c)));
   return a.cat.setCategories(intersected, a.cat.ordered);
 }
 
@@ -194,9 +190,7 @@ export function catIntersectCategories(a: CatSeriesLike, b: CatSeriesLike): CatS
  */
 export function catDiffCategories(a: CatSeriesLike, b: CatSeriesLike): CatSeriesLike {
   const bSet = new Set((b.cat.categories.values as Scalar[]).map(String));
-  const remaining = (a.cat.categories.values as Scalar[]).filter(
-    (c) => !bSet.has(String(c)),
-  );
+  const remaining = (a.cat.categories.values as Scalar[]).filter((c) => !bSet.has(String(c)));
   return a.cat.setCategories(remaining, a.cat.ordered);
 }
 
@@ -475,9 +469,7 @@ export function catRecode(
   const cats = series.cat.categories.values as Scalar[];
   const newCats = cats.map((c): Scalar => {
     const k = String(c);
-    return Object.prototype.hasOwnProperty.call(mapping, k)
-      ? (mapping[k] as string)
-      : c;
+    return Object.prototype.hasOwnProperty.call(mapping, k) ? (mapping[k] as string) : c;
   });
   return series.cat.renameCategories(newCats);
 }

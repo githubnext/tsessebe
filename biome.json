@@ -69,6 +69,20 @@
         "rules": {
           "nursery": {
             "noSecrets": "off"
+          },
+          "complexity": {
+            "useLiteralKeys": "off"
+          }
+        }
+      }
+    },
+    {
+      "include": ["benchmarks/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off",
+            "noConsoleLog": "off"
           }
         }
       }

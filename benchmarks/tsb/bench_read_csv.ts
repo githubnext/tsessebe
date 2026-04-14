@@ -1,7 +1,7 @@
 /**
  * Benchmark: read_csv — parse a 100k-row CSV string
  */
-import { read_csv } from "../../src/index.js";
+import { readCsv } from "../../src/index.js";
 
 const ROWS = 100_000;
 const WARMUP = 2;
@@ -14,18 +14,13 @@ for (let i = 0; i < ROWS; i++) {
 }
 const csvContent = lines.join("\n");
 
-// Write to a temp file
-import { writeFileSync } from "node:fs";
-const tmpPath = "/tmp/gh-aw/agent/bench_read_csv.csv";
-writeFileSync(tmpPath, csvContent, "utf8");
-
 for (let i = 0; i < WARMUP; i++) {
-  read_csv(tmpPath);
+  readCsv(csvContent);
 }
 
 const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  read_csv(tmpPath);
+  readCsv(csvContent);
 }
 const total = performance.now() - start;
 

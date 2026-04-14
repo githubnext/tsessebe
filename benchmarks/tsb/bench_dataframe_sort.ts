@@ -8,16 +8,16 @@ const WARMUP = 3;
 const ITERATIONS = 10;
 
 const a = Array.from({ length: ROWS }, (_, i) => `group_${i % 100}`);
-const b = Float64Array.from({ length: ROWS }, () => Math.random() * 1000);
-const df = new DataFrame({ a, b });
+const b = Array.from({ length: ROWS }, () => Math.random() * 1000);
+const df = DataFrame.fromColumns({ a, b });
 
 for (let i = 0; i < WARMUP; i++) {
-  df.sort_values(["a", "b"]);
+  df.sortValues(["a", "b"]);
 }
 
 const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  df.sort_values(["a", "b"]);
+  df.sortValues(["a", "b"]);
 }
 const total = performance.now() - start;
 

@@ -94,7 +94,8 @@ describe("rollingApply", () => {
 
   test("custom min function", () => {
     const out = rollingApply(s(3, 1, 4, 1, 5, 9), 3, numMin);
-    expect(out.toArray()).toEqual([null, null, 1, 1, 1, 5]);
+    // window [1,5,9] → min is 1, not 5
+    expect(out.toArray()).toEqual([null, null, 1, 1, 1, 1]);
   });
 
   test("raw=true passes valid nums only (same as default)", () => {
@@ -120,7 +121,7 @@ describe("rollingApply", () => {
 
   test("pairwise diff function", () => {
     // last - first in window
-    const diff = (nums: readonly number[]) => nums[nums.length - 1]! - nums[0]!;
+    const diff = (nums: readonly number[]) => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
     const out = rollingApply(s(1, 3, 6, 10, 15), 3, diff);
     expect(out.toArray()).toEqual([null, null, 5, 7, 9]);
   });
@@ -143,9 +144,10 @@ describe("rollingApply", () => {
   });
 
   test("count function behaves correctly", () => {
-    const count = (nums: readonly number[]) => nums.length;
+    const count = (nums: readonly number[]): number => nums.length;
     const out = rollingApply(s(1, null, 3, null, 5), 3, count, { minPeriods: 1 });
-    expect(out.toArray()).toEqual([1, 1, 2, 2, 2]);
+    // window at i=3: [null,3,null] → valid=[3] → count=1
+    expect(out.toArray()).toEqual([1, 1, 2, 1, 2]);
   });
 
   test("range function over window", () => {
@@ -242,7 +244,7 @@ describe("dataFrameRollingApply", () => {
   });
 
   test("custom function applied independently per column", () => {
-    const diff = (nums: readonly number[]) => nums[nums.length - 1]! - nums[0]!;
+    const diff = (nums: readonly number[]) => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
     const df = DataFrame.fromColumns({ a: [1, 3, 6], b: [10, 15, 21] });
     const out = dataFrameRollingApply(df, 2, diff);
     expect(out.col("a").toArray()).toEqual([null, 2, 3]);
@@ -298,7 +300,10 @@ describe("rollingApply property tests", () => {
   test("output length equals input length", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 20,
+        }),
         fc.integer({ min: 1, max: 5 }),
         (data, window) => {
           const series = new Series({ data });
@@ -312,7 +317,10 @@ describe("rollingApply property tests", () => {
   test("leading nulls count equals min(window-1, n) for standard mode", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         fc.integer({ min: 1, max: 8 }),
         (data, window) => {
           const series = new Series({ data });
@@ -321,8 +329,11 @@ describe("rollingApply property tests", () => {
           const expectedNulls = Math.min(window - 1, data.length);
           let leadingNulls = 0;
           for (const v of vals) {
-            if (v === null) leadingNulls++;
-            else break;
+            if (v === null) {
+              leadingNulls++;
+            } else {
+              break;
+            }
           }
           return leadingNulls === expectedNulls;
         },
@@ -333,7 +344,10 @@ describe("rollingApply property tests", () => {
   test("rollingAgg columns match individual rollingApply", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 15 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 15,
+        }),
         fc.integer({ min: 1, max: 5 }),
         (data, window) => {
           const series = new Series({ data });
@@ -341,11 +355,9 @@ describe("rollingApply property tests", () => {
           const appliedSum = rollingApply(series, window, numSum);
           const appliedMax = rollingApply(series, window, numMax);
           const sumOk =
-            JSON.stringify(agg.col("sum").toArray()) ===
-            JSON.stringify(appliedSum.toArray());
+            JSON.stringify(agg.col("sum").toArray()) === JSON.stringify(appliedSum.toArray());
           const maxOk =
-            JSON.stringify(agg.col("max").toArray()) ===
-            JSON.stringify(appliedMax.toArray());
+            JSON.stringify(agg.col("max").toArray()) === JSON.stringify(appliedMax.toArray());
           return sumOk && maxOk;
         },
       ),

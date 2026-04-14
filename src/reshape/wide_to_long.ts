@@ -38,10 +38,10 @@
  * @module
  */
 
-import type { Label, Scalar } from "../types.ts";
-import { Index } from "../core/base-index.ts";
+import type { Index } from "../core/base-index.ts";
 import { DataFrame } from "../core/frame.ts";
 import { RangeIndex } from "../core/range-index.ts";
+import type { Label, Scalar } from "../types.ts";
 
 // ─── public types ──────────────────────────────────────────────────────────────
 
@@ -193,7 +193,8 @@ export function wideToLong(
         const arr = stubArrays[stub];
         if (arr !== undefined) {
           const wideCol = df.get(wideColName);
-          const val: Scalar = wideCol !== undefined ? ((wideCol.values[row] ?? null) as Scalar) : null;
+          const val: Scalar =
+            wideCol !== undefined ? ((wideCol.values[row] ?? null) as Scalar) : null;
           arr.push(val);
         }
       }

@@ -98,7 +98,10 @@ export interface QCutOptions {
 
 /** Format a numeric edge to at most `precision` decimal places. */
 function fmt(v: number, precision: number): string {
-  return v.toFixed(precision).replace(/\.?0+$/, "").replace(/^-0$/, "0");
+  return v
+    .toFixed(precision)
+    .replace(/\.?0+$/, "")
+    .replace(/^-0$/, "0");
 }
 
 /** Build interval label string from two edges. */
@@ -174,9 +177,7 @@ function assignBins(
       if (v > binHi) return null;
       if (lo === 0 && include_lowest) {
         if (v < binLo) return null;
-      } else {
-        if (v <= binLo) return null;
-      }
+      } else if (v <= binLo) return null;
     } else {
       // [binLo, binHi)
       if (v < binLo || v >= binHi) {
@@ -239,6 +240,11 @@ export function cut(
     edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
     // Slightly extend the lower edge so the minimum value is included
     edges[0] = mn - step * 0.001;
+    // Guard against floating-point drift: ensure the last edge covers the max
+    const lastIdx = edges.length - 1;
+    if ((edges[lastIdx] as number) < mx) {
+      edges[lastIdx] = mx;
+    }
     edges = deduplicateEdges(edges, duplicates);
   } else {
     if (bins.length < 2) {
@@ -349,7 +355,7 @@ export function qcut(
   const numBins = edges.length - 1;
   if (numBins < 1) {
     throw new Error(
-      "Not enough unique quantile edges. Try passing duplicates=\"drop\" or reducing `q`.",
+      'Not enough unique quantile edges. Try passing duplicates="drop" or reducing `q`.',
     );
   }
 

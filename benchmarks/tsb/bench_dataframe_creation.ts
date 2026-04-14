@@ -8,18 +8,18 @@ const ROWS = 100_000;
 const WARMUP = 3;
 const ITERATIONS = 10;
 
-const nums1 = Float64Array.from({ length: ROWS }, (_, i) => i * 1.1);
-const nums2 = Float64Array.from({ length: ROWS }, (_, i) => i * 2.2);
+const nums1 = Array.from({ length: ROWS }, (_, i) => i * 1.1);
+const nums2 = Array.from({ length: ROWS }, (_, i) => i * 2.2);
 const strs = Array.from({ length: ROWS }, (_, i) => `label_${i % 100}`);
 
 // Warm up
 for (let i = 0; i < WARMUP; i++) {
-  new DataFrame({ a: nums1, b: nums2, c: strs });
+  DataFrame.fromColumns({ a: nums1, b: nums2, c: strs });
 }
 
 const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  new DataFrame({ a: nums1, b: nums2, c: strs });
+  DataFrame.fromColumns({ a: nums1, b: nums2, c: strs });
 }
 const total = performance.now() - start;
 

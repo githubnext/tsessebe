@@ -27,7 +27,7 @@
  */
 
 import type { Label, Scalar } from "../types.ts";
-import { Index } from "./base-index.ts";
+import type { Index } from "./base-index.ts";
 import { DataFrame } from "./frame.ts";
 import { Series } from "./series.ts";
 

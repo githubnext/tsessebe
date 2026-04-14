@@ -74,10 +74,7 @@ export interface DataFrameWhereOptions {
  * For a label-aligned `Series<boolean>`, labels that are absent in the target
  * series are treated as `false`.
  */
-function resolveSeriesCond(
-  series: Series<Scalar>,
-  cond: SeriesCond,
-): readonly boolean[] {
+function resolveSeriesCond(series: Series<Scalar>, cond: SeriesCond): readonly boolean[] {
   if (typeof cond === "function") {
     const resolved = cond(series);
     return resolveSeriesCond(series, resolved);
@@ -92,7 +89,9 @@ function resolveSeriesCond(
   const labels = series.index.values as readonly Label[];
   return labels.map((label) => {
     const pos = boolSeries.index.values.indexOf(label);
-    if (pos === -1) return false;
+    if (pos === -1) {
+      return false;
+    }
     const v = boolSeries.values[pos];
     return v === true;
   });
@@ -181,27 +180,28 @@ export function seriesMask(
  * For a label-aligned boolean `DataFrame`, missing column/row labels are treated
  * as `false`.
  */
-function resolveDataFrameCond(
-  df: DataFrame,
-  cond: DataFrameCond,
-): Map<string, readonly boolean[]> {
+function resolveDataFrameCond(df: DataFrame, cond: DataFrameCond): Map<string, readonly boolean[]> {
   const condDf: DataFrame = typeof cond === "function" ? cond(df) : cond;
 
   const result = new Map<string, readonly boolean[]>();
   const rowLabels = df.index.values as readonly Label[];
 
   for (const colName of df.columns.values) {
-    const condColIdx = condDf.columns.indexOf(colName);
-    if (condColIdx === -1) {
+    if (!condDf.columns.contains(colName)) {
       // Column absent from condition → treat entire column as false
-      result.set(colName, rowLabels.map(() => false));
+      result.set(
+        colName,
+        rowLabels.map(() => false),
+      );
       continue;
     }
 
     const condCol = condDf.col(colName);
     const rowMask: boolean[] = rowLabels.map((label) => {
       const rowPos = condDf.index.values.indexOf(label);
-      if (rowPos === -1) return false;
+      if (rowPos === -1) {
+        return false;
+      }
       return condCol.values[rowPos] === true;
     });
     result.set(colName, rowMask);
