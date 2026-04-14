@@ -213,17 +213,29 @@ export function strExtractGroups(
 
 /** Parse named capture group names from a regex source string. */
 function extractGroupNames(re: RegExp): string[] {
-  const namedGroupPattern = /\(\?<([^>]+)>/g;
   const names: string[] = [];
-  for (;;) {
-    const m = namedGroupPattern.exec(re.source);
-    if (m === null) {
-      break;
+  const source = re.source;
+  let i = 0;
+  while (i < source.length - 2) {
+    if (source[i] === "(" && source[i + 1] === "?" && source[i + 2] === "<") {
+      const first = source[i + 3];
+      if (first !== undefined && /[A-Za-z_]/.test(first)) {
+        let j = i + 4;
+        while (j < source.length) {
+          const ch = source[j];
+          if (ch === ">") {
+            names.push(source.slice(i + 3, j));
+            i = j;
+            break;
+          }
+          if (ch !== undefined && !/[A-Za-z0-9_]/.test(ch)) {
+            break;
+          }
+          j++;
+        }
+      }
     }
-    const name = m[1];
-    if (name !== undefined) {
-      names.push(name);
-    }
+    i++;
   }
   return names;
 }
