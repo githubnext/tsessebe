@@ -84,7 +84,7 @@ describe("strGetDummies", () => {
   it("basic | separator", () => {
     const df = strGetDummies(s(["a|b", "b|c", "a"]));
     expect(df.shape[0]).toBe(3);
-    expect(df.columns.values.sort()).toEqual(["a", "b", "c"]);
+    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
     expect(df.col("a").values[0]).toBe(1);
     expect(df.col("a").values[1]).toBe(0);
     expect(df.col("a").values[2]).toBe(1);
@@ -98,12 +98,12 @@ describe("strGetDummies", () => {
 
   it("custom separator", () => {
     const df = strGetDummies(s(["a,b", "b,c"]), { sep: "," });
-    expect(df.columns.values.sort()).toEqual(["a", "b", "c"]);
+    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
   });
 
   it("prefix option", () => {
     const df = strGetDummies(s(["x|y"]), { prefix: "tag", prefixSep: "-" });
-    expect(df.columns.values.sort()).toEqual(["tag-x", "tag-y"]);
+    expect([...df.columns.values].sort()).toEqual(["tag-x", "tag-y"]);
   });
 
   it("empty string element maps to no tokens", () => {
@@ -136,7 +136,7 @@ describe("strGetDummies", () => {
   it("array input (not Series)", () => {
     const df = strGetDummies(["a|b", "c"]);
     expect(df.shape[0]).toBe(2);
-    expect(df.columns.values.sort()).toEqual(["a", "b", "c"]);
+    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
   });
 });
 
@@ -256,7 +256,10 @@ describe("strRemoveSuffix", () => {
 
 describe("strTranslate", () => {
   it("replaces characters according to table", () => {
-    const table = new Map<string, string | null>([["a", "A"], ["e", "E"]]);
+    const table = new Map<string, string | null>([
+      ["a", "A"],
+      ["e", "E"],
+    ]);
     expect(strTranslate("hello", table)).toBe("hEllo");
     expect(strTranslate("abc", table)).toBe("Abc");
   });
@@ -297,7 +300,11 @@ describe("strTranslate", () => {
 
   it("delete all vowels", () => {
     const table = new Map<string, string | null>([
-      ["a", null], ["e", null], ["i", null], ["o", null], ["u", null],
+      ["a", null],
+      ["e", null],
+      ["i", null],
+      ["o", null],
+      ["u", null],
     ]);
     expect(strTranslate("hello world", table)).toBe("hll wrld");
   });
@@ -412,7 +419,7 @@ describe("strRemovePrefix — properties", () => {
     fc.assert(
       fc.property(fc.asciiString(), fc.asciiString({ minLength: 1 }), (str, prefix) => {
         const result = strRemovePrefix(str, prefix);
-        return !result.startsWith(prefix) || !str.startsWith(prefix);
+        return !(result.startsWith(prefix) && str.startsWith(prefix));
       }),
     );
   });

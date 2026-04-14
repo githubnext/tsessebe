@@ -27,7 +27,7 @@
  */
 
 import type { Label, Scalar } from "../types.ts";
-import { Index } from "./base-index.ts";
+import type { Index } from "./base-index.ts";
 import { DataFrame } from "./frame.ts";
 import { Series } from "./series.ts";
 
@@ -82,23 +82,28 @@ export function insertColumn(
   }
 
   // Rebuild the column map, inserting the new column at position `loc`.
+  const colNames: string[] = [];
   const colMap = new Map<string, Series<Scalar>>();
   let idx = 0;
 
   for (const colName of df.columns.values) {
     if (idx === loc) {
-      colMap.set(column, series);
+      colNames.push(column);
     }
+    colNames.push(colName);
     colMap.set(colName, df.col(colName));
     idx++;
   }
 
   // Handle insertion at the end (loc === nCols).
   if (loc === nCols) {
-    colMap.set(column, series);
+    colNames.push(column);
   }
 
-  return new DataFrame(colMap, df.index);
+  // Always add the new column data to the map (last-wins for duplicate names).
+  colMap.set(column, series);
+
+  return new DataFrame(colMap, df.index, colNames);
 }
 
 // ─── popColumn ────────────────────────────────────────────────────────────────

@@ -115,10 +115,22 @@ export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./stats/in
 export { valueCounts, dataFrameValueCounts } from "./stats/index.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/index.ts";
 
-export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./core/index.ts";
+export {
+  insertColumn,
+  popColumn,
+  reorderColumns,
+  moveColumn,
+  dataFrameFromPairs,
+} from "./core/index.ts";
 export type { PopResult } from "./core/index.ts";
 export { toDictOriented, fromDictOriented } from "./core/index.ts";
-export type { ToDictOrient, FromDictOrient, DictSplit, DictTight, SplitInput } from "./core/index.ts";
+export type {
+  ToDictOrient,
+  FromDictOrient,
+  DictSplit,
+  DictTight,
+  SplitInput,
+} from "./core/index.ts";
 export { wideToLong } from "./reshape/index.ts";
 export type { WideToLongOptions } from "./reshape/index.ts";
 export { cut, qcut } from "./stats/index.ts";
@@ -132,7 +144,16 @@ export type {
   SeriesWhereOptions,
   DataFrameWhereOptions,
 } from "./stats/index.ts";
-export { isna, notna, isnull, notnull, fillna, dropna, countna, countValid } from "./stats/index.ts";
+export {
+  isna,
+  notna,
+  isnull,
+  notnull,
+  fillna,
+  dropna,
+  countna,
+  countValid,
+} from "./stats/index.ts";
 export type { IsnaInput, FillnaOptions, DropnaOptions } from "./stats/index.ts";
 export {
   getAttrs,

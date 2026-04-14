@@ -7,9 +7,9 @@ const ROWS = 100_000;
 const WARMUP = 3;
 const ITERATIONS = 10;
 
-const a = Float64Array.from({ length: ROWS }, (_, i) => i * 1.1);
-const b = Float64Array.from({ length: ROWS }, (_, i) => Math.sqrt(i + 1));
-const df = new DataFrame({ a, b });
+const a = Array.from({ length: ROWS }, (_, i) => i * 1.1);
+const b = Array.from({ length: ROWS }, (_, i) => Math.sqrt(i + 1));
+const df = DataFrame.fromColumns({ a, b });
 
 for (let i = 0; i < WARMUP; i++) {
   df.describe();

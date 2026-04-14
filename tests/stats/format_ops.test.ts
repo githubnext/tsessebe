@@ -27,7 +27,7 @@ import {
 
 describe("formatFloat", () => {
   test("default 2 decimal places", () => {
-    expect(formatFloat(3.14159)).toBe("3.14");
+    expect(formatFloat(3.14259)).toBe("3.14");
   });
 
   test("0 decimal places", () => {
@@ -47,7 +47,7 @@ describe("formatFloat", () => {
   });
 
   test("Infinity", () => {
-    expect(formatFloat(Infinity)).toBe("Infinity");
+    expect(formatFloat(Number.POSITIVE_INFINITY)).toBe("Infinity");
   });
 
   test("NaN", () => {
@@ -100,7 +100,7 @@ describe("formatPercent", () => {
   });
 
   test("Infinity", () => {
-    expect(formatPercent(Infinity)).toBe("Infinity");
+    expect(formatPercent(Number.POSITIVE_INFINITY)).toBe("Infinity");
   });
 
   test("NaN", () => {
@@ -129,7 +129,7 @@ describe("formatScientific", () => {
   });
 
   test("Infinity", () => {
-    expect(formatScientific(Infinity)).toBe("Infinity");
+    expect(formatScientific(Number.POSITIVE_INFINITY)).toBe("Infinity");
   });
 
   test("NaN", () => {
@@ -138,9 +138,12 @@ describe("formatScientific", () => {
 
   test("property: contains e", () => {
     fc.assert(
-      fc.property(fc.double({ noNaN: true, noDefaultInfinity: true, min: 1e-100, max: 1e100 }), (n) => {
-        return formatScientific(n).includes("e");
-      }),
+      fc.property(
+        fc.double({ noNaN: true, noDefaultInfinity: true, min: 1e-100, max: 1e100 }),
+        (n) => {
+          return formatScientific(n).includes("e");
+        },
+      ),
     );
   });
 });
@@ -170,7 +173,7 @@ describe("formatEngineering", () => {
   });
 
   test("Infinity", () => {
-    expect(formatEngineering(Infinity)).toBe("Infinity");
+    expect(formatEngineering(Number.POSITIVE_INFINITY)).toBe("Infinity");
   });
 
   test("NaN", () => {
@@ -179,17 +182,14 @@ describe("formatEngineering", () => {
 
   test("property: exponent is multiple of 3", () => {
     fc.assert(
-      fc.property(
-        fc.double({ noNaN: true, noDefaultInfinity: true, min: 1e-9, max: 1e9 }),
-        (n) => {
-          if (n === 0) return true;
-          const result = formatEngineering(n);
-          const match = result.match(/e([+-])(\d+)$/);
-          if (!match) return false;
-          const exp = Number(match[2]);
-          return exp % 3 === 0;
-        },
-      ),
+      fc.property(fc.double({ noNaN: true, noDefaultInfinity: true, min: 1e-9, max: 1e9 }), (n) => {
+        if (n === 0) return true;
+        const result = formatEngineering(n);
+        const match = result.match(/e([+-])(\d+)$/);
+        if (!match) return false;
+        const exp = Number(match[2]);
+        return exp % 3 === 0;
+      }),
     );
   });
 });
@@ -218,7 +218,7 @@ describe("formatThousands", () => {
   });
 
   test("Infinity", () => {
-    expect(formatThousands(Infinity)).toBe("Infinity");
+    expect(formatThousands(Number.POSITIVE_INFINITY)).toBe("Infinity");
   });
 
   test("NaN", () => {
@@ -246,7 +246,7 @@ describe("formatCurrency", () => {
   });
 
   test("Infinity", () => {
-    expect(formatCurrency(Infinity)).toBe("$Infinity");
+    expect(formatCurrency(Number.POSITIVE_INFINITY)).toBe("$Infinity");
   });
 
   test("NaN", () => {
@@ -286,7 +286,7 @@ describe("formatCompact", () => {
   });
 
   test("Infinity", () => {
-    expect(formatCompact(Infinity)).toBe("Infinity");
+    expect(formatCompact(Number.POSITIVE_INFINITY)).toBe("Infinity");
   });
 
   test("NaN", () => {
@@ -299,7 +299,7 @@ describe("formatCompact", () => {
 describe("makeFloatFormatter", () => {
   test("basic usage", () => {
     const fmt = makeFloatFormatter(3);
-    expect(fmt(3.14159)).toBe("3.142");
+    expect(fmt(3.14259)).toBe("3.143");
   });
 
   test("non-numeric value", () => {
@@ -557,7 +557,10 @@ describe("dataFrameToString", () => {
   test("returns a string", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (vals) => {
           const df = DataFrame.fromColumns({ x: vals, y: vals });
           return typeof dataFrameToString(df) === "string";

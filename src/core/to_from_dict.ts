@@ -25,12 +25,20 @@
 import type { Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
 import { DataFrame } from "./frame.ts";
-import { Series } from "./series.ts";
+import type { Series } from "./series.ts";
 
 // ─── public types ──────────────────────────────────────────────────────────────
 
 /** Orient values supported by {@link toDictOriented}. */
-export type ToDictOrient = "dict" | "columns" | "list" | "series" | "split" | "tight" | "records" | "index";
+export type ToDictOrient =
+  | "dict"
+  | "columns"
+  | "list"
+  | "series"
+  | "split"
+  | "tight"
+  | "records"
+  | "index";
 
 /** Orient values supported by {@link fromDictOriented}. */
 export type FromDictOrient = "columns" | "index" | "split" | "tight";
@@ -78,17 +86,23 @@ function isDefaultRange(labels: readonly Label[]): boolean {
  * @param df     Source DataFrame.
  * @param orient Output structure. Defaults to `"dict"`.
  */
-export function toDictOriented(df: DataFrame, orient: "dict" | "columns"): Record<string, Record<string, Scalar>>;
+export function toDictOriented(
+  df: DataFrame,
+  orient: "dict" | "columns",
+): Record<string, Record<string, Scalar>>;
 export function toDictOriented(df: DataFrame, orient: "list"): Record<string, Scalar[]>;
 export function toDictOriented(df: DataFrame, orient: "series"): Record<string, Series<Scalar>>;
 export function toDictOriented(df: DataFrame, orient: "split"): DictSplit;
 export function toDictOriented(df: DataFrame, orient: "tight"): DictTight;
 export function toDictOriented(df: DataFrame, orient: "records"): Record<string, Scalar>[];
-export function toDictOriented(df: DataFrame, orient: "index"): Record<string, Record<string, Scalar>>;
+export function toDictOriented(
+  df: DataFrame,
+  orient: "index",
+): Record<string, Record<string, Scalar>>;
 export function toDictOriented(
   df: DataFrame,
   orient: ToDictOrient = "dict",
-): Record<string, unknown> | unknown[] {
+): Record<string, unknown> | unknown[] | DictSplit | DictTight {
   const colNames = [...df.columns.values];
   const rowLabels = [...(df.index.values as Label[])];
   const nRows = df.index.size;
@@ -201,10 +215,7 @@ export function fromDictOriented(
   orient: "index",
 ): DataFrame;
 export function fromDictOriented(data: SplitInput, orient: "split" | "tight"): DataFrame;
-export function fromDictOriented(
-  data: unknown,
-  orient: FromDictOrient = "columns",
-): DataFrame {
+export function fromDictOriented(data: unknown, orient: FromDictOrient = "columns"): DataFrame {
   switch (orient) {
     case "columns": {
       const colsData = data as Record<string, readonly Scalar[]>;
@@ -266,8 +277,11 @@ function buildFromSplit(input: SplitInput): DataFrame {
   for (const row of data) {
     for (let j = 0; j < columns.length; j++) {
       const col = columns[j];
+      if (col === undefined) {
+        continue;
+      }
       const arr = colArrays[col];
-      if (col !== undefined && arr !== undefined) {
+      if (arr !== undefined) {
         arr.push(row[j] ?? null);
       }
     }

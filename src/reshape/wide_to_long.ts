@@ -38,10 +38,10 @@
  * @module
  */
 
-import type { Label, Scalar } from "../types.ts";
-import { Index } from "../core/base-index.ts";
+import type { Index } from "../core/base-index.ts";
 import { DataFrame } from "../core/frame.ts";
 import { RangeIndex } from "../core/range-index.ts";
+import type { Label, Scalar } from "../types.ts";
 
 // ─── public types ──────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ function collectSuffixes(
     // Sort numerically when both look like integers, otherwise lexicographically.
     const na = Number(a);
     const nb = Number(b);
-    if (!Number.isNaN(na) && !Number.isNaN(nb)) {
+    if (!(Number.isNaN(na) || Number.isNaN(nb))) {
       return na - nb;
     }
     return a < b ? -1 : a > b ? 1 : 0;
@@ -193,7 +193,8 @@ export function wideToLong(
         const arr = stubArrays[stub];
         if (arr !== undefined) {
           const wideCol = df.get(wideColName);
-          const val: Scalar = wideCol !== undefined ? ((wideCol.values[row] ?? null) as Scalar) : null;
+          const val: Scalar =
+            wideCol !== undefined ? ((wideCol.values[row] ?? null) as Scalar) : null;
           arr.push(val);
         }
       }

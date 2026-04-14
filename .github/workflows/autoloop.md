@@ -45,6 +45,7 @@ safe-outputs:
     title-prefix: "[Autoloop] "
     labels: [automation, autoloop]
     protected-files: fallback-to-issue
+    preserve-branch-name: true
     max: 1
   push-to-pull-request-branch:
     target: "*"
@@ -434,10 +435,26 @@ steps:
       # Look up existing PR for the selected program's canonical branch
       existing_pr = None
       head_branch = None
+
+      def verify_pr_is_open(pr_number):
+          """Check if a PR is still open via the GitHub API. Returns True if open."""
+          try:
+              verify_url = f"https://api.github.com/repos/{repo}/pulls/{pr_number}"
+              verify_req = urllib.request.Request(verify_url, headers={
+                  "Authorization": f"token {github_token}",
+                  "Accept": "application/vnd.github.v3+json",
+              })
+              with urllib.request.urlopen(verify_req, timeout=30) as verify_resp:
+                  pr_data = json.loads(verify_resp.read().decode())
+              return pr_data.get("state") == "open"
+          except Exception:
+              return True  # If we can't verify, assume it's open (best effort)
+
       if selected:
           head_branch = f"autoloop/{selected}"
           owner = repo.split("/")[0] if "/" in repo else ""
           if owner:
+              # Strategy 1: exact branch match (works when branch has no framework suffix)
               try:
                   pr_api_url = (
                       f"https://api.github.com/repos/{repo}/pulls"
@@ -451,22 +468,54 @@ steps:
                       open_prs = json.loads(pr_resp.read().decode())
                   if open_prs:
                       existing_pr = open_prs[0]["number"]
-                      print(f"  Found existing PR #{existing_pr} for branch {head_branch}")
-                  else:
-                      print(f"  No existing PR found for branch {head_branch}")
+                      print(f"  Found existing PR #{existing_pr} for exact branch {head_branch}")
               except Exception as e:
-                  print(f"  Warning: could not check for existing PRs: {e}")
+                  print(f"  Warning: could not check for existing PRs by exact branch: {e}")
+
+              # Strategy 2: search by title and branch prefix (catches framework-generated
+              # hash suffixes like autoloop/name-a1b2c3d4e5f6g7h8 created by create-pull-request)
+              if existing_pr is None:
+                  try:
+                      title_marker = f"[Autoloop: {selected}]"
+                      branch_prefix = head_branch  # e.g. autoloop/perf-comparison
+                      list_url = (
+                          f"https://api.github.com/repos/{repo}/pulls"
+                          f"?state=open&per_page=100&sort=created&direction=desc"
+                      )
+                      list_req = urllib.request.Request(list_url, headers={
+                          "Authorization": f"token {github_token}",
+                          "Accept": "application/vnd.github.v3+json",
+                      })
+                      with urllib.request.urlopen(list_req, timeout=30) as list_resp:
+                          all_open_prs = json.loads(list_resp.read().decode())
+                      # Match branch names: exact canonical name or canonical + framework hash suffix
+                      branch_pattern = re.compile(r'^' + re.escape(branch_prefix) + r'(-[0-9a-f]{16})?$')
+                      for pr in all_open_prs:
+                          pr_title = pr.get("title", "")
+                          pr_head_ref = pr.get("head", {}).get("ref", "")
+                          if title_marker in pr_title or branch_pattern.match(pr_head_ref):
+                              existing_pr = pr["number"]
+                              print(f"  Found existing PR #{existing_pr} by title/branch-prefix (branch: {pr_head_ref})")
+                              break
+                      if existing_pr is None:
+                          print(f"  No existing PR found for program {selected}")
+                  except Exception as e:
+                      print(f"  Warning: could not search for existing PRs by title/prefix: {e}")
           else:
               print(f"  Warning: could not parse owner from GITHUB_REPOSITORY='{repo}'")
 
-          # Also check the state file for a recorded PR number as fallback
+          # Strategy 3: check the state file for a recorded PR number as fallback
           if existing_pr is None:
               state = read_program_state(selected)
               pr_field = state.get("pr") or ""
               pr_match = re.match(r'^#?(\d+)$', pr_field.strip())
               if pr_match:
-                  existing_pr = int(pr_match.group(1))
-                  print(f"  Found PR #{existing_pr} from state file for {selected}")
+                  pr_num = int(pr_match.group(1))
+                  if verify_pr_is_open(pr_num):
+                      existing_pr = pr_num
+                      print(f"  Found open PR #{existing_pr} from state file for {selected}")
+                  else:
+                      print(f"  PR #{pr_num} from state file is no longer open — ignoring")
 
       result = {
           "selected": selected,

@@ -284,8 +284,7 @@ function _dropnaRows(df: DataFrame, how: "any" | "all"): DataFrame {
   for (let i = 0; i < nRows; i++) {
     const rowMissing: boolean[] = colNames.map((col) => scalarIsna(df.col(col).iat(i)));
 
-    const shouldDrop =
-      how === "any" ? rowMissing.some(Boolean) : rowMissing.every(Boolean);
+    const shouldDrop = how === "any" ? rowMissing.some(Boolean) : rowMissing.every(Boolean);
 
     if (!shouldDrop) {
       keep.push(i);
@@ -321,8 +320,7 @@ function _dropnaColumns(df: DataFrame, how: "any" | "all"): DataFrame {
     const vals = series.values;
     const missingFlags = vals.map(scalarIsna);
 
-    const shouldDrop =
-      how === "any" ? missingFlags.some(Boolean) : missingFlags.every(Boolean);
+    const shouldDrop = how === "any" ? missingFlags.some(Boolean) : missingFlags.every(Boolean);
 
     if (!shouldDrop) {
       colMap.set(name, series);

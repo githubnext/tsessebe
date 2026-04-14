@@ -91,10 +91,7 @@ describe("seriesWhere — Series<boolean> cond (label-aligned)", () => {
 
 describe("seriesWhere — callable cond", () => {
   it("callable returning boolean array", () => {
-    const result = seriesWhere(
-      s([1, 2, 3, 4, 5]),
-      (x) => x.values.map((v) => (v as number) > 3),
-    );
+    const result = seriesWhere(s([1, 2, 3, 4, 5]), (x) => x.values.map((v) => (v as number) > 3));
     expect(sv(result)).toEqual([null, null, null, 4, 5]);
   });
 
@@ -108,11 +105,9 @@ describe("seriesWhere — callable cond", () => {
   });
 
   it("callable with other value", () => {
-    const result = seriesWhere(
-      s([5, 10, 15]),
-      (x) => x.values.map((v) => (v as number) > 7),
-      { other: -1 },
-    );
+    const result = seriesWhere(s([5, 10, 15]), (x) => x.values.map((v) => (v as number) > 7), {
+      other: -1,
+    });
     expect(sv(result)).toEqual([-1, 10, 15]);
   });
 });
@@ -148,11 +143,9 @@ describe("seriesMask — boolean array", () => {
 
 describe("seriesMask — callable cond", () => {
   it("masks values satisfying condition", () => {
-    const result = seriesMask(
-      s([1, 2, 3, 4, 5]),
-      (x) => x.values.map((v) => (v as number) > 3),
-      { other: 0 },
-    );
+    const result = seriesMask(s([1, 2, 3, 4, 5]), (x) => x.values.map((v) => (v as number) > 3), {
+      other: 0,
+    });
     expect(sv(result)).toEqual([1, 2, 3, 0, 0]);
   });
 });

@@ -27,7 +27,7 @@
  */
 
 import { DataFrame } from "../core/index.ts";
-import { Index } from "../core/index.ts";
+import type { Index } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
@@ -82,8 +82,12 @@ function validNums(slice: readonly Scalar[]): number[] {
 /** Convert a raw window slice to `null`-substituted numeric array. */
 function rawWindow(slice: readonly Scalar[]): (number | null)[] {
   return slice.map((v): number | null => {
-    if (isMissing(v)) return null;
-    if (typeof v === "number") return v;
+    if (isMissing(v)) {
+      return null;
+    }
+    if (typeof v === "number") {
+      return v;
+    }
     return null;
   });
 }
@@ -172,9 +176,7 @@ export function rollingApply(
     if (!met) {
       result.push(null);
     } else if (useRaw) {
-      const validOnly = (raw as readonly (number | null)[]).filter(
-        (v): v is number => v !== null,
-      );
+      const validOnly = (raw as readonly (number | null)[]).filter((v): v is number => v !== null);
       result.push(fn(validOnly));
     } else {
       result.push(fn(nums));

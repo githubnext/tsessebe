@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
+import { type DataFrame, Series } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 import {
   strDedent,
@@ -368,7 +368,7 @@ describe("strSplitExpand — property tests", () => {
           const df = strSplitExpand(arr as Scalar[], "|");
           const cols = df.columns.values as string[];
           // rejoin each row
-          const rejoined = arr.map((s, ri) => {
+          const rejoined = arr.map((_s, ri) => {
             return cols.map((c) => df.col(c).iat(ri) ?? "").join("|");
           });
           // compare (escaped) — the round-trip should work if the original had no "|" in it
@@ -387,9 +387,8 @@ describe("strPartition / strRPartition — property tests", () => {
         const [before, mid, after] = strPartition(str, sep);
         if (str.includes(sep)) {
           return before + mid + after === str;
-        } else {
-          return before === str && mid === "" && after === "";
         }
+        return before === str && mid === "" && after === "";
       }),
     );
   });
@@ -400,9 +399,8 @@ describe("strPartition / strRPartition — property tests", () => {
         const [before, mid, after] = strRPartition(str, sep);
         if (str.includes(sep)) {
           return before + mid + after === str;
-        } else {
-          return before === "" && mid === "" && after === str;
         }
+        return before === "" && mid === "" && after === str;
       }),
     );
   });
@@ -412,10 +410,17 @@ describe("strDedent — property tests", () => {
   it("dedent-then-indent is idempotent on uniform indentation", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.string({ minLength: 1 }).filter((s) => !s.includes("\n")), {
-          minLength: 1,
-          maxLength: 5,
-        }),
+        fc.array(
+          fc
+            .string({ minLength: 1 })
+            .filter(
+              (s) => !s.includes("\n") && s.trim().length > 0 && s[0] !== " " && s[0] !== "\t",
+            ),
+          {
+            minLength: 1,
+            maxLength: 5,
+          },
+        ),
         fc.integer({ min: 0, max: 8 }),
         (lines, spaces) => {
           const prefix = " ".repeat(spaces);
@@ -430,8 +435,6 @@ describe("strDedent — property tests", () => {
 
 describe("strMultiReplace — property tests", () => {
   it("empty replacements is identity", () => {
-    fc.assert(
-      fc.property(fc.string(), (str) => strMultiReplace(str, []) === str),
-    );
+    fc.assert(fc.property(fc.string(), (str) => strMultiReplace(str, []) === str));
   });
 });

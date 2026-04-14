@@ -15,7 +15,13 @@ export { CategoricalAccessor } from "./cat_accessor.ts";
 export type { CatSeriesLike } from "./cat_accessor.ts";
 export { MultiIndex } from "./multi_index.ts";
 export type { MultiIndexOptions } from "./multi_index.ts";
-export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./insert_pop.ts";
+export {
+  insertColumn,
+  popColumn,
+  reorderColumns,
+  moveColumn,
+  dataFrameFromPairs,
+} from "./insert_pop.ts";
 export type { PopResult } from "./insert_pop.ts";
 export { toDictOriented, fromDictOriented } from "./to_from_dict.ts";
 export type {

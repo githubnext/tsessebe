@@ -3,7 +3,6 @@
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { Dtype } from "../../src/index.ts";
 import {
   isArrayLike,
   isBigInt,
@@ -28,8 +27,8 @@ import {
   isNumericDtype,
   isObjectDtype,
   isPeriodDtype,
-  isRegExp,
   isReCompilable,
+  isRegExp,
   isScalar,
   isSignedIntegerDtype,
   isStringDtype,
@@ -37,6 +36,7 @@ import {
   isTimedeltaDtype,
   isUnsignedIntegerDtype,
 } from "../../src/core/api_types.ts";
+import { Dtype } from "../../src/index.ts";
 
 // ─── isScalar ─────────────────────────────────────────────────────────────────
 
@@ -73,9 +73,7 @@ describe("isScalar", () => {
   });
 
   it("property: all numbers are scalars", () => {
-    fc.assert(
-      fc.property(fc.float({ noNaN: true }), (n) => isScalar(n) === true),
-    );
+    fc.assert(fc.property(fc.float({ noNaN: true }), (n) => isScalar(n) === true));
   });
 });
 
@@ -127,7 +125,7 @@ describe("isArrayLike", () => {
 
   it("returns false for numbers", () => {
     expect(isArrayLike(42)).toBe(false);
-    expect(isArrayLike(NaN)).toBe(false);
+    expect(isArrayLike(Number.NaN)).toBe(false);
   });
 
   it("returns false for null/undefined", () => {
@@ -206,9 +204,9 @@ describe("isNumber", () => {
   it("true for numbers including NaN and Infinity", () => {
     expect(isNumber(3.14)).toBe(true);
     expect(isNumber(0)).toBe(true);
-    expect(isNumber(NaN)).toBe(true);
-    expect(isNumber(Infinity)).toBe(true);
-    expect(isNumber(-Infinity)).toBe(true);
+    expect(isNumber(Number.NaN)).toBe(true);
+    expect(isNumber(Number.POSITIVE_INFINITY)).toBe(true);
+    expect(isNumber(Number.NEGATIVE_INFINITY)).toBe(true);
   });
 
   it("false for non-numbers", () => {
@@ -256,9 +254,9 @@ describe("isFloat", () => {
   });
 
   it("false for NaN and Infinity", () => {
-    expect(isFloat(NaN)).toBe(false);
-    expect(isFloat(Infinity)).toBe(false);
-    expect(isFloat(-Infinity)).toBe(false);
+    expect(isFloat(Number.NaN)).toBe(false);
+    expect(isFloat(Number.POSITIVE_INFINITY)).toBe(false);
+    expect(isFloat(Number.NEGATIVE_INFINITY)).toBe(false);
   });
 
   it("false for non-numbers", () => {
@@ -279,8 +277,8 @@ describe("isInteger", () => {
   });
 
   it("false for NaN and Infinity", () => {
-    expect(isInteger(NaN)).toBe(false);
-    expect(isInteger(Infinity)).toBe(false);
+    expect(isInteger(Number.NaN)).toBe(false);
+    expect(isInteger(Number.POSITIVE_INFINITY)).toBe(false);
   });
 
   it("false for non-numbers", () => {
@@ -305,7 +303,7 @@ describe("isBigInt", () => {
 describe("isRegExp", () => {
   it("true for RegExp instances", () => {
     expect(isRegExp(/abc/)).toBe(true);
-    expect(isRegExp(new RegExp("xyz"))).toBe(true);
+    expect(isRegExp(/xyz/)).toBe(true);
   });
 
   it("false for strings and other values", () => {
@@ -332,20 +330,22 @@ describe("isMissing", () => {
   it("true for null, undefined, NaN", () => {
     expect(isMissing(null)).toBe(true);
     expect(isMissing(undefined)).toBe(true);
-    expect(isMissing(NaN)).toBe(true);
+    expect(isMissing(Number.NaN)).toBe(true);
   });
 
   it("false for valid values", () => {
     expect(isMissing(0)).toBe(false);
     expect(isMissing("")).toBe(false);
     expect(isMissing(false)).toBe(false);
-    expect(isMissing(Infinity)).toBe(false);
+    expect(isMissing(Number.POSITIVE_INFINITY)).toBe(false);
   });
 
   it("property: no finite number is missing", () => {
     fc.assert(
       fc.property(fc.float({ noNaN: true }), (n) => {
-        if (!Number.isFinite(n)) return true;
+        if (!Number.isFinite(n)) {
+          return true;
+        }
         return !isMissing(n);
       }),
     );
@@ -388,7 +388,18 @@ describe("isDate", () => {
 
 describe("isNumericDtype", () => {
   it("true for all numeric dtypes", () => {
-    for (const name of ["int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64"] as const) {
+    for (const name of [
+      "int8",
+      "int16",
+      "int32",
+      "int64",
+      "uint8",
+      "uint16",
+      "uint32",
+      "uint64",
+      "float32",
+      "float64",
+    ] as const) {
       expect(isNumericDtype(name)).toBe(true);
       expect(isNumericDtype(Dtype.from(name))).toBe(true);
     }
@@ -575,8 +586,26 @@ describe("isIntervalDtype", () => {
 // ─── property-based cross-checks ─────────────────────────────────────────────
 
 describe("dtype predicate cross-checks", () => {
-  const numericNames = ["int8", "int16", "int32", "int64", "uint8", "uint16", "uint32", "uint64", "float32", "float64"] as const;
-  const nonNumericNames = ["bool", "string", "object", "datetime", "timedelta", "category"] as const;
+  const numericNames = [
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "float32",
+    "float64",
+  ] as const;
+  const nonNumericNames = [
+    "bool",
+    "string",
+    "object",
+    "datetime",
+    "timedelta",
+    "category",
+  ] as const;
 
   it("isNumericDtype and isIntegerDtype are consistent", () => {
     for (const n of numericNames) {

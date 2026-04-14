@@ -45,12 +45,7 @@ import type { Label, Scalar } from "../types.ts";
 export function pipe<A>(value: A): A;
 export function pipe<A, B>(value: A, fn1: (a: A) => B): B;
 export function pipe<A, B, C>(value: A, fn1: (a: A) => B, fn2: (b: B) => C): C;
-export function pipe<A, B, C, D>(
-  value: A,
-  fn1: (a: A) => B,
-  fn2: (b: B) => C,
-  fn3: (c: C) => D,
-): D;
+export function pipe<A, B, C, D>(value: A, fn1: (a: A) => B, fn2: (b: B) => C, fn3: (c: C) => D): D;
 export function pipe<A, B, C, D, E>(
   value: A,
   fn1: (a: A) => B,
@@ -119,7 +114,11 @@ export function seriesApply(
   for (let i = 0; i < n; i++) {
     out[i] = fn(series.iat(i), series.index.at(i), i);
   }
-  return new Series({ data: out, index: series.index, ...(series.name !== null ? { name: series.name } : {}) });
+  return new Series({
+    data: out,
+    index: series.index,
+    ...(series.name !== null ? { name: series.name } : {}),
+  });
 }
 
 /**
@@ -141,7 +140,11 @@ export function seriesTransform(
   for (let i = 0; i < n; i++) {
     out[i] = fn(series.iat(i));
   }
-  return new Series({ data: out, index: series.index, ...(series.name !== null ? { name: series.name } : {}) });
+  return new Series({
+    data: out,
+    index: series.index,
+    ...(series.name !== null ? { name: series.name } : {}),
+  });
 }
 
 // ─── DataFrame apply ──────────────────────────────────────────────────────────
@@ -272,7 +275,11 @@ export function dataFrameTransform(
  */
 export function dataFrameTransformRows(
   df: DataFrame,
-  fn: (row: Readonly<Record<string, Scalar>>, rowLabel: Label, position: number) => Readonly<Record<string, Scalar>>,
+  fn: (
+    row: Readonly<Record<string, Scalar>>,
+    rowLabel: Label,
+    position: number,
+  ) => Readonly<Record<string, Scalar>>,
 ): DataFrame {
   const colNames = df.columns.values as readonly string[];
   const rowLabels = df.index.values as readonly Label[];
@@ -290,7 +297,9 @@ export function dataFrameTransformRows(
     const rowOut = fn(rowIn, rowLabels[i] as Label, i);
     for (const c of colNames) {
       const colArr = colArrays.get(c);
-      if (colArr === undefined) continue;
+      if (colArr === undefined) {
+        continue;
+      }
       // use the transformed value if present, else keep original
       colArr[i] = c in rowOut ? (rowOut[c] as Scalar) : rowIn[c];
     }

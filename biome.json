@@ -7,7 +7,14 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist/**", "node_modules/**", "*.d.ts", "playground/**/*.js", "playground/serve.ts"]
+    "ignore": [
+      "dist/**",
+      "node_modules/**",
+      "*.d.ts",
+      "playground/**/*.js",
+      "playground/serve.ts",
+      "benchmarks/**"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -69,6 +76,20 @@
         "rules": {
           "nursery": {
             "noSecrets": "off"
+          },
+          "complexity": {
+            "useLiteralKeys": "off"
+          }
+        }
+      }
+    },
+    {
+      "include": ["benchmarks/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off",
+            "noConsoleLog": "off"
           }
         }
       }

@@ -24,10 +24,10 @@ describe("cut — integer bins", () => {
 
   it("right=false uses left-closed intervals", () => {
     const { codes, labels } = cut([1, 2, 3, 4, 5], 2, { right: false });
-    // [lo, hi)
+    // [lo, hi) — bin 0 is [min-ε, 3), bin 1 is [3, 5]
     expect(labels[0]).toMatch(/^\[/);
     expect(labels[0]).toMatch(/\)$/);
-    expect(codes).toEqual([0, 0, 0, 1, 1]);
+    expect(codes).toEqual([0, 0, 1, 1, 1]);
   });
 
   it("include_lowest labels the first bin with [ on both sides", () => {
@@ -203,17 +203,19 @@ describe("cut — property tests", () => {
         (xs, numBins) => {
           // Need at least 2 distinct finite values
           const distinct = new Set(xs.filter(Number.isFinite));
-          if (distinct.size < 2) return;
+          if (distinct.size < 2) {
+            return;
+          }
           const { codes, labels } = cut(xs, numBins, { include_lowest: true });
           for (let i = 0; i < xs.length; i++) {
             const v = xs[i] as number;
             const c = codes[i];
-            if (!Number.isFinite(v)) {
-              expect(c).toBeNull();
-            } else {
+            if (Number.isFinite(v)) {
               expect(c).not.toBeNull();
               expect(c).toBeGreaterThanOrEqual(0);
               expect(c).toBeLessThan(labels.length);
+            } else {
+              expect(c).toBeNull();
             }
           }
         },
@@ -231,7 +233,9 @@ describe("cut — property tests", () => {
         fc.integer({ min: 2, max: 4 }),
         (xs, numBins) => {
           const distinct = new Set(xs.filter(Number.isFinite));
-          if (distinct.size < 2) return;
+          if (distinct.size < 2) {
+            return;
+          }
           const { codes } = cut(xs, numBins);
           expect(codes.length).toBe(xs.length);
         },
@@ -252,19 +256,21 @@ describe("qcut — property tests", () => {
         (xs, numQ) => {
           const finite = xs.filter(Number.isFinite);
           const distinct = new Set(finite);
-          if (distinct.size < numQ) return;
+          if (distinct.size < numQ) {
+            return;
+          }
           try {
             const { codes, labels } = qcut(xs, numQ, { duplicates: "drop" });
             for (let i = 0; i < xs.length; i++) {
               const v = xs[i] as number;
               const c = codes[i];
-              if (!Number.isFinite(v)) {
-                expect(c).toBeNull();
-              } else {
+              if (Number.isFinite(v)) {
                 if (c !== null) {
                   expect(c).toBeGreaterThanOrEqual(0);
                   expect(c).toBeLessThan(labels.length);
                 }
+              } else {
+                expect(c).toBeNull();
               }
             }
           } catch {

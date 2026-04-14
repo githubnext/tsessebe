@@ -20,8 +20,8 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
 import { insertColumn, moveColumn, popColumn, reorderColumns } from "../../src/core/insert_pop.ts";
+import { DataFrame, Series } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -81,8 +81,10 @@ describe("insertColumn", () => {
   test("allows duplicate column when allowDuplicates=true", () => {
     const df = makeDF();
     const df2 = insertColumn(df, 1, "a", [99, 99, 99], true);
-    // The first "a" is at index 0, second at index 1
+    // columnNames array preserves duplicates; shape grows to 4
     expect(df2.shape[1]).toBe(4);
+    // col("a") returns the last-set value in the Map (the new column)
+    expect(df2.col("a").values).toEqual([99, 99, 99]);
   });
 
   test("throws on loc < 0", () => {

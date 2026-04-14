@@ -113,7 +113,7 @@ function applyWindow(
   minN: number,
   agg: (nums: number[], n: number) => Scalar,
 ): SeriesLike {
-  const { values, index, name } = series;
+  const { values, name } = series;
   const n = values.length;
   const minPeriods = opts.minPeriods ?? window;
   const effectiveMin = Math.max(minN, minPeriods);
@@ -153,7 +153,11 @@ function applyWindow(
  * rollingSem(s, 3); // [null, null, ~0.577, ~0.577, ~0.577]
  * ```
  */
-export function rollingSem(series: SeriesLike, window: number, opts: WindowExtOptions = {}): SeriesLike {
+export function rollingSem(
+  series: SeriesLike,
+  window: number,
+  opts: WindowExtOptions = {},
+): SeriesLike {
   return applyWindow(series, window, opts, 2, (nums) => {
     const s = numStd(nums, 1);
     return s / Math.sqrt(nums.length);
@@ -185,7 +189,11 @@ export function rollingSem(series: SeriesLike, window: number, opts: WindowExtOp
  * rollingSkew(s, 3); // [null, null, 0, 0, 0]  (symmetric windows)
  * ```
  */
-export function rollingSkew(series: SeriesLike, window: number, opts: WindowExtOptions = {}): SeriesLike {
+export function rollingSkew(
+  series: SeriesLike,
+  window: number,
+  opts: WindowExtOptions = {},
+): SeriesLike {
   return applyWindow(series, window, opts, 3, (nums, n) => {
     const m = numMean(nums);
     const s = numStd(nums, 1);
@@ -223,7 +231,11 @@ export function rollingSkew(series: SeriesLike, window: number, opts: WindowExtO
  * rollingKurt(s, 4); // [null, null, null, -1.2]  (uniform distribution)
  * ```
  */
-export function rollingKurt(series: SeriesLike, window: number, opts: WindowExtOptions = {}): SeriesLike {
+export function rollingKurt(
+  series: SeriesLike,
+  window: number,
+  opts: WindowExtOptions = {},
+): SeriesLike {
   return applyWindow(series, window, opts, 4, (nums, n) => {
     const m = numMean(nums);
     const s = numStd(nums, 1);
@@ -231,7 +243,7 @@ export function rollingKurt(series: SeriesLike, window: number, opts: WindowExtO
       return 0;
     }
     const sum4 = nums.reduce((acc, v) => acc + ((v - m) / s) ** 4, 0);
-    const term1 = (n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3)) * sum4;
+    const term1 = ((n * (n + 1)) / ((n - 1) * (n - 2) * (n - 3))) * sum4;
     const term2 = (3 * (n - 1) ** 2) / ((n - 2) * (n - 3));
     return term1 - term2;
   });
@@ -274,7 +286,6 @@ function computeQuantile(
       const fracLo = virtual - lo;
       return fracLo < 0.5 ? loVal : hiVal;
     }
-    case "linear":
     default: {
       const frac = virtual - lo;
       return loVal + frac * (hiVal - loVal);
