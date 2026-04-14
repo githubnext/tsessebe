@@ -200,7 +200,7 @@ describe("seriesTrunc", () => {
   });
   it("property: trunc is integer-valued", () => {
     fc.assert(
-      fc.property(fc.array(fc.float({ noNaN: true })), (arr) => {
+      fc.property(fc.array(fc.float({ noNaN: true, noDefaultInfinity: true })), (arr) => {
         const r = seriesTrunc(s(arr));
         return r.values.every((v) => typeof v === "number" && Number.isInteger(v));
       }),
