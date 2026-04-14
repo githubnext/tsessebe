@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T19:32:35Z |
-| Iteration Count | 76 |
+| Last Run | 2026-04-14T20:22:50Z |
+| Iteration Count | 77 |
 | Best Metric | 251 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error |
+| Consecutive Errors | 2 |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error, error |
 
 ---
 
@@ -77,12 +77,15 @@
 - index_slice_take, index_drop_duplicates, countna, series_str_replace, groupby_get_group — ✅ Done (iter 73/74)
 - str_strip, str_pad, dt_floor_ceil — ✅ Done (iter 74)
 - str_startswith_endswith, str_match, str_join, str_cat, dt_normalize, dt_quarter_month — ✅ Done (iter 75)
-- Index.delete/drop/equals/identical/argmin/argmax/argsort/isna/dropna, str_fullmatch, dt_is_year_start/end, dt_is_leap_year, dt_days_in_month — Ready to add (iter 76 error — push failed). Add from 3c596789 (251) + these 8 = 259.
-- Remaining to explore after iter 76: Series/DataFrame shift/diff if added to API, GroupBy nunique, DataFrame str accessor on columns, more IO benchmarks
+- index_delete_drop, index_equals_identical, index_arg_sort, index_isna_dropna, str_fullmatch, dt_is_year_start_end, dt_is_leap_year, dt_days_in_month — Ready to add (iter 76 and 77 push failed). Recreate from 3c596789 branch (251) + these 8 = 259.
+- Remaining: IO benchmarks (read_parquet, to_parquet), more str/dt variants, GroupBy nunique (no API), DataFrame str accessor on columns
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 77 — 2026-04-14 20:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24421006159)
+- ⚠️ Error: safeoutputs MCP tools unavailable (same as iter 76). Created 8 benchmark pairs: index_delete_drop, index_equals_identical, index_arg_sort, index_isna_dropna, str_fullmatch, dt_is_year_start_end, dt_is_leap_year, dt_days_in_month. Committed locally as d9cb4dd on autoloop/perf-comparison but push failed. Metric would be 259 (+8 vs 251). Next iteration: recreate same 8 pairs from 3c596789 branch (251) + these 8 = 259.
 
 ### Iteration 76 — 2026-04-14 19:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24418824772)
 - ⚠️ Error: safeoutputs MCP server blocked by policy. Created 8 new benchmark pairs (259 total from 251): index_delete_drop, index_equals_identical, index_arg_sort, index_isna_dropna, str_fullmatch, dt_is_year_start_end, dt_is_leap_year, dt_days_in_month. Committed locally to autoloop/perf-comparison (b518c5b) but push failed. Next iteration can recreate same 8 pairs from 3c596789 branch (251 pairs) + these 8 new = 259.
