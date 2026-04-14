@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T15:29:25Z |
-| Iteration Count | 69 |
-| Best Metric | 241 |
+| Last Run | 2026-04-14T15:58:18Z |
+| Iteration Count | 70 |
+| Best Metric | 244 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -62,13 +62,19 @@
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - Series-level dropna/fillna separate benchmarks.
 - More str_* ops: strftime on datetime accessor.
-- Series arithmetic edge cases: floordiv, mod, pow operators.
-- Index operations: sort, nunique (Index has these methods).
+- Series arithmetic edge cases: floordiv, mod, pow operators — ✅ Done (iter 70)
+- Index operations: sort, nunique (Index has these methods) — ✅ Done (iter 70)
 - DataFrame shift/diff if added to API.
+- GroupBy nunique if API exists.
+- DataFrame str accessor on columns.
+- DataFrameExpanding min/max/count/median variants.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 70 — 2026-04-14 15:58 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24409238476)
+- ✅ Accepted metric=244 (+3 vs prev best 241) | Branched from 3c596789 (220 pairs) + merge main (234 after conflict resolution) + 10 new: expanding_min, expanding_max, expanding_count, expanding_median, series_compare, index_ops, dataframe_rank, ewm_cov, series_floordiv_mod_pow, dataframe_ewm_std_var | Commit: 55972b2
 
 ### Iteration 69 — 2026-04-14 15:29 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24407809452)
 - ✅ Accepted metric=241 (+7 vs prev best 234) | Branched from 3c596789 (220 pairs) + merge main (234 after conflict resolution) + 7 new: expanding_min, expanding_max, expanding_count, expanding_median, series_compare (eq/ne/lt/gt/le/ge), index_ops (union/intersection/difference), dataframe_rank (rankDataFrame) | Commit: 1508581
