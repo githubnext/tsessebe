@@ -8,19 +8,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T20:48:52Z |
-| Iteration Count | 78 |
+| Last Run | 2026-04-14T21:19:35Z |
+| Iteration Count | 79 |
 | Best Metric | 251 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
 | Steering Issue | #131 |
 | Experiment Log | #130 |
-| Pause Reason | safeoutputs MCP server unavailable for 3 consecutive iterations (76, 77, 78); push_to_pull_request_branch and git push both blocked |
+| Pause Reason | safeoutputs MCP server unavailable for 4 consecutive iterations (76–79); push_to_pull_request_branch not callable |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 3 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error, error |
+| Consecutive Errors | 4 |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, error, error, error |
 | Paused | true |
 
 ---
@@ -43,11 +43,14 @@
 
 ## 📚 Lessons Learned
 
-- Metric = min(ts_bench_count, py_bench_count); start from main, union 3c596789 branch (172 pairs) + all other hashed branches, add new pairs.
+- Metric = min(ts_bench_count, py_bench_count); start from main, union 3c596789 branch (actual 251 pairs despite commit saying 265) + add new pairs.
 - Bun not installed; TS benchmark files validated by file-count metric only.
-- MCP: push_to_pull_request_branch needs remote tracking ref; create via `git update-ref refs/remotes/origin/autoloop/perf-comparison $(git rev-parse HEAD~1)`.
 - push_repo_memory limit ~10KB total; compress iteration history when needed.
 - API notes: seriesRound, s.dt.year() is method; groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only; rollingApply(s, window, fn); Series({data,name,index}); df.assign({c: series}) direct.
+- Index has: delete(), drop(), equals(), identical(), argsort(), isna(), dropna(), min(), max(), argmin(), argmax(), insert(), nunique(), fillna(), append(), rename().
+- String accessor has: fullmatch(), lower(), upper(), title(), capitalize(), swapcase(), find(), rfind(), repeat(), isalpha(), isdigit(), isalnum(), isnumeric(), islower(), isupper(), istitle(), isspace(), zfill(), center(), ljust(), rjust(), slice(), count().
+- DatetimeAccessor has: is_year_start(), is_year_end(), is_leap_year(), days_in_month(), is_month_start(), is_month_end(), hour(), minute(), second().
+- Branching pattern: checkout 3c596789 branch as canonical autoloop/perf-comparison, add pairs, commit, push via push_to_pull_request_branch to PR #141.
 - All iter 46–69 pairs accepted (except 66 error); 3c596789 has 172 pairs initially, main has 51. Pipeline: branch from 3c596789 → merge main (234 after conflict resolution) → add new pairs → commit.
 - groupby.first()/last() on both GroupBy types; dataFrameCummin/Cumprod exported; EWM.corr takes EwmSeriesLike.
 - Iter 68: 234 pairs achieved (+4 vs iter 67). Branched from 3c596789 (172) + merge main (186) + 48 new: series_median/min_max/sum_mean/unique/corr/std_var/filter/count/toobject/resetindex/isin/quantile/sort_index/loc/iloc/describe/copy/rename/dropna/isna_notna/groupby, dataframe_set_index/sort_index/iloc/loc/drop/resetindex/count/sum_mean/assign/select/to_array/to_records/to_dict/fillna/isna/notna/min_max/std_var/describe, concat_axis1, merge_left/right/outer/inner, ewm_corr, groupby_median, groupby_std_df. Commit: b728240
@@ -78,12 +81,21 @@
 - index_slice_take, index_drop_duplicates, countna, series_str_replace, groupby_get_group — ✅ Done (iter 73/74)
 - str_strip, str_pad, dt_floor_ceil — ✅ Done (iter 74)
 - str_startswith_endswith, str_match, str_join, str_cat, dt_normalize, dt_quarter_month — ✅ Done (iter 75)
-- index_delete_drop, index_equals_identical, index_arg_sort, index_isna_dropna, str_fullmatch, dt_is_year_start_end, dt_is_leap_year, dt_days_in_month — Created locally (commit 0e6a6aa, iter 78), push blocked again. On next run (if safeoutputs fixed): checkout 3c596789 branch, recreate these 8 pairs, push via push_to_pull_request_branch to PR #141.
-- Remaining: IO benchmarks (read_parquet, to_parquet), more str/dt variants, GroupBy nunique (no API), DataFrame str accessor on columns
+- iter 79 (⚠️ error): Same 18 pairs as below attempted but push failed again (4th consecutive MCP error).
+- **NEXT ITERATION (high priority)**: Recreate these 18 pairs from 3c596789 branch (251 pairs): index_delete_drop, index_equals_identical, index_arg_sort, index_isna_dropna, index_min_max, index_argmin_argmax, index_insert, index_nunique, str_fullmatch, str_lower_upper, str_find, str_repeat, str_is_alpha_digit, dt_is_year_start_end, dt_is_leap_year, dt_days_in_month, dt_is_month_start_end, dt_hour_minute_second → metric=269 (+18)
+- Remaining after iter 79: str_case (title/capitalize/swapcase), str_zfill/center/ljust/rjust, str_count (str.count), str_slice/get, str_isalnum/isnumeric/islower/isupper/istitle/isspace, index_fillna, index_append, index_rename, IO benchmarks (read_parquet, to_parquet)
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 79 — 2026-04-14 21:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24423431665)
+
+- **Status**: ⚠️ Error
+- **Change**: Attempted to add 18 new benchmark pairs: index_delete_drop, index_equals_identical, index_arg_sort, index_isna_dropna, index_min_max, index_argmin_argmax, index_insert, index_nunique, str_fullmatch, str_lower_upper, str_find, str_repeat, str_is_alpha_digit, dt_is_year_start_end, dt_is_leap_year, dt_days_in_month, dt_is_month_start_end, dt_hour_minute_second. Metric would be 269 (+18 vs 251).
+- **Metric**: N/A (push blocked — safeoutputs MCP server still unavailable, 4th consecutive)
+- **Commit**: 483c58e (local only, not pushed — workspace ephemeral, lost after run)
+- **Notes**: Branched from 3c596789 (actual 251 pairs, commit says 265 but actual count is 251). All 18 files created and committed. push_to_pull_request_branch not callable. Next iteration must recreate same 18 pairs from 3c596789 branch.
 
 ### Iteration 78 — 2026-04-14 20:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24422133244)
 
