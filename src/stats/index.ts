@@ -39,12 +39,12 @@ export {
   nsmallestDataFrame,
 } from "./nlargest.ts";
 export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
-export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./where_mask.ts";
+export { seriesWhere, seriesMask, dataFrameWhere, dataFrameMask } from "./where_mask.ts";
 export type {
-  WherePredicate,
   SeriesCond,
   DataFrameCond,
-  WhereMaskOptions,
+  SeriesWhereOptions,
+  DataFrameWhereOptions,
 } from "./where_mask.ts";
 export {
   seriesEq,
@@ -173,6 +173,13 @@ export { isna, notna, isnull, notnull } from "./notna.ts";
 
 export { dropna, dropnaSeries, dropnaDataFrame } from "./dropna.ts";
 export type { DropnaHow, DropnaDataFrameOptions } from "./dropna.ts";
+
+export {
+  fillna,
+  countna,
+  countValid,
+} from "./notna_isna.ts";
+export type { IsnaInput, FillnaOptions, DropnaOptions } from "./notna_isna.ts";
 
 export { combineFirstSeries, combineFirstDataFrame } from "./combine_first.ts";
 

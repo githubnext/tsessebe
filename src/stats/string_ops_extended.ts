@@ -19,6 +19,7 @@
 
 import { DataFrame, type Index, RangeIndex, Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
+import type { StrInput } from "./string_ops.ts";
 
 // ─── internal helpers ─────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ export function strSplitExpand(
 ): DataFrame;
 /** @internal */
 export function strSplitExpand(
-  input: string | readonly Scalar[] | Series<Scalar>,
+  input: StrInput,
   sep: string | RegExp = " ",
   options: SplitExpandOptions = {},
 ): string[] | DataFrame {
@@ -169,14 +170,19 @@ export function strExtractGroups(
   const groupNames = extractGroupNames(re);
   const vals = toValues(input);
 
+  // Determine number of capture groups by adding an empty-string alternative.
+  // This always matches, and (matchResult.length - 1) gives the group count.
+  const groupCountMatch = new RegExp(`${re.source}|`).exec("");
+  const groupCount = groupCountMatch !== null ? groupCountMatch.length - 1 : 0;
+
   const rows: (string | null)[][] = vals.map((v) => {
     const s = toStrOrNull(v);
     if (s === null) {
-      return [];
+      return Array.from({ length: groupCount }, (): null => null);
     }
     const m = re.exec(s);
     if (m === null) {
-      return [];
+      return Array.from({ length: groupCount }, (): null => null);
     }
     return Array.from({ length: m.length - 1 }, (_, i) => {
       const captured = m[i + 1];
@@ -184,7 +190,7 @@ export function strExtractGroups(
     });
   });
 
-  const width = rows.reduce((w, r) => Math.max(w, r.length), 0);
+  const width = groupCount;
 
   // Use named groups if available and count matches; otherwise use 0-indexed strings.
   const colNames: string[] =
@@ -209,8 +215,11 @@ export function strExtractGroups(
 function extractGroupNames(re: RegExp): string[] {
   const namedGroupPattern = /\(\?<([^>]+)>/g;
   const names: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = namedGroupPattern.exec(re.source)) !== null) {
+  for (;;) {
+    const m = namedGroupPattern.exec(re.source);
+    if (m === null) {
+      break;
+    }
     const name = m[1];
     if (name !== undefined) {
       names.push(name);
@@ -232,10 +241,7 @@ export function strPartition(input: string, sep: string): PartitionResult;
 /** Partition each element and expand to a DataFrame with columns `"0"`, `"1"`, `"2"`. */
 export function strPartition(input: readonly Scalar[] | Series<Scalar>, sep: string): DataFrame;
 /** @internal */
-export function strPartition(
-  input: string | readonly Scalar[] | Series<Scalar>,
-  sep: string,
-): PartitionResult | DataFrame {
+export function strPartition(input: StrInput, sep: string): PartitionResult | DataFrame {
   function partitionOne(s: string | null): [string | null, string | null, string | null] {
     if (s === null) {
       return [null, null, null];
@@ -271,10 +277,7 @@ export function strRPartition(input: string, sep: string): PartitionResult;
 /** Partition each element at the last occurrence and expand to a DataFrame. */
 export function strRPartition(input: readonly Scalar[] | Series<Scalar>, sep: string): DataFrame;
 /** @internal */
-export function strRPartition(
-  input: string | readonly Scalar[] | Series<Scalar>,
-  sep: string,
-): PartitionResult | DataFrame {
+export function strRPartition(input: StrInput, sep: string): PartitionResult | DataFrame {
   function rpartitionOne(s: string | null): [string | null, string | null, string | null] {
     if (s === null) {
       return [null, null, null];
@@ -322,7 +325,7 @@ export function strMultiReplace(
 ): Series<Scalar>;
 /** @internal */
 export function strMultiReplace(
-  input: string | readonly Scalar[] | Series<Scalar>,
+  input: StrInput,
   replacements: readonly ReplacePair[],
 ): string | Series<Scalar> {
   function applyAll(s: string | null): string | null {
@@ -372,7 +375,7 @@ export function strIndent(
 ): Series<Scalar>;
 /** @internal */
 export function strIndent(
-  input: string | readonly Scalar[] | Series<Scalar>,
+  input: StrInput,
   prefix: string,
   options: IndentOptions = {},
 ): string | Series<Scalar> {
@@ -419,9 +422,7 @@ export function strDedent(input: string): string;
 /** Remove common leading whitespace from each element of a Series or array. */
 export function strDedent(input: readonly Scalar[] | Series<Scalar>): Series<Scalar>;
 /** @internal */
-export function strDedent(
-  input: string | readonly Scalar[] | Series<Scalar>,
-): string | Series<Scalar> {
+export function strDedent(input: StrInput): string | Series<Scalar> {
   function dedentOne(s: string | null): string | null {
     if (s === null) {
       return null;

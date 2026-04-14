@@ -6,6 +6,7 @@ import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
 import { DataFrame, Index, Series } from "../../src/index.ts";
 import type { Label, Scalar } from "../../src/index.ts";
+
 import {
   countValid,
   countna,
@@ -17,13 +18,6 @@ import {
   notnull,
 } from "../../src/stats/notna_isna.ts";
 
-/** Helper: build a DataFrame from a column Map (adds a default RangeIndex). */
-function dfFromMap(cols: Map<string, Series<Scalar>>): DataFrame {
-  const firstCol = cols.values().next().value;
-  const idx = new Index<Label>(Array.from({ length: firstCol?.values.length ?? 0 }, (_, i) => i));
-  return new DataFrame(cols, idx);
-}
-
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function s(data: readonly Scalar[], name?: string): Series<Scalar> {
@@ -32,6 +26,12 @@ function s(data: readonly Scalar[], name?: string): Series<Scalar> {
 
 function sv(series: Series<Scalar>): readonly Scalar[] {
   return series.values;
+}
+
+function dfFromMap(cols: ReadonlyMap<string, Series<Scalar>>): DataFrame {
+  const first = cols.values().next().value;
+  const idx = first !== undefined ? first.index : new Index<Label>([]);
+  return new DataFrame(cols, idx);
 }
 
 // ─── isna — scalar ────────────────────────────────────────────────────────────

@@ -8,8 +8,8 @@ const WARMUP = 3;
 const ITERATIONS = 10;
 
 const keys = Array.from({ length: ROWS }, (_, i) => `group_${i % 100}`);
-const vals = Float64Array.from({ length: ROWS }, (_, i) => i * 0.1);
-const df = new DataFrame({ key: keys, value: vals });
+const vals = Array.from({ length: ROWS }, (_, i) => i * 0.1);
+const df = DataFrame.fromColumns({ key: keys, value: vals });
 
 for (let i = 0; i < WARMUP; i++) {
   df.groupby("key").mean();

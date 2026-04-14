@@ -288,7 +288,9 @@ describe("catFreqTable", () => {
   it("includes zero for unused categories", () => {
     const s = makeCat(["a"], ["a", "b", "c"]);
     const t = catFreqTable(s);
+    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(t["b"]).toBe(0);
+    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(t["c"]).toBe(0);
   });
 
@@ -300,7 +302,9 @@ describe("catFreqTable", () => {
   it("ignores null/missing values", () => {
     const s = makeCat([null, null, "a"], ["a", "b"]);
     const t = catFreqTable(s);
+    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(t["a"]).toBe(1);
+    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(t["b"]).toBe(0);
   });
 
@@ -418,7 +422,9 @@ describe("catFromCodes — property tests", () => {
           const rebuilt = catFromCodes(codes, cats);
           const orig = s.toArray();
           const back = rebuilt.toArray();
-          if (orig.length !== back.length) return false;
+          if (orig.length !== back.length) {
+            return false;
+          }
           return orig.every((v, i) => v === back[i]);
         },
       ),

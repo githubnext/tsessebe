@@ -7,10 +7,10 @@ const ROWS = 50_000;
 const WARMUP = 5;
 const ITERATIONS = 20;
 
-const vals1 = Float64Array.from({ length: ROWS }, (_, i) => i * 1.0);
-const vals2 = Float64Array.from({ length: ROWS }, (_, i) => i * 2.0);
-const df1 = new DataFrame({ value: vals1 });
-const df2 = new DataFrame({ value: vals2 });
+const vals1 = Array.from({ length: ROWS }, (_, i) => i * 1.0);
+const vals2 = Array.from({ length: ROWS }, (_, i) => i * 2.0);
+const df1 = DataFrame.fromColumns({ value: vals1 });
+const df2 = DataFrame.fromColumns({ value: vals2 });
 
 for (let i = 0; i < WARMUP; i++) {
   concat([df1, df2]);

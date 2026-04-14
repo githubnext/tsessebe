@@ -7,9 +7,9 @@ const ROWS = 100_000;
 const WARMUP = 5;
 const ITERATIONS = 20;
 
-const a = Float64Array.from({ length: ROWS }, (_, i) => i * 1.1);
-const b = Float64Array.from({ length: ROWS }, (_, i) => i * 2.2);
-const df = new DataFrame({ old_a: a, old_b: b });
+const a = Array.from({ length: ROWS }, (_, i) => i * 1.1);
+const b = Array.from({ length: ROWS }, (_, i) => i * 2.2);
+const df = DataFrame.fromColumns({ old_a: a, old_b: b });
 
 for (let i = 0; i < WARMUP; i++) {
   df.rename({ old_a: "new_a", old_b: "new_b" });

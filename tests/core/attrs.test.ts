@@ -86,6 +86,7 @@ describe("getAttrs", () => {
     const obj = freshObj();
     setAttrs(obj, { a: 1 });
     const copy = getAttrs(obj);
+    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     copy["a"] = 999;
     // original should be unchanged
     expect(getAttrs(obj)).toEqual({ a: 1 });
@@ -112,6 +113,7 @@ describe("setAttrs", () => {
     const obj = freshObj();
     const input: Record<string, unknown> = { x: 10 };
     setAttrs(obj, input);
+    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     input["x"] = 999;
     expect(getAttrs(obj)).toEqual({ x: 10 });
   });

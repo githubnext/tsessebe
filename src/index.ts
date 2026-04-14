@@ -123,12 +123,12 @@ export {
 export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./stats/index.ts";
 export { valueCounts, dataFrameValueCounts } from "./stats/index.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/index.ts";
-export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./stats/index.ts";
+export { seriesWhere, seriesMask, dataFrameWhere, dataFrameMask } from "./stats/index.ts";
 export type {
-  WherePredicate,
   SeriesCond,
   DataFrameCond,
-  WhereMaskOptions,
+  SeriesWhereOptions,
+  DataFrameWhereOptions,
 } from "./stats/index.ts";
 export {
   seriesEq,
@@ -380,7 +380,13 @@ export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./stats/in
 export { isScalar, isListLike, isArrayLike, isDictLike, isIterator } from "./core/index.ts";
 export { getAttrs, setAttrs, updateAttrs, copyAttrs } from "./core/index.ts";
 export type { Attrs } from "./core/index.ts";
-export { insertColumn, popColumn, reorderColumns, moveColumn } from "./core/index.ts";
+export {
+  insertColumn,
+  popColumn,
+  reorderColumns,
+  moveColumn,
+  dataFrameFromPairs,
+} from "./core/index.ts";
 export type { PopResult } from "./core/index.ts";
 export { toDictOriented, fromDictOriented } from "./core/index.ts";
 export type { ToDictOrient, FromDictOrient, DictSplit, DictTight } from "./core/index.ts";

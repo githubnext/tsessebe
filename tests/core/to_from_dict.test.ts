@@ -250,7 +250,9 @@ describe("property-based", () => {
         fc.array(fc.integer({ min: 1, max: 10 }), { minLength: 1, maxLength: 4 }),
         fc.array(fc.integer({ min: 1, max: 10 }), { minLength: 1, maxLength: 4 }),
         (colA, colB) => {
-          const df = DataFrame.fromColumns({ a: colA, b: colB.slice(0, colA.length) });
+          // Ensure both columns have the same length
+          const len = Math.min(colA.length, colB.length);
+          const df = DataFrame.fromColumns({ a: colA.slice(0, len), b: colB.slice(0, len) });
           const split = toDictOriented(df, "split");
           const df2 = fromDictOriented(split, "split");
           return df2.shape[0] === df.shape[0] && df2.columns.values[0] === "a";

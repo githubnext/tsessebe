@@ -300,43 +300,58 @@
       // Find max time for scaling bars
       let maxTime = 0;
       for (const b of benchmarks) {
-        maxTime = Math.max(maxTime, b.tsb.mean_ms, b.pandas.mean_ms);
+        if (b.tsb != null) maxTime = Math.max(maxTime, b.tsb.mean_ms);
+        if (b.pandas != null) maxTime = Math.max(maxTime, b.pandas.mean_ms);
       }
 
       // Render bar chart
       for (const b of benchmarks) {
         const label = b.function.replace(/_/g, " ");
-        const tsPct = (b.tsb.mean_ms / maxTime) * 100;
-        const pyPct = (b.pandas.mean_ms / maxTime) * 100;
+        const pyPct = b.pandas != null ? (b.pandas.mean_ms / maxTime) * 100 : 0;
+        const tsPct = b.tsb != null ? (b.tsb.mean_ms / maxTime) * 100 : 0;
+
+        const tsBar = b.tsb != null
+          ? '<div class="bar tsb" style="width: ' + Math.max(tsPct, 5) + '%">' + b.tsb.mean_ms.toFixed(3) + ' ms</div>'
+          : '<div class="bar tsb" style="width: 5%; opacity: 0.4;">pending</div>';
+        const pyBar = b.pandas != null
+          ? '<div class="bar pandas" style="width: ' + Math.max(pyPct, 5) + '%">' + b.pandas.mean_ms.toFixed(3) + ' ms</div>'
+          : '<div class="bar pandas" style="width: 5%; opacity: 0.4;">pending</div>';
 
         const row = document.createElement("div");
         row.className = "bar-row";
         row.innerHTML =
           '<div class="bar-label">' + label + '</div>' +
-          '<div class="bar-container">' +
-          '<div class="bar tsb" style="width: ' + Math.max(tsPct, 5) + '%">' + b.tsb.mean_ms + ' ms</div>' +
-          '<div class="bar pandas" style="width: ' + Math.max(pyPct, 5) + '%">' + b.pandas.mean_ms + ' ms</div>' +
-          '</div>';
+          '<div class="bar-container">' + tsBar + pyBar + '</div>';
         barChart.appendChild(row);
       }
 
       // Render table
       for (const b of benchmarks) {
-        const ratio = b.ratio;
-        const faster = ratio < 1 ? "tsb" : "pandas";
-        const badgeClass = ratio < 1 ? "fast" : "slow";
-        const fasterClass = ratio < 1 ? "faster-tsb" : "faster-pandas";
-        const displayRatio = ratio < 1
-          ? (1 / ratio).toFixed(2) + "x faster"
-          : ratio.toFixed(2) + "x slower";
+        const ratio = (b.tsb != null && b.pandas != null && b.pandas.mean_ms > 0)
+          ? b.tsb.mean_ms / b.pandas.mean_ms
+          : null;
+        const faster = ratio != null ? (ratio < 1 ? "tsb" : "pandas") : "—";
+        const badgeClass = ratio != null ? (ratio < 1 ? "fast" : "slow") : "";
+        const fasterClass = ratio != null ? (ratio < 1 ? "faster-tsb" : "faster-pandas") : "";
+        const ratioDisplay = ratio != null
+          ? '<span class="ratio-badge ' + badgeClass + '">' + ratio.toFixed(3) + "x</span>"
+          : "—";
+        const displayRatio = ratio != null
+          ? (ratio < 1
+              ? (1 / ratio).toFixed(2) + "x faster"
+              : ratio.toFixed(2) + "x slower")
+          : "";
+        const fasterDisplay = ratio != null ? faster + " (" + displayRatio + ")" : "—";
+        const tsMsDisplay = b.tsb != null ? b.tsb.mean_ms.toFixed(3) : "—";
+        const pyMsDisplay = b.pandas != null ? b.pandas.mean_ms.toFixed(3) : "—";
 
         const tr = document.createElement("tr");
         tr.innerHTML =
           "<td>" + b.function.replace(/_/g, " ") + "</td>" +
-          "<td>" + b.tsb.mean_ms + "</td>" +
-          "<td>" + b.pandas.mean_ms + "</td>" +
-          '<td><span class="ratio-badge ' + badgeClass + '">' + ratio + "x</span></td>" +
-          '<td class="' + fasterClass + '">' + faster + " (" + displayRatio + ")</td>";
+          "<td>" + tsMsDisplay + "</td>" +
+          "<td>" + pyMsDisplay + "</td>" +
+          "<td>" + ratioDisplay + "</td>" +
+          '<td class="' + fasterClass + '">' + fasterDisplay + "</td>";
         benchTbody.appendChild(tr);
       }
     })();

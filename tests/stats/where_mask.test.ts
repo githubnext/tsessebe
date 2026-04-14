@@ -1,18 +1,16 @@
 /**
- * Tests for src/stats/where_mask.ts
- * Covers whereSeries, maskSeries, whereDataFrame, maskDataFrame.
+ * Tests for src/stats/where_mask.ts — seriesWhere, seriesMask, dataFrameWhere, dataFrameMask.
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  maskDataFrame,
-  maskSeries,
-  whereDataFrame,
-  whereSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
+import {
+  dataFrameMask,
+  dataFrameWhere,
+  seriesMask,
+  seriesWhere,
+} from "../../src/stats/where_mask.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -20,233 +18,312 @@ function s(data: readonly Scalar[]): Series<Scalar> {
   return new Series({ data: [...data] });
 }
 
-function boolS(data: readonly boolean[]): Series<boolean> {
-  return new Series({ data: [...data] });
+function sv(series: Series<Scalar>): readonly Scalar[] {
+  return series.values;
 }
 
-// ─── whereSeries ─────────────────────────────────────────────────────────────
+// ─── seriesWhere — boolean array cond ─────────────────────────────────────────
 
-describe("whereSeries — predicate", () => {
-  it("keeps values where predicate is true", () => {
-    const result = whereSeries(s([1, 2, 3, 4, 5]), (v) => (v as number) > 2);
-    expect([...result.values]).toEqual([null, null, 3, 4, 5]);
+describe("seriesWhere — boolean array", () => {
+  it("keeps values where cond=true, replaces with null where false", () => {
+    const result = seriesWhere(s([1, 2, 3, 4, 5]), [true, false, true, false, true]);
+    expect(sv(result)).toEqual([1, null, 3, null, 5]);
   });
 
-  it("replaces with custom other", () => {
-    const result = whereSeries(s([1, 2, 3]), (v) => (v as number) !== 2, { other: 0 });
-    expect([...result.values]).toEqual([1, 0, 3]);
+  it("keeps all values when cond is all-true", () => {
+    const result = seriesWhere(s([10, 20, 30]), [true, true, true]);
+    expect(sv(result)).toEqual([10, 20, 30]);
   });
 
-  it("keeps index and name", () => {
-    const input = new Series({ data: [10, 20], name: "x" });
-    const result = whereSeries(input, () => true);
-    expect(result.name).toBe("x");
-    expect([...result.index.values]).toEqual([...input.index.values]);
+  it("replaces all values when cond is all-false", () => {
+    const result = seriesWhere(s([1, 2, 3]), [false, false, false]);
+    expect(sv(result)).toEqual([null, null, null]);
   });
 
-  it("all true → identity", () => {
-    const data: Scalar[] = [1, 2, 3];
-    const result = whereSeries(s(data), () => true);
-    expect([...result.values]).toEqual(data);
+  it("uses custom other value", () => {
+    const result = seriesWhere(s([1, 2, 3]), [true, false, true], { other: -99 });
+    expect(sv(result)).toEqual([1, -99, 3]);
   });
 
-  it("all false → all replaced", () => {
-    const result = whereSeries(s([1, 2, 3]), () => false);
-    expect([...result.values]).toEqual([null, null, null]);
+  it("preserves null source values when cond is true", () => {
+    const result = seriesWhere(s([1, null, 3]), [true, true, false]);
+    expect(sv(result)).toEqual([1, null, null]);
   });
 
-  it("handles null / NaN values", () => {
-    const result = whereSeries(s([null, Number.NaN, 1]), (v) => v !== null);
-    // null fails the predicate; NaN passes (v !== null is true)
-    expect([...result.values]).toEqual([null, Number.NaN, 1]);
-  });
-});
-
-describe("whereSeries — boolean Series cond", () => {
-  it("keeps values aligned by position", () => {
-    const result = whereSeries(s([10, 20, 30]), boolS([true, false, true]));
-    expect([...result.values]).toEqual([10, null, 30]);
+  it("preserves series name and index", () => {
+    const src = new Series({ data: [1, 2, 3], name: "myCol" });
+    const result = seriesWhere(src, [true, false, true]);
+    expect(result.name).toBe("myCol");
+    expect(result.values.length).toBe(3);
   });
 
-  it("throws when lengths differ", () => {
-    expect(() => whereSeries(s([1, 2, 3]), boolS([true]))).toThrow(RangeError);
+  it("works with string values", () => {
+    const result = seriesWhere(s(["a", "b", "c"]), [false, true, false], { other: "x" });
+    expect(sv(result)).toEqual(["x", "b", "x"]);
+  });
+
+  it("works with boolean values in series", () => {
+    const result = seriesWhere(s([true, false, true]), [true, false, true], { other: false });
+    expect(sv(result)).toEqual([true, false, true]);
   });
 });
 
-describe("whereSeries — boolean array cond", () => {
-  it("works with plain array", () => {
-    const result = whereSeries(s([7, 8, 9]), [false, true, false]);
-    expect([...result.values]).toEqual([null, 8, null]);
+// ─── seriesWhere — Series<boolean> cond ───────────────────────────────────────
+
+describe("seriesWhere — Series<boolean> cond (label-aligned)", () => {
+  it("aligns by label", () => {
+    const src = new Series({ data: [1, 2, 3], index: ["a", "b", "c"] });
+    const cond = new Series<boolean>({ data: [false, true, false], index: ["a", "b", "c"] });
+    const result = seriesWhere(src, cond);
+    expect(sv(result)).toEqual([null, 2, null]);
+  });
+
+  it("treats missing label as false (replaces with other)", () => {
+    const src = new Series({ data: [10, 20, 30], index: ["x", "y", "z"] });
+    // cond only has "y" and "z"
+    const cond = new Series<boolean>({ data: [true, true], index: ["y", "z"] });
+    const result = seriesWhere(src, cond, { other: 0 });
+    expect(sv(result)).toEqual([0, 20, 30]);
   });
 });
 
-// ─── maskSeries ──────────────────────────────────────────────────────────────
+// ─── seriesWhere — callable cond ──────────────────────────────────────────────
 
-describe("maskSeries — predicate", () => {
-  it("replaces values where predicate is true", () => {
-    const result = maskSeries(s([1, 2, 3, 4, 5]), (v) => (v as number) > 2);
-    expect([...result.values]).toEqual([1, 2, null, null, null]);
+describe("seriesWhere — callable cond", () => {
+  it("callable returning boolean array", () => {
+    const result = seriesWhere(s([1, 2, 3, 4, 5]), (x) => x.values.map((v) => (v as number) > 3));
+    expect(sv(result)).toEqual([null, null, null, 4, 5]);
   });
 
-  it("replaces with custom other", () => {
-    const result = maskSeries(s([1, 2, 3]), (v) => (v as number) === 2, { other: -1 });
-    expect([...result.values]).toEqual([1, -1, 3]);
-  });
-
-  it("mask is inverse of where (predicate)", () => {
-    const data: Scalar[] = [1, 2, 3, 4, 5];
-    const pred = (v: Scalar) => (v as number) > 3;
-    const w = whereSeries(s(data), pred);
-    const m = maskSeries(s(data), pred);
-    for (let i = 0; i < data.length; i++) {
-      const wv = w.values[i] as Scalar;
-      const mv = m.values[i] as Scalar;
-      const original = data[i] as Scalar;
-      // Exactly one of them should equal the original value
-      const wKeeps = wv === original;
-      const mKeeps = mv === original;
-      expect(wKeeps !== mKeeps).toBe(true);
-    }
-  });
-
-  it("all false → identity", () => {
-    const data: Scalar[] = [1, 2, 3];
-    const result = maskSeries(s(data), () => false);
-    expect([...result.values]).toEqual(data);
-  });
-});
-
-describe("maskSeries — boolean Series cond", () => {
-  it("replaces where cond is true", () => {
-    const result = maskSeries(s([10, 20, 30]), boolS([true, false, true]));
-    expect([...result.values]).toEqual([null, 20, null]);
-  });
-});
-
-// ─── whereDataFrame ───────────────────────────────────────────────────────────
-
-describe("whereDataFrame — predicate", () => {
-  it("keeps non-negative values", () => {
-    const df = DataFrame.fromColumns({ a: [1, -2, 3] as Scalar[], b: [-4, 5, -6] as Scalar[] });
-    const result = whereDataFrame(df, (v) => (v as number) >= 0);
-    expect([...result.col("a").values]).toEqual([1, null, 3]);
-    expect([...result.col("b").values]).toEqual([null, 5, null]);
-  });
-
-  it("keeps index and column names", () => {
-    const df = DataFrame.fromColumns({ x: [1, 2] as Scalar[] });
-    const result = whereDataFrame(df, () => true);
-    expect([...result.columns.values]).toEqual(["x"]);
-  });
-
-  it("custom other", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3] as Scalar[] });
-    const result = whereDataFrame(df, (v) => (v as number) !== 2, { other: 0 });
-    expect([...result.col("a").values]).toEqual([1, 0, 3]);
-  });
-});
-
-describe("whereDataFrame — boolean DataFrame cond", () => {
-  it("keeps values where cond DataFrame is true", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3] as Scalar[], b: [4, 5, 6] as Scalar[] });
-    const cond = DataFrame.fromColumns({
-      a: [true, false, true] as Scalar[],
-      b: [false, true, false] as Scalar[],
+  it("callable returning Series<boolean>", () => {
+    const src = new Series({ data: [10, 20, 30], index: ["a", "b", "c"] });
+    const result = seriesWhere(src, (x) => {
+      const bools = x.values.map((v) => (v as number) >= 20);
+      return new Series<boolean>({ data: bools, index: x.index });
     });
-    const result = whereDataFrame(df, cond as unknown as DataFrame);
-    expect([...result.col("a").values]).toEqual([1, null, 3]);
-    expect([...result.col("b").values]).toEqual([null, 5, null]);
+    expect(sv(result)).toEqual([null, 20, 30]);
   });
 
-  it("missing column in cond → all null for that column", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2] as Scalar[], b: [3, 4] as Scalar[] });
-    const cond = DataFrame.fromColumns({ a: [true, false] as Scalar[] });
-    const result = whereDataFrame(df, cond as unknown as DataFrame);
-    expect([...result.col("a").values]).toEqual([1, null]);
-    expect([...result.col("b").values]).toEqual([null, null]);
-  });
-
-  it("throws when cond column length mismatches", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3] as Scalar[] });
-    const cond = DataFrame.fromColumns({ a: [true, false] as Scalar[] });
-    expect(() => whereDataFrame(df, cond as unknown as DataFrame)).toThrow(RangeError);
+  it("callable with other value", () => {
+    const result = seriesWhere(s([5, 10, 15]), (x) => x.values.map((v) => (v as number) > 7), {
+      other: -1,
+    });
+    expect(sv(result)).toEqual([-1, 10, 15]);
   });
 });
 
-// ─── maskDataFrame ────────────────────────────────────────────────────────────
+// ─── seriesMask — basic ───────────────────────────────────────────────────────
 
-describe("maskDataFrame — predicate", () => {
-  it("replaces negative values", () => {
-    const df = DataFrame.fromColumns({ a: [1, -2, 3] as Scalar[], b: [-4, 5, -6] as Scalar[] });
-    const result = maskDataFrame(df, (v) => (v as number) < 0);
-    expect([...result.col("a").values]).toEqual([1, null, 3]);
-    expect([...result.col("b").values]).toEqual([null, 5, null]);
+describe("seriesMask — boolean array", () => {
+  it("is inverse of seriesWhere", () => {
+    const data = s([1, 2, 3, 4, 5]);
+    const cond = [true, false, true, false, true];
+    const where = seriesWhere(data, cond);
+    const mask = seriesMask(data, cond);
+    // Where: [1, null, 3, null, 5] — Mask: [null, 2, null, 4, null]
+    expect(sv(where)).toEqual([1, null, 3, null, 5]);
+    expect(sv(mask)).toEqual([null, 2, null, 4, null]);
   });
 
-  it("mask is inverse of where for DataFrames (predicate)", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3, 4] as Scalar[] });
-    const pred = (v: Scalar) => (v as number) > 2;
-    const w = whereDataFrame(df, pred).col("a").values;
-    const m = maskDataFrame(df, pred).col("a").values;
-    const orig = df.col("a").values;
-    for (let i = 0; i < orig.length; i++) {
-      const wKeeps = w[i] === orig[i];
-      const mKeeps = m[i] === orig[i];
-      expect(wKeeps !== mKeeps).toBe(true);
-    }
+  it("keeps all when cond all-false", () => {
+    const result = seriesMask(s([1, 2, 3]), [false, false, false]);
+    expect(sv(result)).toEqual([1, 2, 3]);
   });
-});
 
-describe("maskDataFrame — boolean DataFrame cond", () => {
-  it("replaces where cond is true", () => {
-    const df = DataFrame.fromColumns({ a: [10, 20, 30] as Scalar[] });
-    const cond = DataFrame.fromColumns({ a: [false, true, false] as Scalar[] });
-    const result = maskDataFrame(df, cond as unknown as DataFrame);
-    expect([...result.col("a").values]).toEqual([10, null, 30]);
+  it("replaces all when cond all-true", () => {
+    const result = seriesMask(s([1, 2, 3]), [true, true, true]);
+    expect(sv(result)).toEqual([null, null, null]);
+  });
+
+  it("uses custom other value", () => {
+    const result = seriesMask(s([1, 2, 3, 4]), [false, true, false, true], { other: 999 });
+    expect(sv(result)).toEqual([1, 999, 3, 999]);
   });
 });
 
-// ─── property tests ─────────────────────────────────────────────────────────
+describe("seriesMask — callable cond", () => {
+  it("masks values satisfying condition", () => {
+    const result = seriesMask(s([1, 2, 3, 4, 5]), (x) => x.values.map((v) => (v as number) > 3), {
+      other: 0,
+    });
+    expect(sv(result)).toEqual([1, 2, 3, 0, 0]);
+  });
+});
 
-describe("property: whereSeries(s, cond) + maskSeries(s, cond) covers all positions", () => {
-  it("every position is kept by exactly one", () => {
+// ─── dataFrameWhere ───────────────────────────────────────────────────────────
+
+describe("dataFrameWhere — DataFrame cond", () => {
+  it("keeps values where cond=true, replaces with null elsewhere", () => {
+    const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+    const cond = DataFrame.fromColumns({
+      a: [true, false, true],
+      b: [false, true, false],
+    });
+    const result = dataFrameWhere(df, cond);
+    expect(result.col("a").values).toEqual([1, null, 3]);
+    expect(result.col("b").values).toEqual([null, 5, null]);
+  });
+
+  it("uses custom other value", () => {
+    const df = DataFrame.fromColumns({ x: [10, 20, 30] });
+    const cond = DataFrame.fromColumns({ x: [true, false, true] });
+    const result = dataFrameWhere(df, cond, { other: -1 });
+    expect(result.col("x").values).toEqual([10, -1, 30]);
+  });
+
+  it("treats missing column in cond as all-false (replaces with other)", () => {
+    const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
+    const cond = DataFrame.fromColumns({ a: [true, false] }); // missing col "b"
+    const result = dataFrameWhere(df, cond, { other: 0 });
+    expect(result.col("a").values).toEqual([1, 0]);
+    expect(result.col("b").values).toEqual([0, 0]); // all replaced
+  });
+
+  it("preserves row index", () => {
+    const df = DataFrame.fromColumns({ v: [1, 2, 3] }, { index: ["r0", "r1", "r2"] });
+    const cond = DataFrame.fromColumns({ v: [false, true, false] }, { index: ["r0", "r1", "r2"] });
+    const result = dataFrameWhere(df, cond);
+    expect(result.index.values).toEqual(["r0", "r1", "r2"]);
+    expect(result.col("v").values).toEqual([null, 2, null]);
+  });
+
+  it("all-true cond returns copy of df values", () => {
+    const df = DataFrame.fromColumns({ a: [7, 8, 9], b: [1, 2, 3] });
+    const cond = DataFrame.fromColumns({ a: [true, true, true], b: [true, true, true] });
+    const result = dataFrameWhere(df, cond);
+    expect(result.col("a").values).toEqual([7, 8, 9]);
+    expect(result.col("b").values).toEqual([1, 2, 3]);
+  });
+});
+
+describe("dataFrameWhere — callable cond", () => {
+  it("callable returning boolean DataFrame", () => {
+    const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+    const result = dataFrameWhere(df, (d) => {
+      const condCols: Record<string, boolean[]> = {};
+      for (const c of d.columns) {
+        condCols[c as string] = d.col(c as string).values.map((v) => (v as number) > 2);
+      }
+      return DataFrame.fromColumns(condCols);
+    });
+    expect(result.col("a").values).toEqual([null, null, 3]);
+    expect(result.col("b").values).toEqual([4, 5, 6]);
+  });
+});
+
+// ─── dataFrameMask ────────────────────────────────────────────────────────────
+
+describe("dataFrameMask — DataFrame cond", () => {
+  it("is inverse of dataFrameWhere", () => {
+    const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+    const cond = DataFrame.fromColumns({
+      a: [true, false, true],
+      b: [false, true, false],
+    });
+    const rWhere = dataFrameWhere(df, cond);
+    const rMask = dataFrameMask(df, cond);
+    // where keeps trues, mask keeps falses — they should be complements
+    expect(rWhere.col("a").values).toEqual([1, null, 3]);
+    expect(rMask.col("a").values).toEqual([null, 2, null]);
+    expect(rWhere.col("b").values).toEqual([null, 5, null]);
+    expect(rMask.col("b").values).toEqual([4, null, 6]);
+  });
+
+  it("uses custom other value", () => {
+    const df = DataFrame.fromColumns({ z: [10, 20, 30] });
+    const cond = DataFrame.fromColumns({ z: [false, true, false] });
+    const result = dataFrameMask(df, cond, { other: 99 });
+    expect(result.col("z").values).toEqual([10, 99, 30]);
+  });
+});
+
+describe("dataFrameMask — callable cond", () => {
+  it("callable returning boolean DataFrame", () => {
+    const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [5, 6, 7, 8] });
+    const result = dataFrameMask(
+      df,
+      (d) => {
+        const condCols: Record<string, boolean[]> = {};
+        for (const c of d.columns) {
+          condCols[c as string] = d.col(c as string).values.map((v) => (v as number) % 2 === 0);
+        }
+        return DataFrame.fromColumns(condCols);
+      },
+      { other: -1 },
+    );
+    // mask: replaces where cond=true (even values)
+    expect(result.col("a").values).toEqual([1, -1, 3, -1]);
+    expect(result.col("b").values).toEqual([5, -1, 7, -1]);
+  });
+});
+
+// ─── property-based tests ─────────────────────────────────────────────────────
+
+describe("property-based: seriesWhere / seriesMask complement", () => {
+  it("where + mask partition values (no overlap, full coverage)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: 0, max: 100 }), { minLength: 1, maxLength: 20 }),
-        (data) => {
-          const scalars = data.map((v) => v as Scalar);
-          const ser = s(scalars);
-          const pred = (v: Scalar) => (v as number) % 2 === 0;
-          const w = whereSeries(ser, pred).values;
-          const m = maskSeries(ser, pred).values;
-          for (let i = 0; i < scalars.length; i++) {
-            const wv = w[i] as Scalar;
-            const mv = m[i] as Scalar;
-            const original = scalars[i] as Scalar;
-            // exactly one keeps the original
-            expect((wv === original) !== (mv === original)).toBe(true);
+        fc.array(fc.oneof(fc.integer({ min: -100, max: 100 }), fc.constant(null)), {
+          minLength: 1,
+          maxLength: 20,
+        }),
+        fc.array(fc.boolean(), { minLength: 1, maxLength: 20 }),
+        (rawData, rawCond) => {
+          const n = Math.min(rawData.length, rawCond.length);
+          const data = rawData.slice(0, n) as Scalar[];
+          const cond = rawCond.slice(0, n);
+
+          const src = new Series<Scalar>({ data });
+          const whereResult = seriesWhere(src, cond, { other: "__OTHER__" as Scalar });
+          const maskResult = seriesMask(src, cond, { other: "__OTHER__" as Scalar });
+
+          for (let i = 0; i < n; i++) {
+            const wv = whereResult.values[i];
+            const mv = maskResult.values[i];
+            if (cond[i]) {
+              // where keeps original, mask replaces
+              expect(wv).toBe(data[i]);
+              expect(mv).toBe("__OTHER__");
+            } else {
+              // where replaces, mask keeps original
+              expect(wv).toBe("__OTHER__");
+              expect(mv).toBe(data[i]);
+            }
           }
         },
       ),
     );
   });
-});
 
-describe("property: whereDataFrame with predicate covers all cells", () => {
-  it("cell kept by where iff not kept by mask", () => {
+  it("seriesWhere with all-true cond === identity", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: -50, max: 50 }), { minLength: 2, maxLength: 10 }),
+        fc.array(fc.oneof(fc.integer({ min: -1000, max: 1000 }), fc.constant(null)), {
+          minLength: 0,
+          maxLength: 30,
+        }),
         (data) => {
-          const scalars = data.map((v) => v as Scalar);
-          const df = DataFrame.fromColumns({ v: scalars });
-          const pred = (v: Scalar) => (v as number) >= 0;
-          const wv = whereDataFrame(df, pred).col("v").values;
-          const mv = maskDataFrame(df, pred).col("v").values;
-          for (let i = 0; i < scalars.length; i++) {
-            const original = scalars[i] as Scalar;
-            expect((wv[i] === original) !== (mv[i] === original)).toBe(true);
-          }
+          const src = new Series<Scalar>({ data: data as Scalar[] });
+          const cond = data.map(() => true);
+          const result = seriesWhere(src, cond);
+          expect(result.values).toEqual(src.values);
+        },
+      ),
+    );
+  });
+
+  it("seriesMask with all-false cond === identity", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.oneof(fc.integer({ min: -1000, max: 1000 }), fc.constant(null)), {
+          minLength: 0,
+          maxLength: 30,
+        }),
+        (data) => {
+          const src = new Series<Scalar>({ data: data as Scalar[] });
+          const cond = data.map(() => false);
+          const result = seriesMask(src, cond);
+          expect(result.values).toEqual(src.values);
         },
       ),
     );

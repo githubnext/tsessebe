@@ -27,7 +27,7 @@ import {
 
 describe("formatFloat", () => {
   test("default 2 decimal places", () => {
-    expect(formatFloat(3.14159)).toBe("3.14");
+    expect(formatFloat(3.14259)).toBe("3.14");
   });
 
   test("0 decimal places", () => {
@@ -299,7 +299,7 @@ describe("formatCompact", () => {
 describe("makeFloatFormatter", () => {
   test("basic usage", () => {
     const fmt = makeFloatFormatter(3);
-    expect(fmt(3.14159)).toBe("3.142");
+    expect(fmt(3.14259)).toBe("3.143");
   });
 
   test("non-numeric value", () => {

@@ -102,10 +102,14 @@ export class DataFrame {
    * @param columns - Ordered map of column name → Series (all same length and index).
    * @param index   - Row index (must match each Series' length).
    */
-  constructor(columns: ReadonlyMap<string, Series<Scalar>>, index: Index<Label>) {
+  constructor(
+    columns: ReadonlyMap<string, Series<Scalar>>,
+    index: Index<Label>,
+    columnNames?: readonly string[],
+  ) {
     this._columns = columns;
     this.index = index;
-    this.columns = new Index<string>([...columns.keys()]);
+    this.columns = new Index<string>(columnNames ?? [...columns.keys()]);
   }
 
   /**
@@ -208,7 +212,7 @@ export class DataFrame {
 
   /** `[nRows, nCols]` — mirrors `pandas.DataFrame.shape`. */
   get shape(): [number, number] {
-    return [this.index.size, this._columns.size];
+    return [this.index.size, this.columns.size];
   }
 
   /** Always `2`. */
@@ -218,12 +222,12 @@ export class DataFrame {
 
   /** Total number of cells (`nRows * nCols`). */
   get size(): number {
-    return this.index.size * this._columns.size;
+    return this.index.size * this.columns.size;
   }
 
   /** `true` when the DataFrame has no rows or no columns. */
   get empty(): boolean {
-    return this.index.size === 0 || this._columns.size === 0;
+    return this.index.size === 0 || this.columns.size === 0;
   }
 
   // ─── column access ────────────────────────────────────────────────────────

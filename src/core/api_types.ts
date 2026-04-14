@@ -107,7 +107,7 @@ export function isListLike(val: unknown): boolean {
     if (Symbol.iterator in (val as object)) {
       return true;
     }
-    const len = (val as Record<string, unknown>)["length"];
+    const len = (val as { length?: unknown }).length;
     if (typeof len === "number" && len >= 0 && Number.isInteger(len)) {
       return true;
     }
@@ -139,7 +139,7 @@ export function isArrayLike(val: unknown): boolean {
   if (typeof val !== "object" && typeof val !== "function") {
     return false;
   }
-  const len = (val as Record<string, unknown>)["length"];
+  const len = (val as { length?: unknown }).length;
   return typeof len === "number" && len >= 0 && Number.isInteger(len);
 }
 
@@ -197,7 +197,7 @@ export function isIterator(val: unknown): boolean {
   if (typeof val !== "object" && typeof val !== "function") {
     return false;
   }
-  return typeof (val as Record<string, unknown>)["next"] === "function";
+  return typeof (val as { next?: unknown }).next === "function";
 }
 
 /**

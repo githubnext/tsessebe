@@ -113,7 +113,7 @@ function applyWindow(
   minN: number,
   agg: (nums: number[], n: number) => Scalar,
 ): SeriesLike {
-  const { values, index, name } = series;
+  const { values, name } = series;
   const n = values.length;
   const minPeriods = opts.minPeriods ?? window;
   const effectiveMin = Math.max(minN, minPeriods);

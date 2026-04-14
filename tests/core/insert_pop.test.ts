@@ -81,8 +81,9 @@ describe("insertColumn", () => {
   test("allows duplicate column when allowDuplicates=true", () => {
     const df = makeDF();
     const df2 = insertColumn(df, 1, "a", [99, 99, 99], true);
-    // Map-backed DataFrame deduplicates keys, so the "a" column is replaced
-    expect(df2.shape[1]).toBe(3);
+    // columnNames array preserves duplicates; shape grows to 4
+    expect(df2.shape[1]).toBe(4);
+    // col("a") returns the last-set value in the Map (the new column)
     expect(df2.col("a").values).toEqual([99, 99, 99]);
   });
 

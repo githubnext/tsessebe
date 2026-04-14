@@ -96,7 +96,7 @@ describe("histogram", () => {
   it("2-bin example", () => {
     const { counts } = histogram([1, 2, 3, 4, 5], { bins: 2 });
     expect(counts.length).toBe(2);
-    expect(counts[0]! + counts[1]!).toBe(5);
+    expect((counts[0] ?? 0) + (counts[1] ?? 0)).toBe(5);
   });
 
   it("right-most value lands in last bin", () => {
@@ -110,7 +110,7 @@ describe("histogram", () => {
     });
     expect(binEdges).toEqual([1, 3, 5]);
     expect(counts.length).toBe(2);
-    expect(counts[0]! + counts[1]!).toBe(5);
+    expect((counts[0] ?? 0) + (counts[1] ?? 0)).toBe(5);
   });
 
   it("density normalisation: integral ≈ 1", () => {
@@ -309,10 +309,10 @@ describe("zscore", () => {
     const s = ns([1, 2, 3, 4, 5]);
     const z0 = vals(zscore(s, { ddof: 0 })).filter((v): v is number => typeof v === "number");
     const z1 = vals(zscore(s, { ddof: 1 })).filter((v): v is number => typeof v === "number");
-    // ddof=0 produces smaller values (divided by larger std denominator)
+    // ddof=0 divides by n (not n-1), producing smaller std → larger z-scores
     const range0 = Math.max(...z0) - Math.min(...z0);
     const range1 = Math.max(...z1) - Math.min(...z1);
-    expect(range0).toBeLessThan(range1);
+    expect(range0).toBeGreaterThan(range1);
   });
 
   it("preserves index labels", () => {
@@ -438,18 +438,10 @@ describe("property: histogram counts match input count", () => {
   it("sum of counts equals number of in-range finite values", () => {
     fc.assert(
       fc.property(
-        fc.array(
-          fc.float({
-            noNaN: true,
-            noDefaultInfinity: true,
-            min: Math.fround(0),
-            max: Math.fround(100),
-          }),
-          {
-            minLength: 1,
-            maxLength: 100,
-          },
-        ),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 100 }), {
+          minLength: 1,
+          maxLength: 100,
+        }),
         fc.integer({ min: 1, max: 20 }),
         (values, bins) => {
           const { counts } = histogram(values, { bins });
@@ -465,24 +457,15 @@ describe("property: linspace endpoints", () => {
   it("first element is start, last element is stop", () => {
     fc.assert(
       fc.property(
-        fc.float({
-          noNaN: true,
-          noDefaultInfinity: true,
-          min: Math.fround(-100),
-          max: Math.fround(0),
-        }),
-        fc.float({
-          noNaN: true,
-          noDefaultInfinity: true,
-          min: Math.fround(1),
-          max: Math.fround(100),
-        }),
+        fc.float({ noNaN: true, noDefaultInfinity: true, min: -100, max: 0 }),
+        fc.float({ noNaN: true, noDefaultInfinity: true, min: 1, max: 100 }),
         fc.integer({ min: 2, max: 200 }),
         (start, stop, num) => {
           const r = linspace(start, stop, num);
           expect(r.length).toBe(num);
-          expect(r[0]).toBe(start);
-          expect(r.at(-1)).toBe(stop);
+          // Use toEqual to handle -0 === 0 correctly
+          expect(r[0]).toEqual(start);
+          expect(r.at(-1)).toEqual(stop);
         },
       ),
     );

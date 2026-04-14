@@ -1,250 +1,289 @@
 /**
- * where / mask — conditional value selection and replacement.
+ * where_mask — element-wise conditional selection for Series and DataFrame.
  *
- * Mirrors:
- * - `pandas.Series.where(cond, other=NaN)`  — keep values where `cond` is true
- * - `pandas.Series.mask(cond, other=NaN)`   — replace values where `cond` is true
- * - `pandas.DataFrame.where(cond, other=NaN)`
- * - `pandas.DataFrame.mask(cond, other=NaN)`
+ * Mirrors the following pandas methods:
+ * - `Series.where(cond, other)` — keep values where `cond` is truthy, replace with `other` elsewhere
+ * - `Series.mask(cond, other)` — inverse of `where`; keep where `cond` is falsy
+ * - `DataFrame.where(cond, other)` — element-wise `where` for DataFrames
+ * - `DataFrame.mask(cond, other)` — element-wise `mask` for DataFrames
  *
- * The `cond` argument may be:
- *   - an element-wise predicate `(value: Scalar, index: number) => boolean`
- *   - a `Series<boolean>` / `readonly boolean[]` (for Series variants)
- *   - a boolean `DataFrame` (for DataFrame variants)
+ * The `cond` parameter accepts:
+ * - A boolean array (aligned positionally to the series/column values)
+ * - A boolean `Series<boolean>` (aligned by label to the target series)
+ * - A callable `(s: Series<Scalar>) => boolean[] | Series<boolean>` for Series ops
+ * - A boolean `DataFrame` (aligned by label) for DataFrame ops
+ * - A callable `(df: DataFrame) => DataFrame` returning a boolean DataFrame for DataFrame ops
  *
- * `other` is the replacement value when the condition is not met.
- * Defaults to `null` (analogous to `NaN` in pandas).
+ * All functions are **pure** — inputs are never mutated.
+ * Missing values in `cond` are treated as `false` (i.e. the position is replaced).
  *
  * @module
  */
 
 import { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
-import type { Scalar } from "../types.ts";
+import type { Label, Scalar } from "../types.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
 
-/** Element-wise predicate used as a `cond` argument. */
-export type WherePredicate = (value: Scalar, index: number) => boolean;
+/**
+ * A boolean condition for a Series operation.
+ *
+ * - `readonly boolean[]` — positional mask (must match series length)
+ * - `Series<boolean>` — label-aligned boolean series
+ * - `(s: Series<Scalar>) => readonly boolean[] | Series<boolean>` — callable
+ */
+export type SeriesCond =
+  | readonly boolean[]
+  | Series<boolean>
+  | ((s: Series<Scalar>) => readonly boolean[] | Series<boolean>);
 
 /**
- * A condition for {@link whereSeries} / {@link maskSeries}.
+ * A boolean condition for a DataFrame operation.
  *
- * May be:
- * - a `WherePredicate` (called for each element)
- * - a `Series<boolean>` whose values are aligned by position
- * - a `readonly boolean[]` aligned by position
+ * - `DataFrame` — label-aligned boolean DataFrame
+ * - `(df: DataFrame) => DataFrame` — callable returning a boolean DataFrame
  */
-export type SeriesCond = WherePredicate | Series<boolean> | readonly boolean[];
+export type DataFrameCond = DataFrame | ((df: DataFrame) => DataFrame);
 
-/**
- * A condition for {@link whereDataFrame} / {@link maskDataFrame}.
- *
- * May be:
- * - a `WherePredicate` applied element-wise across all columns
- * - a `DataFrame` of boolean values aligned by column name and position
- */
-export type DataFrameCond = WherePredicate | DataFrame;
-
-/** Options shared by `where` and `mask` variants. */
-export interface WhereMaskOptions {
+/** Options for {@link seriesWhere} and {@link seriesMask}. */
+export interface SeriesWhereOptions {
   /**
-   * Replacement value used where the condition is **not** satisfied (for
-   * `where`) or **is** satisfied (for `mask`).
-   * @defaultValue `null`
+   * Replacement value for positions where the condition is not satisfied.
+   * Defaults to `null` (pandas uses `NaN` for numeric; we use `null` as the
+   * universal missing sentinel in tsb).
+   */
+  readonly other?: Scalar;
+}
+
+/** Options for {@link dataFrameWhere} and {@link dataFrameMask}. */
+export interface DataFrameWhereOptions {
+  /**
+   * Replacement value for positions where the condition is not satisfied.
+   * Defaults to `null`.
    */
   readonly other?: Scalar;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-/** Resolve `SeriesCond` to a boolean array of length `n`. */
-function resolveSeriesCond(cond: SeriesCond, n: number, vals: readonly Scalar[]): boolean[] {
-  if (typeof cond === "function") {
-    return vals.map((v, i) => cond(v, i));
-  }
-  const bools: readonly boolean[] = cond instanceof Series ? cond.values : cond;
-  if (bools.length !== n) {
-    throw new RangeError(`Condition length ${bools.length} does not match Series length ${n}`);
-  }
-  return [...bools];
-}
-
 /**
- * Core apply: return a new array where `keepWhenTrue` controls the semantics.
- * - `keepWhenTrue = true`  → **where**: keep value when cond[i] is true
- * - `keepWhenTrue = false` → **mask**: keep value when cond[i] is false
- */
-function applyCondition(
-  vals: readonly Scalar[],
-  bools: boolean[],
-  other: Scalar,
-  keepWhenTrue: boolean,
-): Scalar[] {
-  const out: Scalar[] = new Array<Scalar>(vals.length);
-  for (let i = 0; i < vals.length; i++) {
-    const keep = keepWhenTrue ? (bools[i] as boolean) : !(bools[i] as boolean);
-    out[i] = keep ? (vals[i] as Scalar) : other;
-  }
-  return out;
-}
-
-// ─── Series where ─────────────────────────────────────────────────────────────
-
-/**
- * Return a copy of `series` with values **kept** where `cond` is true and
- * replaced with `other` where `cond` is false.
+ * Resolve a {@link SeriesCond} to a positional boolean array aligned to
+ * `series`.
  *
- * Mirrors `pandas.Series.where(cond, other=NaN)`.
+ * For a label-aligned `Series<boolean>`, labels that are absent in the target
+ * series are treated as `false`.
+ */
+function resolveSeriesCond(series: Series<Scalar>, cond: SeriesCond): readonly boolean[] {
+  if (typeof cond === "function") {
+    const resolved = cond(series);
+    return resolveSeriesCond(series, resolved);
+  }
+
+  if (Array.isArray(cond)) {
+    return cond as readonly boolean[];
+  }
+
+  // Series<boolean> — align by label
+  const boolSeries = cond as Series<boolean>;
+  const labels = series.index.values as readonly Label[];
+  return labels.map((label) => {
+    const pos = boolSeries.index.values.indexOf(label);
+    if (pos === -1) {
+      return false;
+    }
+    const v = boolSeries.values[pos];
+    return v === true;
+  });
+}
+
+/**
+ * Apply a positional boolean mask to `series`.
+ *
+ * @param series - source series
+ * @param mask - `true` → keep original, `false` → use `other`
+ * @param other - replacement value (default `null`)
+ */
+function applyMaskToSeries(
+  series: Series<Scalar>,
+  mask: readonly boolean[],
+  other: Scalar,
+): Series<Scalar> {
+  const result: Scalar[] = series.values.map((v, i) => (mask[i] === true ? v : other));
+  return new Series<Scalar>({ data: result, index: series.index, name: series.name });
+}
+
+// ─── Series operations ────────────────────────────────────────────────────────
+
+/**
+ * Return a new Series keeping values where `cond` is truthy, replacing all
+ * other positions with `other` (default `null`).
+ *
+ * Mirrors `pandas.Series.where(cond, other)`.
  *
  * @example
  * ```ts
- * import { Series, whereSeries } from "tsb";
  * const s = new Series({ data: [1, 2, 3, 4, 5] });
- * whereSeries(s, (v) => (v as number) > 2).values;
- * // [null, null, 3, 4, 5]
+ * seriesWhere(s, [true, false, true, false, true]);
+ * // Series [1, null, 3, null, 5]
+ *
+ * seriesWhere(s, (x) => x.values.map((v) => (v as number) > 2), { other: 0 });
+ * // Series [0, 0, 3, 4, 5]
  * ```
  */
-export function whereSeries(
+export function seriesWhere(
   series: Series<Scalar>,
   cond: SeriesCond,
-  options?: WhereMaskOptions,
+  options: SeriesWhereOptions = {},
 ): Series<Scalar> {
-  const other = options?.other ?? null;
-  const bools = resolveSeriesCond(cond, series.values.length, series.values);
-  const data = applyCondition(series.values, bools, other, true);
-  return new Series<Scalar>({ data, index: series.index, name: series.name });
+  const other: Scalar = options.other !== undefined ? options.other : null;
+  const mask = resolveSeriesCond(series, cond);
+  return applyMaskToSeries(series, mask, other);
 }
 
-// ─── Series mask ──────────────────────────────────────────────────────────────
-
 /**
- * Return a copy of `series` with values **replaced** by `other` where `cond`
- * is true (and kept where `cond` is false).
+ * Return a new Series keeping values where `cond` is **falsy**, replacing all
+ * other positions with `other` (default `null`).
  *
- * Mirrors `pandas.Series.mask(cond, other=NaN)`.
+ * Mirrors `pandas.Series.mask(cond, other)`.
+ *
+ * `mask` is the exact inverse of `where`:
+ * `seriesMask(s, cond) === seriesWhere(s, inverted_cond)`
  *
  * @example
  * ```ts
- * import { Series, maskSeries } from "tsb";
  * const s = new Series({ data: [1, 2, 3, 4, 5] });
- * maskSeries(s, (v) => (v as number) > 2).values;
- * // [1, 2, null, null, null]
+ * seriesMask(s, [true, false, true, false, true]);
+ * // Series [null, 2, null, 4, null]
+ *
+ * seriesMask(s, (x) => x.values.map((v) => (v as number) > 2), { other: -1 });
+ * // Series [1, 2, -1, -1, -1]
  * ```
  */
-export function maskSeries(
+export function seriesMask(
   series: Series<Scalar>,
   cond: SeriesCond,
-  options?: WhereMaskOptions,
+  options: SeriesWhereOptions = {},
 ): Series<Scalar> {
-  const other = options?.other ?? null;
-  const bools = resolveSeriesCond(cond, series.values.length, series.values);
-  const data = applyCondition(series.values, bools, other, false);
-  return new Series<Scalar>({ data, index: series.index, name: series.name });
+  const other: Scalar = options.other !== undefined ? options.other : null;
+  const mask = resolveSeriesCond(series, cond);
+  // Invert: keep where cond is FALSE
+  const inverted = mask.map((b) => !b);
+  return applyMaskToSeries(series, inverted, other);
 }
 
-// ─── DataFrame where ──────────────────────────────────────────────────────────
+// ─── DataFrame operations ─────────────────────────────────────────────────────
 
 /**
- * Resolve a `DataFrameCond` for a specific column of length `n`.
- * Returns a boolean array where `true` means "keep the value".
+ * Resolve a {@link DataFrameCond} to a per-column positional boolean array map.
+ *
+ * For a label-aligned boolean `DataFrame`, missing column/row labels are treated
+ * as `false`.
  */
-function resolveDataFrameCond(
-  cond: DataFrameCond,
-  colName: string,
-  n: number,
-  vals: readonly Scalar[],
-): boolean[] {
-  if (typeof cond === "function") {
-    return vals.map((v, i) => (cond as WherePredicate)(v, i));
+function resolveDataFrameCond(df: DataFrame, cond: DataFrameCond): Map<string, readonly boolean[]> {
+  const condDf: DataFrame = typeof cond === "function" ? cond(df) : cond;
+
+  const result = new Map<string, readonly boolean[]>();
+  const rowLabels = df.index.values as readonly Label[];
+
+  for (const colName of df.columns.values) {
+    if (!condDf.columns.contains(colName)) {
+      // Column absent from condition → treat entire column as false
+      result.set(
+        colName,
+        rowLabels.map(() => false),
+      );
+      continue;
+    }
+
+    const condCol = condDf.col(colName);
+    const rowMask: boolean[] = rowLabels.map((label) => {
+      const rowPos = condDf.index.values.indexOf(label);
+      if (rowPos === -1) {
+        return false;
+      }
+      return condCol.values[rowPos] === true;
+    });
+    result.set(colName, rowMask);
   }
-  // cond is a boolean DataFrame — look up column by name
-  const condCol = cond.get(colName);
-  if (condCol === undefined) {
-    // Column not present in condition → treat all as false (don't keep / do mask)
-    return new Array<boolean>(n).fill(false);
-  }
-  const bools = condCol.values;
-  if (bools.length !== n) {
-    throw new RangeError(
-      `Condition column "${colName}" length ${bools.length} does not match DataFrame rows ${n}`,
-    );
-  }
-  return bools.map((v) => Boolean(v));
+  return result;
 }
 
 /**
- * Apply a condition column-wise across a DataFrame.
+ * Return a new DataFrame keeping values where the element-wise `cond` is
+ * truthy, replacing all other positions with `other` (default `null`).
  *
- * @param df            Input DataFrame
- * @param cond          Condition (predicate or boolean DataFrame)
- * @param other         Replacement scalar
- * @param keepWhenTrue  `true` → where semantics; `false` → mask semantics
- */
-function applyDfCond(
-  df: DataFrame,
-  cond: DataFrameCond,
-  other: Scalar,
-  keepWhenTrue: boolean,
-): DataFrame {
-  const nrows = df.shape[0];
-  const colMap = new Map<string, Series<Scalar>>();
-
-  for (const name of df.columns.values) {
-    const col = df.col(name);
-    const bools = resolveDataFrameCond(cond, name, nrows, col.values);
-    const data = applyCondition(col.values, bools, other, keepWhenTrue);
-    colMap.set(name, new Series<Scalar>({ data, index: df.index, name }));
-  }
-
-  return new DataFrame(colMap, df.index);
-}
-
-/**
- * Return a copy of `df` with cell values **kept** where `cond` is true and
- * replaced with `other` where `cond` is false.
+ * Mirrors `pandas.DataFrame.where(cond, other)`.
  *
- * `cond` may be an element-wise predicate or a boolean `DataFrame` aligned
- * column-by-column with `df`.
- *
- * Mirrors `pandas.DataFrame.where(cond, other=NaN)`.
+ * `cond` may be:
+ * - A `DataFrame` of booleans (label-aligned)
+ * - A callable `(df: DataFrame) => DataFrame` that returns a boolean DataFrame
  *
  * @example
  * ```ts
- * import { DataFrame, whereDataFrame } from "tsb";
- * const df = DataFrame.fromColumns({ a: [1, -2, 3], b: [-4, 5, -6] });
- * whereDataFrame(df, (v) => (v as number) >= 0).col("a").values;
- * // [1, null, 3]
+ * const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+ * const mask = DataFrame.fromColumns({ a: [true, false, true], b: [false, true, false] });
+ * dataFrameWhere(df, mask);
+ * // DataFrame { a: [1, null, 3], b: [null, 5, null] }
+ *
+ * dataFrameWhere(df, (d) =>
+ *   DataFrame.fromColumns(
+ *     Object.fromEntries(d.columns.map((c) => [c, d.col(c as string).values.map((v) => (v as number) > 2)]))
+ *   )
+ * );
+ * // DataFrame { a: [null, null, 3], b: [4, 5, 6] }
  * ```
  */
-export function whereDataFrame(
+export function dataFrameWhere(
   df: DataFrame,
   cond: DataFrameCond,
-  options?: WhereMaskOptions,
+  options: DataFrameWhereOptions = {},
 ): DataFrame {
-  return applyDfCond(df, cond, options?.other ?? null, true);
+  const other: Scalar = options.other !== undefined ? options.other : null;
+  const condMap = resolveDataFrameCond(df, cond);
+
+  const resultCols: Record<string, Scalar[]> = {};
+  for (const colName of df.columns.values) {
+    const srcCol = df.col(colName);
+    const mask = condMap.get(colName) ?? srcCol.values.map(() => false);
+    resultCols[colName] = srcCol.values.map((v, i) => (mask[i] === true ? v : other));
+  }
+
+  return DataFrame.fromColumns(resultCols, { index: df.index });
 }
 
-// ─── DataFrame mask ───────────────────────────────────────────────────────────
-
 /**
- * Return a copy of `df` with cell values **replaced** by `other` where `cond`
- * is true (kept where `cond` is false).
+ * Return a new DataFrame keeping values where the element-wise `cond` is
+ * **falsy**, replacing all other positions with `other` (default `null`).
  *
- * Mirrors `pandas.DataFrame.mask(cond, other=NaN)`.
+ * Mirrors `pandas.DataFrame.mask(cond, other)`.
  *
  * @example
  * ```ts
- * import { DataFrame, maskDataFrame } from "tsb";
- * const df = DataFrame.fromColumns({ a: [1, -2, 3], b: [-4, 5, -6] });
- * maskDataFrame(df, (v) => (v as number) < 0).col("a").values;
- * // [1, null, 3]
+ * const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+ * dataFrameMask(df, (d) =>
+ *   DataFrame.fromColumns(
+ *     Object.fromEntries(d.columns.values.map((c) => [c, d.col(c).values.map((v) => (v as number) > 2)]))
+ *   )
+ * );
+ * // DataFrame { a: [1, 2, null], b: [null, null, null] }
  * ```
  */
-export function maskDataFrame(
+export function dataFrameMask(
   df: DataFrame,
   cond: DataFrameCond,
-  options?: WhereMaskOptions,
+  options: DataFrameWhereOptions = {},
 ): DataFrame {
-  return applyDfCond(df, cond, options?.other ?? null, false);
+  const other: Scalar = options.other !== undefined ? options.other : null;
+  const condMap = resolveDataFrameCond(df, cond);
+
+  const resultCols: Record<string, Scalar[]> = {};
+  for (const colName of df.columns.values) {
+    const srcCol = df.col(colName);
+    const mask = condMap.get(colName) ?? srcCol.values.map(() => false);
+    // Invert: keep where cond is FALSE
+    resultCols[colName] = srcCol.values.map((v, i) => (mask[i] !== true ? v : other));
+  }
+
+  return DataFrame.fromColumns(resultCols, { index: df.index });
 }
