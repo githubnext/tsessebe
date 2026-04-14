@@ -134,11 +134,13 @@ describe("wideToLong — multiple id columns", () => {
 
 describe("wideToLong — missing stub columns", () => {
   test("missing wide column fills with null", () => {
-    // A1 and B1/B2 exist; A2 does not — A2 values should be null
-    const df = DataFrame.fromColumns({ id: [1], A1: [10], B1: [20], B2: [30] });
-    const long = wideToLong(df, ["A", "B"], "id", "n", { suffix: "[12]" });
-    // suffix "2" discovered from B2; A2 missing → null
+    // A1 and B2 exist, but A2 and B1 do not — missing stub columns fill with null.
+    // Both suffixes "1" and "2" are discovered across the two stubs.
+    const df = DataFrame.fromColumns({ id: [1], A1: [10], B2: [20] });
+    const long = wideToLong(df, ["A", "B"], "id", "n");
+    // suffix 1 → A1=10, B1=null;  suffix 2 → A2=null, B2=20
     expect(long.col("A").values).toEqual([10, null]);
+    expect(long.col("B").values).toEqual([null, 20]);
   });
 });
 
@@ -200,14 +202,13 @@ describe("property-based", () => {
           const df = DataFrame.fromColumns(colData);
           const long = wideToLong(df, "v", "id", "n");
           const outId = long.col("id").values;
-          // Total row count should be originalRows × nSuffix
-          if (outId.length !== idVals.length * nSuffix) return false;
-          // Each unique id value appears (its original count × nSuffix) times
-          const uniqueIds = [...new Set(idVals)];
-          return uniqueIds.every((v) => {
-            const origCount = idVals.filter((x) => x === v).length;
-            return outId.filter((x) => x === v).length === origCount * nSuffix;
-          });
+          // Output id column is the input id repeated once per suffix,
+          // concatenated in suffix order.
+          const expected: number[] = [];
+          for (let s = 0; s < nSuffix; s++) {
+            expected.push(...idVals);
+          }
+          return outId.length === expected.length && outId.every((v, i) => v === expected[i]);
         },
       ),
     );

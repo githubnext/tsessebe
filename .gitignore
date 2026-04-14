@@ -3,3 +3,5 @@ dist/
 *.tsbuildinfo
 package-lock.json
 *.tgz
+playground/benchmarks/
+playground/dist/

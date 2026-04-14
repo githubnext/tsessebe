@@ -4,8 +4,9 @@
  */
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, RangeIndex, Series } from "../../src/index.ts";
-import type { Scalar } from "../../src/index.ts";
+import { DataFrame, Index, Series } from "../../src/index.ts";
+import type { Label, Scalar } from "../../src/index.ts";
+
 import {
   countValid,
   countna,
@@ -27,11 +28,10 @@ function sv(series: Series<Scalar>): readonly Scalar[] {
   return series.values;
 }
 
-/** Build a DataFrame from a column Map, inferring a default RangeIndex. */
-function mkdf(cols: ReadonlyMap<string, Series<Scalar>>): DataFrame {
+function dfFromMap(cols: ReadonlyMap<string, Series<Scalar>>): DataFrame {
   const first = cols.values().next().value;
-  const n = first !== undefined ? first.values.length : 0;
-  return new DataFrame(cols, new RangeIndex(n));
+  const idx = first !== undefined ? first.index : new Index<Label>([]);
+  return new DataFrame(cols, idx);
 }
 
 // ─── isna — scalar ────────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ describe("isna — Series", () => {
 
 describe("isna — DataFrame", () => {
   it("returns boolean DataFrame", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([1, null, 3]) as Series<Scalar>],
         ["b", s([Number.NaN, 5, null]) as Series<Scalar>],
@@ -138,7 +138,7 @@ describe("isna — DataFrame", () => {
   });
 
   it("returns all-false DataFrame for complete data", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["x", s([1, 2]) as Series<Scalar>],
         ["y", s([3, 4]) as Series<Scalar>],
@@ -233,7 +233,7 @@ describe("isnull / notnull — aliases", () => {
   });
 
   it("isnull(DataFrame) matches isna(DataFrame) column values", () => {
-    const df = mkdf(new Map([["a", s([null, 1, Number.NaN]) as Series<Scalar>]]));
+    const df = dfFromMap(new Map([["a", s([null, 1, Number.NaN]) as Series<Scalar>]]));
     const r1 = isnull(df);
     const r2 = isna(df);
     expect(sv(r1.col("a"))).toEqual(sv(r2.col("a")));
@@ -302,7 +302,7 @@ describe("fillna — Series", () => {
 
 describe("fillna — DataFrame", () => {
   it("fills all missing cells with value", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([1, null]) as Series<Scalar>],
         ["b", s([Number.NaN, 5]) as Series<Scalar>],
@@ -357,7 +357,7 @@ describe("dropna — Series", () => {
 
 describe("dropna — DataFrame axis=0 how=any", () => {
   it("drops rows with any missing value", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([1, null, 3]) as Series<Scalar>],
         ["b", s([4, 5, 6]) as Series<Scalar>],
@@ -370,7 +370,7 @@ describe("dropna — DataFrame axis=0 how=any", () => {
   });
 
   it("keeps all rows when no missing values", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["x", s([1, 2, 3]) as Series<Scalar>],
         ["y", s([4, 5, 6]) as Series<Scalar>],
@@ -381,7 +381,7 @@ describe("dropna — DataFrame axis=0 how=any", () => {
   });
 
   it("drops all rows when every row has a missing value", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([null, null]) as Series<Scalar>],
         ["b", s([1, 2]) as Series<Scalar>],
@@ -396,7 +396,7 @@ describe("dropna — DataFrame axis=0 how=any", () => {
 
 describe("dropna — DataFrame axis=0 how=all", () => {
   it("keeps rows with at least one non-missing value", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([1, null, null]) as Series<Scalar>],
         ["b", s([4, null, 6]) as Series<Scalar>],
@@ -409,7 +409,7 @@ describe("dropna — DataFrame axis=0 how=all", () => {
   });
 
   it("drops rows only when all values are missing", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([null, null]) as Series<Scalar>],
         ["b", s([null, 2]) as Series<Scalar>],
@@ -425,7 +425,7 @@ describe("dropna — DataFrame axis=0 how=all", () => {
 
 describe("dropna — DataFrame axis=1", () => {
   it("drops columns with any missing value", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([1, 2, 3]) as Series<Scalar>],
         ["b", s([4, null, 6]) as Series<Scalar>],
@@ -437,7 +437,7 @@ describe("dropna — DataFrame axis=1", () => {
   });
 
   it("keeps all columns when no missing values", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([1, 2]) as Series<Scalar>],
         ["b", s([3, 4]) as Series<Scalar>],
@@ -448,7 +448,7 @@ describe("dropna — DataFrame axis=1", () => {
   });
 
   it("drops columns only when all values missing (how=all)", () => {
-    const df = mkdf(
+    const df = dfFromMap(
       new Map([
         ["a", s([null, null]) as Series<Scalar>],
         ["b", s([null, 1]) as Series<Scalar>],

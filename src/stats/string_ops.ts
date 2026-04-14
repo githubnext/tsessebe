@@ -30,7 +30,7 @@ import type { Scalar } from "../types.ts";
 export type NormalizeForm = "NFC" | "NFD" | "NFKC" | "NFKD";
 
 /** Input accepted by all string-op functions. */
-export type StrInput = Series<Scalar> | readonly string[] | string;
+export type StrInput = Series<Scalar> | readonly Scalar[] | readonly string[] | string;
 
 /** Options for {@link strGetDummies}. */
 export interface GetDummiesOptions {
@@ -247,13 +247,15 @@ export function strExtractAll(
   const data: Scalar[] = strs.map((s) => {
     const matches: string[][] = [];
     re.lastIndex = 0;
-    let m: RegExpExecArray | null = re.exec(s);
-    while (m !== null) {
+    for (;;) {
+      const m = re.exec(s);
+      if (m === null) {
+        break;
+      }
       matches.push([...m]);
       if (!re.global) {
         break;
       }
-      m = re.exec(s);
     }
     // Store as JSON string so it fits in Scalar; consumers can JSON.parse
     return JSON.stringify(matches);

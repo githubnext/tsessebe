@@ -113,21 +113,13 @@ function intervalLabel(lo: number, hi: number, right: boolean, precision: number
 
 /** Compute the k-th quantile (0–1) of a sorted (non-NaN) array using linear interpolation. */
 function quantileOfSorted(sorted: readonly number[], q: number): number {
-  if (sorted.length === 0) {
-    return Number.NaN;
-  }
-  if (q <= 0) {
-    return sorted[0] as number;
-  }
-  if (q >= 1) {
-    return sorted.at(-1) as number;
-  }
+  if (sorted.length === 0) return Number.NaN;
+  if (q <= 0) return sorted[0] as number;
+  if (q >= 1) return sorted[sorted.length - 1] as number;
   const idx = q * (sorted.length - 1);
   const lo = Math.floor(idx);
   const hi = Math.ceil(idx);
-  if (lo === hi) {
-    return sorted[lo] as number;
-  }
+  if (lo === hi) return sorted[lo] as number;
   const frac = idx - lo;
   return (sorted[lo] as number) * (1 - frac) + (sorted[hi] as number) * frac;
 }
@@ -136,7 +128,7 @@ function quantileOfSorted(sorted: readonly number[], q: number): number {
 function deduplicateEdges(edges: number[], duplicates: "raise" | "drop"): number[] {
   const deduped: number[] = [edges[0] as number];
   for (let i = 1; i < edges.length; i++) {
-    if ((edges[i] as number) === deduped.at(-1)) {
+    if ((edges[i] as number) === deduped[deduped.length - 1]) {
       if (duplicates === "raise") {
         throw new Error(
           `Duplicate bin edge ${edges[i]}. Pass duplicates="drop" to silently remove duplicates.`,
@@ -159,30 +151,22 @@ function assignBins(
 ): Array<number | null> {
   const n = edges.length - 1; // number of bins
   return values.map((v) => {
-    if (!Number.isFinite(v) || Number.isNaN(v)) {
-      return null;
-    }
+    if (!Number.isFinite(v) || Number.isNaN(v)) return null;
     // Binary search for the bin
     let lo = 0;
     let hi = n - 1;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
       const binHi = edges[mid + 1] as number;
-      const _binLo = edges[mid] as number;
+      const binLo = edges[mid] as number;
       if (right) {
         // (binLo, binHi]
-        if (v <= binHi) {
-          hi = mid;
-        } else {
-          lo = mid + 1;
-        }
+        if (v <= binHi) hi = mid;
+        else lo = mid + 1;
       } else {
         // [binLo, binHi)
-        if (v < binHi) {
-          hi = mid;
-        } else {
-          lo = mid + 1;
-        }
+        if (v < binHi) hi = mid;
+        else lo = mid + 1;
       }
     }
     // Validate the found bin
@@ -190,23 +174,15 @@ function assignBins(
     const binHi = edges[lo + 1] as number;
     if (right) {
       // (binLo, binHi] — but first bin may be [binLo, binHi] if include_lowest
-      if (v > binHi) {
-        return null;
-      }
+      if (v > binHi) return null;
       if (lo === 0 && include_lowest) {
-        if (v < binLo) {
-          return null;
-        }
-      } else if (v <= binLo) {
-        return null;
-      }
+        if (v < binLo) return null;
+      } else if (v <= binLo) return null;
     } else {
       // [binLo, binHi)
       if (v < binLo || v >= binHi) {
         // Last bin includes the right edge
-        if (lo === n - 1 && v === binHi) {
-          return lo;
-        }
+        if (lo === n - 1 && v === binHi) return lo;
         return null;
       }
     }
@@ -242,7 +218,7 @@ export function cut(
     right = true,
     include_lowest = false,
     precision = 3,
-    duplicates: _duplicates = "raise",
+    duplicates = "raise",
   } = options;
 
   // ── build bin edges ─────────────────────────────────────────────────────────
@@ -260,27 +236,16 @@ export function cut(
     if (mn === mx) {
       throw new Error("Cannot cut constant array (all values identical).");
     }
-    if (right) {
-      const step = (mx - mn) / bins;
-      edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
-      // Extend the lower edge so the minimum is inside the first (a, b] interval
-      edges[0] = mn - step * 0.001;
-      // Pin the upper edge to the exact max (avoids floating-point drift)
-      edges[edges.length - 1] = mx;
-    } else {
-      // For left-closed [a, b) intervals, extend the upper end so the max is included;
-      // linspace from mn to adjustedMx distributes the extension across all edges,
-      // keeping boundary values in the lower bin (matching pandas behaviour).
-      const adjustedMx = mx + (mx - mn) * 0.001;
-      const step = (adjustedMx - mn) / bins;
-      edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
+    const step = (mx - mn) / bins;
+    edges = Array.from({ length: bins + 1 }, (_, i) => mn + i * step);
+    // Slightly extend the lower edge so the minimum value is included
+    edges[0] = mn - step * 0.001;
+    // Guard against floating-point drift: ensure the last edge covers the max
+    const lastIdx = edges.length - 1;
+    if ((edges[lastIdx] as number) < mx) {
+      edges[lastIdx] = mx;
     }
-    // Auto-computed edges may have floating-point duplicates for tiny ranges;
-    // silently drop them to avoid spurious errors.
-    edges = deduplicateEdges(edges, "drop");
-    if (edges.length < 2) {
-      throw new Error("Cannot cut constant array (all values identical).");
-    }
+    edges = deduplicateEdges(edges, duplicates);
   } else {
     if (bins.length < 2) {
       throw new Error("At least 2 bin edges must be supplied.");
@@ -370,7 +335,7 @@ export function qcut(
         throw new Error("Quantile probabilities must be monotonically increasing.");
       }
     }
-    if ((quantiles[0] as number) < 0 || (quantiles.at(-1) as number) > 1) {
+    if ((quantiles[0] as number) < 0 || (quantiles[quantiles.length - 1] as number) > 1) {
       throw new Error("Quantile probabilities must be in [0, 1].");
     }
   }

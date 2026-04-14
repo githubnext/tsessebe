@@ -133,6 +133,7 @@ describe("rollingSkew", () => {
   });
 
   it("left-skewed data → negative skew", () => {
+    // [1, 9, 10] has a long left tail (low outlier) → negative skewness
     const out = vals(rollingSkew(s([1, 9, 10]), 3));
     const v = out[2];
     expect(typeof v).toBe("number");
@@ -221,6 +222,7 @@ describe("rollingQuantile", () => {
     expect(close(out[2] as number, 1)).toBe(true);
     expect(close(out[3] as number, 1)).toBe(true);
     expect(close(out[4] as number, 1)).toBe(true);
+    // window [1,5,9] → min is 1
     expect(close(out[5] as number, 1)).toBe(true);
   });
 
@@ -288,41 +290,6 @@ describe("rollingQuantile", () => {
   });
 });
 
-// ─── property helpers ─────────────────────────────────────────────────────────
-
-/** Returns true if every non-null value in `result` is a non-negative number. */
-function allNonNegative(result: readonly (number | null | undefined)[]): boolean {
-  for (const v of result) {
-    if (v !== null && v !== undefined && (typeof v !== "number" || v < -1e-12)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/** Returns true if lo ≤ med ≤ hi (with tolerance) for every non-null triple. */
-function quantilesOrdered(
-  lo: readonly (number | null | undefined)[],
-  med: readonly (number | null | undefined)[],
-  hi: readonly (number | null | undefined)[],
-): boolean {
-  for (let i = 0; i < lo.length; i++) {
-    const l = lo[i];
-    const m = med[i];
-    const h = hi[i];
-    if (l === null || m === null || h === null) {
-      continue;
-    }
-    if ((l as number) > (m as number) + 1e-9) {
-      return false;
-    }
-    if ((m as number) > (h as number) + 1e-9) {
-      return false;
-    }
-  }
-  return true;
-}
-
 // ─── property-based tests ─────────────────────────────────────────────────────
 
 describe("window_extended — property tests", () => {
@@ -334,7 +301,20 @@ describe("window_extended — property tests", () => {
           maxLength: 20,
         }),
         fc.integer({ min: 2, max: 10 }),
-        (data, window) => allNonNegative(vals(rollingSem(s(data), window))),
+        (data, window) => {
+          const result = vals(rollingSem(s(data), window));
+          for (const v of result) {
+            if (v !== null && v !== undefined) {
+              if (typeof v !== "number") {
+                return false;
+              }
+              if (v < -1e-12) {
+                return false;
+              }
+            }
+          }
+          return true;
+        },
       ),
     );
   });
@@ -347,12 +327,26 @@ describe("window_extended — property tests", () => {
           maxLength: 15,
         }),
         fc.integer({ min: 2, max: 8 }),
-        (data, window) =>
-          quantilesOrdered(
-            vals(rollingQuantile(s(data), 0, window, { minPeriods: 1 })),
-            vals(rollingQuantile(s(data), 0.5, window, { minPeriods: 1 })),
-            vals(rollingQuantile(s(data), 1, window, { minPeriods: 1 })),
-          ),
+        (data, window) => {
+          const lo = vals(rollingQuantile(s(data), 0, window, { minPeriods: 1 }));
+          const med = vals(rollingQuantile(s(data), 0.5, window, { minPeriods: 1 }));
+          const hi = vals(rollingQuantile(s(data), 1, window, { minPeriods: 1 }));
+          for (let i = 0; i < data.length; i++) {
+            const l = lo[i];
+            const m = med[i];
+            const h = hi[i];
+            if (l === null || m === null || h === null) {
+              continue;
+            }
+            if ((l as number) > (m as number) + 1e-9) {
+              return false;
+            }
+            if ((m as number) > (h as number) + 1e-9) {
+              return false;
+            }
+          }
+          return true;
+        },
       ),
     );
   });

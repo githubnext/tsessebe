@@ -187,8 +187,7 @@ function resolveDataFrameCond(df: DataFrame, cond: DataFrameCond): Map<string, r
   const rowLabels = df.index.values as readonly Label[];
 
   for (const colName of df.columns.values) {
-    const condColIdx = condDf.columns.values.indexOf(colName);
-    if (condColIdx === -1) {
+    if (!condDf.columns.contains(colName)) {
       // Column absent from condition → treat entire column as false
       result.set(
         colName,

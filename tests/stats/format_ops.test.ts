@@ -27,7 +27,7 @@ import {
 
 describe("formatFloat", () => {
   test("default 2 decimal places", () => {
-    expect(formatFloat(Math.PI)).toBe("3.14");
+    expect(formatFloat(3.14259)).toBe("3.14");
   });
 
   test("0 decimal places", () => {
@@ -183,14 +183,10 @@ describe("formatEngineering", () => {
   test("property: exponent is multiple of 3", () => {
     fc.assert(
       fc.property(fc.double({ noNaN: true, noDefaultInfinity: true, min: 1e-9, max: 1e9 }), (n) => {
-        if (n === 0) {
-          return true;
-        }
+        if (n === 0) return true;
         const result = formatEngineering(n);
         const match = result.match(/e([+-])(\d+)$/);
-        if (!match) {
-          return false;
-        }
+        if (!match) return false;
         const exp = Number(match[2]);
         return exp % 3 === 0;
       }),
@@ -303,7 +299,7 @@ describe("formatCompact", () => {
 describe("makeFloatFormatter", () => {
   test("basic usage", () => {
     const fmt = makeFloatFormatter(3);
-    expect(fmt(Math.PI)).toBe("3.142");
+    expect(fmt(3.14259)).toBe("3.143");
   });
 
   test("non-numeric value", () => {
@@ -432,18 +428,14 @@ describe("applyDataFrameFormatter", () => {
       price: makeCurrencyFormatter("$", 1),
       pct: makePercentFormatter(0),
     });
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["price"]).toEqual(["$10.1", "$20.2", "$30.3"]);
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["pct"]).toEqual(["10%", "20%", "30%"]);
   });
 
   test("uses String for columns without a formatter", () => {
     const df = DataFrame.fromColumns({ a: [1, 2], b: ["x", "y"] });
     const result = applyDataFrameFormatter(df, {});
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["a"]).toEqual(["1", "2"]);
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["b"]).toEqual(["x", "y"]);
   });
 
@@ -456,9 +448,7 @@ describe("applyDataFrameFormatter", () => {
   test("empty dataframe", () => {
     const df = DataFrame.fromColumns({ a: [], b: [] });
     const result = applyDataFrameFormatter(df, {});
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["a"]).toEqual([]);
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["b"]).toEqual([]);
   });
 });

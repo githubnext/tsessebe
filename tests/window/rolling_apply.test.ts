@@ -94,6 +94,7 @@ describe("rollingApply", () => {
 
   test("custom min function", () => {
     const out = rollingApply(s(3, 1, 4, 1, 5, 9), 3, numMin);
+    // window [1,5,9] → min is 1, not 5
     expect(out.toArray()).toEqual([null, null, 1, 1, 1, 1]);
   });
 
@@ -120,7 +121,7 @@ describe("rollingApply", () => {
 
   test("pairwise diff function", () => {
     // last - first in window
-    const diff = (nums: readonly number[]): number => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
+    const diff = (nums: readonly number[]) => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
     const out = rollingApply(s(1, 3, 6, 10, 15), 3, diff);
     expect(out.toArray()).toEqual([null, null, 5, 7, 9]);
   });
@@ -143,8 +144,9 @@ describe("rollingApply", () => {
   });
 
   test("count function behaves correctly", () => {
-    const count = (nums: readonly number[]) => nums.length;
+    const count = (nums: readonly number[]): number => nums.length;
     const out = rollingApply(s(1, null, 3, null, 5), 3, count, { minPeriods: 1 });
+    // window at i=3: [null,3,null] → valid=[3] → count=1
     expect(out.toArray()).toEqual([1, 1, 2, 1, 2]);
   });
 
@@ -242,7 +244,7 @@ describe("dataFrameRollingApply", () => {
   });
 
   test("custom function applied independently per column", () => {
-    const diff = (nums: readonly number[]): number => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
+    const diff = (nums: readonly number[]) => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
     const df = DataFrame.fromColumns({ a: [1, 3, 6], b: [10, 15, 21] });
     const out = dataFrameRollingApply(df, 2, diff);
     expect(out.col("a").toArray()).toEqual([null, 2, 3]);

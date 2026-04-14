@@ -413,7 +413,9 @@ describe("strDedent — property tests", () => {
         fc.array(
           fc
             .string({ minLength: 1 })
-            .filter((s) => !s.includes("\n") && s.trim().length > 0 && s.trimStart() === s),
+            .filter(
+              (s) => !s.includes("\n") && s.trim().length > 0 && s[0] !== " " && s[0] !== "\t",
+            ),
           {
             minLength: 1,
             maxLength: 5,

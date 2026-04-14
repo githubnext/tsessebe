@@ -42,9 +42,7 @@ describe("toDictOriented — dict/columns", () => {
   test("default range index produces string-keyed rows", () => {
     const df = makeDF();
     const result = toDictOriented(df, "dict");
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["a"]).toEqual({ "0": 1, "1": 2, "2": 3 });
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["b"]).toEqual({ "0": 4, "1": 5, "2": 6 });
   });
 
@@ -56,7 +54,6 @@ describe("toDictOriented — dict/columns", () => {
   test("custom string index is used as row keys", () => {
     const df = makeIndexedDF();
     const result = toDictOriented(df, "dict");
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["x"]).toEqual({ r0: 10, r1: 20 });
   });
 
@@ -71,15 +68,12 @@ describe("toDictOriented — list", () => {
   test("returns column→array mapping", () => {
     const df = makeDF();
     const result = toDictOriented(df, "list");
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["a"]).toEqual([1, 2, 3]);
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["b"]).toEqual([4, 5, 6]);
   });
 
   test("preserves null values", () => {
     const df = DataFrame.fromColumns({ v: [1, null, 3] });
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(toDictOriented(df, "list")["v"]).toEqual([1, null, 3]);
   });
 });
@@ -88,9 +82,7 @@ describe("toDictOriented — series", () => {
   test("returns column→Series mapping", () => {
     const df = makeDF();
     const result = toDictOriented(df, "series");
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["a"]).toBeInstanceOf(Series);
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect((result["a"] as Series<number>).values).toEqual([1, 2, 3]);
   });
 });
@@ -163,7 +155,6 @@ describe("toDictOriented — index", () => {
   test("custom index keys are used", () => {
     const df = makeIndexedDF();
     const result = toDictOriented(df, "index");
-    // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
     expect(result["r0"]).toEqual({ x: 10, y: 30 });
   });
 });
@@ -259,8 +250,9 @@ describe("property-based", () => {
         fc.array(fc.integer({ min: 1, max: 10 }), { minLength: 1, maxLength: 4 }),
         fc.array(fc.integer({ min: 1, max: 10 }), { minLength: 1, maxLength: 4 }),
         (colA, colB) => {
-          if (colB.length < colA.length) return true;
-          const df = DataFrame.fromColumns({ a: colA, b: colB.slice(0, colA.length) });
+          // Ensure both columns have the same length
+          const len = Math.min(colA.length, colB.length);
+          const df = DataFrame.fromColumns({ a: colA.slice(0, len), b: colB.slice(0, len) });
           const split = toDictOriented(df, "split");
           const df2 = fromDictOriented(split, "split");
           return df2.shape[0] === df.shape[0] && df2.columns.values[0] === "a";

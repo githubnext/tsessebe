@@ -305,7 +305,7 @@ describe("dataFrameApplyMap", () => {
   });
 
   test("fn receives (value, rowLabel, colName)", () => {
-    const calls: [Scalar, Label, string][] = [];
+    const calls: Array<[Scalar, Label, string]> = [];
     dataFrameApplyMap(df, (v, row, col) => {
       calls.push([v, row, col]);
       return v;
@@ -374,9 +374,7 @@ describe("dataFrameTransformRows", () => {
 
   test("applies fn to each row record", () => {
     const out = dataFrameTransformRows(df, (row) => ({
-      // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
       a: (row["a"] as number) + 100,
-      // biome-ignore lint/complexity/useLiteralKeys: TS4111 index signature
       b: row["b"],
     }));
     expect(out.col("a").values).toEqual([101, 102, 103]);
@@ -397,7 +395,7 @@ describe("dataFrameTransformRows", () => {
   });
 
   test("partial row update merges correctly (unspecified keys keep original)", () => {
-    const out = dataFrameTransformRows(df, (_row) => ({ a: 999 }));
+    const out = dataFrameTransformRows(df, (row) => ({ a: 999 }));
     // 'b' not returned by fn → keeps original
     expect(out.col("a").values).toEqual([999, 999, 999]);
     expect(out.col("b").values).toEqual([10, 20, 30]);

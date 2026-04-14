@@ -102,7 +102,7 @@ export function toDictOriented(
 export function toDictOriented(
   df: DataFrame,
   orient: ToDictOrient = "dict",
-): Record<string, unknown> | DictSplit | DictTight | unknown[] {
+): Record<string, unknown> | unknown[] | DictSplit | DictTight {
   const colNames = [...df.columns.values];
   const rowLabels = [...(df.index.values as Label[])];
   const nRows = df.index.size;

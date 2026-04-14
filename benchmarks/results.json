@@ -2,246 +2,356 @@
   "benchmarks": [
     {
       "function": "concat",
-      "tsb": null,
+      "tsb": {
+        "function": "concat",
+        "mean_ms": 128.9745293,
+        "iterations": 20,
+        "total_ms": 2579.490586
+      },
       "pandas": {
         "function": "concat",
         "mean_ms": 0.11375509999993483,
         "iterations": 20,
         "total_ms": 2.2751019999986966
       },
-      "ratio": null
+      "ratio": 1133.791
     },
     {
       "function": "dataframe_apply",
-      "tsb": null,
+      "tsb": {
+        "function": "dataframe_apply",
+        "mean_ms": 16.7897294,
+        "iterations": 10,
+        "total_ms": 167.897294
+      },
       "pandas": {
         "function": "dataframe_apply",
         "mean_ms": 47.161531699998704,
         "iterations": 10,
         "total_ms": 471.61531699998704
       },
-      "ratio": null
+      "ratio": 0.356
     },
     {
       "function": "dataframe_creation",
-      "tsb": null,
+      "tsb": {
+        "function": "dataframe_creation",
+        "mean_ms": 223.22429929999998,
+        "iterations": 10,
+        "total_ms": 2232.242993
+      },
       "pandas": {
         "function": "dataframe_creation",
         "mean_ms": 5.148059900000135,
         "iterations": 10,
         "total_ms": 51.48059900000135
       },
-      "ratio": null
+      "ratio": 43.361
     },
     {
       "function": "dataframe_dropna",
-      "tsb": null,
+      "tsb": {
+        "function": "dataframe_dropna",
+        "mean_ms": 172.72901985000004,
+        "iterations": 20,
+        "total_ms": 3454.5803970000006
+      },
       "pandas": {
         "function": "dataframe_dropna",
         "mean_ms": 2.42739894999886,
         "iterations": 20,
         "total_ms": 48.547978999977204
       },
-      "ratio": null
+      "ratio": 71.158
     },
     {
       "function": "dataframe_filter",
-      "tsb": null,
+      "tsb": {
+        "function": "dataframe_filter",
+        "mean_ms": 126.19991375,
+        "iterations": 20,
+        "total_ms": 2523.998275
+      },
       "pandas": {
         "function": "dataframe_filter",
         "mean_ms": 0.4964389500003108,
         "iterations": 20,
         "total_ms": 9.928779000006216
       },
-      "ratio": null
+      "ratio": 254.21
     },
     {
       "function": "dataframe_rename",
-      "tsb": null,
+      "tsb": {
+        "function": "dataframe_rename",
+        "mean_ms": 0.008352200000000209,
+        "iterations": 20,
+        "total_ms": 0.1670440000000042
+      },
       "pandas": {
         "function": "dataframe_rename",
         "mean_ms": 0.17103454999869427,
         "iterations": 20,
         "total_ms": 3.4206909999738855
       },
-      "ratio": null
+      "ratio": 0.049
     },
     {
       "function": "dataframe_sort",
-      "tsb": null,
+      "tsb": {
+        "function": "dataframe_sort",
+        "mean_ms": 434.5389244,
+        "iterations": 10,
+        "total_ms": 4345.389244
+      },
       "pandas": {
         "function": "dataframe_sort",
         "mean_ms": 33.301584399998774,
         "iterations": 10,
         "total_ms": 333.01584399998774
       },
-      "ratio": null
+      "ratio": 13.049
     },
     {
       "function": "describe",
-      "tsb": null,
+      "tsb": {
+        "function": "describe",
+        "mean_ms": 19.719739000000004,
+        "iterations": 10,
+        "total_ms": 197.19739000000004
+      },
       "pandas": {
         "function": "describe",
         "mean_ms": 5.521558600003118,
         "iterations": 10,
         "total_ms": 55.21558600003118
       },
-      "ratio": null
+      "ratio": 3.571
     },
     {
       "function": "ewm_mean",
-      "tsb": null,
+      "tsb": {
+        "function": "ewm_mean",
+        "mean_ms": 118.5438748,
+        "iterations": 10,
+        "total_ms": 1185.438748
+      },
       "pandas": {
         "function": "ewm_mean",
         "mean_ms": 1.7652839999982461,
         "iterations": 10,
         "total_ms": 17.65283999998246
       },
-      "ratio": null
+      "ratio": 67.153
     },
     {
       "function": "groupby_mean",
-      "tsb": null,
+      "tsb": {
+        "function": "groupby_mean",
+        "mean_ms": 21.510315099999996,
+        "iterations": 10,
+        "total_ms": 215.10315099999997
+      },
       "pandas": {
         "function": "groupby_mean",
         "mean_ms": 8.079756900002621,
         "iterations": 10,
         "total_ms": 80.79756900002621
       },
-      "ratio": null
+      "ratio": 2.662
     },
     {
       "function": "merge",
-      "tsb": null,
+      "tsb": {
+        "function": "merge",
+        "mean_ms": 10348.345783,
+        "iterations": 3,
+        "total_ms": 31045.037349000002
+      },
       "pandas": {
         "function": "merge",
         "mean_ms": 60.42320619999941,
         "iterations": 10,
         "total_ms": 604.2320619999941
       },
-      "ratio": null
+      "ratio": 171.264
     },
     {
       "function": "pivot_table",
-      "tsb": null,
+      "tsb": {
+        "function": "pivot_table",
+        "mean_ms": 117.3417057,
+        "iterations": 10,
+        "total_ms": 1173.417057
+      },
       "pandas": {
         "function": "pivot_table",
         "mean_ms": 22.500251999997545,
         "iterations": 10,
         "total_ms": 225.00251999997545
       },
-      "ratio": null
+      "ratio": 5.215
     },
     {
       "function": "read_csv",
-      "tsb": null,
+      "tsb": {
+        "function": "read_csv",
+        "mean_ms": 589.2802257999999,
+        "iterations": 5,
+        "total_ms": 2946.401129
+      },
       "pandas": {
         "function": "read_csv",
         "mean_ms": 29.951929399999244,
         "iterations": 5,
         "total_ms": 149.75964699999622
       },
-      "ratio": null
+      "ratio": 19.674
     },
     {
       "function": "rolling_mean",
-      "tsb": null,
+      "tsb": {
+        "function": "rolling_mean",
+        "mean_ms": 419.62945440000004,
+        "iterations": 10,
+        "total_ms": 4196.294544
+      },
       "pandas": {
         "function": "rolling_mean",
         "mean_ms": 1.71982609999759,
         "iterations": 10,
         "total_ms": 17.1982609999759
       },
-      "ratio": null
+      "ratio": 243.995
     },
     {
       "function": "series_arithmetic",
-      "tsb": null,
+      "tsb": {
+        "function": "series_arithmetic",
+        "mean_ms": 122.68170964999999,
+        "iterations": 20,
+        "total_ms": 2453.634193
+      },
       "pandas": {
         "function": "series_arithmetic",
         "mean_ms": 0.764571400000591,
         "iterations": 20,
         "total_ms": 15.29142800001182
       },
-      "ratio": null
+      "ratio": 160.458
     },
     {
       "function": "series_creation",
-      "tsb": null,
+      "tsb": {
+        "function": "series_creation",
+        "mean_ms": 103.015,
+        "iterations": 50,
+        "total_ms": 5150.754
+      },
       "pandas": {
         "function": "series_creation",
         "mean_ms": 7.607,
         "iterations": 50,
         "total_ms": 380.349
       },
-      "ratio": null
+      "ratio": 13.542
     },
     {
       "function": "series_cumsum",
-      "tsb": null,
+      "tsb": {
+        "function": "series_cumsum",
+        "mean_ms": 58.26283665,
+        "iterations": 20,
+        "total_ms": 1165.256733
+      },
       "pandas": {
         "function": "series_cumsum",
         "mean_ms": 1.1250383499998406,
         "iterations": 20,
         "total_ms": 22.500766999996813
       },
-      "ratio": null
+      "ratio": 51.787
     },
     {
       "function": "series_fillna",
-      "tsb": null,
+      "tsb": {
+        "function": "series_fillna",
+        "mean_ms": 61.56140175,
+        "iterations": 20,
+        "total_ms": 1231.228035
+      },
       "pandas": {
         "function": "series_fillna",
         "mean_ms": 0.18527670000025864,
         "iterations": 20,
         "total_ms": 3.705534000005173
       },
-      "ratio": null
+      "ratio": 332.267
     },
     {
       "function": "series_shift",
-      "tsb": null,
+      "tsb": {
+        "function": "series_shift",
+        "mean_ms": 110.16682740000002,
+        "iterations": 20,
+        "total_ms": 2203.336548
+      },
       "pandas": {
         "function": "series_shift",
         "mean_ms": 0.07249699999931636,
         "iterations": 20,
         "total_ms": 1.4499399999863272
       },
-      "ratio": null
+      "ratio": 1519.605
     },
     {
       "function": "series_sort",
-      "tsb": null,
+      "tsb": {
+        "function": "series_sort",
+        "mean_ms": 161.28472190000002,
+        "iterations": 10,
+        "total_ms": 1612.8472190000002
+      },
       "pandas": {
         "function": "series_sort",
         "mean_ms": 5.127767300001551,
         "iterations": 10,
         "total_ms": 51.27767300001551
       },
-      "ratio": null
+      "ratio": 31.453
     },
     {
       "function": "series_string_ops",
-      "tsb": null,
+      "tsb": {
+        "function": "series_string_ops",
+        "mean_ms": 243.85622659999999,
+        "iterations": 10,
+        "total_ms": 2438.562266
+      },
       "pandas": {
         "function": "series_string_ops",
         "mean_ms": 34.08206670000027,
         "iterations": 10,
         "total_ms": 340.8206670000027
       },
-      "ratio": null
+      "ratio": 7.155
     },
     {
       "function": "series_value_counts",
-      "tsb": null,
+      "tsb": {
+        "function": "series_value_counts",
+        "mean_ms": 38.8205242,
+        "iterations": 10,
+        "total_ms": 388.205242
+      },
       "pandas": {
         "function": "series_value_counts",
         "mean_ms": 9.212644899997713,
         "iterations": 10,
         "total_ms": 92.12644899997713
       },
-      "ratio": null
+      "ratio": 4.214
     }
   ],
-  "timestamp": "2026-04-12T15:46:00Z"
+  "timestamp": "2026-04-13T00:11:36Z"
 }

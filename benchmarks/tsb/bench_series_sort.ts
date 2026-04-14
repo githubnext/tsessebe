@@ -7,16 +7,16 @@ const ROWS = 100_000;
 const WARMUP = 3;
 const ITERATIONS = 10;
 
-const data = Float64Array.from({ length: ROWS }, () => Math.random() * 1000);
-const s = new Series(data);
+const data = Array.from({ length: ROWS }, () => Math.random() * 1000);
+const s = new Series({ data });
 
 for (let i = 0; i < WARMUP; i++) {
-  s.sort_values();
+  s.sortValues();
 }
 
 const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  s.sort_values();
+  s.sortValues();
 }
 const total = performance.now() - start;
 

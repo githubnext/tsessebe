@@ -7,8 +7,8 @@ const ROWS = 100_000;
 const WARMUP = 5;
 const ITERATIONS = 20;
 
-const data = Float64Array.from({ length: ROWS }, (_, i) => i * 0.5);
-const s = new Series(data);
+const data = Array.from({ length: ROWS }, (_, i) => i * 0.5);
+const s = new Series({ data });
 
 for (let i = 0; i < WARMUP; i++) {
   s.add(2.0).mul(0.5);

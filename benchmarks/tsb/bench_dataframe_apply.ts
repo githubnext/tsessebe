@@ -8,17 +8,17 @@ const ROWS = 10_000;
 const WARMUP = 3;
 const ITERATIONS = 10;
 
-const a = Float64Array.from({ length: ROWS }, (_, i) => i * 1.0);
-const b = Float64Array.from({ length: ROWS }, (_, i) => i * 2.0);
-const df = new DataFrame({ a, b });
+const a = Array.from({ length: ROWS }, (_, i) => i * 1.0);
+const b = Array.from({ length: ROWS }, (_, i) => i * 2.0);
+const df = DataFrame.fromColumns({ a, b });
 
 for (let i = 0; i < WARMUP; i++) {
-  df.apply((row) => (row["a"] as number) + (row["b"] as number), { axis: 1 });
+  df.apply((row) => (row.at("a") as number) + (row.at("b") as number), 1);
 }
 
 const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  df.apply((row) => (row["a"] as number) + (row["b"] as number), { axis: 1 });
+  df.apply((row) => (row.at("a") as number) + (row.at("b") as number), 1);
 }
 const total = performance.now() - start;
 
