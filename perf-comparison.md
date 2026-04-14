@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T12:24:14Z |
-| Iteration Count | 65 |
+| Last Run | 2026-04-14T12:52:27Z |
+| Iteration Count | 66 |
 | Best Metric | 223 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 1 |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error |
 
 ---
 
@@ -49,6 +49,7 @@
 - API notes: seriesRound, s.dt.year() is method; groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only; rollingApply(s, window, fn); Series({data,name,index}); df.assign({c: series}) direct.
 - All iter 46–62 pairs accepted; 3c596789 has 172 pairs, main has 51. Pipeline: branch from main → checkout 3c596789 → add new pairs → commit.
 - groupby.first()/last() on both GroupBy types; dataFrameCummin/Cumprod exported; EWM.corr takes EwmSeriesLike.
+- Iter 66: safeoutputs MCP filtered due to 401 MCP registry check (AWF auth issue). 42 new pairs identified: series_median/min_max/sum_mean/unique/corr/std_var/filter/count/toobject/resetindex/isin/quantile/sort_index/loc/iloc/describe, dataframe_set_index/sort_index/iloc/loc/drop/resetindex/count/sum_mean/assign/select/to_array/to_records/to_dict/fillna/isna/notna/min_max/std_var/describe, concat_axis1, merge_left/right/outer/inner, ewm_corr, groupby_median. Next iter: recreate these + more from 3c596789+main (186) to exceed 223.
 
 ---
 
@@ -64,6 +65,9 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 66 — 2026-04-14 12:52 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24399899563)
+- ⚠️ Error: Push failed. Created 42 new benchmark pairs (186→228 total, metric would have been 228). Committed locally to autoloop/perf-comparison (81bf680) but push failed: safeoutputs MCP server was filtered due to 401 MCP registry policy check failure. Next iteration can recreate same 42 pairs from 3c596789 branch (186 after merge main) + series_median/min_max/sum_mean/unique/corr/std_var/filter/count/toobject/resetindex/isin/quantile/sort_index/loc/iloc/describe, dataframe_set_index/sort_index/iloc/loc/drop/resetindex/count/sum_mean/assign/select/to_array/to_records/to_dict/fillna/isna/notna/min_max/std_var/describe, concat_axis1, merge_left/right/outer/inner, ewm_corr, groupby_median
 
 ### Iteration 65 — 2026-04-14 12:24 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24398649588)
 - ✅ Accepted metric=223 (+14 vs prev best 209) | Started from 3c596789 branch (172 pairs) + merge main (186) + 37 new: series_median/min_max/sum_mean/unique/corr/std_var/filter/count/toobject/resetindex/isin/quantile, dataframe_set_index/sort_index/iloc/loc/drop/resetindex/count/sum_mean/assign/select/to_array/to_records/to_dict/fillna/isna/notna/min_max/std_var, concat_axis1, merge_left/right/outer/inner, ewm_corr, groupby_median | Commit: 8d94ea3
