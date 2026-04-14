@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T08:07:00Z |
-| Iteration Count | 60 |
-| Best Metric | 186 |
+| Last Run | 2026-04-14T09:02:53Z |
+| Iteration Count | 61 |
+| Best Metric | 201 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -60,7 +60,8 @@
 - groupby.first()/last() available on both DataFrameGroupBy and SeriesGroupBy.
 - Series.dt.year()/month()/day() are methods (not properties) in tsb.
 - dataFrameCummin/Cumprod both exported from src/index.ts.
-- Iter-60: 3c596789 had 143 pairs (not 157); recovered all 8 hashed branches (157 unique pairs total) + 29 new: dataframe_abs, dataframe_round, dataframe_clip, dataframe_cumsum, dataframe_cummax, dataframe_cummin, dataframe_cumprod, groupby_first, groupby_last, datetime_accessor, percentile_of_score, quantile, str_byte_length, dataframe_value_counts, attrs_ops (from iter-59 recovery) + groupby_sum/count/min/max/size, str_char_width, make_formatter, cat_union_intersect_diff, dataframe_where, dataframe_mask, series_dt_strftime, attrs_count_keys, dataframe_nlargest_nsmallest, fillna_dropna (new). Total 186.
+- Iter-61: Pipeline stable; recovered all 186 pairs from 8 hashed branches + 15 new. Series constructor takes `{data, name, index}` object (not positional args). `df.assign({c: series})` works directly (no `new Series()` wrapper needed). `AggFn` type is `(vals: readonly Scalar[]) => Scalar` - use Scalar return type in custom aggregators. EWM.corr takes EwmSeriesLike (Series works). Total 201.
+- groupby AggName only supports: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" — no "median"/"nunique"; use custom AggFn for those.
 
 ---
 
@@ -76,6 +77,9 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 61 — 2026-04-14 09:02 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24390384652)
+- ✅ Accepted metric=201 (+15 vs prev best 186) | Recovered all 150 from hashed branches + 15 new: series_unique, series_isin, series_corr, series_filter, series_count, series_std_var, series_toobject, dataframe_assign, dataframe_select, dataframe_to_records, dataframe_to_dict, dataframe_count, dataframe_sum_mean, ewm_corr, groupby_median | Commit: 687990c
 
 ### Iteration 60 — 2026-04-14 08:07 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24388084827)
 - ✅ Accepted metric=186 (+14 vs prev best 172) | Recovered 157 pairs from 8 hashed branches + 29 new: dataframe_abs/round/clip/cumsum/cummax/cummin/cumprod, groupby_first/last/sum/count/min/max/size, datetime_accessor, percentile_of_score, quantile, str_byte_length/char_width, dataframe_value_counts, attrs_ops/count_keys, make_formatter, cat_union_intersect_diff, dataframe_where/mask, series_dt_strftime, dataframe_nlargest_nsmallest, fillna_dropna | Commit: 249e71e
