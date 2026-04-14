@@ -59,7 +59,11 @@ function zipNumeric(
  * Apply a scalar numeric transform to a value array.  Non-numeric values
  * pass through unchanged.
  */
-function mapScalar(vals: readonly Scalar[], scalar: number, fn: (a: number, b: number) => number): Scalar[] {
+function mapScalar(
+  vals: readonly Scalar[],
+  scalar: number,
+  fn: (a: number, b: number) => number,
+): Scalar[] {
   const out: Scalar[] = new Array<Scalar>(vals.length);
   for (let i = 0; i < vals.length; i++) {
     const v = vals[i] as Scalar;
@@ -108,10 +112,7 @@ const _pow = (a: number, b: number): number => a ** b;
  * seriesPow(s, new Series({ data: [1, 2, 3] })).values; // [2, 9, 64]
  * ```
  */
-export function seriesPow(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesPow(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _pow)
@@ -164,10 +165,7 @@ const _mod = (a: number, b: number): number => {
  * seriesMod(s, 3).values;  // [2, 0, 1]   (Python-style)
  * ```
  */
-export function seriesMod(
-  series: Series<Scalar>,
-  other: number | Series<Scalar>,
-): Series<Scalar> {
+export function seriesMod(series: Series<Scalar>, other: number | Series<Scalar>): Series<Scalar> {
   const data =
     typeof other === "number"
       ? mapScalar(series.values, other, _mod)

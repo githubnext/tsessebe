@@ -2,6 +2,14 @@ import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
 import { natArgSort, natCompare, natSortKey, natSorted } from "../../src/core/natsort.ts";
 
+function mustAt<T>(values: readonly T[], index: number): T {
+  const value = values[index];
+  if (value === undefined) {
+    throw new Error("expected value at index");
+  }
+  return value;
+}
+
 // ─── natCompare ───────────────────────────────────────────────────────────────
 
 describe("natCompare", () => {
@@ -113,11 +121,7 @@ describe("natSorted", () => {
 
   it("ignoreCase option", () => {
     const words = ["Banana", "apple", "Cherry"];
-    expect(natSorted(words, { ignoreCase: true })).toEqual([
-      "apple",
-      "Banana",
-      "Cherry",
-    ]);
+    expect(natSorted(words, { ignoreCase: true })).toEqual(["apple", "Banana", "Cherry"]);
   });
 
   it("key function extracts sort key from objects", () => {
@@ -155,23 +159,11 @@ describe("natSorted", () => {
   });
 
   it("numeric-only strings", () => {
-    expect(natSorted(["10", "9", "2", "1", "20"])).toEqual([
-      "1",
-      "2",
-      "9",
-      "10",
-      "20",
-    ]);
+    expect(natSorted(["10", "9", "2", "1", "20"])).toEqual(["1", "2", "9", "10", "20"]);
   });
 
   it("mixed alpha-numeric", () => {
-    expect(natSorted(["b1", "a20", "a3", "a1", "b2"])).toEqual([
-      "a1",
-      "a3",
-      "a20",
-      "b1",
-      "b2",
-    ]);
+    expect(natSorted(["b1", "a20", "a3", "a1", "b2"])).toEqual(["a1", "a3", "a20", "b1", "b2"]);
   });
 });
 
@@ -199,11 +191,7 @@ describe("natSortKey", () => {
   });
 
   it("ignoreCase folds text tokens", () => {
-    expect(natSortKey("File10.TXT", { ignoreCase: true })).toEqual([
-      "file",
-      10,
-      ".txt",
-    ]);
+    expect(natSortKey("File10.TXT", { ignoreCase: true })).toEqual(["file", 10, ".txt"]);
   });
 
   it("ignoreCase does not affect digit tokens", () => {
@@ -223,7 +211,7 @@ describe("natArgSort", () => {
     const arr = ["file10", "file2", "file1"];
     const idx = natArgSort(arr);
     expect(idx).toEqual([2, 1, 0]); // file1, file2, file10
-    expect(idx.map((i) => arr[i]!)).toEqual(["file1", "file2", "file10"]);
+    expect(idx.map((i) => mustAt(arr, i))).toEqual(["file1", "file2", "file10"]);
   });
 
   it("empty array", () => {
@@ -237,13 +225,13 @@ describe("natArgSort", () => {
   it("reverse option", () => {
     const arr = ["file1", "file2", "file10"];
     const idx = natArgSort(arr, { reverse: true });
-    expect(idx.map((i) => arr[i]!)).toEqual(["file10", "file2", "file1"]);
+    expect(idx.map((i) => mustAt(arr, i))).toEqual(["file10", "file2", "file1"]);
   });
 
   it("ignoreCase option", () => {
     const arr = ["Banana", "apple", "Cherry"];
     const idx = natArgSort(arr, { ignoreCase: true });
-    expect(idx.map((i) => arr[i]!)).toEqual(["apple", "Banana", "Cherry"]);
+    expect(idx.map((i) => mustAt(arr, i))).toEqual(["apple", "Banana", "Cherry"]);
   });
 
   it("all identical strings", () => {
@@ -274,7 +262,7 @@ describe("natSorted property tests", () => {
       fc.property(fc.array(fc.string({ minLength: 0, maxLength: 20 })), (arr) => {
         const sorted = natSorted(arr);
         for (let i = 0; i + 1 < sorted.length; i++) {
-          expect(natCompare(sorted[i]!, sorted[i + 1]!)).toBeLessThanOrEqual(0);
+          expect(natCompare(mustAt(sorted, i), mustAt(sorted, i + 1))).toBeLessThanOrEqual(0);
         }
       }),
       { numRuns: 200 },
@@ -285,7 +273,7 @@ describe("natSorted property tests", () => {
     fc.assert(
       fc.property(fc.array(fc.string({ minLength: 0, maxLength: 20 })), (arr) => {
         const sorted = natSorted(arr);
-        const fromArgSort = natArgSort(arr).map((i) => arr[i]!);
+        const fromArgSort = natArgSort(arr).map((i) => mustAt(arr, i));
         expect(fromArgSort).toEqual(sorted);
       }),
       { numRuns: 200 },

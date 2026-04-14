@@ -88,9 +88,7 @@ function resolveBound(
   if (Array.isArray(bound)) {
     const arr = bound as readonly (number | null)[];
     if (arr.length !== n) {
-      throw new RangeError(
-        `Bound array length ${arr.length} does not match Series length ${n}`,
-      );
+      throw new RangeError(`Bound array length ${arr.length} does not match Series length ${n}`);
     }
     return arr.map((v) => (typeof v === "number" && !Number.isNaN(v) ? v : null));
   }
@@ -162,7 +160,11 @@ export function clipSeriesWithBounds(
 
   const data: Scalar[] = new Array<Scalar>(n);
   for (let i = 0; i < n; i++) {
-    data[i] = clipValue(series.values[i] as Scalar, loBounds[i] as number | null, hiBounds[i] as number | null);
+    data[i] = clipValue(
+      series.values[i] as Scalar,
+      loBounds[i] as number | null,
+      hiBounds[i] as number | null,
+    );
   }
 
   return new Series<Scalar>({ data, index: series.index, name: series.name });
@@ -278,13 +280,9 @@ function _clipDFElementWise(
     const col = df.col(colName);
 
     const loCol: Series<Scalar> | null =
-      lower instanceof DataFrame && lower.columns.values.includes(name)
-        ? lower.col(colName)
-        : null;
+      lower instanceof DataFrame && lower.columns.values.includes(name) ? lower.col(colName) : null;
     const hiCol: Series<Scalar> | null =
-      upper instanceof DataFrame && upper.columns.values.includes(name)
-        ? upper.col(colName)
-        : null;
+      upper instanceof DataFrame && upper.columns.values.includes(name) ? upper.col(colName) : null;
 
     // Scalar fallback when bound is not a DataFrame
     const loScalar: number | null =

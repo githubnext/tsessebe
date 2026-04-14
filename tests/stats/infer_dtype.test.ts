@@ -5,10 +5,10 @@
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
 import { Series } from "../../src/core/index.ts";
+import { Interval } from "../../src/core/interval.ts";
+import { Period } from "../../src/core/period.ts";
 import { Timedelta } from "../../src/core/timedelta.ts";
 import { Timestamp } from "../../src/core/timestamp.ts";
-import { Period } from "../../src/core/period.ts";
-import { Interval } from "../../src/core/interval.ts";
 import { inferDtype } from "../../src/stats/infer_dtype.ts";
 
 // ─── empty / all-null ─────────────────────────────────────────────────────────
@@ -91,11 +91,11 @@ describe("inferDtype — floating", () => {
   });
 
   test("NaN alone → floating", () => {
-    expect(inferDtype([NaN])).toBe("floating");
+    expect(inferDtype([Number.NaN])).toBe("floating");
   });
 
   test("Infinity → floating", () => {
-    expect(inferDtype([Infinity, -Infinity])).toBe("floating");
+    expect(inferDtype([Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])).toBe("floating");
   });
 
   test("float + null, skipna=true → floating", () => {
@@ -244,28 +244,19 @@ describe("inferDtype — Series input", () => {
 describe("inferDtype — property tests", () => {
   test("all-integer arrays always return integer", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { minLength: 1 }),
-        (arr) => inferDtype(arr) === "integer",
-      ),
+      fc.property(fc.array(fc.integer(), { minLength: 1 }), (arr) => inferDtype(arr) === "integer"),
     );
   });
 
   test("all-string arrays always return string", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.string(), { minLength: 1 }),
-        (arr) => inferDtype(arr) === "string",
-      ),
+      fc.property(fc.array(fc.string(), { minLength: 1 }), (arr) => inferDtype(arr) === "string"),
     );
   });
 
   test("all-boolean arrays always return boolean", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.boolean(), { minLength: 1 }),
-        (arr) => inferDtype(arr) === "boolean",
-      ),
+      fc.property(fc.array(fc.boolean(), { minLength: 1 }), (arr) => inferDtype(arr) === "boolean"),
     );
   });
 

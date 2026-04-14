@@ -103,7 +103,7 @@ class Rng {
 
   constructor(seed: number) {
     // Ensure non-zero starting state.
-    this._state = (seed >>> 0) || 0xdeadbeef;
+    this._state = seed >>> 0 || 0xdeadbeef;
   }
 
   /** Returns a float in [0, 1). */
@@ -258,7 +258,7 @@ function fisherYatesSample(pool: number, count: number, rng: Rng): readonly numb
  * after zeroing the selected item's weight.
  */
 function weightedWithoutReplacement(
-  pool: number,
+  _pool: number,
   count: number,
   rng: Rng,
   initialWeights: number[],
@@ -292,10 +292,7 @@ function sampleWithReplacement(
  * Resolve weights to raw number[] for weighted operations,
  * or return null for unweighted sampling.
  */
-function resolveWeights(
-  weights: readonly Scalar[] | undefined,
-  pool: number,
-): number[] | null {
+function resolveWeights(weights: readonly Scalar[] | undefined, pool: number): number[] | null {
   if (weights === undefined) {
     return null;
   }
@@ -385,15 +382,7 @@ export function sampleSeries(
  * ```
  */
 export function sampleDataFrame(df: DataFrame, options: SampleDataFrameOptions = {}): DataFrame {
-  const {
-    n,
-    frac,
-    replace = false,
-    weights,
-    randomState,
-    ignoreIndex = false,
-    axis = 0,
-  } = options;
+  const { n, frac, replace = false, weights, randomState, ignoreIndex = false, axis = 0 } = options;
 
   if (axis === 1) {
     return sampleColumns(df, n, frac, replace, weights, randomState);

@@ -66,7 +66,8 @@ const MS_PER_WEEK = 7 * MS_PER_DAY;
 // ─── top-level regex constants ────────────────────────────────────────────────
 
 /** ISO 8601 duration: P[nD][T[nH][nM][nS]]   (only the subset we support) */
-const RE_ISO = /^-?P(?:(\d+(?:\.\d+)?)W)?(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i;
+const RE_ISO =
+  /^-?P(?:(\d+(?:\.\d+)?)W)?(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i;
 
 /** pandas-style: "N days HH:MM:SS[.mmm]" */
 const RE_PANDAS = /^(-)?(\d+) days? (\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?$/i;
@@ -169,11 +170,11 @@ export class Timedelta {
       const sign = trimmed.startsWith("-") ? -1 : 1;
       const [, wStr, dStr, hStr, mStr, sStr] = iso;
       const ms =
-        (Number(wStr ?? 0)) * MS_PER_WEEK +
-        (Number(dStr ?? 0)) * MS_PER_DAY +
-        (Number(hStr ?? 0)) * MS_PER_HOUR +
-        (Number(mStr ?? 0)) * MS_PER_MINUTE +
-        (Number(sStr ?? 0)) * MS_PER_SECOND;
+        Number(wStr ?? 0) * MS_PER_WEEK +
+        Number(dStr ?? 0) * MS_PER_DAY +
+        Number(hStr ?? 0) * MS_PER_HOUR +
+        Number(mStr ?? 0) * MS_PER_MINUTE +
+        Number(sStr ?? 0) * MS_PER_SECOND;
       return new Timedelta(sign * ms);
     }
 
@@ -521,10 +522,7 @@ export class TimedeltaIndex {
    * TimedeltaIndex.fromStrings(["0 days 01:00:00", "0 days 02:00:00"]);
    * ```
    */
-  static fromStrings(
-    strings: readonly string[],
-    options?: TimedeltaIndexOptions,
-  ): TimedeltaIndex {
+  static fromStrings(strings: readonly string[], options?: TimedeltaIndexOptions): TimedeltaIndex {
     const deltas = strings.map((s) => Timedelta.parse(s));
     return new TimedeltaIndex(deltas, options?.name ?? null);
   }
@@ -543,9 +541,7 @@ export class TimedeltaIndex {
    */
   at(i: number): Timedelta {
     if (i < 0 || i >= this._data.length) {
-      throw new RangeError(
-        `TimedeltaIndex.at: index ${i} out of bounds [0, ${this._data.length})`,
-      );
+      throw new RangeError(`TimedeltaIndex.at: index ${i} out of bounds [0, ${this._data.length})`);
     }
     // biome-ignore lint/style/noNonNullAssertion: bounds checked above
     return this._data[i]!;

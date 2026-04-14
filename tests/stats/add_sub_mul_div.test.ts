@@ -61,7 +61,7 @@ describe("seriesAdd", () => {
   });
 
   test("missing values propagated — NaN", () => {
-    const result = seriesAdd(s([1, NaN, 3]), 5).values as number[];
+    const result = seriesAdd(s([1, Number.NaN, 3]), 5).values as number[];
     expect(result[0]).toBe(6);
     expect(Number.isNaN(result[1] as number)).toBe(true);
     expect(result[2]).toBe(8);
@@ -76,7 +76,10 @@ describe("seriesAdd", () => {
   test("property: add(0) identity", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const result = seriesAdd(s(data), 0).values as number[];
           return data.every((v, i) => result[i] === v);
@@ -92,7 +95,8 @@ describe("seriesAdd", () => {
         fc.integer({ min: -100, max: 100 }),
         (data, scalar) => {
           const r1 = seriesAdd(s(data), scalar).values as number[];
-          const r2 = seriesAdd(s(data.map(() => scalar as number | null)), s(data)).values as number[];
+          const r2 = seriesAdd(s(data.map(() => scalar as number | null)), s(data))
+            .values as number[];
           return r1.every((v, i) => v === r2[i]);
         },
       ),
@@ -157,7 +161,10 @@ describe("seriesSub", () => {
   test("property: sub(0) identity", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const result = seriesSub(s(data), 0).values as number[];
           return data.every((v, i) => result[i] === v);
@@ -230,7 +237,7 @@ describe("seriesMul", () => {
   });
 
   test("missing values propagated — NaN", () => {
-    const result = seriesMul(s([1, NaN, 3]), 2).values as number[];
+    const result = seriesMul(s([1, Number.NaN, 3]), 2).values as number[];
     expect(result[0]).toBe(2);
     expect(Number.isNaN(result[1] as number)).toBe(true);
     expect(result[2]).toBe(6);
@@ -248,7 +255,8 @@ describe("seriesMul", () => {
         fc.integer({ min: -20, max: 20 }),
         (data, scalar) => {
           const r1 = seriesMul(s(data), scalar).values as number[];
-          const r2 = seriesMul(s(data.map(() => scalar as number | null)), s(data)).values as number[];
+          const r2 = seriesMul(s(data.map(() => scalar as number | null)), s(data))
+            .values as number[];
           return r1.every((v, i) => v === r2[i]);
         },
       ),
@@ -258,7 +266,10 @@ describe("seriesMul", () => {
   test("property: mul(1) identity", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const result = seriesMul(s(data), 1).values as number[];
           return data.every((v, i) => result[i] === v);
@@ -275,9 +286,15 @@ describe("seriesMul", () => {
         fc.integer({ min: -10, max: 10 }),
         (data, a, b) => {
           const lhs = seriesMul(seriesAdd(s(data), a), b).values as number[];
-          const rhs = seriesAdd(seriesMul(s(data), b), seriesMul(s([a] as (number | null)[]).values.length === 1
-            ? new Series<number | null>({ data: data.map(() => a) })
-            : new Series<number | null>({ data: data.map(() => a) }), b)).values as number[];
+          const rhs = seriesAdd(
+            seriesMul(s(data), b),
+            seriesMul(
+              s([a] as (number | null)[]).values.length === 1
+                ? new Series<number | null>({ data: data.map(() => a) })
+                : new Series<number | null>({ data: data.map(() => a) }),
+              b,
+            ),
+          ).values as number[];
           return lhs.every((v, i) => v === rhs[i]);
         },
       ),
@@ -307,7 +324,11 @@ describe("seriesDiv", () => {
   });
 
   test("scalar — division by zero returns Infinity", () => {
-    expect(seriesDiv(s([1, -1, 2]), 0).values).toEqual([Infinity, -Infinity, Infinity]);
+    expect(seriesDiv(s([1, -1, 2]), 0).values).toEqual([
+      Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY,
+      Number.POSITIVE_INFINITY,
+    ]);
   });
 
   test("scalar — 0/0 returns NaN", () => {
@@ -324,7 +345,7 @@ describe("seriesDiv", () => {
   });
 
   test("missing values propagated — NaN", () => {
-    const result = seriesDiv(s([4, NaN, 16]), 2).values as number[];
+    const result = seriesDiv(s([4, Number.NaN, 16]), 2).values as number[];
     expect(result[0]).toBe(2);
     expect(Number.isNaN(result[1] as number)).toBe(true);
     expect(result[2]).toBe(8);
@@ -338,7 +359,10 @@ describe("seriesDiv", () => {
   test("property: div(1) identity", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const result = seriesDiv(s(data), 1).values as number[];
           return data.every((v, i) => result[i] === v);
@@ -496,7 +520,7 @@ describe("dataFrameDiv", () => {
   test("division by zero — Infinity", () => {
     const df = dfFromCols({ a: [1, -1] });
     const result = dataFrameDiv(df, 0);
-    expect(result.col("a").values).toEqual([Infinity, -Infinity]);
+    expect(result.col("a").values).toEqual([Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]);
   });
 });
 

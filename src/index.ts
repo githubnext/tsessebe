@@ -282,8 +282,17 @@ export type { SearchSortedSide, SearchSortedOptions } from "./core/index.ts";
 export { valueCountsBinned } from "./stats/index.ts";
 export type { ValueCountsBinnedOptions } from "./stats/index.ts";
 
-export { duplicatedSeries, duplicatedDataFrame, dropDuplicatesSeries, dropDuplicatesDataFrame } from "./stats/index.ts";
-export type { KeepPolicy, DuplicatedDataFrameOptions, DuplicatedSeriesOptions } from "./stats/index.ts";
+export {
+  duplicatedSeries,
+  duplicatedDataFrame,
+  dropDuplicatesSeries,
+  dropDuplicatesDataFrame,
+} from "./stats/index.ts";
+export type {
+  KeepPolicy,
+  DuplicatedDataFrameOptions,
+  DuplicatedSeriesOptions,
+} from "./stats/index.ts";
 export { reindexSeries, reindexDataFrame } from "./core/index.ts";
 export type { ReindexMethod, ReindexSeriesOptions, ReindexDataFrameOptions } from "./core/index.ts";
 
@@ -296,10 +305,22 @@ export type { ExplodeOptions, ExplodeDataFrameOptions } from "./stats/index.ts";
 export { isin, dataFrameIsin } from "./stats/index.ts";
 export type { IsinValues, IsinDict, DataFrameIsinValues } from "./stats/index.ts";
 
-export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./core/index.ts";
+export {
+  insertColumn,
+  popColumn,
+  reorderColumns,
+  moveColumn,
+  dataFrameFromPairs,
+} from "./core/index.ts";
 export type { PopResult } from "./core/index.ts";
 export { toDictOriented, fromDictOriented } from "./core/index.ts";
-export type { ToDictOrient, FromDictOrient, DictSplit, DictTight, SplitInput } from "./core/index.ts";
+export type {
+  ToDictOrient,
+  FromDictOrient,
+  DictSplit,
+  DictTight,
+  SplitInput,
+} from "./core/index.ts";
 export { rollingSem, rollingSkew, rollingKurt, rollingQuantile } from "./stats/index.ts";
 export type { WindowExtOptions, RollingQuantileOptions } from "./stats/index.ts";
 export { fillna, countna, countValid } from "./stats/index.ts";

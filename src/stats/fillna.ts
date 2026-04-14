@@ -109,12 +109,7 @@ function isMissing(v: Scalar): boolean {
 
 /** True when `v` is a plain object (ColumnFillMap), not a Series or primitive. */
 function isColumnFillMap(v: unknown): v is ColumnFillMap {
-  return (
-    v !== null &&
-    typeof v === "object" &&
-    !(v instanceof Series) &&
-    !(v instanceof DataFrame)
-  );
+  return v !== null && typeof v === "object" && !(v instanceof Series) && !(v instanceof DataFrame);
 }
 
 // ─── core algorithms ──────────────────────────────────────────────────────────
@@ -202,7 +197,10 @@ function seriesAsColumnMap(fill: Series<Scalar>, colNames: readonly string[]): M
 }
 
 /** Apply a column-level fill function to every column of a DataFrame. */
-function colWiseFill(df: DataFrame, fn: (vals: readonly Scalar[], name: string) => Scalar[]): DataFrame {
+function colWiseFill(
+  df: DataFrame,
+  fn: (vals: readonly Scalar[], name: string) => Scalar[],
+): DataFrame {
   const colMap = new Map<string, Series<Scalar>>();
   for (const name of df.columns.values) {
     const col = df.col(name);
@@ -323,10 +321,7 @@ export function fillnaSeries(
  * fillnaDataFrame(df, { method: "bfill" }).col("a").values;   // [1, 3, 3]
  * ```
  */
-export function fillnaDataFrame(
-  df: DataFrame,
-  options: FillnaDataFrameOptions = {},
-): DataFrame {
+export function fillnaDataFrame(df: DataFrame, options: FillnaDataFrameOptions = {}): DataFrame {
   const limit = options.limit ?? Number.POSITIVE_INFINITY;
   const axis = options.axis ?? 0;
   const colNames = df.columns.values;

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame } from "../../src/core/frame.ts";
+import { alignDataFrame, alignSeries } from "../../src/core/align.ts";
 import { Index } from "../../src/core/base-index.ts";
+import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
-import { alignSeries, alignDataFrame } from "../../src/core/align.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -16,14 +16,9 @@ function ns(data: number[], labels: string[], name?: string): Series<Scalar> {
   });
 }
 
-function makeDF(
-  cols: Record<string, number[]>,
-  rowLabels: string[],
-): DataFrame {
+function makeDF(cols: Record<string, number[]>, rowLabels: string[]): DataFrame {
   return DataFrame.fromColumns(
-    Object.fromEntries(
-      Object.entries(cols).map(([k, v]) => [k, v]),
-    ) as Record<string, number[]>,
+    Object.fromEntries(Object.entries(cols).map(([k, v]) => [k, v])) as Record<string, number[]>,
     { index: new Index<string>(rowLabels) },
   );
 }
@@ -286,8 +281,12 @@ describe("alignSeries — property tests", () => {
           const da = dataA.slice(0, la.length);
           const db = dataB.slice(0, lb.length);
           // Pad with zeros if needed
-          while (da.length < la.length) da.push(0);
-          while (db.length < lb.length) db.push(0);
+          while (da.length < la.length) {
+            da.push(0);
+          }
+          while (db.length < lb.length) {
+            db.push(0);
+          }
 
           const a = new Series<number>({ data: da, index: new Index(la) });
           const b = new Series<number>({ data: db, index: new Index(lb) });
@@ -314,10 +313,7 @@ describe("alignSeries — property tests", () => {
           const a = new Series<number>({ data: da, index: new Index(la) });
           const b = new Series<number>({ data: db, index: new Index(lb) });
           const [ia, ib] = alignSeries(a, b, { join: "inner" });
-          return (
-            ia.size <= Math.min(a.size, b.size) &&
-            ib.size === ia.size
-          );
+          return ia.size <= Math.min(a.size, b.size) && ib.size === ia.size;
         },
       ),
     );
@@ -333,7 +329,9 @@ describe("alignSeries — property tests", () => {
           const la = [...new Set(rawA.map(String))];
           const lb = [...new Set(rawB.map(String))];
           const da = dataA.slice(0, la.length);
-          while (da.length < la.length) da.push(0);
+          while (da.length < la.length) {
+            da.push(0);
+          }
           const db = lb.map(() => 0);
           const a = new Series<number>({ data: da, index: new Index(la) });
           const b = new Series<number>({ data: db, index: new Index(lb) });
@@ -357,7 +355,9 @@ describe("alignSeries — property tests", () => {
           const la = [...new Set(rawA.map(String))];
           const lb = [...new Set(rawB.map(String))];
           const db = dataB.slice(0, lb.length);
-          while (db.length < lb.length) db.push(0);
+          while (db.length < lb.length) {
+            db.push(0);
+          }
           const da = la.map(() => 0);
           const a = new Series<number>({ data: da, index: new Index(la) });
           const b = new Series<number>({ data: db, index: new Index(lb) });

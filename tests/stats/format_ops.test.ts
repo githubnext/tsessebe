@@ -183,10 +183,14 @@ describe("formatEngineering", () => {
   test("property: exponent is multiple of 3", () => {
     fc.assert(
       fc.property(fc.double({ noNaN: true, noDefaultInfinity: true, min: 1e-9, max: 1e9 }), (n) => {
-        if (n === 0) return true;
+        if (n === 0) {
+          return true;
+        }
         const result = formatEngineering(n);
         const match = result.match(/e([+-])(\d+)$/);
-        if (!match) return false;
+        if (!match) {
+          return false;
+        }
         const exp = Number(match[2]);
         return exp % 3 === 0;
       }),

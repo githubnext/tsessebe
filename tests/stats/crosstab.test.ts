@@ -10,8 +10,8 @@
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
 import { Series } from "../../src/index.ts";
-import { crosstab, seriesCrosstab } from "../../src/stats/crosstab.ts";
 import type { Scalar } from "../../src/index.ts";
+import { crosstab, seriesCrosstab } from "../../src/stats/crosstab.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ describe("crosstab — dropna", () => {
   });
 
   it("NaN numeric value treated as missing by default", () => {
-    const idx: Scalar[] = ["a", NaN, "a"];
+    const idx: Scalar[] = ["a", Number.NaN, "a"];
     const col: Scalar[] = ["x", "x", "x"];
     const ct = crosstab(idx, col);
     expect(ct.index.values).not.toContain("NaN");
@@ -224,8 +224,7 @@ describe("crosstab — normalize", () => {
 
 describe("crosstab — values + aggfunc", () => {
   const sum: (vs: readonly number[]) => number = (vs) => vs.reduce((s, v) => s + v, 0);
-  const mean: (vs: readonly number[]) => number = (vs) =>
-    vs.reduce((s, v) => s + v, 0) / vs.length;
+  const mean: (vs: readonly number[]) => number = (vs) => vs.reduce((s, v) => s + v, 0) / vs.length;
 
   it("sum aggregation", () => {
     const idx = ["a", "a", "b"];
@@ -247,9 +246,7 @@ describe("crosstab — values + aggfunc", () => {
   });
 
   it("throws when values provided without aggfunc", () => {
-    expect(() =>
-      crosstab(["a"], ["x"], { values: [1] }),
-    ).toThrow(TypeError);
+    expect(() => crosstab(["a"], ["x"], { values: [1] })).toThrow(TypeError);
   });
 
   it("non-numeric values are ignored in aggregation", () => {
@@ -397,10 +394,7 @@ describe("crosstab — property tests", () => {
         const ct = crosstab(idx, col, { margins: true });
         const dataCols = ct.columns.values.filter((c) => c !== "All") as string[];
         for (const r of ct.index.values.filter((r) => r !== "All") as string[]) {
-          const rowSum = dataCols.reduce(
-            (s, c) => s + (ct.col(c).at(r) as number),
-            0,
-          );
+          const rowSum = dataCols.reduce((s, c) => s + (ct.col(c).at(r) as number), 0);
           expect(ct.col("All").at(r) as number).toBe(rowSum);
         }
       }),

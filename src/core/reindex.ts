@@ -32,10 +32,10 @@
  * @module
  */
 
+import type { FillMethod, Label, Scalar } from "../types.ts";
 import { Index } from "./base-index.ts";
-import { Series } from "./series.ts";
 import { DataFrame } from "./frame.ts";
-import type { Label, Scalar, FillMethod } from "../types.ts";
+import { Series } from "./series.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
 
@@ -189,7 +189,9 @@ function applyNearest(values: Scalar[], present: readonly boolean[]): Scalar[] {
   }
 
   for (let i = 0; i < n; i++) {
-    if (present[i]) continue;
+    if (present[i]) {
+      continue;
+    }
     const ld = leftDist[i];
     const rd = rightDist[i];
     if (ld === -1 && rd === -1) {
@@ -304,10 +306,7 @@ export function reindexSeries<T extends Scalar>(
  * // shape [3, 3]; row 2 → [0, 0, 0]; column "c" → [0, 0, 0]
  * ```
  */
-export function reindexDataFrame(
-  df: DataFrame,
-  options: ReindexDataFrameOptions = {},
-): DataFrame {
+export function reindexDataFrame(df: DataFrame, options: ReindexDataFrameOptions = {}): DataFrame {
   const { index: newRowIndex, columns: newColumns, ...seriesOpts } = options;
 
   // Step 1 — optionally reindex rows

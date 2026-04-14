@@ -20,9 +20,9 @@
  * @module
  */
 
-import { DataFrame } from "../core/frame.ts";
 import type { Dtype } from "../core/dtype.ts";
 import type { DtypeKind } from "../core/dtype.ts";
+import type { DataFrame } from "../core/frame.ts";
 import type { DtypeName } from "../types.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
@@ -64,7 +64,9 @@ export interface SelectDtypesOptions {
 
 /** Normalise a selector (or undefined) to an array. */
 function toArray(sel: DtypeSelector | readonly DtypeSelector[] | undefined): DtypeSelector[] {
-  if (sel === undefined) return [];
+  if (sel === undefined) {
+    return [];
+  }
   return Array.isArray(sel) ? (sel as DtypeSelector[]) : [sel as DtypeSelector];
 }
 
@@ -92,41 +94,65 @@ function matchesAny(dtype: Dtype, selectors: readonly DtypeSelector[]): boolean 
   for (const sel of selectors) {
     switch (sel) {
       case "number":
-        if (kind === "int" || kind === "uint" || kind === "float") return true;
+        if (kind === "int" || kind === "uint" || kind === "float") {
+          return true;
+        }
         break;
       case "integer":
-        if (kind === "int" || kind === "uint") return true;
+        if (kind === "int" || kind === "uint") {
+          return true;
+        }
         break;
       case "signed integer":
-        if (kind === "int") return true;
+        if (kind === "int") {
+          return true;
+        }
         break;
       case "unsigned integer":
-        if (kind === "uint") return true;
+        if (kind === "uint") {
+          return true;
+        }
         break;
       case "floating":
-        if (kind === "float") return true;
+        if (kind === "float") {
+          return true;
+        }
         break;
       case "bool":
-        if (kind === "bool") return true;
+        if (kind === "bool") {
+          return true;
+        }
         break;
       case "object":
-        if (kind === "object") return true;
+        if (kind === "object") {
+          return true;
+        }
         break;
       case "string":
-        if (kind === "string") return true;
+        if (kind === "string") {
+          return true;
+        }
         break;
       case "datetime":
-        if (kind === "datetime") return true;
+        if (kind === "datetime") {
+          return true;
+        }
         break;
       case "timedelta":
-        if (kind === "timedelta") return true;
+        if (kind === "timedelta") {
+          return true;
+        }
         break;
       case "category":
-        if (kind === "category") return true;
+        if (kind === "category") {
+          return true;
+        }
         break;
       default:
         // Concrete dtype name match.
-        if ((sel as string) === name) return true;
+        if ((sel as string) === name) {
+          return true;
+        }
     }
   }
   return false;
@@ -165,9 +191,7 @@ export function selectDtypes(df: DataFrame, opts: SelectDtypesOptions): DataFram
   // Validate no overlap between include and exclude.
   for (const inc of includes) {
     if ((excludes as string[]).includes(inc as string)) {
-      throw new Error(
-        `selectDtypes: selector "${inc}" appears in both include and exclude`,
-      );
+      throw new Error(`selectDtypes: selector "${inc}" appears in both include and exclude`);
     }
   }
 

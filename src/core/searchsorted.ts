@@ -66,18 +66,30 @@ function isMissing(v: Scalar): v is null | undefined {
 function defaultCompare(a: Scalar, b: Scalar): number {
   const aMiss = isMissing(a);
   const bMiss = isMissing(b);
-  if (aMiss && bMiss) return 0;
-  if (aMiss) return -1;
-  if (bMiss) return 1;
+  if (aMiss && bMiss) {
+    return 0;
+  }
+  if (aMiss) {
+    return -1;
+  }
+  if (bMiss) {
+    return 1;
+  }
 
   // Same type fast-paths
   if (typeof a === "number" && typeof b === "number") {
     // NaN sorts last (treat NaN as greater than everything)
     const aNaN = Number.isNaN(a);
     const bNaN = Number.isNaN(b);
-    if (aNaN && bNaN) return 0;
-    if (aNaN) return 1;
-    if (bNaN) return -1;
+    if (aNaN && bNaN) {
+      return 0;
+    }
+    if (aNaN) {
+      return 1;
+    }
+    if (bNaN) {
+      return -1;
+    }
     return a - b;
   }
 
@@ -144,6 +156,26 @@ function bisect(
   return lo;
 }
 
+function valueAt(values: readonly Scalar[], index: number): Scalar {
+  const value = values[index];
+  if (value === undefined) {
+    throw new RangeError("searchsorted: index out of bounds");
+  }
+  return value;
+}
+
+function valueAtSorted(
+  values: readonly Scalar[],
+  sorter: readonly number[],
+  index: number,
+): Scalar {
+  const sortedIndex = sorter[index];
+  if (sortedIndex === undefined) {
+    throw new RangeError("searchsorted: sorter index out of bounds");
+  }
+  return valueAt(values, sortedIndex);
+}
+
 // ─── public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -172,9 +204,9 @@ export function searchsorted(
   const { side = "left", sorter, compareFn = defaultCompare } = options;
   const n = a.length;
   if (sorter !== undefined) {
-    return bisect(n, (i) => a[sorter[i]!]!, v, side, compareFn);
+    return bisect(n, (i) => valueAtSorted(a, sorter, i), v, side, compareFn);
   }
-  return bisect(n, (i) => a[i]!, v, side, compareFn);
+  return bisect(n, (i) => valueAt(a, i), v, side, compareFn);
 }
 
 /**
@@ -203,7 +235,7 @@ export function searchsortedMany(
   const { side = "left", sorter, compareFn = defaultCompare } = options;
   const n = a.length;
   const get: (i: number) => Scalar =
-    sorter !== undefined ? (i) => a[sorter[i]!]! : (i) => a[i]!;
+    sorter !== undefined ? (i) => valueAtSorted(a, sorter, i) : (i) => valueAt(a, i);
   return vs.map((v) => bisect(n, get, v, side, compareFn));
 }
 
@@ -230,6 +262,6 @@ export function argsortScalars(
   compareFn: (x: Scalar, y: Scalar) => number = defaultCompare,
 ): number[] {
   const indices = a.map((_, i) => i);
-  indices.sort((i, j) => compareFn(a[i]!, a[j]!));
+  indices.sort((i, j) => compareFn(valueAt(a, i), valueAt(a, j)));
   return indices;
 }

@@ -11,7 +11,7 @@
  * @module
  */
 
-import { DataFrame } from "../core/index.ts";
+import type { DataFrame } from "../core/index.ts";
 import { Index } from "../core/index.ts";
 import { RangeIndex } from "../core/index.ts";
 import { Series } from "../core/index.ts";
@@ -121,10 +121,7 @@ function indexMemoryBytes(idx: Index<Label>, deep: boolean): number {
  * seriesMemoryUsage(s); // 12  (3 elements × 4 bytes)
  * ```
  */
-export function seriesMemoryUsage(
-  s: Series<Scalar>,
-  options?: MemoryUsageOptions,
-): number {
+export function seriesMemoryUsage(s: Series<Scalar>, options?: MemoryUsageOptions): number {
   const includeIndex = options?.index ?? true;
   const deep = options?.deep ?? false;
 
@@ -161,10 +158,7 @@ export function seriesMemoryUsage(
  * // Index entry + "a" (3×8 bytes float64) + "b" (3×8 pointer bytes)
  * ```
  */
-export function dataFrameMemoryUsage(
-  df: DataFrame,
-  options?: MemoryUsageOptions,
-): Series<number> {
+export function dataFrameMemoryUsage(df: DataFrame, options?: MemoryUsageOptions): Series<number> {
   const includeIndex = options?.index ?? true;
   const deep = options?.deep ?? false;
 

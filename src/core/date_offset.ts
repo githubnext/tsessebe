@@ -140,7 +140,9 @@ function isBusinessDay(date: Date): boolean {
  * - If on a month-end: advance `n` months directly.
  */
 function applyMonthEnd(date: Date, n: number): Date {
-  if (n === 0) return new Date(date.getTime());
+  if (n === 0) {
+    return new Date(date.getTime());
+  }
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth();
   if (isMonthEnd(date)) {
@@ -158,7 +160,9 @@ function applyMonthEnd(date: Date, n: number): Date {
  * Mirrors `pandas.tseries.offsets.MonthBegin(n).apply(date)`.
  */
 function applyMonthBegin(date: Date, n: number): Date {
-  if (n === 0) return new Date(date.getTime());
+  if (n === 0) {
+    return new Date(date.getTime());
+  }
   const y = date.getUTCFullYear();
   const m = date.getUTCMonth();
   if (isMonthBegin(date) || n > 0) {
@@ -172,10 +176,16 @@ function applyMonthBegin(date: Date, n: number): Date {
  * Mirrors `pandas.tseries.offsets.YearEnd(n).apply(date)`.
  */
 function applyYearEnd(date: Date, n: number): Date {
-  if (n === 0) return new Date(date.getTime());
+  if (n === 0) {
+    return new Date(date.getTime());
+  }
   const y = date.getUTCFullYear();
-  if (isYearEnd(date)) return new Date(Date.UTC(y + n, 11, 31));
-  if (n > 0) return new Date(Date.UTC(y + n - 1, 11, 31));
+  if (isYearEnd(date)) {
+    return new Date(Date.UTC(y + n, 11, 31));
+  }
+  if (n > 0) {
+    return new Date(Date.UTC(y + n - 1, 11, 31));
+  }
   return new Date(Date.UTC(y + n, 11, 31));
 }
 
@@ -184,9 +194,13 @@ function applyYearEnd(date: Date, n: number): Date {
  * Mirrors `pandas.tseries.offsets.YearBegin(n).apply(date)`.
  */
 function applyYearBegin(date: Date, n: number): Date {
-  if (n === 0) return new Date(date.getTime());
+  if (n === 0) {
+    return new Date(date.getTime());
+  }
   const y = date.getUTCFullYear();
-  if (isYearBegin(date) || n > 0) return new Date(Date.UTC(y + n, 0, 1));
+  if (isYearBegin(date) || n > 0) {
+    return new Date(Date.UTC(y + n, 0, 1));
+  }
   return new Date(Date.UTC(y + n + 1, 0, 1));
 }
 
@@ -229,8 +243,10 @@ function applyBday(date: Date, n: number): Date {
  * Returns `date` unchanged if it already falls on `jsDow`.
  */
 function rollFwdWeekday(date: Date, jsDow: number): Date {
-  const daysAhead = ((jsDow - date.getUTCDay()) + 7) % 7;
-  if (daysAhead === 0) return new Date(date.getTime());
+  const daysAhead = (jsDow - date.getUTCDay() + 7) % 7;
+  if (daysAhead === 0) {
+    return new Date(date.getTime());
+  }
   return new Date(date.getTime() + daysAhead * MS_PER_DAY);
 }
 
@@ -239,8 +255,10 @@ function rollFwdWeekday(date: Date, jsDow: number): Date {
  * Returns `date` unchanged if it already falls on `jsDow`.
  */
 function rollBkWeekday(date: Date, jsDow: number): Date {
-  const daysBack = ((date.getUTCDay() - jsDow) + 7) % 7;
-  if (daysBack === 0) return new Date(date.getTime());
+  const daysBack = (date.getUTCDay() - jsDow + 7) % 7;
+  if (daysBack === 0) {
+    return new Date(date.getTime());
+  }
   return new Date(date.getTime() - daysBack * MS_PER_DAY);
 }
 
@@ -249,17 +267,23 @@ function rollBkWeekday(date: Date, jsDow: number): Date {
  * `jsDow` is null for plain (unaligned) weeks.
  */
 function applyWeek(date: Date, n: number, jsDow: number | null): Date {
-  if (n === 0) return new Date(date.getTime());
+  if (n === 0) {
+    return new Date(date.getTime());
+  }
   if (jsDow === null) {
     return new Date(date.getTime() + n * MS_PER_WEEK);
   }
   const onTarget = date.getUTCDay() === jsDow;
   if (n > 0) {
-    if (onTarget) return new Date(date.getTime() + n * MS_PER_WEEK);
+    if (onTarget) {
+      return new Date(date.getTime() + n * MS_PER_WEEK);
+    }
     const rolled = rollFwdWeekday(date, jsDow);
     return new Date(rolled.getTime() + (n - 1) * MS_PER_WEEK);
   }
-  if (onTarget) return new Date(date.getTime() + n * MS_PER_WEEK);
+  if (onTarget) {
+    return new Date(date.getTime() + n * MS_PER_WEEK);
+  }
   const rolled = rollBkWeekday(date, jsDow);
   return new Date(rolled.getTime() + (n + 1) * MS_PER_WEEK);
 }
@@ -500,7 +524,10 @@ export class Week implements DateOffset {
    */
   readonly weekday: number | null;
 
-  constructor(readonly n = 1, options: WeekOptions = {}) {
+  constructor(
+    readonly n = 1,
+    options: WeekOptions = {},
+  ) {
     this.weekday = options.weekday ?? null;
   }
 
@@ -514,17 +541,23 @@ export class Week implements DateOffset {
   }
 
   rollforward(date: Date): Date {
-    if (this.weekday === null) return new Date(date.getTime());
+    if (this.weekday === null) {
+      return new Date(date.getTime());
+    }
     return rollFwdWeekday(date, pdToJsDow(this.weekday));
   }
 
   rollback(date: Date): Date {
-    if (this.weekday === null) return new Date(date.getTime());
+    if (this.weekday === null) {
+      return new Date(date.getTime());
+    }
     return rollBkWeekday(date, pdToJsDow(this.weekday));
   }
 
   onOffset(date: Date): boolean {
-    if (this.weekday === null) return true;
+    if (this.weekday === null) {
+      return true;
+    }
     return date.getUTCDay() === pdToJsDow(this.weekday);
   }
 
@@ -569,14 +602,18 @@ export class MonthEnd implements DateOffset {
   }
 
   rollforward(date: Date): Date {
-    if (isMonthEnd(date)) return new Date(date.getTime());
+    if (isMonthEnd(date)) {
+      return new Date(date.getTime());
+    }
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();
     return new Date(Date.UTC(y, m + 1, 0));
   }
 
   rollback(date: Date): Date {
-    if (isMonthEnd(date)) return new Date(date.getTime());
+    if (isMonthEnd(date)) {
+      return new Date(date.getTime());
+    }
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();
     return new Date(Date.UTC(y, m, 0));
@@ -626,14 +663,18 @@ export class MonthBegin implements DateOffset {
   }
 
   rollforward(date: Date): Date {
-    if (isMonthBegin(date)) return new Date(date.getTime());
+    if (isMonthBegin(date)) {
+      return new Date(date.getTime());
+    }
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();
     return new Date(Date.UTC(y, m + 1, 1));
   }
 
   rollback(date: Date): Date {
-    if (isMonthBegin(date)) return new Date(date.getTime());
+    if (isMonthBegin(date)) {
+      return new Date(date.getTime());
+    }
     const y = date.getUTCFullYear();
     const m = date.getUTCMonth();
     return new Date(Date.UTC(y, m, 1));
@@ -679,12 +720,16 @@ export class YearEnd implements DateOffset {
   }
 
   rollforward(date: Date): Date {
-    if (isYearEnd(date)) return new Date(date.getTime());
+    if (isYearEnd(date)) {
+      return new Date(date.getTime());
+    }
     return new Date(Date.UTC(date.getUTCFullYear(), 11, 31));
   }
 
   rollback(date: Date): Date {
-    if (isYearEnd(date)) return new Date(date.getTime());
+    if (isYearEnd(date)) {
+      return new Date(date.getTime());
+    }
     return new Date(Date.UTC(date.getUTCFullYear() - 1, 11, 31));
   }
 
@@ -727,12 +772,16 @@ export class YearBegin implements DateOffset {
   }
 
   rollforward(date: Date): Date {
-    if (isYearBegin(date)) return new Date(date.getTime());
+    if (isYearBegin(date)) {
+      return new Date(date.getTime());
+    }
     return new Date(Date.UTC(date.getUTCFullYear() + 1, 0, 1));
   }
 
   rollback(date: Date): Date {
-    if (isYearBegin(date)) return new Date(date.getTime());
+    if (isYearBegin(date)) {
+      return new Date(date.getTime());
+    }
     return new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   }
 

@@ -11,16 +11,16 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame } from "../../src/core/frame.ts";
 import { Index } from "../../src/core/base-index.ts";
+import { DataFrame } from "../../src/core/frame.ts";
 import { Series } from "../../src/core/series.ts";
-import type { Scalar } from "../../src/types.ts";
 import {
   dropDuplicatesDataFrame,
   dropDuplicatesSeries,
   duplicatedDataFrame,
   duplicatedSeries,
 } from "../../src/stats/duplicated.ts";
+import type { Scalar } from "../../src/types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ describe("duplicatedSeries — keep=first", () => {
   });
 
   test("NaN values are treated as equal", () => {
-    const s = new Series({ data: [NaN, 1, NaN] });
+    const s = new Series({ data: [Number.NaN, 1, Number.NaN] });
     expect(bools(duplicatedSeries(s))).toEqual([false, false, true]);
   });
 
@@ -96,9 +96,7 @@ describe("duplicatedSeries — keep=last", () => {
 
   test("[1,2,1,3,2] → [true,true,false,false,false]", () => {
     const s = new Series({ data: [1, 2, 1, 3, 2] });
-    expect(bools(duplicatedSeries(s, { keep: "last" }))).toEqual([
-      true, true, false, false, false,
-    ]);
+    expect(bools(duplicatedSeries(s, { keep: "last" }))).toEqual([true, true, false, false, false]);
   });
 
   test("all same → last false, rest true", () => {
@@ -181,16 +179,12 @@ describe("duplicatedDataFrame — keep=first", () => {
 
   test("subset=['a'] — row 2 is dup of row 0 on column a", () => {
     const df2 = DataFrame.fromColumns({ a: [1, 2, 1, 2], b: ["x", "y", "z", "w"] });
-    expect(bools(duplicatedDataFrame(df2, { subset: ["a"] }))).toEqual([
-      false, false, true, true,
-    ]);
+    expect(bools(duplicatedDataFrame(df2, { subset: ["a"] }))).toEqual([false, false, true, true]);
   });
 
   test("subset=['b'] — independent of 'a'", () => {
     const df2 = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: ["x", "y", "x", "y"] });
-    expect(bools(duplicatedDataFrame(df2, { subset: ["b"] }))).toEqual([
-      false, false, true, true,
-    ]);
+    expect(bools(duplicatedDataFrame(df2, { subset: ["b"] }))).toEqual([false, false, true, true]);
   });
 
   test("all unique → all false", () => {
@@ -240,9 +234,7 @@ describe("duplicatedDataFrame — keep=first", () => {
 describe("duplicatedDataFrame — keep=last", () => {
   test("[1,2,1,3] → first row 0 is dup, row 2 kept", () => {
     const df = DataFrame.fromColumns({ a: [1, 2, 1, 3] });
-    expect(bools(duplicatedDataFrame(df, { keep: "last" }))).toEqual([
-      true, false, false, false,
-    ]);
+    expect(bools(duplicatedDataFrame(df, { keep: "last" }))).toEqual([true, false, false, false]);
   });
 
   test("all same → last false, rest true", () => {
@@ -256,9 +248,7 @@ describe("duplicatedDataFrame — keep=last", () => {
 describe("duplicatedDataFrame — keep=false", () => {
   test("[1,2,1,3] → first and third rows are both marked", () => {
     const df = DataFrame.fromColumns({ a: [1, 2, 1, 3] });
-    expect(bools(duplicatedDataFrame(df, { keep: false }))).toEqual([
-      true, false, true, false,
-    ]);
+    expect(bools(duplicatedDataFrame(df, { keep: false }))).toEqual([true, false, true, false]);
   });
 
   test("all unique → all false", () => {
@@ -328,41 +318,53 @@ describe("dropDuplicatesDataFrame", () => {
 describe("property-based: duplicatedSeries", () => {
   test("output size equals input size", () => {
     fc.assert(
-      fc.property(fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }), (arr) => {
-        const s = new Series({ data: arr });
-        return duplicatedSeries(s).size === s.size;
-      }),
+      fc.property(
+        fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }),
+        (arr) => {
+          const s = new Series({ data: arr });
+          return duplicatedSeries(s).size === s.size;
+        },
+      ),
     );
   });
 
   test("dropDuplicatesSeries result has no duplicates (keep=first)", () => {
     fc.assert(
-      fc.property(fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }), (arr) => {
-        const s = new Series({ data: arr });
-        const deduped = dropDuplicatesSeries(s);
-        const mask = duplicatedSeries(deduped);
-        return (mask.values as readonly boolean[]).every((v) => !v);
-      }),
+      fc.property(
+        fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }),
+        (arr) => {
+          const s = new Series({ data: arr });
+          const deduped = dropDuplicatesSeries(s);
+          const mask = duplicatedSeries(deduped);
+          return (mask.values as readonly boolean[]).every((v) => !v);
+        },
+      ),
     );
   });
 
   test("dropDuplicatesSeries result is a subset of input values (keep=first)", () => {
     fc.assert(
-      fc.property(fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }), (arr) => {
-        const s = new Series({ data: arr });
-        const deduped = dropDuplicatesSeries(s);
-        const inputSet = new Set(arr.map(String));
-        return (deduped.values as readonly number[]).every((v) => inputSet.has(String(v)));
-      }),
+      fc.property(
+        fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }),
+        (arr) => {
+          const s = new Series({ data: arr });
+          const deduped = dropDuplicatesSeries(s);
+          const inputSet = new Set(arr.map(String));
+          return (deduped.values as readonly number[]).every((v) => inputSet.has(String(v)));
+        },
+      ),
     );
   });
 
   test("keep=first result size <= input size", () => {
     fc.assert(
-      fc.property(fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }), (arr) => {
-        const s = new Series({ data: arr });
-        return dropDuplicatesSeries(s).size <= s.size;
-      }),
+      fc.property(
+        fc.array(fc.integer({ min: 0, max: 5 }), { minLength: 0, maxLength: 20 }),
+        (arr) => {
+          const s = new Series({ data: arr });
+          return dropDuplicatesSeries(s).size <= s.size;
+        },
+      ),
     );
   });
 });
@@ -412,8 +414,12 @@ describe("property-based: duplicatedDataFrame", () => {
         fc.array(fc.integer({ min: 0, max: 3 }), { minLength: 0, maxLength: 15 }),
         (arr) => {
           const df = DataFrame.fromColumns({ x: arr });
-          const firstCount = (duplicatedDataFrame(df, { keep: "first" }).values as boolean[]).filter(Boolean).length;
-          const falseCount = (duplicatedDataFrame(df, { keep: false }).values as boolean[]).filter(Boolean).length;
+          const firstCount = (
+            duplicatedDataFrame(df, { keep: "first" }).values as boolean[]
+          ).filter(Boolean).length;
+          const falseCount = (duplicatedDataFrame(df, { keep: false }).values as boolean[]).filter(
+            Boolean,
+          ).length;
           return falseCount >= firstCount;
         },
       ),

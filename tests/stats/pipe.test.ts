@@ -121,15 +121,11 @@ describe("pipeSeries — property tests", () => {
 
   test("extra args are forwarded unchanged", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { maxLength: 20 }),
-        fc.integer(),
-        (data, extra) => {
-          const s = makeSeries(data as Scalar[]);
-          const r = pipeSeries(s, (_x, n: number) => n, extra);
-          return r === extra;
-        },
-      ),
+      fc.property(fc.array(fc.integer(), { maxLength: 20 }), fc.integer(), (data, extra) => {
+        const s = makeSeries(data as Scalar[]);
+        const r = pipeSeries(s, (_x, n: number) => n, extra);
+        return r === extra;
+      }),
     );
   });
 });

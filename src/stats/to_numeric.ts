@@ -69,19 +69,31 @@ export interface ToNumericOptions {
 function tryConvert(
   v: unknown,
 ): { readonly ok: true; readonly value: number } | { readonly ok: false } {
-  if (v === null || v === undefined) return { ok: true, value: NaN };
-  if (typeof v === "number") return { ok: true, value: v };
-  if (typeof v === "boolean") return { ok: true, value: v ? 1 : 0 };
-  if (typeof v === "bigint") return { ok: true, value: Number(v) };
+  if (v === null || v === undefined) {
+    return { ok: true, value: Number.NaN };
+  }
+  if (typeof v === "number") {
+    return { ok: true, value: v };
+  }
+  if (typeof v === "boolean") {
+    return { ok: true, value: v ? 1 : 0 };
+  }
+  if (typeof v === "bigint") {
+    return { ok: true, value: Number(v) };
+  }
   if (typeof v === "string") {
     const trimmed = v.trim();
-    if (trimmed === "") return { ok: true, value: NaN };
+    if (trimmed === "") {
+      return { ok: true, value: Number.NaN };
+    }
     // Use Number() which handles Infinity, -Infinity, hex (0x…), etc.
     const n = Number(trimmed);
-    if (!Number.isNaN(n)) return { ok: true, value: n };
+    if (!Number.isNaN(n)) {
+      return { ok: true, value: n };
+    }
     // "NaN" string → NaN (pandas does the same)
     if (trimmed === "NaN" || trimmed === "nan" || trimmed === "NAN") {
-      return { ok: true, value: NaN };
+      return { ok: true, value: Number.NaN };
     }
     return { ok: false };
   }
@@ -96,7 +108,9 @@ function tryConvert(
  * implementation could store a dtype annotation on the Series instead.
  */
 function applyDowncast(n: number, downcast: ToNumericDowncast | undefined): number {
-  if (downcast === undefined || !Number.isFinite(n)) return n;
+  if (downcast === undefined || !Number.isFinite(n)) {
+    return n;
+  }
 
   if (downcast === "float") {
     // Represent as float32 precision (round-trip through Float32Array).
@@ -106,20 +120,34 @@ function applyDowncast(n: number, downcast: ToNumericDowncast | undefined): numb
   }
 
   // integer / signed / unsigned — snap to an integer if it is already one.
-  if (!Number.isInteger(n)) return n;
+  if (!Number.isInteger(n)) {
+    return n;
+  }
 
   if (downcast === "unsigned") {
     // Clamp to uint8 range first, expanding as needed.
-    if (n >= 0 && n <= 255) return n & 0xff;
-    if (n >= 0 && n <= 65535) return n & 0xffff;
-    if (n >= 0 && n <= 4294967295) return n >>> 0;
+    if (n >= 0 && n <= 255) {
+      return n & 0xff;
+    }
+    if (n >= 0 && n <= 65535) {
+      return n & 0xffff;
+    }
+    if (n >= 0 && n <= 4294967295) {
+      return n >>> 0;
+    }
     return n;
   }
 
   // signed / integer
-  if (n >= -128 && n <= 127) return n | 0;
-  if (n >= -32768 && n <= 32767) return n | 0;
-  if (n >= -2147483648 && n <= 2147483647) return n | 0;
+  if (n >= -128 && n <= 127) {
+    return n | 0;
+  }
+  if (n >= -32768 && n <= 32767) {
+    return n | 0;
+  }
+  if (n >= -2147483648 && n <= 2147483647) {
+    return n | 0;
+  }
   return n;
 }
 
@@ -139,12 +167,16 @@ export function toNumericScalar(value: unknown, options?: ToNumericOptions): num
 export function toNumericScalar(value: unknown, options: ToNumericOptions = {}): unknown {
   const errors = options.errors ?? "raise";
   const result = tryConvert(value);
-  if (result.ok) return applyDowncast(result.value, options.downcast);
-  if (errors === "coerce") return NaN;
-  if (errors === "ignore") return value;
-  throw new TypeError(
-    `to_numeric: cannot convert ${JSON.stringify(value)} to a number`,
-  );
+  if (result.ok) {
+    return applyDowncast(result.value, options.downcast);
+  }
+  if (errors === "coerce") {
+    return Number.NaN;
+  }
+  if (errors === "ignore") {
+    return value;
+  }
+  throw new TypeError(`to_numeric: cannot convert ${JSON.stringify(value)} to a number`);
 }
 
 // ─── array overload ───────────────────────────────────────────────────────────
@@ -159,17 +191,24 @@ export function toNumericArray<T>(
   options?: ToNumericOptions & { readonly errors: "ignore" },
 ): (number | T)[];
 export function toNumericArray(values: readonly unknown[], options?: ToNumericOptions): number[];
-export function toNumericArray(values: readonly unknown[], options: ToNumericOptions = {}): unknown[] {
+export function toNumericArray(
+  values: readonly unknown[],
+  options: ToNumericOptions = {},
+): unknown[] {
   const errors = options.errors ?? "raise";
   const downcast = options.downcast;
   return values.map((v) => {
     const result = tryConvert(v);
-    if (result.ok) return applyDowncast(result.value, downcast);
-    if (errors === "coerce") return NaN;
-    if (errors === "ignore") return v;
-    throw new TypeError(
-      `to_numeric: cannot convert ${JSON.stringify(v)} to a number`,
-    );
+    if (result.ok) {
+      return applyDowncast(result.value, downcast);
+    }
+    if (errors === "coerce") {
+      return Number.NaN;
+    }
+    if (errors === "ignore") {
+      return v;
+    }
+    throw new TypeError(`to_numeric: cannot convert ${JSON.stringify(v)} to a number`);
   });
 }
 
@@ -184,8 +223,14 @@ export function toNumericSeries<T extends Scalar>(
   s: Series<T>,
   options?: ToNumericOptions & { readonly errors: "ignore" },
 ): Series<number | T>;
-export function toNumericSeries<T extends Scalar>(s: Series<T>, options?: ToNumericOptions): Series<number>;
-export function toNumericSeries<T extends Scalar>(s: Series<T>, options: ToNumericOptions = {}): Series<number | T> {
+export function toNumericSeries<T extends Scalar>(
+  s: Series<T>,
+  options?: ToNumericOptions,
+): Series<number>;
+export function toNumericSeries<T extends Scalar>(
+  s: Series<T>,
+  options: ToNumericOptions = {},
+): Series<number | T> {
   const converted = toNumericArray(s.values as readonly unknown[], options) as (number | T)[];
   return new Series<number | T>({ data: converted, index: s.index, name: s.name });
 }

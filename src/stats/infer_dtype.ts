@@ -41,10 +41,10 @@
  */
 
 import { Series } from "../core/index.ts";
+import { Interval } from "../core/interval.ts";
+import { Period } from "../core/period.ts";
 import { Timedelta } from "../core/timedelta.ts";
 import { Timestamp } from "../core/timestamp.ts";
-import { Period } from "../core/period.ts";
-import { Interval } from "../core/interval.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
 
@@ -100,18 +100,36 @@ type ValueKind =
   | "other";
 
 function classifyOne(v: unknown): ValueKind {
-  if (v === null || v === undefined) return "null";
-  if (typeof v === "boolean") return "boolean";
-  if (typeof v === "bigint") return "bigint";
+  if (v === null || v === undefined) {
+    return "null";
+  }
+  if (typeof v === "boolean") {
+    return "boolean";
+  }
+  if (typeof v === "bigint") {
+    return "bigint";
+  }
   if (typeof v === "number") {
     return Number.isInteger(v) ? "integer" : "float";
   }
-  if (typeof v === "string") return "string";
-  if (v instanceof Timestamp) return "timestamp";
-  if (v instanceof Timedelta) return "timedelta";
-  if (v instanceof Period) return "period";
-  if (v instanceof Interval) return "interval";
-  if (v instanceof Date) return "date";
+  if (typeof v === "string") {
+    return "string";
+  }
+  if (v instanceof Timestamp) {
+    return "timestamp";
+  }
+  if (v instanceof Timedelta) {
+    return "timedelta";
+  }
+  if (v instanceof Period) {
+    return "period";
+  }
+  if (v instanceof Interval) {
+    return "interval";
+  }
+  if (v instanceof Date) {
+    return "date";
+  }
   return "other";
 }
 
@@ -140,23 +158,29 @@ export function inferDtype(
   const skipna = options?.skipna ?? true;
   const arr: readonly unknown[] = values instanceof Series ? values.toArray() : values;
 
-  if (arr.length === 0) return "empty";
+  if (arr.length === 0) {
+    return "empty";
+  }
 
   const kinds = new Set<ValueKind>();
-  let totalNulls = 0;
+  let _totalNulls = 0;
 
   for (const v of arr) {
     const k = classifyOne(v);
     if (k === "null") {
-      totalNulls++;
-      if (!skipna) kinds.add("null");
+      _totalNulls++;
+      if (!skipna) {
+        kinds.add("null");
+      }
     } else {
       kinds.add(k);
     }
   }
 
   // All values were null/undefined
-  if (kinds.size === 0) return "empty";
+  if (kinds.size === 0) {
+    return "empty";
+  }
 
   // Single kind → trivially infer
   if (kinds.size === 1) {
@@ -203,9 +227,15 @@ export function inferDtype(
     [...kindsExNulls].every((k) => k === "integer" || k === "float" || k === "bigint");
 
   if (numericOnly) {
-    if (hasBigint && !hasFloat) return "decimal"; // int + bigint mix
-    if (hasInteger && hasFloat) return "mixed-integer-float"; // int + float
-    if (hasBigint && hasFloat) return "mixed-integer-float"; // bigint + float
+    if (hasBigint && !hasFloat) {
+      return "decimal"; // int + bigint mix
+    }
+    if (hasInteger && hasFloat) {
+      return "mixed-integer-float"; // int + float
+    }
+    if (hasBigint && hasFloat) {
+      return "mixed-integer-float"; // bigint + float
+    }
     return "integer"; // shouldn't reach here
   }
 

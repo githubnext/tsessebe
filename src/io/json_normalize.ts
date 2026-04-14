@@ -103,7 +103,9 @@ function getPath(obj: JsonObject, path: readonly string[]): JsonValue | undefine
       return undefined;
     }
     cur = (cur as JsonObject)[key] as JsonValue;
-    if (cur === undefined) return undefined;
+    if (cur === undefined) {
+      return undefined;
+    }
   }
   return cur;
 }
@@ -169,14 +171,11 @@ function normalizeWithPath(
     // Extract meta values from this parent record
     const metaValues: Record<string, Scalar> = {};
     for (const metaPath of meta) {
-      const colName =
-        metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
+      const colName = metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
       const val = getPath(record, metaPath);
       if (val === undefined) {
         if (errors === "raise") {
-          throw new Error(
-            `jsonNormalize: meta key "${metaPath.join(".")}" not found in record`,
-          );
+          throw new Error(`jsonNormalize: meta key "${metaPath.join(".")}" not found in record`);
         }
         metaValues[colName] = null;
       } else if (typeof val === "object") {
@@ -271,14 +270,11 @@ export function jsonNormalize(
       }
       // Attach meta (from same record)
       for (const metaPath of metaPaths) {
-        const colName =
-          metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
+        const colName = metaPrefix + (metaPath.length === 1 ? metaPath[0] : metaPath.join(sep));
         const val = getPath(record, metaPath);
         if (val === undefined) {
           if (errors === "raise") {
-            throw new Error(
-              `jsonNormalize: meta key "${metaPath.join(".")}" not found in record`,
-            );
+            throw new Error(`jsonNormalize: meta key "${metaPath.join(".")}" not found in record`);
           }
           row[colName] = null;
         } else if (typeof val === "object") {
@@ -293,11 +289,7 @@ export function jsonNormalize(
     // recordPath provided
     // Normalise to array of (single) paths
     const pathList: readonly (readonly string[])[] = (() => {
-      if (
-        Array.isArray(recordPath) &&
-        recordPath.length > 0 &&
-        Array.isArray(recordPath[0])
-      ) {
+      if (Array.isArray(recordPath) && recordPath.length > 0 && Array.isArray(recordPath[0])) {
         // Array of paths
         return (recordPath as readonly JsonPath[]).map(toPathArray);
       }

@@ -96,19 +96,44 @@ const MS_PER_HOUR = 3_600_000;
 const MS_PER_DAY = 86_400_000;
 
 const WEEKDAY_NAMES: readonly string[] = [
-  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ];
-const WEEKDAY_ABBR: readonly string[] = [
-  "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun",
-];
+const WEEKDAY_ABBR: readonly string[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH_NAMES: readonly string[] = [
   "", // 1-based
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 const MONTH_ABBR: readonly string[] = [
-  "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 /** Left-pad a number with zeros to `len` digits. */
@@ -187,13 +212,26 @@ function getLocalParts(utcMs: number, tz: string | null): DateParts {
 
   for (const p of parts) {
     switch (p.type) {
-      case "year": year = Number(p.value); break;
-      case "month": month = Number(p.value); break;
-      case "day": day = Number(p.value); break;
-      case "hour": hour = Number(p.value) % 24; break;
-      case "minute": minute = Number(p.value); break;
-      case "second": second = Number(p.value); break;
-      default: break;
+      case "year":
+        year = Number(p.value);
+        break;
+      case "month":
+        month = Number(p.value);
+        break;
+      case "day":
+        day = Number(p.value);
+        break;
+      case "hour":
+        hour = Number(p.value) % 24;
+        break;
+      case "minute":
+        minute = Number(p.value);
+        break;
+      case "second":
+        second = Number(p.value);
+        break;
+      default:
+        break;
     }
   }
 
@@ -213,21 +251,43 @@ function utcOffsetMinutes(utcMs: number, tz: string): number {
   const d = new Date(utcMs);
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     hour12: false,
   });
   const parts = fmt.formatToParts(d);
-  let year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
+  let year = 0;
+  let month = 0;
+  let day = 0;
+  let hour = 0;
+  let minute = 0;
+  let second = 0;
   for (const p of parts) {
     switch (p.type) {
-      case "year": year = Number(p.value); break;
-      case "month": month = Number(p.value); break;
-      case "day": day = Number(p.value); break;
-      case "hour": hour = Number(p.value) % 24; break;
-      case "minute": minute = Number(p.value); break;
-      case "second": second = Number(p.value); break;
-      default: break;
+      case "year":
+        year = Number(p.value);
+        break;
+      case "month":
+        month = Number(p.value);
+        break;
+      case "day":
+        day = Number(p.value);
+        break;
+      case "hour":
+        hour = Number(p.value) % 24;
+        break;
+      case "minute":
+        minute = Number(p.value);
+        break;
+      case "second":
+        second = Number(p.value);
+        break;
+      default:
+        break;
     }
   }
   const localMs = Date.UTC(year, month - 1, day, hour, minute, second);
@@ -256,7 +316,10 @@ const RE_DATETIME =
 const RE_DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** Parse an ISO-like datetime string into UTC milliseconds and tz metadata. */
-function parseString(s: string, tzHint: string | null | undefined): { utcMs: number; parsedTz: string | null } {
+function parseString(
+  s: string,
+  tzHint: string | null | undefined,
+): { utcMs: number; parsedTz: string | null } {
   const trimmed = s.trim();
 
   // Try full datetime.
@@ -285,7 +348,8 @@ function parseString(s: string, tzHint: string | null | undefined): { utcMs: num
     if (mDt[9] !== undefined && mDt[10] !== undefined) {
       // Explicit offset (+HH:MM or -HH:MM).
       const sign = mDt[9] === "+" ? 1 : -1;
-      const offsetMs = sign * (Number(mDt[10]) * MS_PER_HOUR + Number(mDt[11] ?? "0") * MS_PER_MINUTE);
+      const offsetMs =
+        sign * (Number(mDt[10]) * MS_PER_HOUR + Number(mDt[11] ?? "0") * MS_PER_MINUTE);
       const wallMs = Date.UTC(year, month, day, hour, minute, second, ms);
       const utcMs = wallMs - offsetMs;
       return { utcMs, parsedTz: tzHint ?? "UTC" };
@@ -322,13 +386,27 @@ function parseString(s: string, tzHint: string | null | undefined): { utcMs: num
 /** Return the size of a frequency in milliseconds. */
 function freqMs(freq: string): number {
   const upper = freq.toUpperCase();
-  if (upper === "NS" || upper === "N") return 0; // nanosecond — treat as 1ms for our resolution
-  if (upper === "US" || upper === "U") return 1;
-  if (upper === "MS" || upper === "L") return 1;
-  if (upper === "S") return MS_PER_SECOND;
-  if (upper === "T" || upper === "MIN" || upper === "MIN") return MS_PER_MINUTE;
-  if (upper === "H") return MS_PER_HOUR;
-  if (upper === "D") return MS_PER_DAY;
+  if (upper === "NS" || upper === "N") {
+    return 0; // nanosecond — treat as 1ms for our resolution
+  }
+  if (upper === "US" || upper === "U") {
+    return 1;
+  }
+  if (upper === "MS" || upper === "L") {
+    return 1;
+  }
+  if (upper === "S") {
+    return MS_PER_SECOND;
+  }
+  if (upper === "T" || upper === "MIN" || upper === "MIN") {
+    return MS_PER_MINUTE;
+  }
+  if (upper === "H") {
+    return MS_PER_HOUR;
+  }
+  if (upper === "D") {
+    return MS_PER_DAY;
+  }
   // Try "Nunit" pattern (e.g. "2H", "15T").
   const m = /^(\d+)(.+)$/.exec(freq);
   if (m !== null && m[1] !== undefined && m[2] !== undefined) {
@@ -387,7 +465,10 @@ export class Timestamp {
    * @param input - ISO string, Unix numeric value, or JS Date.
    * @param options - Optional tz, unit, and nanosecond overrides.
    */
-  constructor(input: string | number | Date | Timestamp | RawTimestamp, options?: TimestampOptions) {
+  constructor(
+    input: string | number | Date | Timestamp | RawTimestamp,
+    options?: TimestampOptions,
+  ) {
     if (input instanceof RawTimestamp) {
       this._utcMs = input.utcMs;
       this._tz = input.tz;
@@ -419,16 +500,22 @@ export class Timestamp {
       let utcMs: number;
       let us = 0;
       switch (unit) {
-        case "s": utcMs = Math.trunc(input) * MS_PER_SECOND; break;
-        case "ms": utcMs = Math.trunc(input); break;
-        case "us":
+        case "s":
+          utcMs = Math.trunc(input) * MS_PER_SECOND;
+          break;
+        case "ms":
+          utcMs = Math.trunc(input);
+          break;
+        case "us": {
           utcMs = Math.trunc(input / 1000);
           us = Math.trunc(input % 1000);
           break;
-        case "ns":
+        }
+        case "ns": {
           utcMs = Math.trunc(input / 1_000_000);
           us = Math.trunc((input % 1_000_000) / 1_000);
           break;
+        }
         default:
           utcMs = Math.trunc(input);
       }
@@ -522,30 +609,52 @@ export class Timestamp {
   }
 
   /** Four-digit year. */
-  get year(): number { return this._localParts().year; }
+  get year(): number {
+    return this._localParts().year;
+  }
   /** Month (1–12). */
-  get month(): number { return this._localParts().month; }
+  get month(): number {
+    return this._localParts().month;
+  }
   /** Day of month (1–31). */
-  get day(): number { return this._localParts().day; }
+  get day(): number {
+    return this._localParts().day;
+  }
   /** Hour (0–23). */
-  get hour(): number { return this._localParts().hour; }
+  get hour(): number {
+    return this._localParts().hour;
+  }
   /** Minute (0–59). */
-  get minute(): number { return this._localParts().minute; }
+  get minute(): number {
+    return this._localParts().minute;
+  }
   /** Second (0–59). */
-  get second(): number { return this._localParts().second; }
+  get second(): number {
+    return this._localParts().second;
+  }
   /** Millisecond (0–999). */
-  get millisecond(): number { return this._utcMs % 1_000; }
+  get millisecond(): number {
+    return this._utcMs % 1_000;
+  }
   /** Microsecond (0–999999): millisecond * 1000 + sub-ms microseconds. */
-  get microsecond(): number { return (this._utcMs % 1_000) * 1_000 + this._us; }
+  get microsecond(): number {
+    return (this._utcMs % 1_000) * 1_000 + this._us;
+  }
   /** Nanosecond (0–999). */
-  get nanosecond(): number { return this._ns; }
+  get nanosecond(): number {
+    return this._ns;
+  }
 
   /**
    * Day of week (0=Monday, 6=Sunday), matching pandas convention.
    */
-  get dayofweek(): number { return this._localParts().weekday; }
+  get dayofweek(): number {
+    return this._localParts().weekday;
+  }
   /** Alias for {@link dayofweek}. */
-  get weekday(): number { return this.dayofweek; }
+  get weekday(): number {
+    return this.dayofweek;
+  }
 
   /** Day of year (1–366). */
   get dayofyear(): number {
@@ -565,22 +674,34 @@ export class Timestamp {
   }
 
   /** Quarter (1–4). */
-  get quarter(): number { return Math.ceil(this._localParts().month / 3); }
+  get quarter(): number {
+    return Math.ceil(this._localParts().month / 3);
+  }
 
   /** IANA timezone string, or null for naive. */
-  get tz(): string | null { return this._tz; }
+  get tz(): string | null {
+    return this._tz;
+  }
   /** Alias for {@link tz}. */
-  get tzinfo(): string | null { return this._tz; }
+  get tzinfo(): string | null {
+    return this._tz;
+  }
   /** Always null — tsb Timestamps have no fixed frequency. */
-  get freq(): null { return null; }
+  get freq(): null {
+    return null;
+  }
 
   // ─── boolean properties ───────────────────────────────────────────────────────
 
   /** True if the year is a leap year. */
-  get is_leap_year(): boolean { return isLeapYear(this.year); }
+  get is_leap_year(): boolean {
+    return isLeapYear(this.year);
+  }
 
   /** True if this is the first day of the month. */
-  get is_month_start(): boolean { return this.day === 1; }
+  get is_month_start(): boolean {
+    return this.day === 1;
+  }
 
   /** True if this is the last day of the month. */
   get is_month_end(): boolean {
@@ -590,20 +711,30 @@ export class Timestamp {
 
   /** True if this is the first day of a quarter. */
   get is_quarter_start(): boolean {
-    return this.day === 1 && (this.month === 1 || this.month === 4 || this.month === 7 || this.month === 10);
+    return (
+      this.day === 1 &&
+      (this.month === 1 || this.month === 4 || this.month === 7 || this.month === 10)
+    );
   }
 
   /** True if this is the last day of a quarter. */
   get is_quarter_end(): boolean {
     const { year, month, day } = this._localParts();
-    return day === daysInMonth(year, month) && (month === 3 || month === 6 || month === 9 || month === 12);
+    return (
+      day === daysInMonth(year, month) &&
+      (month === 3 || month === 6 || month === 9 || month === 12)
+    );
   }
 
   /** True if this is the first day of the year (Jan 1). */
-  get is_year_start(): boolean { return this.month === 1 && this.day === 1; }
+  get is_year_start(): boolean {
+    return this.month === 1 && this.day === 1;
+  }
 
   /** True if this is the last day of the year (Dec 31). */
-  get is_year_end(): boolean { return this.month === 12 && this.day === 31; }
+  get is_year_end(): boolean {
+    return this.month === 12 && this.day === 31;
+  }
 
   // ─── conversion methods ───────────────────────────────────────────────────────
 
@@ -645,11 +776,12 @@ export class Timestamp {
    * @param timespec - Precision: `"auto"`, `"hours"`, `"minutes"`, `"seconds"`,
    *                   `"milliseconds"`, `"microseconds"` (default `"auto"`).
    */
-  isoformat(sep: string = "T", timespec: string = "auto"): string {
+  isoformat(sep = "T", timespec = "auto"): string {
     const { year, month, day, hour, minute, second } = this._localParts();
     const ms = this._utcMs % 1_000;
     const datePart = `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
-    const spec = timespec === "auto" ? (ms !== 0 || this._us !== 0 ? "microseconds" : "seconds") : timespec;
+    const spec =
+      timespec === "auto" ? (ms !== 0 || this._us !== 0 ? "microseconds" : "seconds") : timespec;
 
     let timePart: string;
     switch (spec) {
@@ -665,22 +797,22 @@ export class Timestamp {
       case "milliseconds":
         timePart = `${pad(hour, 2)}:${pad(minute, 2)}:${pad(second, 2)}.${pad(ms, 3)}`;
         break;
-      case "microseconds":
       default:
         timePart = `${pad(hour, 2)}:${pad(minute, 2)}:${pad(second, 2)}.${pad(ms * 1_000 + this._us, 6)}`;
         break;
     }
 
-    const tzSuffix = this._tz === null
-      ? ""
-      : this._tz === "UTC"
-        ? "+00:00"
-        : (() => {
-            const offMin = utcOffsetMinutes(this._utcMs, this._tz);
-            const sign = offMin >= 0 ? "+" : "-";
-            const absMin = Math.abs(offMin);
-            return `${sign}${pad(Math.floor(absMin / 60), 2)}:${pad(absMin % 60, 2)}`;
-          })();
+    const tzSuffix =
+      this._tz === null
+        ? ""
+        : this._tz === "UTC"
+          ? "+00:00"
+          : (() => {
+              const offMin = utcOffsetMinutes(this._utcMs, this._tz);
+              const sign = offMin >= 0 ? "+" : "-";
+              const absMin = Math.abs(offMin);
+              return `${sign}${pad(Math.floor(absMin / 60), 2)}:${pad(absMin % 60, 2)}`;
+            })();
 
     return `${datePart}${sep}${timePart}${tzSuffix}`;
   }
@@ -705,7 +837,9 @@ export class Timestamp {
 
     const tzName = this._tz ?? "";
     const tzOffset = (() => {
-      if (this._tz === null) return "";
+      if (this._tz === null) {
+        return "";
+      }
       const offMin = utcOffsetMinutes(this._utcMs, this._tz);
       const sign = offMin >= 0 ? "+" : "-";
       const absMin = Math.abs(offMin);
@@ -717,27 +851,48 @@ export class Timestamp {
 
     return format.replace(/%[A-Za-z%n]/g, (token) => {
       switch (token) {
-        case "%Y": return pad(year, 4);
-        case "%y": return pad(year % 100, 2);
-        case "%m": return pad(month, 2);
-        case "%d": return pad(day, 2);
-        case "%H": return pad(hour, 2);
-        case "%I": return pad(hour12, 2);
-        case "%M": return pad(minute, 2);
-        case "%S": return pad(second, 2);
-        case "%f": return pad(us6, 6);
-        case "%j": return pad(doy, 3);
-        case "%A": return WEEKDAY_NAMES[weekday] ?? "";
-        case "%a": return WEEKDAY_ABBR[weekday] ?? "";
-        case "%B": return MONTH_NAMES[month] ?? "";
-        case "%b": return MONTH_ABBR[month] ?? "";
-        case "%p": return ampm;
-        case "%Z": return tzName;
-        case "%z": return tzOffset;
-        case "%w": return String(jsDow);
-        case "%%": return "%";
-        case "%n": return "\n";
-        default: return token;
+        case "%Y":
+          return pad(year, 4);
+        case "%y":
+          return pad(year % 100, 2);
+        case "%m":
+          return pad(month, 2);
+        case "%d":
+          return pad(day, 2);
+        case "%H":
+          return pad(hour, 2);
+        case "%I":
+          return pad(hour12, 2);
+        case "%M":
+          return pad(minute, 2);
+        case "%S":
+          return pad(second, 2);
+        case "%f":
+          return pad(us6, 6);
+        case "%j":
+          return pad(doy, 3);
+        case "%A":
+          return WEEKDAY_NAMES[weekday] ?? "";
+        case "%a":
+          return WEEKDAY_ABBR[weekday] ?? "";
+        case "%B":
+          return MONTH_NAMES[month] ?? "";
+        case "%b":
+          return MONTH_ABBR[month] ?? "";
+        case "%p":
+          return ampm;
+        case "%Z":
+          return tzName;
+        case "%z":
+          return tzOffset;
+        case "%w":
+          return String(jsDow);
+        case "%%":
+          return "%";
+        case "%n":
+          return "\n";
+        default:
+          return token;
       }
     });
   }
@@ -754,7 +909,9 @@ export class Timestamp {
    */
   floor(freq: string): Timestamp {
     const unit = freqMs(freq);
-    if (unit === 0) return new Timestamp(this);
+    if (unit === 0) {
+      return new Timestamp(this);
+    }
     const floored = Math.floor(this._utcMs / unit) * unit;
     return new Timestamp(floored, { tz: this._tz });
   }
@@ -769,7 +926,9 @@ export class Timestamp {
    */
   ceil(freq: string): Timestamp {
     const unit = freqMs(freq);
-    if (unit === 0) return new Timestamp(this);
+    if (unit === 0) {
+      return new Timestamp(this);
+    }
     const ceiled = Math.ceil(this._utcMs / unit) * unit;
     return new Timestamp(ceiled, { tz: this._tz });
   }
@@ -784,7 +943,9 @@ export class Timestamp {
    */
   round(freq: string): Timestamp {
     const unit = freqMs(freq);
-    if (unit === 0) return new Timestamp(this);
+    if (unit === 0) {
+      return new Timestamp(this);
+    }
     const rounded = Math.round(this._utcMs / unit) * unit;
     return new Timestamp(rounded, { tz: this._tz });
   }
@@ -814,8 +975,7 @@ export class Timestamp {
   tz_localize(tz: string): Timestamp {
     if (this._tz !== null) {
       throw new Error(
-        `Timestamp.tz_localize: timestamp is already tz-aware (tz="${this._tz}"). ` +
-        `Use tz_convert() to change timezone.`,
+        `Timestamp.tz_localize: timestamp is already tz-aware (tz="${this._tz}"). Use tz_convert() to change timezone.`,
       );
     }
     // Re-interpret the wall-clock UTC ms as a local time in `tz`.
@@ -850,7 +1010,9 @@ export class Timestamp {
    * ```
    */
   add(delta: Timedelta): Timestamp {
-    return new Timestamp(new RawTimestamp(this._utcMs + delta.totalMilliseconds, this._tz, this._us, this._ns));
+    return new Timestamp(
+      new RawTimestamp(this._utcMs + delta.totalMilliseconds, this._tz, this._us, this._ns),
+    );
   }
 
   /**
@@ -869,7 +1031,9 @@ export class Timestamp {
   sub(other: Timestamp): Timedelta;
   sub(other: Timedelta | Timestamp): Timestamp | Timedelta {
     if (other instanceof Timedelta) {
-      return new Timestamp(new RawTimestamp(this._utcMs - other.totalMilliseconds, this._tz, this._us, this._ns));
+      return new Timestamp(
+        new RawTimestamp(this._utcMs - other.totalMilliseconds, this._tz, this._us, this._ns),
+      );
     }
     return Timedelta.fromMilliseconds(this._utcMs - other._utcMs);
   }
@@ -877,20 +1041,34 @@ export class Timestamp {
   // ─── comparisons ─────────────────────────────────────────────────────────────
 
   /** Primitive value (ms since epoch) — enables `<`, `>`, `<=`, `>=` operators. */
-  valueOf(): number { return this._utcMs; }
+  valueOf(): number {
+    return this._utcMs;
+  }
 
   /** True if `this` and `other` represent the same instant. */
-  eq(other: Timestamp): boolean { return this._utcMs === other._utcMs; }
+  eq(other: Timestamp): boolean {
+    return this._utcMs === other._utcMs;
+  }
   /** True if `this` and `other` represent different instants. */
-  ne(other: Timestamp): boolean { return this._utcMs !== other._utcMs; }
+  ne(other: Timestamp): boolean {
+    return this._utcMs !== other._utcMs;
+  }
   /** True if `this` is before `other`. */
-  lt(other: Timestamp): boolean { return this._utcMs < other._utcMs; }
+  lt(other: Timestamp): boolean {
+    return this._utcMs < other._utcMs;
+  }
   /** True if `this` is before or equal to `other`. */
-  le(other: Timestamp): boolean { return this._utcMs <= other._utcMs; }
+  le(other: Timestamp): boolean {
+    return this._utcMs <= other._utcMs;
+  }
   /** True if `this` is after `other`. */
-  gt(other: Timestamp): boolean { return this._utcMs > other._utcMs; }
+  gt(other: Timestamp): boolean {
+    return this._utcMs > other._utcMs;
+  }
   /** True if `this` is after or equal to `other`. */
-  ge(other: Timestamp): boolean { return this._utcMs >= other._utcMs; }
+  ge(other: Timestamp): boolean {
+    return this._utcMs >= other._utcMs;
+  }
 
   // ─── name helpers ──────────────────────────────────────────────────────────────
 

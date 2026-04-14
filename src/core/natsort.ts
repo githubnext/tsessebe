@@ -58,8 +58,11 @@ function tokenize(s: string): readonly Token[] {
   // Split on runs of ASCII digits
   const re = /(\d+)/g;
   let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(s)) !== null) {
+  while (true) {
+    const m = re.exec(s);
+    if (m === null) {
+      break;
+    }
     if (m.index > last) {
       tokens.push(s.slice(last, m.index));
     }
@@ -109,18 +112,21 @@ function cmpTokens(a: Token, b: Token, ignoreCase: boolean): number {
  * @param options - Sort options (ignoreCase, reverse).
  * @returns Negative, zero, or positive number as expected by `Array.sort`.
  */
-export function natCompare(
-  a: string,
-  b: string,
-  options: NatSortOptions = {},
-): number {
+export function natCompare(a: string, b: string, options: NatSortOptions = {}): number {
   const { ignoreCase = false, reverse = false } = options;
   const ta = tokenize(a);
   const tb = tokenize(b);
   const len = Math.min(ta.length, tb.length);
   for (let i = 0; i < len; i++) {
-    const c = cmpTokens(ta[i]!, tb[i]!, ignoreCase);
-    if (c !== 0) return reverse ? -c : c;
+    const taToken = ta[i];
+    const tbToken = tb[i];
+    if (taToken === undefined || tbToken === undefined) {
+      break;
+    }
+    const c = cmpTokens(taToken, tbToken, ignoreCase);
+    if (c !== 0) {
+      return reverse ? -c : c;
+    }
   }
   const lenCmp = ta.length - tb.length;
   if (lenCmp === 0) {
@@ -152,10 +158,7 @@ export function natCompare(
  * @param options - Sort options (ignoreCase, reverse, key).
  * @returns New array in natural order.
  */
-export function natSorted<T>(
-  arr: readonly T[],
-  options: NatSortedOptions<T> = {},
-): T[] {
+export function natSorted<T>(arr: readonly T[], options: NatSortedOptions<T> = {}): T[] {
   const { key, ...cmpOpts } = options;
   const copy = [...arr];
   if (key !== undefined) {
@@ -196,7 +199,9 @@ export function natSortKey(
 ): readonly Token[] {
   const { ignoreCase = false } = options;
   const tokens = tokenize(s);
-  if (!ignoreCase) return tokens;
+  if (!ignoreCase) {
+    return tokens;
+  }
   return tokens.map((t) => (typeof t === "string" ? t.toLowerCase() : t));
 }
 
@@ -214,20 +219,27 @@ export function natSortKey(
  * @param options - Sort options (ignoreCase, reverse).
  * @returns Array of original indices in sorted order.
  */
-export function natArgSort(
-  arr: readonly string[],
-  options: NatSortOptions = {},
-): number[] {
+export function natArgSort(arr: readonly string[], options: NatSortOptions = {}): number[] {
   const indices = arr.map((_, i) => i);
   const { ignoreCase = false, reverse = false } = options;
   const keys = arr.map((s) => tokenize(ignoreCase ? s.toLowerCase() : s));
   indices.sort((i, j) => {
-    const ta = keys[i]!;
-    const tb = keys[j]!;
+    const ta = keys[i];
+    const tb = keys[j];
+    if (ta === undefined || tb === undefined) {
+      throw new RangeError("natArgSort: index out of bounds");
+    }
     const len = Math.min(ta.length, tb.length);
     for (let k = 0; k < len; k++) {
-      const c = cmpTokens(ta[k]!, tb[k]!, false); // already case-folded
-      if (c !== 0) return reverse ? -c : c;
+      const taToken = ta[k];
+      const tbToken = tb[k];
+      if (taToken === undefined || tbToken === undefined) {
+        break;
+      }
+      const c = cmpTokens(taToken, tbToken, false); // already case-folded
+      if (c !== 0) {
+        return reverse ? -c : c;
+      }
     }
     const lc = ta.length - tb.length;
     if (lc === 0) {

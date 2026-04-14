@@ -39,9 +39,7 @@ describe("Timedelta.fromComponents", () => {
 
   it("mixed components", () => {
     const td = Timedelta.fromComponents({ days: 1, hours: 2, minutes: 3, seconds: 4 });
-    expect(td.totalMilliseconds).toBe(
-      1 * 86_400_000 + 2 * 3_600_000 + 3 * 60_000 + 4 * 1_000,
-    );
+    expect(td.totalMilliseconds).toBe(1 * 86_400_000 + 2 * 3_600_000 + 3 * 60_000 + 4 * 1_000);
   });
 
   it("negative components", () => {
@@ -49,7 +47,7 @@ describe("Timedelta.fromComponents", () => {
   });
 
   it("throws on non-finite", () => {
-    expect(() => Timedelta.fromMilliseconds(Infinity)).toThrow();
+    expect(() => Timedelta.fromMilliseconds(Number.POSITIVE_INFINITY)).toThrow();
   });
 });
 
@@ -131,13 +129,29 @@ describe("Timedelta.parse", () => {
 // ─── component accessors ─────────────────────────────────────────────────────
 
 describe("component accessors", () => {
-  const td = Timedelta.fromComponents({ days: 1, hours: 2, minutes: 3, seconds: 4, milliseconds: 567 });
+  const td = Timedelta.fromComponents({
+    days: 1,
+    hours: 2,
+    minutes: 3,
+    seconds: 4,
+    milliseconds: 567,
+  });
 
-  it("days", () => { expect(td.days).toBe(1); });
-  it("hours", () => { expect(td.hours).toBe(2); });
-  it("minutes", () => { expect(td.minutes).toBe(3); });
-  it("seconds", () => { expect(td.seconds).toBe(4); });
-  it("milliseconds", () => { expect(td.milliseconds).toBe(567); });
+  it("days", () => {
+    expect(td.days).toBe(1);
+  });
+  it("hours", () => {
+    expect(td.hours).toBe(2);
+  });
+  it("minutes", () => {
+    expect(td.minutes).toBe(3);
+  });
+  it("seconds", () => {
+    expect(td.seconds).toBe(4);
+  });
+  it("milliseconds", () => {
+    expect(td.milliseconds).toBe(567);
+  });
 
   it("negative days", () => {
     const neg = Timedelta.fromComponents({ hours: -25 });
@@ -168,17 +182,27 @@ describe("arithmetic", () => {
   const h1 = Timedelta.fromComponents({ hours: 1 });
   const h2 = Timedelta.fromComponents({ hours: 2 });
 
-  it("add", () => { expect(h1.add(h2).totalHours).toBe(3); });
-  it("sub", () => { expect(h2.sub(h1).totalHours).toBe(1); });
-  it("mul", () => { expect(h1.mul(3).totalHours).toBe(3); });
-  it("negate", () => { expect(h1.negate().totalHours).toBe(-1); });
+  it("add", () => {
+    expect(h1.add(h2).totalHours).toBe(3);
+  });
+  it("sub", () => {
+    expect(h2.sub(h1).totalHours).toBe(1);
+  });
+  it("mul", () => {
+    expect(h1.mul(3).totalHours).toBe(3);
+  });
+  it("negate", () => {
+    expect(h1.negate().totalHours).toBe(-1);
+  });
   it("abs of negative", () => {
     expect(Timedelta.fromComponents({ hours: -3 }).abs().totalHours).toBe(3);
   });
   it("abs of positive unchanged", () => {
     expect(h2.abs().totalHours).toBe(2);
   });
-  it("divBy", () => { expect(h2.divBy(h1)).toBe(2); });
+  it("divBy", () => {
+    expect(h2.divBy(h1)).toBe(2);
+  });
   it("divBy zero throws", () => {
     expect(() => h1.divBy(Timedelta.fromMilliseconds(0))).toThrow(RangeError);
   });
@@ -190,11 +214,21 @@ describe("comparison", () => {
   const h1 = Timedelta.fromComponents({ hours: 1 });
   const h2 = Timedelta.fromComponents({ hours: 2 });
 
-  it("compareTo less", () => { expect(h1.compareTo(h2)).toBeLessThan(0); });
-  it("compareTo equal", () => { expect(h1.compareTo(h1)).toBe(0); });
-  it("compareTo greater", () => { expect(h2.compareTo(h1)).toBeGreaterThan(0); });
-  it("equals true", () => { expect(h1.equals(Timedelta.fromComponents({ hours: 1 }))).toBe(true); });
-  it("equals false", () => { expect(h1.equals(h2)).toBe(false); });
+  it("compareTo less", () => {
+    expect(h1.compareTo(h2)).toBeLessThan(0);
+  });
+  it("compareTo equal", () => {
+    expect(h1.compareTo(h1)).toBe(0);
+  });
+  it("compareTo greater", () => {
+    expect(h2.compareTo(h1)).toBeGreaterThan(0);
+  });
+  it("equals true", () => {
+    expect(h1.equals(Timedelta.fromComponents({ hours: 1 }))).toBe(true);
+  });
+  it("equals false", () => {
+    expect(h1.equals(h2)).toBe(false);
+  });
 });
 
 // ─── toString / toISOString ───────────────────────────────────────────────────
@@ -237,7 +271,9 @@ describe("toISOString", () => {
     expect(Timedelta.fromComponents({ hours: -1 }).toISOString()).toBe("-PT1H");
   });
   it("seconds with ms", () => {
-    expect(Timedelta.fromComponents({ seconds: 1, milliseconds: 500 }).toISOString()).toBe("PT1.500S");
+    expect(Timedelta.fromComponents({ seconds: 1, milliseconds: 500 }).toISOString()).toBe(
+      "PT1.500S",
+    );
   });
 });
 
@@ -249,11 +285,21 @@ describe("TimedeltaIndex.fromTimedeltas", () => {
   const td2 = Timedelta.fromComponents({ hours: 2 });
   const idx = TimedeltaIndex.fromTimedeltas([td0, td1, td2]);
 
-  it("size", () => { expect(idx.size).toBe(3); });
-  it("at(0)", () => { expect(idx.at(0).totalHours).toBe(0); });
-  it("at(2)", () => { expect(idx.at(2).totalHours).toBe(2); });
-  it("out of bounds throws", () => { expect(() => idx.at(5)).toThrow(RangeError); });
-  it("toArray copies", () => { expect(idx.toArray()).toHaveLength(3); });
+  it("size", () => {
+    expect(idx.size).toBe(3);
+  });
+  it("at(0)", () => {
+    expect(idx.at(0).totalHours).toBe(0);
+  });
+  it("at(2)", () => {
+    expect(idx.at(2).totalHours).toBe(2);
+  });
+  it("out of bounds throws", () => {
+    expect(() => idx.at(5)).toThrow(RangeError);
+  });
+  it("toArray copies", () => {
+    expect(idx.toArray()).toHaveLength(3);
+  });
 });
 
 describe("TimedeltaIndex.fromRange", () => {
@@ -383,7 +429,7 @@ describe("property tests", () => {
       fc.property(arbMs, arbMs, (a, b) => {
         const ta = Timedelta.fromMilliseconds(a);
         const tb = Timedelta.fromMilliseconds(b);
-        return ta.sub(tb).totalMilliseconds === -(tb.sub(ta).totalMilliseconds);
+        return ta.sub(tb).totalMilliseconds === -tb.sub(ta).totalMilliseconds;
       }),
     );
   });

@@ -21,7 +21,7 @@
  */
 
 import { DataFrame } from "../core/index.ts";
-import { Index } from "../core/index.ts";
+import type { Index } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
@@ -74,10 +74,7 @@ function buildLabelMap(idx: Index<Label>): Map<string, number[]> {
  * // Series { x:1, y:20, z:3, w:40 }
  * ```
  */
-export function combineFirstSeries(
-  self: Series<Scalar>,
-  other: Series<Scalar>,
-): Series<Scalar> {
+export function combineFirstSeries(self: Series<Scalar>, other: Series<Scalar>): Series<Scalar> {
   const selfIdx = self.index as Index<Label>;
   const otherIdx = other.index as Index<Label>;
   const unionIdx = selfIdx.union(otherIdx);
@@ -91,17 +88,18 @@ export function combineFirstSeries(
     const key = String(unionIdx.at(i));
 
     const selfPositions = selfMap.get(key);
-    const selfVal = selfPositions !== undefined ? (self.values[selfPositions[0] ?? 0] as Scalar) : undefined;
+    const selfVal =
+      selfPositions !== undefined ? (self.values[selfPositions[0] ?? 0] as Scalar) : undefined;
 
-    if (!isMissing(selfVal)) {
-      data.push(selfVal as Scalar);
-    } else {
+    if (isMissing(selfVal)) {
       const otherPositions = otherMap.get(key);
       if (otherPositions !== undefined) {
         data.push(other.values[otherPositions[0] ?? 0] as Scalar);
       } else {
         data.push(null);
       }
+    } else {
+      data.push(selfVal as Scalar);
     }
   }
 
@@ -181,10 +179,7 @@ export function combineFirstDataFrame(self: DataFrame, other: DataFrame): DataFr
       data.push(resolved);
     }
 
-    resultColMap.set(
-      colName,
-      new Series<Scalar>({ data, index: unionRowIdx }),
-    );
+    resultColMap.set(colName, new Series<Scalar>({ data, index: unionRowIdx }));
   }
 
   return new DataFrame(resultColMap, unionRowIdx);

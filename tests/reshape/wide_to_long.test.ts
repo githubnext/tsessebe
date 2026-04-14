@@ -98,10 +98,10 @@ describe("wideToLong", () => {
     it("handles underscore separator", () => {
       const df = DataFrame.fromColumns({
         id: [1, 2],
-        "A_1": [10, 20],
-        "A_2": [30, 40],
-        "B_1": [50, 60],
-        "B_2": [70, 80],
+        A_1: [10, 20],
+        A_2: [30, 40],
+        B_1: [50, 60],
+        B_2: [70, 80],
       });
       const result = wideToLong(df, ["A", "B"], "id", "t", { sep: "_" });
 
@@ -116,7 +116,7 @@ describe("wideToLong", () => {
       const df = DataFrame.fromColumns({
         id: [1, 2],
         A1: [1, 2],
-        "A_1": [10, 20],
+        A_1: [10, 20],
       });
       const result = wideToLong(df, "A", "id", "t", { sep: "_" });
       expect(result.shape[0]).toBe(2); // only A_1 matched
@@ -144,8 +144,8 @@ describe("wideToLong", () => {
     it("handles alphabetic suffix via RegExp", () => {
       const df = DataFrame.fromColumns({
         id: [1, 2],
-        "Apre": [10, 20],
-        "Apost": [30, 40],
+        Apre: [10, 20],
+        Apost: [30, 40],
       });
       const result = wideToLong(df, "A", "id", "phase", { suffix: /[a-z]+/ });
 
@@ -156,8 +156,8 @@ describe("wideToLong", () => {
     it("handles alphanumeric suffix via string pattern", () => {
       const df = DataFrame.fromColumns({
         id: ["a"],
-        "val_q1": [100],
-        "val_q2": [200],
+        val_q1: [100],
+        val_q2: [200],
       });
       const result = wideToLong(df, "val", "id", "quarter", {
         sep: "_",
@@ -376,7 +376,9 @@ describe("wideToLong", () => {
             }
             for (const [id, originalCount] of counts) {
               const count = outIds.filter((v) => v === id).length;
-              if (count !== originalCount * nSuffixes) return false;
+              if (count !== originalCount * nSuffixes) {
+                return false;
+              }
             }
             return true;
           },
@@ -391,7 +393,9 @@ describe("wideToLong", () => {
           fc.array(fc.integer({ min: 1, max: 5 }), { minLength: 1, maxLength: 4 }),
           fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 4 }),
           (ids, sfx1vals) => {
-            if (ids.length !== sfx1vals.length) return true; // skip mismatched
+            if (ids.length !== sfx1vals.length) {
+              return true; // skip mismatched
+            }
             const data: Record<string, readonly Scalar[]> = {
               id: ids,
               A1: sfx1vals,

@@ -9,7 +9,10 @@ import { jsonNormalize } from "../../src/index.ts";
 
 describe("jsonNormalize — basic flattening", () => {
   it("flattens a flat list of records", () => {
-    const df = jsonNormalize([{ a: 1, b: 2 }, { a: 3, b: 4 }]);
+    const df = jsonNormalize([
+      { a: 1, b: 2 },
+      { a: 3, b: 4 },
+    ]);
     expect(df.shape).toEqual([2, 2]);
     expect([...df.columns.values]).toEqual(["a", "b"]);
     expect([...df.col("a").values]).toEqual([1, 3]);
@@ -123,9 +126,7 @@ describe("jsonNormalize — recordPath", () => {
   });
 
   it("throws when recordPath does not point to array", () => {
-    expect(() =>
-      jsonNormalize([{ items: "not-an-array" }], { recordPath: "items" }),
-    ).toThrow();
+    expect(() => jsonNormalize([{ items: "not-an-array" }], { recordPath: "items" })).toThrow();
   });
 });
 
@@ -156,9 +157,9 @@ describe("jsonNormalize — meta", () => {
 
   it("throws on missing meta key when errors=raise (default)", () => {
     const data = [{ items: [{ v: 1 }] }]; // no 'id' field
-    expect(() =>
-      jsonNormalize(data, { recordPath: "items", meta: ["id"] }),
-    ).toThrow(/meta key.*id/);
+    expect(() => jsonNormalize(data, { recordPath: "items", meta: ["id"] })).toThrow(
+      /meta key.*id/,
+    );
   });
 
   it("fills null on missing meta key when errors=ignore", () => {
@@ -172,9 +173,7 @@ describe("jsonNormalize — meta", () => {
   });
 
   it("supports nested meta path", () => {
-    const data = [
-      { info: { id: 42 }, items: [{ v: 1 }] },
-    ];
+    const data = [{ info: { id: 42 }, items: [{ v: 1 }] }];
     const df = jsonNormalize(data, { recordPath: "items", meta: [["info", "id"]] });
     expect([...df.col("info.id").values]).toEqual([42]);
   });
@@ -216,7 +215,10 @@ describe("jsonNormalize — dtype inference", () => {
 
 describe("jsonNormalize — column ordering", () => {
   it("preserves first-seen column order", () => {
-    const data = [{ a: 1, b: 2 }, { b: 3, c: 4, a: 5 }];
+    const data = [
+      { a: 1, b: 2 },
+      { b: 3, c: 4, a: 5 },
+    ];
     const df = jsonNormalize(data);
     expect([...df.columns.values]).toEqual(["a", "b", "c"]);
   });
@@ -285,7 +287,10 @@ describe("jsonNormalize — property tests", () => {
         fc.array(
           fc.record({
             parentId: fc.integer({ min: 1, max: 100 }),
-            children: fc.array(fc.record({ childVal: fc.integer() }), { minLength: 1, maxLength: 5 }),
+            children: fc.array(fc.record({ childVal: fc.integer() }), {
+              minLength: 1,
+              maxLength: 5,
+            }),
           }),
           { minLength: 1, maxLength: 8 },
         ),

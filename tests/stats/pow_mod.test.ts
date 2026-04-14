@@ -49,7 +49,7 @@ describe("seriesPow", () => {
   });
 
   test("missing values propagated — NaN", () => {
-    const result = seriesPow(s([1, NaN, 3]), 2).values as number[];
+    const result = seriesPow(s([1, Number.NaN, 3]), 2).values as number[];
     expect(result[0]).toBe(1);
     expect(Number.isNaN(result[1] as number)).toBe(true);
     expect(result[2]).toBe(9);
@@ -72,7 +72,10 @@ describe("seriesPow", () => {
   test("property: x^1 === x for finite numbers", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const result = seriesPow(s(data), 1).values as number[];
           return data.every((v, i) => result[i] === v);
@@ -239,7 +242,10 @@ describe("seriesFloorDiv", () => {
   test("property: result === floor(a/b) for positive divisor", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         fc.double({ noNaN: true, noDefaultInfinity: true, min: 0.001 }),
         (data, divisor) => {
           const result = seriesFloorDiv(s(data), divisor).values as number[];
@@ -292,7 +298,10 @@ describe("dataFrameFloorDiv", () => {
   test("property: each cell equals Math.floor(v / divisor)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 2, maxLength: 6 }),
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 2,
+          maxLength: 6,
+        }),
         fc.double({ noNaN: true, noDefaultInfinity: true, min: 0.5 }),
         (data, divisor) => {
           const df = dfFromCols({ a: data });

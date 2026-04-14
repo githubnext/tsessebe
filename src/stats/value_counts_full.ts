@@ -15,10 +15,10 @@
  * @module
  */
 
-import type { Scalar } from "../types.ts";
 import { Series } from "../core/index.ts";
 import { Index } from "../core/index.ts";
 import { Dtype } from "../core/index.ts";
+import type { Scalar } from "../types.ts";
 import { cut, cutIntervalIndex } from "./cut.ts";
 
 // ─── types ────────────────────────────────────────────────────────────────────
@@ -109,9 +109,10 @@ export function valueCountsBinned(
   }
 
   // Step 4: build result pairs [label, count]
-  let pairs: Array<[string, number]> = orderedLabels.map(
-    (lbl): [string, number] => [lbl, countMap.get(lbl) ?? 0],
-  );
+  let pairs: [string, number][] = orderedLabels.map((lbl): [string, number] => [
+    lbl,
+    countMap.get(lbl) ?? 0,
+  ]);
 
   // Step 5: optionally sort by count
   if (sort) {

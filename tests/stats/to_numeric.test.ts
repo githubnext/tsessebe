@@ -28,8 +28,9 @@ describe("toNumericScalar — basic types", () => {
   test("whitespace string → NaN", () => expect(toNumericScalar("   ")).toBeNaN());
   test("'NaN' string → NaN", () => expect(toNumericScalar("NaN")).toBeNaN());
   test("'nan' string → NaN", () => expect(toNumericScalar("nan")).toBeNaN());
-  test("Infinity string", () => expect(toNumericScalar("Infinity")).toBe(Infinity));
-  test("-Infinity string", () => expect(toNumericScalar("-Infinity")).toBe(-Infinity));
+  test("Infinity string", () => expect(toNumericScalar("Infinity")).toBe(Number.POSITIVE_INFINITY));
+  test("-Infinity string", () =>
+    expect(toNumericScalar("-Infinity")).toBe(Number.NEGATIVE_INFINITY));
   test("hex string", () => expect(toNumericScalar("0xff")).toBe(255));
   test("leading/trailing whitespace", () => expect(toNumericScalar("  3.5  ")).toBe(3.5));
 });
@@ -65,17 +66,19 @@ describe("toNumericScalar — downcast", () => {
   });
 
   test("downcast float32 rounds", () => {
-    const v = toNumericScalar(3.14159265358979, { downcast: "float" });
+    const v = toNumericScalar(Math.PI, { downcast: "float" });
     // float32 representation has less precision
-    expect(v).toBeCloseTo(3.14159, 4);
+    expect(v).toBeCloseTo(Math.PI, 4);
   });
 
   test("downcast NaN unchanged", () => {
-    expect(toNumericScalar(NaN, { downcast: "integer" })).toBeNaN();
+    expect(toNumericScalar(Number.NaN, { downcast: "integer" })).toBeNaN();
   });
 
   test("downcast Infinity unchanged", () => {
-    expect(toNumericScalar(Infinity, { downcast: "integer" })).toBe(Infinity);
+    expect(toNumericScalar(Number.POSITIVE_INFINITY, { downcast: "integer" })).toBe(
+      Number.POSITIVE_INFINITY,
+    );
   });
 });
 

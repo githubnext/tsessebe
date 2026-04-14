@@ -7,12 +7,12 @@
 
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
+import type { Index } from "../../src/core/base-index.ts";
 import { Dtype } from "../../src/core/dtype.ts";
 import { RangeIndex } from "../../src/core/range-index.ts";
-import { Index } from "../../src/core/base-index.ts";
+import { DataFrame, Series } from "../../src/index.ts";
+import type { Label, Scalar } from "../../src/index.ts";
 import { selectDtypes } from "../../src/stats/select_dtypes.ts";
-import type { Scalar, Label } from "../../src/index.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 

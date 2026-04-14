@@ -75,7 +75,7 @@ describe("factorize — missing values with useNaSentinel=true (default)", () =>
   });
 
   test("NaN values get code -1", () => {
-    const { codes, uniques } = factorize([1, NaN, 2, NaN, 1]);
+    const { codes, uniques } = factorize([1, Number.NaN, 2, Number.NaN, 1]);
     expect(codes).toEqual([0, -1, 1, -1, 0]);
     expect(uniques).toEqual([1, 2]);
   });
@@ -103,7 +103,7 @@ describe("factorize — useNaSentinel=false", () => {
   });
 
   test("NaN treated as a regular value", () => {
-    const { codes, uniques } = factorize([1, NaN, 1, NaN], {
+    const { codes, uniques } = factorize([1, Number.NaN, 1, Number.NaN], {
       useNaSentinel: false,
     });
     expect(codes).toEqual([0, 1, 0, 1]);
@@ -256,29 +256,25 @@ describe("factorize — property tests", () => {
 
   test("sorted uniques are in non-decreasing order (numbers)", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer({ min: -50, max: 50 }), { maxLength: 20 }),
-        (arr) => {
-          const { uniques } = factorize(arr, { sort: true });
-          for (let i = 1; i < uniques.length; i++) {
-            expect((uniques[i] as number) >= (uniques[i - 1] as number)).toBe(true);
-          }
-        },
-      ),
+      fc.property(fc.array(fc.integer({ min: -50, max: 50 }), { maxLength: 20 }), (arr) => {
+        const { uniques } = factorize(arr, { sort: true });
+        for (let i = 1; i < uniques.length; i++) {
+          expect((uniques[i] as number) >= (uniques[i - 1] as number)).toBe(true);
+        }
+      }),
     );
   });
 
   test("sorted and first-seen produce same set of uniques", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.string({ maxLength: 4 }), { maxLength: 25 }),
-        (arr) => {
-          const { uniques: fs } = factorize(arr, { sort: false });
-          const { uniques: sorted } = factorize(arr, { sort: true });
-          expect(new Set(fs).size).toBe(new Set(sorted).size);
-          for (const v of fs) expect(sorted).toContain(v);
-        },
-      ),
+      fc.property(fc.array(fc.string({ maxLength: 4 }), { maxLength: 25 }), (arr) => {
+        const { uniques: fs } = factorize(arr, { sort: false });
+        const { uniques: sorted } = factorize(arr, { sort: true });
+        expect(new Set(fs).size).toBe(new Set(sorted).size);
+        for (const v of fs) {
+          expect(sorted).toContain(v);
+        }
+      }),
     );
   });
 

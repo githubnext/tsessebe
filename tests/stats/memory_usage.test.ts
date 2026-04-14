@@ -76,7 +76,10 @@ describe("seriesMemoryUsage", () => {
 
   it("RangeIndex cost is always 24 bytes regardless of length", () => {
     const s1 = new Series<number>({ data: [1], dtype: Dtype.int64 });
-    const s2 = new Series<number>({ data: Array.from({ length: 100 }, (_, i) => i), dtype: Dtype.int64 });
+    const s2 = new Series<number>({
+      data: Array.from({ length: 100 }, (_, i) => i),
+      dtype: Dtype.int64,
+    });
     const idxCost1 = seriesMemoryUsage(s1) - s1.size * 8;
     const idxCost2 = seriesMemoryUsage(s2) - s2.size * 8;
     expect(idxCost1).toBe(24);
@@ -133,19 +136,31 @@ describe("seriesMemoryUsage", () => {
 
   it("property: result with index ≥ result without index", () => {
     fc.assert(
-      fc.property(fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), { minLength: 0, maxLength: 50 }), (arr) => {
-        const s = new Series<number>({ data: arr, dtype: Dtype.float64 });
-        return seriesMemoryUsage(s, { index: true }) >= seriesMemoryUsage(s, { index: false });
-      }),
+      fc.property(
+        fc.array(fc.double({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 0,
+          maxLength: 50,
+        }),
+        (arr) => {
+          const s = new Series<number>({ data: arr, dtype: Dtype.float64 });
+          return seriesMemoryUsage(s, { index: true }) >= seriesMemoryUsage(s, { index: false });
+        },
+      ),
     );
   });
 
   it("property: shallow byte count = n × itemsize for fixed-width dtypes (no index)", () => {
     fc.assert(
-      fc.property(fc.array(fc.integer({ min: -2147483648, max: 2147483647 }), { minLength: 0, maxLength: 100 }), (arr) => {
-        const s = new Series<number>({ data: arr, dtype: Dtype.int32 });
-        return seriesMemoryUsage(s, { index: false }) === arr.length * 4;
-      }),
+      fc.property(
+        fc.array(fc.integer({ min: -2147483648, max: 2147483647 }), {
+          minLength: 0,
+          maxLength: 100,
+        }),
+        (arr) => {
+          const s = new Series<number>({ data: arr, dtype: Dtype.int32 });
+          return seriesMemoryUsage(s, { index: false }) === arr.length * 4;
+        },
+      ),
     );
   });
 

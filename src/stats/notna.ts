@@ -42,16 +42,20 @@
  * ```
  */
 
-import type { Scalar } from "../types.ts";
 import { DataFrame } from "../core/frame.ts";
 import { Series } from "../core/series.ts";
+import type { Scalar } from "../types.ts";
 
 // ─── internal helper ──────────────────────────────────────────────────────────
 
 /** Return `true` when `v` is a missing value (null, undefined, NaN). */
 function missing(v: unknown): boolean {
-  if (v === null || v === undefined) return true;
-  if (typeof v === "number" && Number.isNaN(v)) return true;
+  if (v === null || v === undefined) {
+    return true;
+  }
+  if (typeof v === "number" && Number.isNaN(v)) {
+    return true;
+  }
   return false;
 }
 

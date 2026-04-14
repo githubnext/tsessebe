@@ -65,9 +65,7 @@ function resolveSeriesCond(cond: SeriesCond, n: number, vals: readonly Scalar[])
   }
   const bools: readonly boolean[] = cond instanceof Series ? cond.values : cond;
   if (bools.length !== n) {
-    throw new RangeError(
-      `Condition length ${bools.length} does not match Series length ${n}`,
-    );
+    throw new RangeError(`Condition length ${bools.length} does not match Series length ${n}`);
   }
   return [...bools];
 }

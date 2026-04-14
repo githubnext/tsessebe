@@ -52,7 +52,13 @@ export { reindexSeries, reindexDataFrame } from "./reindex.ts";
 export type { ReindexMethod, ReindexSeriesOptions, ReindexDataFrameOptions } from "./reindex.ts";
 export { alignSeries, alignDataFrame } from "./align.ts";
 export type { AlignSeriesOptions, AlignDataFrameOptions } from "./align.ts";
-export { insertColumn, popColumn, reorderColumns, moveColumn, dataFrameFromPairs } from "./insert_pop.ts";
+export {
+  insertColumn,
+  popColumn,
+  reorderColumns,
+  moveColumn,
+  dataFrameFromPairs,
+} from "./insert_pop.ts";
 export type { PopResult } from "./insert_pop.ts";
 export { toDictOriented, fromDictOriented } from "./to_from_dict.ts";
 export type {

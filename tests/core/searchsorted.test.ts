@@ -1,10 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
-import {
-  argsortScalars,
-  searchsorted,
-  searchsortedMany,
-} from "../../src/core/searchsorted.ts";
+import { argsortScalars, searchsorted, searchsortedMany } from "../../src/core/searchsorted.ts";
 
 // ─── searchsorted (scalar queries) ────────────────────────────────────────────
 
@@ -179,9 +175,7 @@ describe("searchsortedMany", () => {
     const sorted = [10, 20, 30, 40, 50];
     const sorter = argsortScalars(unsorted);
     const vs = [15, 25, 35, 45];
-    expect(searchsortedMany(unsorted, vs, { sorter })).toEqual(
-      searchsortedMany(sorted, vs),
-    );
+    expect(searchsortedMany(unsorted, vs, { sorter })).toEqual(searchsortedMany(sorted, vs));
   });
 });
 
@@ -222,9 +216,9 @@ describe("searchsorted — property: insertion maintains sorted order", () => {
   it("inserting at returned index keeps array sorted (numbers)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.double({ noNaN: true }), { minLength: 0, maxLength: 20 }).map((arr) =>
-          [...arr].sort((a, b) => a - b),
-        ),
+        fc
+          .array(fc.double({ noNaN: true }), { minLength: 0, maxLength: 20 })
+          .map((arr) => [...arr].sort((a, b) => a - b)),
         fc.double({ noNaN: true }),
         fc.constantFrom("left" as const, "right" as const),
         (sorted, v, side) => {
@@ -232,7 +226,9 @@ describe("searchsorted — property: insertion maintains sorted order", () => {
           const inserted = [...sorted.slice(0, idx), v, ...sorted.slice(idx)];
           // After insertion, array must still be sorted
           for (let i = 1; i < inserted.length; i++) {
-            if ((inserted[i - 1] as number) > (inserted[i] as number)) return false;
+            if ((inserted[i - 1] as number) > (inserted[i] as number)) {
+              return false;
+            }
           }
           return true;
         },
@@ -243,10 +239,12 @@ describe("searchsorted — property: insertion maintains sorted order", () => {
   it("left ≤ right for the same value (numbers)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: -100, max: 100 }), {
-          minLength: 0,
-          maxLength: 30,
-        }).map((arr) => [...arr].sort((a, b) => a - b)),
+        fc
+          .array(fc.integer({ min: -100, max: 100 }), {
+            minLength: 0,
+            maxLength: 30,
+          })
+          .map((arr) => [...arr].sort((a, b) => a - b)),
         fc.integer({ min: -110, max: 110 }),
         (sorted, v) => {
           const l = searchsorted(sorted, v, { side: "left" });
@@ -260,9 +258,9 @@ describe("searchsorted — property: insertion maintains sorted order", () => {
   it("result is within [0, n]", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: 0, max: 50 }), { minLength: 0, maxLength: 25 }).map(
-          (arr) => [...arr].sort((a, b) => a - b),
-        ),
+        fc
+          .array(fc.integer({ min: 0, max: 50 }), { minLength: 0, maxLength: 25 })
+          .map((arr) => [...arr].sort((a, b) => a - b)),
         fc.integer({ min: -5, max: 55 }),
         (sorted, v) => {
           const idx = searchsorted(sorted, v);
@@ -281,10 +279,7 @@ describe("searchsorted — property: insertion maintains sorted order", () => {
         (arr, v, side) => {
           const sorted = [...arr].sort((a, b) => a - b);
           const sorter = argsortScalars(arr);
-          return (
-            searchsorted(arr, v, { side, sorter }) ===
-            searchsorted(sorted, v, { side })
-          );
+          return searchsorted(arr, v, { side, sorter }) === searchsorted(sorted, v, { side });
         },
       ),
     );

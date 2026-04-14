@@ -29,7 +29,7 @@
  */
 
 import { DataFrame } from "../core/index.ts";
-import { Index } from "../core/index.ts";
+import type { Index } from "../core/index.ts";
 import { RangeIndex } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
@@ -198,12 +198,16 @@ export function wideToLong(
   const outCols: Record<string, readonly Scalar[]> = {};
   for (const col of idCols) {
     const arr = idColData.get(col);
-    if (arr !== undefined) outCols[col] = arr;
+    if (arr !== undefined) {
+      outCols[col] = arr;
+    }
   }
   outCols[j] = jCol;
   for (const stub of stubs) {
     const arr = stubColData.get(stub);
-    if (arr !== undefined) outCols[stub] = arr;
+    if (arr !== undefined) {
+      outCols[stub] = arr;
+    }
   }
 
   const rowIndex: Index<Label> =

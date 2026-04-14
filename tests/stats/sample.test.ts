@@ -94,7 +94,11 @@ describe("sampleSeries — weights", () => {
   test("zero-weight element never selected (probabilistic)", () => {
     const s = new Series({ data: [1, 2, 3] });
     const weights = [0, 1, 1] as const;
-    const counts = new Map<number, number>([[1, 0], [2, 0], [3, 0]]);
+    const counts = new Map<number, number>([
+      [1, 0],
+      [2, 0],
+      [3, 0],
+    ]);
     for (let seed = 0; seed < 50; seed++) {
       const r = sampleSeries(s, { n: 1, weights, randomState: seed });
       const v = r.values[0] as number;
@@ -360,9 +364,7 @@ describe("sampleDataFrame — property tests", () => {
           const n = Math.min(data.length, 2);
           const df = DataFrame.fromColumns({ a: data, b: data });
           const r = sampleDataFrame(df, { n, randomState: seed });
-          return (
-            r.columns.values.includes("a") && r.columns.values.includes("b")
-          );
+          return r.columns.values.includes("a") && r.columns.values.includes("b");
         },
       ),
     );

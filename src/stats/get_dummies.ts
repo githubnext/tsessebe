@@ -77,7 +77,7 @@ function collectCategories(vals: readonly Scalar[]): Scalar[] {
   const seen = new Set<Scalar>();
   const cats: Scalar[] = [];
   for (const v of vals) {
-    if (!isMissing(v) && !seen.has(v)) {
+    if (!(isMissing(v) || seen.has(v))) {
       seen.add(v);
       cats.push(v);
     }
@@ -167,7 +167,13 @@ export function dataFrameGetDummies(
   df: DataFrame,
   options: DataFrameGetDummiesOptions = {},
 ): DataFrame {
-  const { columns: targetCols, prefix: basePrefix, prefixSep = "_", dummyNa = false, dropFirst = false } = options;
+  const {
+    columns: targetCols,
+    prefix: basePrefix,
+    prefixSep = "_",
+    dummyNa = false,
+    dropFirst = false,
+  } = options;
 
   const allCols = df.columns.values as readonly string[];
 
@@ -184,10 +190,7 @@ export function dataFrameGetDummies(
   const colMap = new Map<string, Series<Scalar>>();
 
   for (const c of allCols) {
-    if (!encodeSet.has(c)) {
-      // Preserve non-encoded columns unchanged
-      colMap.set(c, df.col(c));
-    } else {
+    if (encodeSet.has(c)) {
       // Expand to dummies, prefixing with the column name unless overridden
       const colPrefix = basePrefix !== undefined ? basePrefix : c;
       const dummies = getDummies(df.col(c), {
@@ -199,6 +202,9 @@ export function dataFrameGetDummies(
       for (const dc of dummies.columns.values as string[]) {
         colMap.set(dc, dummies.col(dc));
       }
+    } else {
+      // Preserve non-encoded columns unchanged
+      colMap.set(c, df.col(c));
     }
   }
 

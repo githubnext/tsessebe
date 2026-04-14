@@ -15,7 +15,7 @@ function sumValues(s: Series<number>): number {
 
 /** Check whether index labels look like interval strings "(a, b]" etc. */
 function isIntervalLabel(s: string): boolean {
-  return /^[\[(]-?\d/.test(s);
+  return /^[[(]-?\d/.test(s);
 }
 
 // ─── basic binning ────────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ describe("valueCountsBinned — sort options", () => {
     // Extract left edge numbers from labels like "(0.99, 4.0]"
     const lefts = labels.map((l): number => {
       const m = l.match(/-?\d+(\.\d+)?/);
-      return m ? parseFloat(m[0]) : 0;
+      return m ? Number.parseFloat(m[0]) : 0;
     });
     // Should be ascending
     for (let i = 1; i < lefts.length; i++) {
@@ -107,7 +107,7 @@ describe("valueCountsBinned — sort options", () => {
     const labels = vc.index.values as string[];
     const lefts = labels.map((l): number => {
       const m = l.match(/-?\d+(\.\d+)?/);
-      return m ? parseFloat(m[0]) : 0;
+      return m ? Number.parseFloat(m[0]) : 0;
     });
     // Should be descending
     for (let i = 1; i < lefts.length; i++) {
@@ -170,7 +170,7 @@ describe("valueCountsBinned — missing values", () => {
   });
 
   test("NaN values are excluded from counts", () => {
-    const s = new Series({ data: [1, NaN, 2, NaN, 3] });
+    const s = new Series({ data: [1, Number.NaN, 2, Number.NaN, 3] });
     const vc = valueCountsBinned(s, 2);
     expect(sumValues(vc)).toBe(3);
   });
@@ -208,7 +208,9 @@ describe("valueCountsBinned — properties", () => {
         (data, bins) => {
           // Need at least 2 distinct values for cut to work
           const distinct = new Set(data).size;
-          if (distinct < 2) return true;
+          if (distinct < 2) {
+            return true;
+          }
           try {
             const s = new Series({ data });
             const vc = valueCountsBinned(s, bins);
@@ -234,7 +236,9 @@ describe("valueCountsBinned — properties", () => {
         fc.integer({ min: 1, max: 5 }),
         (data, bins) => {
           const distinct = new Set(data).size;
-          if (distinct < 2) return true;
+          if (distinct < 2) {
+            return true;
+          }
           try {
             const s = new Series({ data });
             const vc = valueCountsBinned(s, bins, { normalize: true });
@@ -259,7 +263,9 @@ describe("valueCountsBinned — properties", () => {
         fc.integer({ min: 2, max: 5 }),
         (data, bins) => {
           const distinct = new Set(data).size;
-          if (distinct < 2) return true;
+          if (distinct < 2) {
+            return true;
+          }
           try {
             const s = new Series({ data });
             const vc = valueCountsBinned(s, bins);
@@ -284,7 +290,9 @@ describe("valueCountsBinned — properties", () => {
         fc.integer({ min: 2, max: 5 }),
         (data, bins) => {
           const distinct = new Set(data).size;
-          if (distinct < 2) return true;
+          if (distinct < 2) {
+            return true;
+          }
           try {
             const s = new Series({ data });
             const vc = valueCountsBinned(s, bins, { sort: true });
