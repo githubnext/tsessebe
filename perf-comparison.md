@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-13T23:47:04Z |
-| Iteration Count | 52 |
-| Best Metric | 117 |
+| Last Run | 2026-04-14T00:33:13Z |
+| Iteration Count | 53 |
+| Best Metric | 129 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | (created this run) |
@@ -50,23 +50,32 @@
 - Exports: seriesRound (not round), clip, cummax/cummin/cumprod, s.dt.year() is method, coefficientOfVariation/zscore standalone, catFromCodes(codes, categories), strRPartition on Series.
 - rolling has min/max/median/count/var/std/sum/sem/skew/kurt/quantile; Expanding.std/var/sum; EWM.var.
 - All of iter52's 20 new pairs confirmed: cat_to_ordinal, cat_recode, str_get_dummies, str_extract_all, str_normalize, str_remove_prefix/suffix, dataframe_from_pairs, format_scientific/engineering/thousands/currency/compact, apply_series_formatter, groupby_std/var, pipe, coefficient_of_variation, multi_index, dataframe_rolling.
+- Iter-53 added 12 more new pairs: str_translate, cat_cross_tab, cat_freq_table, cat_sort_by_freq, dataframe_expanding, dataframe_ewm, series_apply, histogram, arange_linspace, str_partition, str_rpartition, from_dict_oriented.
 
 ---
 
 ## 🔭 Future Directions
 
-- strTranslate benchmark (strTranslate function).
+- strTranslate benchmark (strTranslate function). ✅ Done iter-53
 - groupby with custom agg function benchmark.
-- catCrossTab, catFreqTable, catSortByFreq benchmarks (may exist in hashed branches).
-- DataFrameExpanding, DataFrameEwm benchmarks.
-- seriesApply, seriesTransform benchmarks.
-- histogram, arange/linspace benchmarks.
-- strPartition, strRPartition benchmarks.
-- fromDictOriented benchmark.
+- catCrossTab, catFreqTable, catSortByFreq benchmarks. ✅ Done iter-53
+- DataFrameExpanding, DataFrameEwm benchmarks. ✅ Done iter-53
+- seriesApply, seriesTransform benchmarks. ✅ Done iter-53
+- histogram, arange/linspace benchmarks. ✅ Done iter-53
+- strPartition, strRPartition benchmarks. ✅ Done iter-53
+- fromDictOriented benchmark. ✅ Done iter-53
+- seriesTransform benchmark (next).
+- groupby custom agg function benchmark (next).
+- applyDataFrameFormatter benchmark.
+- dataFrameToString/seriesToString benchmark.
+- seriesMeta/multiReplace/indent/dedent benchmarks.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 53 — 2026-04-14 00:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24374280631)
+- ✅ Accepted metric=129 (+12) | Union all 8 hashed branches (97 pairs) + 32 new: 20 iter-52 recoveries + 12 new iter-53: str_translate, cat_cross_tab, cat_freq_table, cat_sort_by_freq, dataframe_expanding, dataframe_ewm, series_apply, histogram, arange_linspace, str_partition, str_rpartition, from_dict_oriented | Commit: 240207d
 
 ### Iteration 52 — 2026-04-13 23:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24372801781)
 - ✅ Accepted metric=117 (+8) | Union all 8 hashed branches (97 pairs) + 20 new: cat_to_ordinal, cat_recode, str_get_dummies, str_extract_all, str_normalize, str_remove_prefix/suffix, dataframe_from_pairs, format_scientific/engineering/thousands/currency/compact, apply_series_formatter, groupby_std/var, pipe, coefficient_of_variation, multi_index, dataframe_rolling | Commit: 6a4c100
