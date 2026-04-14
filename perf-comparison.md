@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T07:05:00Z |
-| Iteration Count | 59 |
-| Best Metric | 172 |
+| Last Run | 2026-04-14T08:07:00Z |
+| Iteration Count | 60 |
+| Best Metric | 186 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -60,7 +60,7 @@
 - groupby.first()/last() available on both DataFrameGroupBy and SeriesGroupBy.
 - Series.dt.year()/month()/day() are methods (not properties) in tsb.
 - dataFrameCummin/Cumprod both exported from src/index.ts.
-- Future: groupby_nunique not yet in groupby API; skip.
+- Iter-60: 3c596789 had 143 pairs (not 157); recovered all 8 hashed branches (157 unique pairs total) + 29 new: dataframe_abs, dataframe_round, dataframe_clip, dataframe_cumsum, dataframe_cummax, dataframe_cummin, dataframe_cumprod, groupby_first, groupby_last, datetime_accessor, percentile_of_score, quantile, str_byte_length, dataframe_value_counts, attrs_ops (from iter-59 recovery) + groupby_sum/count/min/max/size, str_char_width, make_formatter, cat_union_intersect_diff, dataframe_where, dataframe_mask, series_dt_strftime, attrs_count_keys, dataframe_nlargest_nsmallest, fillna_dropna (new). Total 186.
 
 ---
 
@@ -70,10 +70,15 @@
 - Series/DataFrame accessor benchmarks (str on DataFrame columns).
 - IO benchmarks: read_parquet, to_parquet, read_excel.
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
+- Series-level dropna/fillna separate benchmarks.
+- More str_* ops: strftime on datetime accessor.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 60 — 2026-04-14 08:07 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24388084827)
+- ✅ Accepted metric=186 (+14 vs prev best 172) | Recovered 157 pairs from 8 hashed branches + 29 new: dataframe_abs/round/clip/cumsum/cummax/cummin/cumprod, groupby_first/last/sum/count/min/max/size, datetime_accessor, percentile_of_score, quantile, str_byte_length/char_width, dataframe_value_counts, attrs_ops/count_keys, make_formatter, cat_union_intersect_diff, dataframe_where/mask, series_dt_strftime, dataframe_nlargest_nsmallest, fillna_dropna | Commit: 249e71e
 
 ### Iteration 59 — 2026-04-14 07:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24385692074)
 - ✅ Accepted metric=172 (+5 vs prev best 167) | Union 3c596789 branch (157 pairs) + 15 new: dataframe_abs, dataframe_round, dataframe_clip, dataframe_cumsum, dataframe_cummax, dataframe_cummin, dataframe_cumprod, groupby_first, groupby_last, datetime_accessor, percentile_of_score, quantile, str_byte_length, dataframe_value_counts, attrs_ops | Commit: d967d82
