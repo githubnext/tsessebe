@@ -15,7 +15,7 @@ on:
 
 permissions: read-all
 
-timeout-minutes: 30
+timeout-minutes: 360
 
 network:
   allowed:
