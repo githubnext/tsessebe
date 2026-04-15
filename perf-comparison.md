@@ -8,19 +8,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T21:48:00Z |
-| Iteration Count | 112 |
+| Last Run | 2026-04-15T22:30:00Z |
+| Iteration Count | 113 |
 | Best Metric | 332 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
 | Steering Issue | #131 |
 | Experiment Log | #130 |
-| Pause Reason | safeoutputs MCP tools unavailable; push blocked 6 consecutive runs |
+| Pause Reason | safeoutputs MCP server blocked by policy; push blocked 7 consecutive runs (iters 107-113) |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 6 |
-| Recent Statuses | error, error, error, error, error, error, accepted, error, accepted, error |
+| Consecutive Errors | 7 |
+| Recent Statuses | error, error, error, error, error, error, error, accepted, error, accepted |
 | Paused | true |
 
 ---
@@ -43,7 +43,7 @@
 
 ## 📚 Lessons Learned
 
-- Metric = min(ts_bench_count, py_bench_count); branch autoloop/perf-comparison. Best metric 332 after iter 106, commit 62b943a. Consecutive push blocker (iters 107-112): safeoutputs MCP tools unavailable every run. Need run where MCP server IS connected.
+- Metric = min(ts_bench_count, py_bench_count); branch autoloop/perf-comparison. Best metric 332 after iter 106, commit 62b943a. Consecutive push blocker (iters 107-113): safeoutputs MCP server blocked by policy every run. Agent log confirms: "2 MCP servers were blocked by policy: 'github', 'safeoutputs'". Need run config that enables safeoutputs MCP policy.
 - Bun not installed; TS benchmark files validated by file-count metric only.
 - push_repo_memory limit ~8 KB per file (total ~10 KB across all files).
 - Index API: delete(), drop(), equals(), identical(), argsort(), isna(), dropna(), min(), max(), argmin(), argmax(), insert(), nunique(), fillna(), append(), rename(), symmetricDifference() — all benchmarked.
@@ -127,6 +127,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 113 — 2026-04-15 22:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24481211408)
+
+- **Status**: ⚠️ Error
+- **Change**: Added 6 pairs: cat_from_codes, value_type_checks2, dtype_predicates, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit 156bf3e. Metric would be 338 (+6 vs best 332).
+- **Metric**: N/A (push blocked — safeoutputs MCP server blocked by policy; consecutive_errors now 7, program remains paused)
+- **Commit**: 156bf3e (local only)
+- **Notes**: All 12 benchmark files created and committed. Agent log explicitly confirms "2 MCP servers were blocked by policy: 'github', 'safeoutputs'". This is the root cause of the recurring blocker. Same 6 pairs as iters 107-112.
 
 ### Iteration 112 — 2026-04-15 21:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24480081505)
 
