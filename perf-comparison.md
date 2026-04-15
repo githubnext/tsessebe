@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T18:54:54Z |
-| Iteration Count | 107 |
+| Last Run | 2026-04-15T19:34:08Z |
+| Iteration Count | 108 |
 | Best Metric | 332 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | error, error, error, accepted, error, accepted, error, error, accepted, error |
+| Consecutive Errors | 2 |
+| Recent Statuses | error, error, accepted, error, accepted, error, error, accepted, error, error |
 | Paused | false |
 
 ---
@@ -114,6 +114,7 @@
 - Series.combine() if it exists in API.
 - Advanced MultiIndex operations not yet covered — ✅ Done (iter 107: sortValues, equals, duplicated, dropDuplicates, isin, isna, notna, dropna, toArray).
 - DataFrame assign with multiple columns.
+- reindexSeries/reindexDataFrame, alignSeries, Timestamp, Timedelta, Period/PeriodIndex, IntervalIndex, CategoricalIndex — ✅ Done (iter 108).
 - DataFrame.filter() if it exists.
 - More IO: to_parquet/read_parquet if added to src/io.
 - catFromCodes() — ✅ Done (iter 107).
@@ -125,6 +126,13 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 108 — 2026-04-15 19:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24474199980)
+
+- **Status**: ⚠️ Error
+- **Change**: Added 7 pairs: reindex, align, timestamp, timedelta, period, interval_index, categorical_index. Local commit d3d50c4. Metric would be 344 (+12 vs best 332).
+- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue as iters 83-107 except 86, 94, 97, 102, 106)
+- **Notes**: All 14 benchmark files (7 TS + 7 PY) created and committed on local branch autoloop/perf-comparison. Next run should recreate and push when MCP tools are available.
 
 ### Iteration 107 — 2026-04-15 18:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24472402835)
 
