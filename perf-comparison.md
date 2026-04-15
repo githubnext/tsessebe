@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T12:23:57Z |
-| Iteration Count | 96 |
-| Best Metric | 293 |
+| Last Run | 2026-04-15T12:51:46Z |
+| Iteration Count | 97 |
+| Best Metric | 305 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 2 |
-| Recent Statuses | error, error, accepted, error, error, error, error, error, error, error |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, error, accepted, error, error, error, error, error, error |
 | Paused | false |
 
 ---
@@ -78,17 +78,26 @@
 - str_startswith_endswith, str_match, str_join, str_cat, dt_normalize, dt_quarter_month — ✅ Done (iter 75)
 - str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, str_islower_isupper, str_wrap, str_encode, str_istitle_isspace, index_fillna, index_append, index_rename — ✅ Done (iter 94).
 - dt_millisecond_microsecond_nanosecond, dt_dayofyear_weekday, dt_round, dt_date, str_rsplit, str_slice_replace, index_isin, index_duplicated, cat_add_remove_categories, cat_rename_set_categories, cat_reorder_as_ordered, cat_value_counts — ✅ Done (already on branch from iter 95, actual metric 293).
-- series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile — ✅ Done (iter 96).
+- series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile — ✅ Done (iter 97).
+- DataFrame.fromRecords, DataFrame.toRecords, DataFrame.setIndex, Series.setIndex — ✅ Done (iter 97).
 - IO benchmarks (read_parquet, to_parquet) — not in src/io/; skip.
-- DataFrame.fromRecords and DataFrame.fromColumns benchmark — potential next target.
 - MultiIndex create/access benchmarks — potential next target.
-- Series.setIndex / Series.resetIndex benchmarks — potential next target.
+- DataFrame.from2D, DataFrame.toDict, DataFrame.select — potential next target.
+- Series.toArray/toList benchmarks — potential next target.
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 97 — 2026-04-15 12:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24455451593)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 12 pairs: series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile, dataframe_fromrecords, dataframe_torecords, dataframe_setindex, series_setindex.
+- **Metric**: 305 (previous best: 293, delta: +12)
+- **Commit**: 5ed4d5d
+- **Notes**: safeoutputs MCP tools available this run. rollingSkew/Kurt/Sem/Quantile are standalone exports; stack() is from reshape. CatAccessor.removeUnusedCategories needs addCategories first to populate unused cats.
 
 ### Iteration 96 — 2026-04-15 12:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24454210628)
 
