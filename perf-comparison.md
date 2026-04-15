@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T13:36:00Z |
-| Iteration Count | 98 |
+| Last Run | 2026-04-15T14:36:09Z |
+| Iteration Count | 99 |
 | Best Metric | 305 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, error, error, accepted, error, error, error, error, error |
+| Consecutive Errors | 1 |
+| Recent Statuses | error, accepted, error, accepted, error, error, accepted, error, error, error |
 | Paused | false |
 
 ---
@@ -81,22 +81,33 @@
 - series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile — ✅ Done (iter 97).
 - DataFrame.fromRecords, DataFrame.toRecords, DataFrame.setIndex, Series.setIndex — ✅ Done (iter 97).
 - IO benchmarks (read_parquet, to_parquet) — not in src/io/; skip.
-- MultiIndex create/access benchmarks — ✅ Done (iter 98 local commit 32232b3, needs push).
-- DataFrame.from2D, DataFrame.toDict, DataFrame.select — potential next target.
-- Series.toArray/toList benchmarks — ✅ Done (iter 98 local commit 32232b3, needs push).
-- Expanding sum/std/var/apply — ✅ Done (iter 98 local commit 32232b3, needs push).
-- rollingAgg/dataFrameRollingAgg standalone — ✅ Done (iter 98 local commit 32232b3, needs push).
-- Index.copy/toArray — ✅ Done (iter 98 local commit 32232b3, needs push).
-- MultiIndex setops (union/intersection/difference) — potential next target.
-- MultiIndex reorderLevels, setNames — potential next target.
-- groupby nunique — check if API exists before trying.
+- MultiIndex create/access benchmarks — ✅ Done (iter 99).
+- DataFrame.from2D, DataFrame.select — ✅ Done (iter 99).
+- Series.toArray/toList benchmarks — ✅ Done (iter 99).
+- Expanding sum/std/var/apply — ✅ Done (iter 99).
+- rollingAgg/dataFrameRollingAgg standalone — ✅ Done (iter 99).
+- Index.copy/toArray — ✅ Done (iter 99).
+- MultiIndex setops (union/intersection/difference) — ✅ Done (iter 99).
+- MultiIndex reorderLevels, setNames — ✅ Done (iter 99 via bench_multi_index_droplevel).
+- groupby nunique — not in API; skip.
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
+- DataFrame.toDict other orientations (index, records, split) — potential next.
+- Series.nbits/itemsize-style benchmarks if API exists.
+- DataFrame.memory_usage benchmark if API exists.
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 99 — 2026-04-15 14:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24460598911)
+
+- **Status**: ⚠️ Error
+- **Change**: Added 12 pairs: expanding_sum, expanding_std, expanding_var, expanding_apply, rolling_agg, dataframe_rolling_agg, multi_index_getloc, multi_index_droplevel (incl. reorderLevels/setNames), multi_index_setops (union/intersection/difference), series_toarray_tolist, index_copy_toarray, dataframe_from2d_select. Local commit fef506e. Metric would be 317.
+- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same as iters 83-98 except 86, 94, 97)
+- **Commit**: fef506e (local only)
+- **Notes**: MultiIndex constructor uses `{ tuples }` options bag; droplevel/reorderLevels/setNames all exist. dataFrameRollingAgg/rollingAgg are standalone exports. Expanding apply takes fn: (readonly number[]) => number.
 
 ### Iteration 98 — 2026-04-15 13:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24457541317)
 
