@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T22:47:09Z |
-| Iteration Count | 114 |
-| Best Metric | 334 |
+| Last Run | 2026-04-15T23:18:29Z |
+| Iteration Count | 115 |
+| Best Metric | 340 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, error, error, error, error, error, accepted, error |
+| Recent Statuses | error, error, error, error, error, error, error, accepted, error, accepted |
 | Paused | false |
 
 ---
@@ -69,7 +69,7 @@
 ## 🔭 Future Directions
 
 - catFromCodes() benchmark still needed (cat_from_codes pair missing from branch).
-- MultiIndex remaining: sortValues, equals, duplicated, dropDuplicates, isin, isna, notna, dropna, toArray.
+- MultiIndex isin, toArray, reorderLevels, setNames still not benchmarked.
 - More groupby: nunique (check if API exists).
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - DataFrame shift/diff, series_pipe, DataFrame.copy(), Series.combine() if APIs exist.
@@ -78,6 +78,12 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 115 — 2026-04-15 23:18 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24483302039)
+- **Status**: ✅ Accepted
+- **Change**: Added 6 benchmark pairs: ewm_var (Series.ewm().var()), dt_is_quarter_start_end (DatetimeAccessor.is_quarter_start/is_quarter_end), dt_year_month_day (DatetimeAccessor.year/month/day), multi_index_sort_equals (sortValues+equals), multi_index_duplicated (duplicated+dropDuplicates), multi_index_isna_dropna (isna+notna+dropna)
+- **Metric**: 340 (previous: 334, +6) | **Commit**: f392fdb
+- **Notes**: Filled coverage gaps in EWM var, DateTime year/month/day and quarter accessors, MultiIndex lifecycle methods.
 
 ### Iteration 114 — 2026-04-15 22:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24482265300)
 - **Status**: ✅ Accepted
