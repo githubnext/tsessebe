@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T06:40:27Z |
-| Iteration Count | 89 |
+| Last Run | 2026-04-15T07:36:07Z |
+| Iteration Count | 90 |
 | Best Metric | 269 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 3 |
-| Recent Statuses | error, error, error, error, error, error, error, error, accepted, error |
+| Consecutive Errors | 4 |
+| Recent Statuses | error, error, error, error, error, error, error, error, error, accepted |
 | Paused | false |
 
 ---
@@ -79,15 +79,23 @@
 - str_startswith_endswith, str_match, str_join, str_cat, dt_normalize, dt_quarter_month — ✅ Done (iter 75)
 - Remaining after iter 80: str_case (title/capitalize/swapcase), str_zfill/center/ljust/rjust, str_count (str.count), str_slice/get, str_isalnum/isnumeric/islower/isupper/istitle/isspace, index_fillna, index_append, index_rename, IO benchmarks (read_parquet, to_parquet) — ✅ All string/index ops Done (iter 82)
 - IO benchmarks (read_parquet, to_parquet) still pending if API exists.
-- str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, index_fillna, index_append, index_rename, str_lstrip_rstrip, str_slice_replace, str_wrap, str_islower_isupper, rolling_sem_skew_kurt — ✅ Done (iter 89, commit 563bc8d).
-- Next: str_encode (str.encode), groupby_nunique (if API exists), dataframe_value_counts, stack/unstack variants, IO benchmarks (read_parquet, to_parquet if API exists).
-- Base branch is origin/autoloop/perf-comparison-3c596789b15fd053 (269 pairs); iteration 89 adds 12 more for 281 total.
+- str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, index_fillna, index_append, index_rename, str_lstrip_rstrip, str_slice_replace, str_wrap, str_islower_isupper, str_encode — ✅ Done (iter 90, commit 66879ec).
+- Next: groupby_nunique (if API exists), dataframe_value_counts (already done?), stack/unstack variants, IO benchmarks (read_parquet, to_parquet if API exists), Series.dt.strftime, DataFrame.explode if API exists.
+- Base branch is origin/autoloop/perf-comparison-3c596789b15fd053 (269 pairs); iteration 90 adds 12 more for 281 total.
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 90 — 2026-04-15 07:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24442256190)
+
+- **Status**: ⚠️ Error
+- **Change**: Added 12 pairs: str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, str_islower_isupper, index_fillna, index_append, index_rename, str_slice_replace, str_wrap, str_encode. Local commit 66879ec. Metric = 281.
+- **Metric**: N/A (push blocked — git HTTPS auth unavailable; safeoutputs MCP not connected)
+- **Commit**: 66879ec (local only)
+- **Notes**: All 24 benchmark files (12 TS + 12 PY) created and committed. Branch metric=281 (+12 vs 269). Same blocker as iterations 83-85, 87-89. safeoutputs tools not in available tool list this run.
 
 ### Iteration 89 — 2026-04-15 06:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24440234178)
 
