@@ -269,6 +269,86 @@
           <p>Fractional change between elements. pctChangeSeries() and pctChangeDataFrame() with periods, fillMethod (pad/bfill), limit, and axis options.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3><a href="insert_pop.html" style="color: var(--accent); text-decoration: none;">📥 insertColumn / popColumn</a></h3>
+          <p>Insert and remove DataFrame columns at precise positions. <code>insertColumn(df, loc, col, values)</code> inserts at integer position, <code>popColumn(df, col)</code> returns <code>{ series, df }</code>. Also includes <code>reorderColumns</code> and <code>moveColumn</code>. Mirrors <code>pandas.DataFrame.insert()</code> and <code>.pop()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="cut_qcut.html" style="color: var(--accent); text-decoration: none;">✂️ cut / qcut</a></h3>
+          <p>Bin continuous numeric data into discrete intervals. <code>cut()</code> uses fixed-width or explicit bin edges; <code>qcut()</code> uses quantile-based bins of equal population. Both return codes, labels, and bin edges. Mirrors <code>pandas.cut</code> and <code>pandas.qcut</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="window_extended.html" style="color: var(--accent); text-decoration: none;">📊 Rolling Extended Stats</a></h3>
+          <p>Higher-order rolling window statistics: <code>rollingSem</code> (standard error of mean), <code>rollingSkew</code> (Fisher-Pearson skewness), <code>rollingKurt</code> (excess kurtosis), and <code>rollingQuantile</code> (arbitrary percentile with 5 interpolation methods). Mirrors <code>pandas.Series.rolling().sem/skew/kurt/quantile()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="rolling_apply.html" style="color: var(--accent); text-decoration: none;">🔧 Rolling Apply &amp; Multi-Agg</a></h3>
+          <p>Standalone custom rolling-window functions: <code>rollingApply</code> (custom fn per window), <code>rollingAgg</code> (multiple named aggregations → DataFrame), <code>dataFrameRollingApply</code>, <code>dataFrameRollingAgg</code>. Supports <code>minPeriods</code>, <code>center</code>, and <code>raw</code> mode. Mirrors <code>pandas.Rolling.apply()</code> and <code>Rolling.agg()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="where_mask.html" style="color: var(--accent); text-decoration: none;">🎭 where / mask</a></h3>
+          <p>Element-wise conditional selection: <code>seriesWhere</code> / <code>seriesMask</code> and <code>dataFrameWhere</code> / <code>dataFrameMask</code>. Accepts boolean arrays, label-aligned boolean Series/DataFrame, or callables. Mirrors <code>pandas.Series.where</code>, <code>pandas.DataFrame.where</code>, and their <code>.mask()</code> inverses.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="card">
+          <h3><a href="notna_isna.html" style="color: var(--accent); text-decoration: none;">🔍 isna / notna</a></h3>
+          <p>Module-level missing-value detection: <code>isna</code>, <code>notna</code>, <code>isnull</code>, <code>notnull</code> work on scalars, arrays, Series, and DataFrames. Plus standalone <code>fillna</code>, <code>dropna</code>, <code>countna</code>, and <code>countValid</code>. Mirrors <code>pandas.isna</code>, <code>pandas.notna</code>, <code>pandas.isnull</code>, <code>pandas.notnull</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="attrs.html" style="color: var(--accent); text-decoration: none;">🏷️ attrs — User Metadata</a></h3>
+          <p>Attach arbitrary key→value metadata to any <code>Series</code> or <code>DataFrame</code> via a <strong>WeakMap registry</strong>. Provides <code>getAttrs</code>, <code>setAttrs</code>, <code>updateAttrs</code>, <code>copyAttrs</code>, <code>withAttrs</code>, <code>mergeAttrs</code>, <code>clearAttrs</code>, <code>getAttr</code>, <code>setAttr</code>, <code>deleteAttr</code>, <code>attrsCount</code>, <code>attrsKeys</code>. Mirrors <code>pandas.DataFrame.attrs</code> / <code>pandas.Series.attrs</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="string_ops.html" style="color: var(--accent); text-decoration: none;">🔤 string_ops — Standalone String Ops</a></h3>
+          <p>Module-level string utilities: <code>strNormalize</code> (Unicode NFC/NFD/NFKC/NFKD), <code>strGetDummies</code> (one-hot DataFrame), <code>strExtractAll</code> (all regex matches), <code>strRemovePrefix</code>, <code>strRemoveSuffix</code>, <code>strTranslate</code> (char-level substitution), <code>strCharWidth</code> (CJK-aware display width), <code>strByteLength</code>. Works on Series, arrays, or scalars.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="string_ops_extended.html" style="color: var(--accent); text-decoration: none;">🔤 string_ops_extended — Extended String Ops</a></h3>
+          <p>Advanced string utilities: <code>strSplitExpand</code> (split → DataFrame columns), <code>strExtractGroups</code> (regex capture groups → DataFrame), <code>strPartition</code> / <code>strRPartition</code> (split into before/sep/after), <code>strMultiReplace</code> (batch replacements), <code>strIndent</code> / <code>strDedent</code> (line-level indentation). Works on Series, arrays, or scalars.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="pipe_apply.html" style="color: var(--accent); text-decoration: none;">🔗 pipe_apply — Pipeline &amp; Apply Utilities</a></h3>
+          <p>Standalone equivalents of pandas' <code>pipe()</code> / <code>apply()</code> / <code>applymap()</code>: <code>pipe</code> (variadic type-safe pipeline), <code>seriesApply</code> (element-wise with label/pos context), <code>seriesTransform</code>, <code>dataFrameApply</code> (axis 0/1), <code>dataFrameApplyMap</code> (cell-wise), <code>dataFrameTransform</code> (column-wise), <code>dataFrameTransformRows</code> (row-wise).</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="numeric_extended.html" style="color: var(--accent); text-decoration: none;">🔢 numeric_extended — Numeric Utilities</a></h3>
+          <p>numpy/scipy-style numeric utilities: <code>digitize</code> (bin values), <code>histogram</code> (frequency counts with density option), <code>linspace</code> / <code>arange</code> (number sequences), <code>percentileOfScore</code> (percentile rank of a score), <code>zscore</code> (z-score standardisation), <code>minMaxNormalize</code> (scale to [0,1] or custom range), <code>coefficientOfVariation</code> (std/mean). Series-aware variants included.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+      </div>
+        <div class="feature-card done">
+          <div class="feature-content">
+            <h3><a href="categorical_ops.html" style="color: var(--accent); text-decoration: none;">🏷️ categorical_ops — Categorical Utilities</a></h3>
+          <p>Standalone categorical helpers: <code>catFromCodes</code> (from integer codes), set operations (<code>catUnionCategories</code>, <code>catIntersectCategories</code>, <code>catDiffCategories</code>, <code>catEqualCategories</code>), <code>catSortByFreq</code>, <code>catToOrdinal</code>, <code>catFreqTable</code>, <code>catCrossTab</code>, <code>catRecode</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+      </div>
+        <div class="feature-card done">
+          <div class="feature-content">
+            <h3><a href="format_ops.html" style="color: var(--accent); text-decoration: none;">🔢 format_ops — Number Formatting</a></h3>
+          <p>Number-formatting helpers for Series and DataFrame. Scalar formatters: <code>formatFloat</code>, <code>formatPercent</code>, <code>formatScientific</code>, <code>formatEngineering</code>, <code>formatThousands</code>, <code>formatCurrency</code>, <code>formatCompact</code>. Formatter factories: <code>makeFloatFormatter</code>, <code>makePercentFormatter</code>, <code>makeCurrencyFormatter</code>. Apply to collections: <code>applySeriesFormatter</code>, <code>applyDataFrameFormatter</code>. Render to string: <code>seriesToString</code>, <code>dataFrameToString</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top: 3rem;">
+      <h2 style="margin-bottom: 1rem; font-size: 1.25rem;">Performance</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3><a href="benchmarks.html" style="color: var(--accent); text-decoration: none;">⚡ Benchmarks</a></h3>
+          <p>Side-by-side performance comparison of tsb (TypeScript/Bun) vs pandas (Python). Timing metrics for each function.</p>
+          <div class="status">🏗️ In Progress</div>
+        </div>
       </div>
     </section>
   </main>
