@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T16:50:45Z |
-| Iteration Count | 103 |
+| Last Run | 2026-04-15T17:26:49Z |
+| Iteration Count | 104 |
 | Best Metric | 326 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | error, error, error, accepted, error, accepted, error, error, accepted, error |
+| Consecutive Errors | 2 |
+| Recent Statuses | error, error, accepted, error, accepted, error, error, accepted, error, error |
 | Paused | false |
 
 ---
@@ -43,10 +43,10 @@
 
 ## 📚 Lessons Learned
 
-- Metric = min(ts_bench_count, py_bench_count); working branch is origin/autoloop/perf-comparison-3c596789b15fd053 (actual metric 337 after iter 103).
+- Metric = min(ts_bench_count, py_bench_count); working branch is origin/autoloop/perf-comparison-3c596789b15fd053 (actual origin metric 326 after iter 102; iter 104 local adds 6 more but push blocked).
 - Bun not installed; TS benchmark files validated by file-count metric only.
 - push_repo_memory limit ~8 KB per file (total ~10 KB across all files).
-- Index API: delete(), drop(), equals(), identical(), argsort(), isna(), dropna(), min(), max(), argmin(), argmax(), insert(), nunique(), fillna(), append(), rename(), symmetricDifference().
+- Index API: delete(), drop(), equals(), identical(), argsort(), isna(), dropna(), min(), max(), argmin(), argmax(), insert(), nunique(), fillna(), append(), rename(), symmetricDifference() — all benchmarked.
 - String accessor: fullmatch(), lower(), upper(), title(), capitalize(), swapcase(), find(), rfind(), repeat(), isalpha(), isdigit(), isalnum(), isnumeric(), islower(), isupper(), istitle(), isspace(), zfill(), center(), ljust(), rjust(), slice(), count().
 - DatetimeAccessor: is_year_start(), is_year_end(), is_leap_year(), days_in_month(), is_month_start(), is_month_end(), hour(), minute(), second().
 - Branching: checkout origin/autoloop/perf-comparison-3c596789b15fd053 as local autoloop/perf-comparison, add pairs, commit, push via push_to_pull_request_branch to PR #141.
@@ -101,17 +101,31 @@
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - Series.nbits/itemsize-style benchmarks if API exists.
 - DataFrame.memory_usage benchmark if API exists.
-- Dtype class (from, inferFrom, commonType, property access) — ✅ Done (iter 103, pending push).
-- Index.symmetricDifference — ✅ Done (iter 103, pending push).
-- attrs: getAttr/setAttr/clearAttrs/copyAttrs/deleteAttr/mergeAttrs/hasAttrs — ✅ Done (iter 103, pending push).
-- describe() with custom percentiles and include options — ✅ Done (iter 103, pending push).
-- Series property access (shape/ndim/size/empty/values) — ✅ Done (iter 103, pending push).
+- Dtype class (from, inferFrom, commonType, property access) — ✅ Done (iter 104, pending push).
+- Index.symmetricDifference — ✅ Done (iter 104, pending push).
+- attrs: getAttr/setAttr/clearAttrs/copyAttrs/deleteAttr/mergeAttrs/hasAttrs — ✅ Done (iter 104, pending push).
+- describe() with custom percentiles and include options — ✅ Done (iter 104, pending push).
+- Series property access (shape/ndim/size/empty/values) — ✅ Done (iter 104, pending push).
+- insertColumn for DataFrame — ✅ Done (iter 104, pending push).
+- DataFrame.copy() if it exists in API.
+- Series.combine() if it exists in API.
+- Advanced MultiIndex operations not yet covered.
+- DataFrame assign with multiple columns.
+- DataFrame.filter() if it exists.
+- More IO: to_parquet/read_parquet if added to src/io.
 
 ---
 
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 104 — 2026-04-15 17:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24468471179)
+
+- **Status**: ⚠️ Error
+- **Change**: Added 6 pairs: dtype, attrs_advanced, index_symmetric_diff, describe_options, series_properties, insert_column. Local commit b8b7dbc. Metric would be 332.
+- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue as iters 83-103 except 86, 94, 97, 102)
+- **Notes**: All 12 benchmark files (6 TS + 6 PY) created and committed locally. Dtype.from()/inferFrom()/commonType(), advanced attrs helpers, Index.symmetricDifference(), describe() with options, Series property getters, and insertColumn() all covered. Next run should recreate and push when MCP tools are available.
 
 ### Iteration 103 — 2026-04-15 16:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24466900367)
 
