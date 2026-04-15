@@ -8,18 +8,18 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-14T23:47:02Z |
-| Iteration Count | 83 |
+| Last Run | 2026-04-15T00:34:02Z |
+| Iteration Count | 84 |
 | Best Metric | 269 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
 | Steering Issue | #131 |
 | Experiment Log | #130 |
-| Pause Reason | safeoutputs MCP unavailable (iter 83, 8th consecutive). Local commit d120f51 (+8 pairs, 277 total). Remote metric remains 269. |
+| Pause Reason | safeoutputs MCP unavailable (iter 84, 9th consecutive). Local commit e1adbe4 (+8 pairs: str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, index_fillna, index_append, index_rename → 277 total). Remote metric remains 269. |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 8 |
+| Consecutive Errors | 9 |
 | Recent Statuses | error, error, error, error, error, error, error, error, error |
 | Paused | true |
 
@@ -85,6 +85,16 @@
 ---
 
 ## 📊 Iteration History
+
+All iterations in reverse chronological order (newest first).
+
+### Iteration 84 — 2026-04-15 00:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24430048504)
+
+- **Status**: ⚠️ Error
+- **Change**: Added 8 pairs: str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, index_fillna, index_append, index_rename. Local commit e1adbe4. Metric would be 277.
+- **Metric**: N/A (push blocked — safeoutputs MCP unavailable, 9th consecutive failure)
+- **Commit**: e1adbe4 (local only)
+- **Notes**: All 16 benchmark files created and committed. Branch: autoloop/perf-comparison based on origin/autoloop/perf-comparison-3c596789b15fd053. safeoutputs tools not in available tool list (add_comment returns "Tool does not exist").
 
 ### Iteration 83 — 2026-04-14 23:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24428630710)
 
