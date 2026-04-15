@@ -8,20 +8,20 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T22:30:00Z |
-| Iteration Count | 113 |
-| Best Metric | 332 |
+| Last Run | 2026-04-15T22:47:09Z |
+| Iteration Count | 114 |
+| Best Metric | 334 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
 | Steering Issue | #131 |
 | Experiment Log | #130 |
-| Pause Reason | safeoutputs MCP server blocked by policy; push blocked 7 consecutive runs (iters 107-113) |
+| Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 7 |
-| Recent Statuses | error, error, error, error, error, error, error, accepted, error, accepted |
-| Paused | true |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, error, error, error, error, error, error, accepted, error |
+| Paused | false |
 
 ---
 
@@ -43,7 +43,7 @@
 
 ## 📚 Lessons Learned
 
-- Metric = min(ts_bench_count, py_bench_count); branch autoloop/perf-comparison. Best metric 332 after iter 106, commit 62b943a. Consecutive push blocker (iters 107-113): safeoutputs MCP server blocked by policy every run. Agent log confirms: "2 MCP servers were blocked by policy: 'github', 'safeoutputs'". Need run config that enables safeoutputs MCP policy.
+- Metric = min(ts_bench_count, py_bench_count); branch autoloop/perf-comparison. Best metric 334 after iter 114, commit 685193d. Iters 107-113 were push-blocked (safeoutputs MCP blocked by policy). Iter 114 succeeded when policy was restored.
 - Bun not installed; TS benchmark files validated by file-count metric only.
 - push_repo_memory limit ~8 KB per file (total ~10 KB across all files).
 - Index API: delete(), drop(), equals(), identical(), argsort(), isna(), dropna(), min(), max(), argmin(), argmax(), insert(), nunique(), fillna(), append(), rename(), symmetricDifference() — all benchmarked.
@@ -68,226 +68,30 @@
 
 ## 🔭 Future Directions
 
-- More groupby aggregation variants (nunique — check if API exists).
-- IO benchmarks: read_parquet, to_parquet, read_excel.
+- catFromCodes() benchmark still needed (cat_from_codes pair missing from branch).
+- MultiIndex remaining: sortValues, equals, duplicated, dropDuplicates, isin, isna, notna, dropna, toArray.
+- More groupby: nunique (check if API exists).
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
-- Series-level dropna/fillna separate benchmarks.
-- More str_* ops: strftime on datetime accessor.
-- Series arithmetic edge cases: floordiv, mod, pow operators — ✅ Done (iter 70/71)
-- Index operations: sort, nunique (Index has these methods) — ✅ Done (iter 71)
-- DataFrame shift/diff if added to API.
-- GroupBy nunique if API exists.
-- DataFrameExpanding min/max/count/median — ✅ Done (iter 71)
-- EWM apply with custom function — ✅ Done (iter 71)
-- DataFrameEwm std/var — ✅ Done (iter 71)
-- Series comparison operators — ✅ Done (iter 71)
-- Index set ops — ✅ Done (iter 71)
-- DataFrame rank — ✅ Done (iter 71)
-- series_groupby_transform, index_contains, dataframe_apply_axis1, index_sort, dataframe_rolling_apply — ✅ Done (iter 72)
-- str_strip, str_pad, dt_floor_ceil — ✅ Done (iter 74)
-- str_startswith_endswith, str_match, str_join, str_cat, dt_normalize, dt_quarter_month — ✅ Done (iter 75)
-- str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, str_islower_isupper, str_wrap, str_encode, str_istitle_isspace, index_fillna, index_append, index_rename — ✅ Done (iter 94).
-- dt_millisecond_microsecond_nanosecond, dt_dayofyear_weekday, dt_round, dt_date, str_rsplit, str_slice_replace, index_isin, index_duplicated, cat_add_remove_categories, cat_rename_set_categories, cat_reorder_as_ordered, cat_value_counts — ✅ Done (already on branch from iter 95, actual metric 293).
-- series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile — ✅ Done (iter 97).
-- DataFrame.fromRecords, DataFrame.toRecords, DataFrame.setIndex, Series.setIndex — ✅ Done (iter 97).
-- IO benchmarks (read_parquet, to_parquet) — not in src/io/; skip.
-- MultiIndex create/access benchmarks — ✅ Done (iter 99).
-- DataFrame.from2D, DataFrame.select — ✅ Done (iter 99).
-- Series.toArray/toList benchmarks — ✅ Done (iter 99).
-- Expanding sum/std/var/apply — ✅ Done (iter 99).
-- rollingAgg/dataFrameRollingAgg standalone — ✅ Done (iter 99).
-- Index.copy/toArray — ✅ Done (iter 99).
-- MultiIndex setops (union/intersection/difference) — ✅ Done (iter 99).
-- MultiIndex reorderLevels, setNames — ✅ Done (iter 99 via bench_multi_index_droplevel).
-- groupby nunique — not in API; skip.
-- MultiIndex.swaplevel(), Series.fromObject(), Series.withValues(), DataFrame.col()/has()/get(), type checks (isScalar etc.), toDictOriented multi-orient, RangeIndex, index_monotonic, str_len — ✅ Done (iter 102).
-- Advanced reshape: crosstab with margins, pivot_table with fill_value.
-- Series.nbits/itemsize-style benchmarks if API exists.
-- DataFrame.memory_usage benchmark if API exists.
-- Dtype class (from, inferFrom, commonType, property access) — ✅ Done (iter 106).
-- Index.symmetricDifference — ✅ Done (iter 106).
-- attrs: getAttr/setAttr/clearAttrs/copyAttrs/deleteAttr/mergeAttrs/hasAttrs — ✅ Done (iter 106).
-- Series property access (shape/ndim/size/empty/values) — ✅ Done (iter 106).
-- insertColumn for DataFrame — ✅ Done (iter 106).
-- dataFrameFromPairs — ✅ Done (iter 106).
-- DataFrame.copy() if it exists in API.
-- Series.combine() if it exists in API.
-- Advanced MultiIndex operations not yet covered — ✅ Done (iter 107: sortValues, equals, duplicated, dropDuplicates, isin, isna, notna, dropna, toArray).
-- DataFrame assign with multiple columns.
-- reindexSeries/reindexDataFrame, alignSeries, Timestamp, Timedelta, Period/PeriodIndex, IntervalIndex, CategoricalIndex — ✅ Done (iter 108).
-- DataFrame.filter() if it exists.
-- More IO: to_parquet/read_parquet if added to src/io.
-- catFromCodes() — planned for next push (local commit 115bf22).
-- Extended value type checks (isNumber/isBool/isStringValue/isFloat/isInteger/isBigInt/isRegExp/isMissing/isHashable/isDate) — planned for next push (local commit 115bf22).
-- Dtype predicates (isNumericDtype/isIntegerDtype/isFloatDtype/isBoolDtype/isStringDtype/isDatetimeDtype/isCategoricalDtype) — planned for next push (local commit 115bf22).
-- MultiIndex sortValues/equals/duplicated/dropDuplicates/isin/isna/notna/dropna/toArray — planned for next push (local commit 115bf22).
+- DataFrame shift/diff, series_pipe, DataFrame.copy(), Series.combine() if APIs exist.
+- IO: read_parquet/to_parquet if added to src/io.
 
 ---
 
 ## 📊 Iteration History
 
-All iterations in reverse chronological order (newest first).
-
-### Iteration 113 — 2026-04-15 22:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24481211408)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: cat_from_codes, value_type_checks2, dtype_predicates, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit 156bf3e. Metric would be 338 (+6 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP server blocked by policy; consecutive_errors now 7, program remains paused)
-- **Commit**: 156bf3e (local only)
-- **Notes**: All 12 benchmark files created and committed. Agent log explicitly confirms "2 MCP servers were blocked by policy: 'github', 'safeoutputs'". This is the root cause of the recurring blocker. Same 6 pairs as iters 107-112.
-
-### Iteration 112 — 2026-04-15 21:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24480081505)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: cat_from_codes, value_type_checks2, dtype_predicates, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit 169dfb4. Metric would be 338 (+6 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; consecutive_errors now 6, program paused)
-- **Commit**: 169dfb4 (local only)
-- **Notes**: All 12 benchmark files created and committed. Same recurring push blocker (iters 107-112). catFromCodes, value/dtype predicates, MultiIndex sort/equals/duplicated/isin/isna/dropna/toArray all covered. Next run should push when MCP tools available.
-
-### Iteration 111 — 2026-04-15 21:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24478931080)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: cat_from_codes, value_type_checks2, dtype_predicates, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit 115bf22. Metric would be 338 (+6 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; consecutive_errors now 5, program remains paused)
-- **Commit**: 115bf22 (local only)
-- **Notes**: All 12 benchmark files created and committed. Same recurring push blocker (iters 107-111). catFromCodes, value/dtype predicates, MultiIndex sort/equals/duplicated/isin/isna/dropna/toArray all covered. Next run should push when MCP tools available.
-
-### Iteration 110 — 2026-04-15 20:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24477539530)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: cat_from_codes, value_type_checks, dtype_predicates, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit 054f3a1. Metric would be 338 (+6 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; consecutive_errors now 4, program paused)
-- **Commit**: 054f3a1 (local only)
-- **Notes**: All 12 benchmark files created and committed. Same recurring push blocker. Program auto-paused after 4 consecutive errors. Next run should recreate these 6 pairs when MCP tools available and unpause program.
-
-### Iteration 109 — 2026-04-15 20:20 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24476292921)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: value_type_checks2, dtype_predicates, cat_from_codes, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit 0ff1962. Metric would be 338 (+6 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; consecutive_errors now 3)
-- **Commit**: 0ff1962 (local only)
-- **Notes**: All 12 benchmark files created and committed. Same recurring push blocker. Next run should recreate these 6 pairs when MCP tools available.
-
-- **Status**: ⚠️ Error
-- **Change**: Added 7 pairs: reindex, align, timestamp, timedelta, period, interval_index, categorical_index. Local commit d3d50c4. Metric would be 344 (+12 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue as iters 83-107 except 86, 94, 97, 102, 106)
-- **Notes**: All 14 benchmark files (7 TS + 7 PY) created and committed on local branch autoloop/perf-comparison. Next run should recreate and push when MCP tools are available.
-
-### Iteration 107 — 2026-04-15 18:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24472402835)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: cat_from_codes, value_type_checks2, dtype_predicates, multi_index_sort_equals, multi_index_duplicated_isin, multi_index_isna_toarray. Local commit c0a2461. Metric would be 338 (+6 vs best 332).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue)
-- **Commit**: c0a2461 (local only)
-- **Notes**: All 12 benchmark files created and committed locally. catFromCodes vs pd.Categorical.from_codes(), extended type predicates (isNumber/isBool etc.), dtype predicates (isNumericDtype etc.), and MultiIndex remaining methods (sortValues/equals/duplicated/dropDuplicates/isin/isna/notna/dropna/toArray) all covered. Next run should push when MCP tools available.
-
-### Iteration 106 — 2026-04-15 18:27 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24471170829)
-
+### Iteration 114 — 2026-04-15 22:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24482265300)
 - **Status**: ✅ Accepted
-- **Change**: Added 6 pairs: dtype, attrs_advanced, index_symmetric_diff, series_properties, insert_column, df_from_pairs.
-- **Metric**: 332 (previous best: 326, delta: +6)
-- **Commit**: 2128602
-- **Notes**: Dtype.from()/inferFrom()/commonType() and property accessors benchmarked. Advanced attrs helpers (getAttr/setAttr/deleteAttr/clearAttrs/copyAttrs/mergeAttrs/hasAttrs) covered. Index.symmetricDifference(), Series property getters, insertColumn, and dataFrameFromPairs all added.
+- **Change**: Added bench_value_type_checks (11 predicates: isNumber/isBool/isStringValue/isFloat/isInteger/isBigInt/isRegExp/isReCompilable/isMissing/isHashable/isDate) and bench_dtype_predicates (15 predicates: isNumericDtype/isIntegerDtype/isFloatDtype/isBoolDtype/isStringDtype/isDatetimeDtype/isCategoricalDtype/isSignedIntegerDtype/isUnsignedIntegerDtype/isTimedeltaDtype/isObjectDtype/isComplexDtype/isExtensionArrayDtype/isPeriodDtype/isIntervalDtype)
+- **Metric**: 334 (previous: 332, +2) | **Commit**: 685193d
+- **Notes**: Pushed via MCP HTTP after resolving remote tracking ref issue (set refs/remotes/origin/autoloop/perf-comparison to 62b943a).
 
-### Iteration 105 — 2026-04-15 17:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24469672759)
+### Iters 107–113 — ⚠️ Error: safeoutputs MCP blocked by policy (7 consecutive). Each iter added 6 local pairs but could not push.
 
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: dtype, attrs_advanced, index_symmetric_diff, describe_options, series_properties, insert_column. Local commit c02124e. Metric would be 332 (+6 vs best 326).
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue as iters 83-104 except 86, 94, 97, 102)
-- **Notes**: All 12 benchmark files (6 TS + 6 PY) created and committed to local branch autoloop/perf-comparison (from origin/autoloop/perf-comparison-3c596789b15fd053). Next run should find commit c02124e and push when MCP tools are available.
-
-### Iteration 104 — 2026-04-15 17:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24468471179)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 6 pairs: dtype, attrs_advanced, index_symmetric_diff, describe_options, series_properties, insert_column. Local commit b8b7dbc. Metric would be 332.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue as iters 83-103 except 86, 94, 97, 102)
-- **Notes**: All 12 benchmark files (6 TS + 6 PY) created and committed locally. Dtype.from()/inferFrom()/commonType(), advanced attrs helpers, Index.symmetricDifference(), describe() with options, Series property getters, and insertColumn() all covered. Next run should recreate and push when MCP tools are available.
-
-### Iteration 103 — 2026-04-15 16:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24466900367)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 5 pairs: dtype, attrs_advanced, index_symmetric_diff, describe_options, series_properties. Merged origin/main (+6 pairs). Total metric would be 337 (+11 vs best 326). Local commit 54d99e1 on branch autoloop/perf-comparison.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same recurring issue as iters 83-101 except 94, 97, 102)
-- **Notes**: Benchmarks created for Dtype class operations, Index.symmetricDifference, advanced attrs functions, describe() with options, Series property access. Branch checkout: origin/autoloop/perf-comparison-3c596789b15fd053. Next run should push these. Functions to add: more DataFrame properties, Series.combine(), advanced MultiIndex ops.
-
-### Iteration 102 — 2026-04-15 16:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24465820163)
-
-- **Status**: ✅ Accepted
-- **Change**: Added 9 pairs: multi_index_swaplevel, series_from_object, series_with_values, dataframe_col_has, type_checks, to_dict_oriented_all, range_index, index_monotonic, str_len.
-- **Metric**: 326 (previous best: 317, delta: +9)
-- **Commit**: bcf58b5
-- **Notes**: Successfully pushed all iter 101 planned benchmarks. RangeIndex.contains(), Index.isMonotonicIncreasing/isMonotonicDecreasing, Series.fromObject(), withValues(), DataFrame.col()/has()/get(), type check utilities, toDictOriented multi-orient, and str.len() all benchmarked.
-
-### Iteration 101 — 2026-04-15 15:56 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24464467430)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 10 pairs: multi_index_swaplevel, series_from_object, series_with_values, dataframe_col_has, type_checks, to_dict_oriented_all, range_index, index_monotonic, index_getloc, str_len. Local commit 1795d4f. Metric would be 327.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same as iters 83-100 except 86, 94, 97)
-- **Commit**: 1795d4f (local only)
-- **Notes**: MultiIndex.fromTuples() confirmed as correct API (private constructor). Index.getLoc()/isUnique/isMonotonicIncreasing all benchmarked. str.len() accessor benchmarked.
-
-### Iteration 100 — 2026-04-15 15:30 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24463206508)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 7 pairs: multi_index_swaplevel, series_from_object, series_with_values, dataframe_col_has, type_checks, to_dict_oriented_all, range_index. Local commit 4e65f9c. Metric would be 324.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same as iters 83-99 except 86, 94, 97)
-- **Commit**: 4e65f9c (local only)
-- **Notes**: Branch already has 317 pairs (iter 99 commit bee51f7 is on origin). Uncovered: MultiIndex.swaplevel(), Series.fromObject()/withValues(), DataFrame.col()/has()/get(), type-check utilities, toDictOriented multi-orient, RangeIndex ops.
-
-### Iteration 99 — 2026-04-15 14:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24460598911)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 12 pairs: expanding_sum, expanding_std, expanding_var, expanding_apply, rolling_agg, dataframe_rolling_agg, multi_index_getloc, multi_index_droplevel (incl. reorderLevels/setNames), multi_index_setops (union/intersection/difference), series_toarray_tolist, index_copy_toarray, dataframe_from2d_select. Local commit fef506e. Metric would be 317.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same as iters 83-98 except 86, 94, 97)
-- **Commit**: fef506e (local only)
-- **Notes**: MultiIndex constructor uses `{ tuples }` options bag; droplevel/reorderLevels/setNames all exist. dataFrameRollingAgg/rollingAgg are standalone exports. Expanding apply takes fn: (readonly number[]) => number.
-
-### Iteration 98 — 2026-04-15 13:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24457541317)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 10 pairs: expanding_sum, expanding_std, expanding_var, expanding_apply, rolling_agg, dataframe_rolling_agg, multi_index_getloc, multi_index_droplevel, series_toarray_tolist, index_copy_toarray. Local commit 32232b3. Metric would be 315.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same as iters 83-96 except 86, 94, 97)
-- **Commit**: 32232b3 (local only)
-- **Notes**: MultiIndex uses `MultiIndex.fromTuples()` static factory. rollingAgg/dataFrameRollingAgg are standalone exports. Expanding sum/std/var/apply had no existing benchmarks. Files committed locally, can't push to PR #141 without MCP tools.
-
-### Iteration 97 — 2026-04-15 12:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24455451593)
-
-- **Status**: ✅ Accepted
-- **Change**: Added 12 pairs: series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile, dataframe_fromrecords, dataframe_torecords, dataframe_setindex, series_setindex.
-- **Metric**: 305 (previous best: 293, delta: +12)
-- **Commit**: 5ed4d5d
-- **Notes**: safeoutputs MCP tools available this run. rollingSkew/Kurt/Sem/Quantile are standalone exports; stack() is from reshape. CatAccessor.removeUnusedCategories needs addCategories first to populate unused cats.
-
-### Iteration 96 — 2026-04-15 12:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24454210628)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 8 pairs: series_at_iat, index_getindexer, cat_remove_unused, stack, rolling_skew, rolling_kurt, rolling_sem, rolling_quantile. Local commit 9977ed9. Metric would be 301.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; same as iters 83-93, 95)
-- **Commit**: 9977ed9 (local only)
-- **Notes**: Branch base was actually at 293 (iter 95 commit was already pushed). Discovered rollingSem/Skew/Kurt/Quantile are standalone exports from stats/window_extended.ts. stack() uses DataFrame.fromColumns. CatAccessor.removeUnusedCategories needs addCategories() first to populate extra cats.
-
-### Iteration 95 — 2026-04-15 11:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24452790751)
-
-- **Status**: ⚠️ Error
-- **Change**: Added 12 pairs: dt_millisecond_microsecond_nanosecond, dt_dayofyear_weekday, dt_round, dt_date, str_rsplit, str_slice_replace, index_isin, index_duplicated, cat_add_remove_categories, cat_rename_set_categories, cat_reorder_as_ordered, cat_value_counts. Local commit db56034. Metric would be 293.
-- **Metric**: N/A (push blocked — safeoutputs MCP tools unavailable; push_to_pull_request_branch returns "Tool does not exist")
-- **Commit**: db56034 (local only)
-- **Notes**: All 24 benchmark files (12 TS + 12 PY) created and committed. Same blocker as iters 83-93 (except 86, 94). safeoutputs MCP server not connected this run.
-
-### Iteration 94 — 2026-04-15 10:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24450563155)
-
-- **Status**: ✅ Accepted
-- **Change**: Added 12 pairs: str_case, str_zfill_center_ljust_rjust, str_count, str_slice_get, str_isalnum_isnumeric, str_islower_isupper, str_istitle_isspace, str_wrap, str_encode, index_fillna, index_append, index_rename.
-- **Metric**: 281 (previous best: 269, delta: +12)
-- **Commit**: 82afaa6
-- **Notes**: safeoutputs MCP tools available this run. Successfully pushed 24 benchmark files (12 TS + 12 PY) covering remaining string accessor and Index methods.
-
-### Iters 83–93 (except 86) — ⚠️ Error: safeoutputs MCP unavailable. Various pairs created locally; all pushes blocked.
-
+### Iteration 106 — 2026-04-15 18:27 UTC — ✅ metric=332 (+6) | Commit: 2128602
+### Iteration 102 — 2026-04-15 16:26 UTC — ✅ metric=326 (+9) | Commit: bcf58b5
+### Iteration 97 — 2026-04-15 12:51 UTC — ✅ metric=305 (+12) | Commit: 5ed4d5d
+### Iteration 94 — 2026-04-15 10:55 UTC — ✅ metric=281 (+12) | Commit: 82afaa6
 ### Iteration 86 — 2026-04-15 03:06 UTC — ✅ metric=277 (+8) | Commit: 809e0e9
-
-### Iters 75–85 — 2026-04-14/15 — mix of ✅ accepted (75: +6, 74: +8, 73: +5, 72: +17) and ⚠️ errors.
-
-### Iters 57–71 — 2026-04-14 (all ✅ accepted, metrics 157→246): Rebuilt from 3c596789 branch; added ewm/expanding/groupby/merge/str/dt ops.
-
-### Iters 25–56 — 2026-04-13/14 (all ✅ accepted, metrics progressively 0→157): Baseline established, steady accumulation.
+### Iters 75–85 — mix of ✅ accepted and ⚠️ errors; metrics 246→269.
+### Iters 57–74 — all ✅ accepted; metrics 157→269. Rebuilt from 3c596789 branch.
+### Iters 1–56 — all ✅ accepted; metrics 0→157. Baseline established.
