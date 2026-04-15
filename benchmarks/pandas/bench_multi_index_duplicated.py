@@ -1,0 +1,31 @@
+"""Benchmark: MultiIndex.duplicated() and drop_duplicates() on 100k-pair MultiIndex"""
+import json, time
+import pandas as pd
+
+ROWS = 100_000
+WARMUP = 3
+ITERATIONS = 10
+
+# Create a MultiIndex with duplicates (10k unique pairs repeated 10 times)
+a = [f"a{i % 100}" for i in range(ROWS)]
+b = [i % 1000 for i in range(ROWS)]
+tuples = list(zip(a, b))
+
+mi = pd.MultiIndex.from_tuples(tuples)
+
+for _ in range(WARMUP):
+    mi.duplicated()
+    mi.drop_duplicates()
+
+start = time.perf_counter()
+for _ in range(ITERATIONS):
+    mi.duplicated()
+    mi.drop_duplicates()
+total = (time.perf_counter() - start) * 1000
+
+print(json.dumps({
+    "function": "multi_index_duplicated",
+    "mean_ms": total / ITERATIONS,
+    "iterations": ITERATIONS,
+    "total_ms": total,
+}))
