@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T17:53:29Z |
-| Iteration Count | 105 |
-| Best Metric | 326 |
+| Last Run | 2026-04-15T18:27:43Z |
+| Iteration Count | 106 |
+| Best Metric | 332 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 3 |
-| Recent Statuses | error, error, error, accepted, error, accepted, error, error, accepted, error |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, error, error, accepted, error, accepted, error, error, accepted |
 | Paused | false |
 
 ---
@@ -101,12 +101,12 @@
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - Series.nbits/itemsize-style benchmarks if API exists.
 - DataFrame.memory_usage benchmark if API exists.
-- Dtype class (from, inferFrom, commonType, property access) — ✅ Done (iter 105).
-- Index.symmetricDifference — ✅ Done (iter 105).
-- attrs: getAttr/setAttr/clearAttrs/copyAttrs/deleteAttr/mergeAttrs/hasAttrs — ✅ Done (iter 105).
-- describe() with custom percentiles and include options — ✅ Done (iter 105).
-- Series property access (shape/ndim/size/empty/values) — ✅ Done (iter 105).
-- insertColumn for DataFrame — ✅ Done (iter 105).
+- Dtype class (from, inferFrom, commonType, property access) — ✅ Done (iter 106).
+- Index.symmetricDifference — ✅ Done (iter 106).
+- attrs: getAttr/setAttr/clearAttrs/copyAttrs/deleteAttr/mergeAttrs/hasAttrs — ✅ Done (iter 106).
+- Series property access (shape/ndim/size/empty/values) — ✅ Done (iter 106).
+- insertColumn for DataFrame — ✅ Done (iter 106).
+- dataFrameFromPairs — ✅ Done (iter 106).
 - DataFrame.copy() if it exists in API.
 - Series.combine() if it exists in API.
 - Advanced MultiIndex operations not yet covered.
@@ -119,6 +119,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 106 — 2026-04-15 18:27 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24471170829)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 6 pairs: dtype, attrs_advanced, index_symmetric_diff, series_properties, insert_column, df_from_pairs.
+- **Metric**: 332 (previous best: 326, delta: +6)
+- **Commit**: 2128602
+- **Notes**: Dtype.from()/inferFrom()/commonType() and property accessors benchmarked. Advanced attrs helpers (getAttr/setAttr/deleteAttr/clearAttrs/copyAttrs/mergeAttrs/hasAttrs) covered. Index.symmetricDifference(), Series property getters, insertColumn, and dataFrameFromPairs all added.
 
 ### Iteration 105 — 2026-04-15 17:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24469672759)
 
