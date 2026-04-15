@@ -1,180 +1,218 @@
 /**
  * select_dtypes — filter DataFrame columns by dtype.
  *
- * Mirrors `DataFrame.select_dtypes(include, exclude)` in pandas.
- * Accepts exact dtype names (`"int64"`, `"float64"`, …) and generic
- * category aliases (`"number"`, `"integer"`, `"floating"`, `"bool"`,
- * `"object"`, `"datetime"`, `"timedelta"`, `"category"`, `"string"`).
+ * Mirrors `pandas.DataFrame.select_dtypes(include, exclude)`.
+ *
+ * @example
+ * ```ts
+ * const df = DataFrame.fromColumns({
+ *   a: [1, 2, 3],          // int64
+ *   b: [1.1, 2.2, 3.3],    // float64
+ *   c: ["x", "y", "z"],    // string
+ *   d: [true, false, true], // bool
+ * });
+ * selectDtypes(df, { include: "number" }).columns.toArray();
+ * // ["a", "b"]
+ * selectDtypes(df, { exclude: ["bool", "string"] }).columns.toArray();
+ * // ["a", "b"]
+ * ```
  *
  * @module
  */
 
-import type { DataFrame } from "../core/index.ts";
-import type { Dtype, DtypeKind } from "../core/index.ts";
+import type { Dtype } from "../core/dtype.ts";
+import type { DtypeKind } from "../core/dtype.ts";
+import type { DataFrame } from "../core/frame.ts";
 import type { DtypeName } from "../types.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
 
 /**
- * A dtype specifier accepted by {@link selectDtypes}.
- *
- * Can be an exact dtype name (`"int64"`, `"float64"`, …) or one of the
- * generic aliases: `"number"`, `"integer"`, `"signed"`, `"unsigned"`,
- * `"floating"`, `"bool"`, `"object"`, `"datetime"`, `"timedelta"`,
- * `"category"`, `"string"`.
+ * A dtype selector: one of the pandas generic aliases ("number", "integer",
+ * "floating", "bool", "object", "string", "datetime", "timedelta", "category")
+ * or a concrete dtype name ("int64", "float32", …).
  */
-export type DtypeSpecifier = DtypeName | DtypeAlias;
-
-/** Generic category aliases understood by selectDtypes. */
-export type DtypeAlias =
+export type DtypeSelector =
+  | DtypeName
   | "number"
   | "integer"
-  | "signed"
-  | "unsigned"
+  | "signed integer"
+  | "unsigned integer"
   | "floating"
   | "bool"
   | "object"
+  | "string"
   | "datetime"
   | "timedelta"
-  | "category"
-  | "string";
+  | "category";
 
 /** Options for {@link selectDtypes}. */
 export interface SelectDtypesOptions {
   /**
-   * Dtype specifiers to **include**. Only columns whose dtype matches at
-   * least one specifier are retained. If omitted, all columns pass the
-   * include filter.
+   * A dtype selector (or array of selectors) for columns to **keep**.
+   * At least one of `include` or `exclude` must be provided.
    */
-  readonly include?: readonly DtypeSpecifier[];
+  readonly include?: DtypeSelector | readonly DtypeSelector[];
   /**
-   * Dtype specifiers to **exclude**. Columns whose dtype matches any
-   * specifier are removed. Applied after the include filter.
-   * If omitted, no columns are excluded.
+   * A dtype selector (or array of selectors) for columns to **drop**.
+   * At least one of `include` or `exclude` must be provided.
    */
-  readonly exclude?: readonly DtypeSpecifier[];
+  readonly exclude?: DtypeSelector | readonly DtypeSelector[];
 }
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ─── internal helpers ─────────────────────────────────────────────────────────
 
-/** All dtype names that belong to the "number" generic alias. */
-const NUMBER_KINDS: ReadonlySet<DtypeKind> = new Set(["int", "uint", "float"]);
-
-/**
- * Return `true` if `dtype` matches the given specifier.
- */
-function matchesSpecifier(dtype: Dtype, spec: DtypeSpecifier): boolean {
-  const k = dtype.kind;
-  switch (spec as string) {
-    case "number":
-      return NUMBER_KINDS.has(k);
-    case "integer":
-      return k === "int" || k === "uint";
-    case "signed":
-      return k === "int";
-    case "unsigned":
-      return k === "uint";
-    case "floating":
-      return k === "float";
-    case "bool":
-      return k === "bool";
-    case "object":
-      return k === "object";
-    case "datetime":
-      return k === "datetime";
-    case "timedelta":
-      return k === "timedelta";
-    case "category":
-      return k === "category";
-    case "string":
-      return k === "string";
-    default:
-      return dtype.name === (spec as string);
+/** Normalise a selector (or undefined) to an array. */
+function toArray(sel: DtypeSelector | readonly DtypeSelector[] | undefined): DtypeSelector[] {
+  if (sel === undefined) {
+    return [];
   }
+  return Array.isArray(sel) ? (sel as DtypeSelector[]) : [sel as DtypeSelector];
 }
 
 /**
- * Return `true` if `dtype` matches **any** specifier in the list.
+ * Return true when `dtype` is matched by at least one selector in `selectors`.
+ *
+ * Supported generic aliases (mirrors pandas):
+ *   - "number"           → int, uint, float
+ *   - "integer"          → int, uint
+ *   - "signed integer"   → int
+ *   - "unsigned integer" → uint
+ *   - "floating"         → float
+ *   - "bool"             → bool
+ *   - "object"           → object
+ *   - "string"           → string
+ *   - "datetime"         → datetime
+ *   - "timedelta"        → timedelta
+ *   - "category"         → category
+ *
+ * Any concrete `DtypeName` (e.g., "int32", "float64") matches that exact dtype.
  */
-function matchesAny(dtype: Dtype, specs: readonly DtypeSpecifier[]): boolean {
-  for (const s of specs) {
-    if (matchesSpecifier(dtype, s)) {
-      return true;
+function matchesAny(dtype: Dtype, selectors: readonly DtypeSelector[]): boolean {
+  const kind: DtypeKind = dtype.kind;
+  const name: DtypeName = dtype.name;
+  for (const sel of selectors) {
+    switch (sel) {
+      case "number":
+        if (kind === "int" || kind === "uint" || kind === "float") {
+          return true;
+        }
+        break;
+      case "integer":
+        if (kind === "int" || kind === "uint") {
+          return true;
+        }
+        break;
+      case "signed integer":
+        if (kind === "int") {
+          return true;
+        }
+        break;
+      case "unsigned integer":
+        if (kind === "uint") {
+          return true;
+        }
+        break;
+      case "floating":
+        if (kind === "float") {
+          return true;
+        }
+        break;
+      case "bool":
+        if (kind === "bool") {
+          return true;
+        }
+        break;
+      case "object":
+        if (kind === "object") {
+          return true;
+        }
+        break;
+      case "string":
+        if (kind === "string") {
+          return true;
+        }
+        break;
+      case "datetime":
+        if (kind === "datetime") {
+          return true;
+        }
+        break;
+      case "timedelta":
+        if (kind === "timedelta") {
+          return true;
+        }
+        break;
+      case "category":
+        if (kind === "category") {
+          return true;
+        }
+        break;
+      default:
+        // Concrete dtype name match.
+        if ((sel as string) === name) {
+          return true;
+        }
     }
   }
   return false;
 }
 
-// ─── public API ───────────────────────────────────────────────────────────────
-
-/** Validate no specifier appears in both lists. */
-function validateNoOverlap(
-  include: readonly DtypeSpecifier[],
-  exclude: readonly DtypeSpecifier[],
-): void {
-  for (const inc of include) {
-    for (const exc of exclude) {
-      if (inc === exc) {
-        throw new TypeError(`selectDtypes: specifier "${inc}" appears in both include and exclude`);
-      }
-    }
-  }
-}
-
-/** Decide whether a column passes the include/exclude filter. */
-function columnPasses(
-  dtype: Dtype,
-  include: readonly DtypeSpecifier[] | undefined,
-  exclude: readonly DtypeSpecifier[] | undefined,
-): boolean {
-  const passInclude = include === undefined || include.length === 0 || matchesAny(dtype, include);
-  const passExclude = !(exclude !== undefined && exclude.length > 0 && matchesAny(dtype, exclude));
-  return passInclude && passExclude;
-}
+// ─── public API ──────────────────────────────────────────────────────────────
 
 /**
- * Return a new DataFrame containing only columns whose dtype satisfies
- * the `include` / `exclude` filter.
+ * Return a subset of `df` consisting only of columns whose dtype matches the
+ * given `include`/`exclude` selectors.
  *
- * Follows pandas semantics:
- * - When both `include` and `exclude` are given, a column must match the
- *   include list **and** not match the exclude list to be retained.
- * - Passing the same specifier in both `include` and `exclude` raises an
- *   error (as pandas does).
- * - When neither is given the original DataFrame is returned unchanged.
+ * Rules (mirrors pandas):
+ * - At least one of `include` or `exclude` must be non-empty.
+ * - A column is kept when:
+ *     - `include` is non-empty → dtype must match at least one include selector.
+ *     - `exclude` is non-empty → dtype must NOT match any exclude selector.
+ *     - Both supplied → must match include AND must not match exclude.
+ * - `include` and `exclude` must not overlap (same generic alias or concrete name
+ *   in both lists) — an error is thrown in that case.
  *
  * @example
  * ```ts
- * const df = DataFrame.fromColumns({
- *   a: [1, 2, 3],
- *   b: [1.1, 2.2, 3.3],
- *   c: ["x", "y", "z"],
- * });
- *
- * selectDtypes(df, { include: ["number"] }).columns.values;
- * // ["a", "b"]
- *
- * selectDtypes(df, { exclude: ["float64"] }).columns.values;
- * // ["a", "c"]
+ * selectDtypes(df, { include: "number" })           // numeric columns only
+ * selectDtypes(df, { include: ["int64", "bool"] })  // int64 + bool columns
+ * selectDtypes(df, { exclude: "object" })           // drop object columns
  * ```
  */
-export function selectDtypes(df: DataFrame, opts: SelectDtypesOptions = {}): DataFrame {
-  const { include, exclude } = opts;
+export function selectDtypes(df: DataFrame, opts: SelectDtypesOptions): DataFrame {
+  const includes = toArray(opts.include);
+  const excludes = toArray(opts.exclude);
 
-  if (!((include?.length ?? 0) > 0 || (exclude?.length ?? 0) > 0)) {
-    return df;
+  if (includes.length === 0 && excludes.length === 0) {
+    throw new Error("selectDtypes: at least one of include or exclude must be provided");
   }
 
-  if (include !== undefined && include.length > 0 && exclude !== undefined && exclude.length > 0) {
-    validateNoOverlap(include, exclude);
-  }
-
-  const kept: string[] = [];
-  for (const col of df.columns.values) {
-    if (columnPasses(df.col(col).dtype, include, exclude)) {
-      kept.push(col);
+  // Validate no overlap between include and exclude.
+  for (const inc of includes) {
+    if ((excludes as string[]).includes(inc as string)) {
+      throw new Error(`selectDtypes: selector "${inc}" appears in both include and exclude`);
     }
   }
 
-  return df.select(kept);
+  const keepCols: string[] = [];
+  for (const colName of df.columns.toArray()) {
+    const series = df.col(colName);
+    const dtype = series.dtype;
+
+    let keep = true;
+
+    if (includes.length > 0 && !matchesAny(dtype, includes)) {
+      keep = false;
+    }
+    if (excludes.length > 0 && matchesAny(dtype, excludes)) {
+      keep = false;
+    }
+
+    if (keep) {
+      keepCols.push(colName);
+    }
+  }
+
+  return df.select(keepCols);
 }

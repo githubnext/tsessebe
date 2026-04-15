@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — isin</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>isin</h1>
+<p class="subtitle">Element-wise membership testing — mirrors <code>pandas.Series.isin()</code> and <code>pandas.DataFrame.isin()</code>.</p>
+
+<section>
+  <h2>1 — Series.isin: check membership in an array</h2>
+  <p><code>isin(series, values)</code> returns a boolean <code>Series</code> with <code>true</code> where each element appears in <code>values</code>.  Accepts any iterable: arrays, <code>Set</code>s, generators.</p>
+  <pre><code id="ex1-code">import { Series, isin } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5], name: "scores" });
+
+const result = isin(s, [1, 3, 5]);
+console.log([...result.values]);  // [true, false, true, false, true]
+console.log(result.name);         // "scores"
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — Using a Set for O(1) lookups</h2>
+  <p>Passing a <code>Set</code> avoids any extra construction overhead when you already have one:</p>
+  <pre><code id="ex2-code">import { Series, isin } from "tsb";
+
+const allowed = new Set(["apple", "cherry", "date"]);
+const fruits = new Series({ data: ["apple", "banana", "cherry", "elderberry"] });
+
+console.log([...isin(fruits, allowed).values]);
+// [true, false, true, false]
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — NaN and null behaviour</h2>
+  <p><code>NaN</code> is <em>never</em> a member of any collection (matches pandas behaviour). <code>null</code> uses strict equality and <em>will</em> match if present.</p>
+  <pre><code id="ex3-code">import { Series, isin } from "tsb";
+
+const s = new Series({ data: [1, NaN, null, 3] });
+
+console.log([...isin(s, [1, NaN, null]).values]);
+// NaN → false even though NaN is in the list
+// [true, false, true, true]
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — DataFrame.isin: shared collection</h2>
+  <p><code>dataFrameIsin(df, values)</code> checks every cell against the same collection and returns a boolean <code>DataFrame</code> of the same shape.</p>
+  <pre><code id="ex4-code">import { DataFrame, dataFrameIsin } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, 2, 3],
+  b: [3, 4, 5],
+  c: ["x", "y", "z"],
+});
+
+const result = dataFrameIsin(df, [1, 3, "z"]);
+// a: [true, false, true]
+// b: [true, false, false]
+// c: [false, false, true]
+console.log([...result.col("a").values]);
+console.log([...result.col("b").values]);
+console.log([...result.col("c").values]);
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — DataFrame.isin: per-column lookup (IsinDict)</h2>
+  <p>Pass a plain object <code>{ colName: values, … }</code> to give each column its own set of allowed values.  Columns absent from the dict produce all <code>false</code>.</p>
+  <pre><code id="ex5-code">import { DataFrame, dataFrameIsin } from "tsb";
+
+const df = DataFrame.fromColumns({
+  region:  ["north", "south", "east", "west"],
+  revenue: [100, 200, 150, 300],
+  active:  [true, false, true, false],
+});
+
+// Check region against a whitelist, revenue against specific values
+const result = dataFrameIsin(df, {
+  region:  ["north", "east"],
+  revenue: [100, 300],
+});
+
+console.log([...result.col("region").values]);   // [true, false, true, false]
+console.log([...result.col("revenue").values]);  // [true, false, false, true]
+console.log([...result.col("active").values]);   // [false, false, false, false] — absent from dict
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — Filtering rows where any column matches</h2>
+  <p>A common pattern: use <code>dataFrameIsin</code> as a boolean mask to filter rows.</p>
+  <pre><code id="ex6-code">import { DataFrame, dataFrameIsin } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol", "Dave"],
+  score: [85, 92, 78, 95],
+});
+
+// Keep only rows where name is in the target set
+const mask = dataFrameIsin(df, { name: ["Alice", "Carol"] });
+const filtered = df.filter((_row, i) => mask.col("name").values[i] === true);
+console.log([...filtered.col("name").values]);   // ["Alice", "Carol"]
+console.log([...filtered.col("score").values]);  // [85, 78]
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<div class="note">
+  <strong>Note:</strong> <code>isin</code> always returns a new boolean Series/DataFrame — it never mutates the input. The index and column labels are preserved exactly.
+</div>
+</body>
+</html>

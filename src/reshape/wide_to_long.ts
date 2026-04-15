@@ -1,241 +1,219 @@
 /**
- * wide_to_long — reshape a wide-format DataFrame to long format.
+ * wide_to_long — reshape a wide DataFrame to long format using column name stubs.
  *
- * Mirrors `pandas.wide_to_long()`:
- * - Finds columns whose names start with any stub in `stubnames`
- *   (optionally followed by a `sep` separator, then a suffix).
- * - Stacks those columns into rows, pairing each stub value with its
- *   corresponding suffix level.
- * - Columns listed in `i` become the identifier (key) columns.
- * - A new column named `j` holds the suffix values.
+ * Mirrors `pandas.wide_to_long(df, stubnames, i, j, sep='', suffix='\\d+')`.
+ *
+ * Takes a wide-format DataFrame where multiple columns share a common prefix
+ * (stub) and a varying suffix, and reshapes it into a long-format DataFrame
+ * where each stub becomes a column and the suffixes become values in a new
+ * column named `j`.
  *
  * @example
  * ```ts
- * import { wideToLong, DataFrame } from "tsb";
  * const df = DataFrame.fromColumns({
- *   id: [1, 2],
- *   math_2020: [90, 80],
- *   math_2021: [95, 85],
- *   eng_2020: [70, 75],
- *   eng_2021: [72, 78],
+ *   id:  ["x", "y"],
+ *   A1:  [1, 2],
+ *   A2:  [3, 4],
+ *   B1:  [5, 6],
+ *   B2:  [7, 8],
  * });
- * const long = wideToLong(df, ["math", "eng"], "id", "year", { sep: "_" });
- * // id  year  math  eng
- * //  1  2020    90   70
- * //  1  2021    95   72
- * //  2  2020    80   75
- * //  2  2021    85   78
+ * wideToLong(df, ["A", "B"], "id", "year");
+ * // id  year  A  B
+ * // x   1     1  5
+ * // y   1     2  6
+ * // x   2     3  7
+ * // y   2     4  8
  * ```
  *
  * @module
  */
 
 import { DataFrame } from "../core/index.ts";
-import type { Scalar } from "../types.ts";
+import type { Index } from "../core/index.ts";
+import { RangeIndex } from "../core/index.ts";
+import type { Label, Scalar } from "../types.ts";
 
-// Top-level regex: suffix is all-digit characters.
-const DIGIT_RE = /^\d+$/;
-
-// ─── public API types ─────────────────────────────────────────────────────────
+// ─── public types ─────────────────────────────────────────────────────────────
 
 /** Options for {@link wideToLong}. */
 export interface WideToLongOptions {
   /**
-   * Character separating the stub name from the suffix in column names.
-   * Default `""` (no separator — suffix immediately follows stub).
+   * Separator between the stub name and the suffix in column names.
+   * For example, `sep: "_"` matches `"A_1"`, `"A_2"`, etc.
+   * @defaultValue `""`
    */
   readonly sep?: string;
   /**
-   * A regex pattern string that the suffix portion of matching column
-   * names must satisfy.  Default `"\\d+"` (digits only, matching
-   * pandas' default `suffix='\\d+'`).
-   * Pass `".*"` to allow any suffix.
+   * Regular expression (or string pattern) that matches the suffix portion of
+   * column names after the stub and separator.  The entire rest of the column
+   * name (after `stub + sep`) must match this pattern.
+   * @defaultValue `/\d+/` — numeric suffixes only
    */
-  readonly suffix?: string;
+  readonly suffix?: RegExp | string;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-/** Match a column name against a stub prefix and return its suffix, or null. */
-function matchStub(colName: string, stub: string, sep: string, suffixRe: RegExp): string | null {
-  const prefix = stub + sep;
-  if (!colName.startsWith(prefix)) {
-    return null;
-  }
-  const tail = colName.slice(prefix.length);
-  return suffixRe.test(tail) ? tail : null;
+/** Normalize a string or string-array argument to `string[]`. */
+function toStringArray(x: readonly string[] | string): string[] {
+  return typeof x === "string" ? [x] : [...x];
 }
 
-/** Sort suffixes: numeric ascending when all-digit, else lexicographic. */
-function sortSuffixes(suffixes: string[]): string[] {
-  return [...suffixes].sort((a, b) => {
-    const na = Number(a);
-    const nb = Number(b);
-    if (!(Number.isNaN(na) || Number.isNaN(nb))) {
-      return na - nb;
-    }
-    if (a < b) {
-      return -1;
-    }
-    if (a > b) {
-      return 1;
-    }
-    return 0;
-  });
+/** Escape a string for safe embedding in a `RegExp` pattern. */
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /**
- * Discover all stub column mappings: suffix → (stub → source column name).
+ * Build a compiled anchor regex for a single stub.
+ *
+ * Matches column names of the form `{stub}{sep}{suffix}` where `suffix`
+ * matches the full remaining text.  The suffix portion is captured in group 1.
  */
-function discoverSuffixMap(
-  colNames: readonly string[],
-  stubs: readonly string[],
-  sep: string,
-  suffixRe: RegExp,
-): Map<string, Map<string, string>> {
-  const suffixMap = new Map<string, Map<string, string>>();
-  for (const col of colNames) {
-    for (const stub of stubs) {
-      const suf = matchStub(col, stub, sep, suffixRe);
-      if (suf !== null) {
-        let entry = suffixMap.get(suf);
-        if (entry === undefined) {
-          entry = new Map<string, string>();
-          suffixMap.set(suf, entry);
-        }
-        entry.set(stub, col);
-        break;
-      }
-    }
-  }
-  return suffixMap;
+function buildStubRegex(stub: string, sep: string, suffixPattern: string): RegExp {
+  return new RegExp(`^${escapeRegex(stub)}${escapeRegex(sep)}(${suffixPattern})$`);
 }
 
-/** Pre-read stub column data indexed by suffix then stub. */
-function buildStubSourceData(
-  df: DataFrame,
-  orderedSuffixes: readonly string[],
-  stubs: readonly string[],
-  suffixMap: Map<string, Map<string, string>>,
-): Map<string, Map<string, readonly Scalar[]>> {
-  const result = new Map<string, Map<string, readonly Scalar[]>>();
-  for (const suf of orderedSuffixes) {
-    const entry = suffixMap.get(suf);
-    const colData = new Map<string, readonly Scalar[]>();
-    for (const stub of stubs) {
-      const colName = entry?.get(stub);
-      colData.set(stub, colName !== undefined ? df.col(colName).values : []);
-    }
-    result.set(suf, colData);
-  }
-  return result;
-}
-
-/** Build a j-column scalar value from a suffix string. */
-function jValue(suf: string): Scalar {
-  return DIGIT_RE.test(suf) ? Number(suf) : suf;
-}
-
-/** Accumulate one row of output for a given (rowIdx, suffix) pair. */
-function accumulateRow(
-  rowIdx: number,
-  suf: string,
-  idCols: readonly string[],
-  stubs: readonly string[],
-  idData: Map<string, readonly Scalar[]>,
-  stubSourceData: Map<string, Map<string, readonly Scalar[]>>,
-  outId: Map<string, Scalar[]>,
-  outJ: Scalar[],
-  outStub: Map<string, Scalar[]>,
-): void {
-  for (const idCol of idCols) {
-    const src = idData.get(idCol);
-    outId.get(idCol)?.push(src !== undefined ? (src[rowIdx] ?? null) : null);
-  }
-  outJ.push(jValue(suf));
-  const colData = stubSourceData.get(suf);
-  for (const stub of stubs) {
-    const src = colData?.get(stub);
-    const v = src !== undefined && src.length > rowIdx ? (src[rowIdx] ?? null) : null;
-    outStub.get(stub)?.push(v);
-  }
+/**
+ * Try to parse a suffix string as a number; if it is not purely numeric,
+ * return it as-is.
+ */
+function parseSuffix(raw: string): Scalar {
+  return /^-?\d+(\.\d+)?$/.test(raw) ? Number(raw) : raw;
 }
 
 // ─── main function ────────────────────────────────────────────────────────────
 
 /**
- * Reshape a wide-format DataFrame to long format.
+ * Reshape a wide-format DataFrame to long format using column name stubs.
  *
- * @param df        - Input wide-format DataFrame.
- * @param stubnames - One or more column-name prefixes (stubs) to gather.
- * @param i         - Column(s) to use as identifier (key) variables.
- * @param j         - Name for the new column that holds the suffix values.
- * @param options   - {@link WideToLongOptions}.
- * @returns A long-format DataFrame with `i` columns, a `j` column, and
- *          one column per stub containing the corresponding gathered values.
+ * Each group of columns that shares a stub prefix (e.g. `A1`, `A2`, `B1`,
+ * `B2` with stubs `["A", "B"]`) is collapsed into a single column per stub,
+ * with a new column named `j` holding the extracted suffix values.
  *
- * @example
- * ```ts
- * const df = DataFrame.fromColumns({
- *   A: [1, 2],
- *   x1: [10, 20],
- *   x2: [11, 21],
- *   y1: [30, 40],
- *   y2: [31, 41],
- * });
- * const long = wideToLong(df, ["x", "y"], "A", "time");
- * // A  time  x   y
- * // 1     1  10  30
- * // 1     2  11  31
- * // 2     1  20  40
- * // 2     2  21  41
- * ```
+ * Columns not listed in `stubnames` or `i` are silently dropped (mirrors
+ * pandas behaviour).
+ *
+ * @param df        - Source wide-format DataFrame.
+ * @param stubnames - One or more column-name prefixes (stubs) to reshape.
+ * @param i         - Column(s) to use as identifier variables (kept as-is).
+ * @param j         - Name of the new column that holds the extracted suffixes.
+ * @param options   - Optional `sep` and `suffix` settings.
+ * @returns Long-format DataFrame with id columns, `j`, and one column per stub.
+ *
+ * @throws {RangeError} If an `i` column does not exist.
+ * @throws {RangeError} If `j` conflicts with an existing column name that is
+ *   not a stub column.
+ * @throws {RangeError} If no stub columns are found for any of the stubs.
  */
 export function wideToLong(
   df: DataFrame,
   stubnames: readonly string[] | string,
   i: readonly string[] | string,
   j: string,
-  options: WideToLongOptions = {},
+  options?: WideToLongOptions,
 ): DataFrame {
-  const { sep = "", suffix = "\\d+" } = options;
-  const stubs = typeof stubnames === "string" ? [stubnames] : [...stubnames];
-  const idCols = typeof i === "string" ? [i] : [...i];
+  const stubs = toStringArray(stubnames);
+  const idCols = toStringArray(i);
+  const sep = options?.sep ?? "";
+  const rawSuffix = options?.suffix ?? /\d+/;
+  const suffixPattern = rawSuffix instanceof RegExp ? rawSuffix.source : rawSuffix;
 
-  const suffixRe = new RegExp(`^(?:${suffix})$`);
-  const colNames = df.columns.values;
-
-  const suffixMap = discoverSuffixMap(colNames, stubs, sep, suffixRe);
-  const orderedSuffixes = sortSuffixes([...suffixMap.keys()]);
-
-  const idData = new Map<string, readonly Scalar[]>(idCols.map((c) => [c, df.col(c).values]));
-  const stubSourceData = buildStubSourceData(df, orderedSuffixes, stubs, suffixMap);
-
-  const outId = new Map<string, Scalar[]>(idCols.map((c) => [c, []]));
-  const outJ: Scalar[] = [];
-  const outStub = new Map<string, Scalar[]>(stubs.map((s) => [s, []]));
-
-  const nRows = df.index.size;
-  for (let rowIdx = 0; rowIdx < nRows; rowIdx++) {
-    for (const suf of orderedSuffixes) {
-      accumulateRow(rowIdx, suf, idCols, stubs, idData, stubSourceData, outId, outJ, outStub);
+  // ── validate id columns ────────────────────────────────────────────────────
+  for (const col of idCols) {
+    if (!df.has(col)) {
+      throw new RangeError(`wide_to_long: id column "${col}" not found in DataFrame.`);
     }
   }
 
-  const outRecord: Record<string, readonly Scalar[]> = {};
-  for (const idCol of idCols) {
-    const arr = outId.get(idCol);
-    if (arr !== undefined) {
-      outRecord[idCol] = arr;
-    }
+  // ── validate j does not shadow a non-stub existing column ─────────────────
+  // (pandas raises ValueError if j clashes with a remaining non-stub column)
+  const stubSet = new Set(stubs);
+  if (!stubSet.has(j) && df.has(j) && !idCols.includes(j)) {
+    // Allow j to equal a stub name (it will be overwritten), but not an
+    // unrelated column.
+    throw new RangeError(
+      `wide_to_long: j column name "${j}" conflicts with an existing non-stub column.`,
+    );
   }
-  outRecord[j] = outJ;
+
+  // ── build per-stub regexes and find all unique suffixes ───────────────────
+  const stubRegexes = new Map<string, RegExp>();
   for (const stub of stubs) {
-    const arr = outStub.get(stub);
-    if (arr !== undefined) {
-      outRecord[stub] = arr;
+    stubRegexes.set(stub, buildStubRegex(stub, sep, suffixPattern));
+  }
+
+  // Collect unique suffixes in first-seen order (scanning columns left-to-right).
+  const suffixOrder: string[] = [];
+  const suffixSeen = new Set<string>();
+
+  for (const col of df.columns.values) {
+    for (const [, re] of stubRegexes) {
+      const m = re.exec(col);
+      if (m !== null) {
+        const rawSfx = m[1];
+        if (rawSfx !== undefined && !suffixSeen.has(rawSfx)) {
+          suffixSeen.add(rawSfx);
+          suffixOrder.push(rawSfx);
+        }
+        break; // column matched one stub; no need to check others
+      }
     }
   }
 
-  return DataFrame.fromColumns(outRecord);
+  if (suffixOrder.length === 0) {
+    throw new RangeError(
+      `wide_to_long: no columns matched any of the stub patterns ${JSON.stringify(stubs)}.`,
+    );
+  }
+
+  // ── allocate output arrays ────────────────────────────────────────────────
+  const nRows = df.index.size;
+  const totalRows = nRows * suffixOrder.length;
+
+  const idColData: Map<string, Scalar[]> = new Map(idCols.map((c) => [c, []]));
+  const jCol: Scalar[] = [];
+  const stubColData: Map<string, Scalar[]> = new Map(stubs.map((s) => [s, []]));
+
+  // ── fill output arrays ────────────────────────────────────────────────────
+  for (const rawSfx of suffixOrder) {
+    const parsedJ = parseSuffix(rawSfx);
+    for (let ri = 0; ri < nRows; ri++) {
+      // id columns
+      for (const col of idCols) {
+        (idColData.get(col) as Scalar[]).push(df.col(col).values[ri] ?? null);
+      }
+      // j column
+      jCol.push(parsedJ);
+      // stub columns
+      for (const stub of stubs) {
+        const colName = `${stub}${sep}${rawSfx}`;
+        const val: Scalar = df.has(colName) ? (df.col(colName).values[ri] ?? null) : null;
+        (stubColData.get(stub) as Scalar[]).push(val);
+      }
+    }
+  }
+
+  // ── assemble output DataFrame ─────────────────────────────────────────────
+  const outCols: Record<string, readonly Scalar[]> = {};
+  for (const col of idCols) {
+    const arr = idColData.get(col);
+    if (arr !== undefined) {
+      outCols[col] = arr;
+    }
+  }
+  outCols[j] = jCol;
+  for (const stub of stubs) {
+    const arr = stubColData.get(stub);
+    if (arr !== undefined) {
+      outCols[stub] = arr;
+    }
+  }
+
+  const rowIndex: Index<Label> =
+    totalRows === 0
+      ? (new RangeIndex(0) as unknown as Index<Label>)
+      : (new RangeIndex(totalRows) as unknown as Index<Label>);
+
+  return DataFrame.fromColumns(outCols, { index: rowIndex });
 }

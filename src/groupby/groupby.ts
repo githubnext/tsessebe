@@ -21,6 +21,7 @@ import { RangeIndex } from "../core/index.ts";
 import { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
+import type { NamedAggSpec } from "./named_agg.ts";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 
@@ -302,6 +303,53 @@ export class DataFrameGroupBy {
     const valueCols = this._valueCols();
     const colSpecs = this._resolveColSpecs(spec, valueCols);
     return this._runAgg(colSpecs, asIndex);
+  }
+
+  /**
+   * Aggregate each group using named aggregation specs.
+   *
+   * Each key in `spec` becomes the output column name; the `NamedAgg` value
+   * specifies which source column to aggregate and how.
+   */
+  aggNamed(spec: NamedAggSpec, asIndex = true): DataFrame {
+    const groupKeys = this._groups.map((g) => g.key);
+    const resultCols: Record<string, Scalar[]> = {};
+
+    if (!asIndex) {
+      if (this._by.length === 1) {
+        const byCol = this._by[0] as string;
+        resultCols[byCol] = groupKeys.slice();
+      } else {
+        for (const by of this._by) {
+          resultCols[by] = [];
+        }
+        for (const g of this._groups) {
+          const parts = (g.key as string).split("__SEP__");
+          this._by.forEach((by, idx) => {
+            const byArr = resultCols[by];
+            if (byArr !== undefined) {
+              byArr.push(parts[idx] ?? null);
+            }
+          });
+        }
+      }
+    }
+
+    for (const [outCol, namedSpec] of Object.entries(spec)) {
+      const fn = resolveAgg(namedSpec.aggfunc);
+      const srcVals = this._df.col(namedSpec.column).values as readonly Scalar[];
+      resultCols[outCol] = this._groups.map((g) =>
+        fn(g.positions.map((p) => srcVals[p] as Scalar)),
+      );
+    }
+
+    const rowIdx: Index<Label> = asIndex
+      ? new Index<Label>(groupKeys)
+      : defaultIndex(groupKeys.length);
+
+    return DataFrame.fromColumns(resultCols as Record<string, readonly Scalar[]>, {
+      index: rowIdx,
+    });
   }
 
   /** Shorthand for `agg("sum")` — numeric columns only, like pandas. */

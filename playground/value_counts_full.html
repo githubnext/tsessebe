@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>valueCountsBinned — tsb playground</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 860px;
+        margin: 2rem auto;
+        padding: 0 1.5rem;
+        line-height: 1.6;
+        color: #1a1a2e;
+        background: #f8f9fa;
+      }
+      h1 { color: #2d6a4f; margin-bottom: 0.25rem; }
+      .subtitle { color: #555; margin-top: 0; }
+      h2 { color: #2d6a4f; margin-top: 2rem; }
+      .card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      }
+      label { font-weight: 600; display: block; margin-bottom: 0.25rem; }
+      input[type="text"], input[type="number"] {
+        width: 100%; padding: 0.5rem; border: 1px solid #ccc;
+        border-radius: 4px; font-size: 1rem; box-sizing: border-box;
+      }
+      .row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+      .row > * { flex: 1; min-width: 120px; }
+      button {
+        background: #2d6a4f; color: #fff; border: none;
+        padding: 0.6rem 1.4rem; border-radius: 4px;
+        font-size: 1rem; cursor: pointer; margin-top: 0.5rem;
+      }
+      button:hover { background: #1b4332; }
+      pre {
+        background: #1a1a2e; color: #a8dadc;
+        padding: 1rem; border-radius: 4px;
+        overflow-x: auto; font-size: 0.9rem; margin: 0.5rem 0;
+      }
+      .tag {
+        display: inline-block; padding: 0.15rem 0.5rem;
+        border-radius: 12px; font-size: 0.78rem; font-weight: 600;
+        background: #d8f3dc; color: #1b4332; margin-right: 0.3rem;
+      }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { padding: 0.4rem 0.8rem; border: 1px solid #dee2e6; }
+      th { background: #e9ecef; }
+    </style>
+  </head>
+  <body>
+    <h1>valueCountsBinned</h1>
+    <p class="subtitle">
+      <code>pandas.Series.value_counts(bins=N)</code> — bin numeric values into equal-width
+      intervals, then count frequencies.
+    </p>
+
+    <div class="card">
+      <h2>Interactive Demo</h2>
+      <div class="row">
+        <div>
+          <label for="data-input">Numeric values (comma-separated)</label>
+          <input id="data-input" type="text" value="1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10" />
+        </div>
+        <div>
+          <label for="bins-input">Number of bins</label>
+          <input id="bins-input" type="number" value="3" min="1" max="50" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="sort-input">sort</label>
+          <select id="sort-input">
+            <option value="true">true (by count)</option>
+            <option value="false">false (by interval)</option>
+          </select>
+        </div>
+        <div>
+          <label for="ascending-input">ascending</label>
+          <select id="ascending-input">
+            <option value="false">false</option>
+            <option value="true">true</option>
+          </select>
+        </div>
+        <div>
+          <label for="normalize-input">normalize</label>
+          <select id="normalize-input">
+            <option value="false">false (counts)</option>
+            <option value="true">true (proportions)</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="runDemo()">Run</button>
+
+      <h3>Result</h3>
+      <div id="output"><em>Click Run to see results.</em></div>
+    </div>
+
+    <div class="card">
+      <h2>How it works</h2>
+      <p>
+        <code>valueCountsBinned(series, N)</code> internally:
+      </p>
+      <ol>
+        <li>Calls <code>cut(series, N)</code> to assign each value to one of <em>N</em> equal-width bins.</li>
+        <li>Counts occurrences per bin label (NaN/null values are excluded).</li>
+        <li>Optionally sorts by count (<code>sort=true</code>, default) or by interval position (<code>sort=false</code>).</li>
+        <li>Optionally returns proportions instead of counts (<code>normalize=true</code>).</li>
+      </ol>
+
+      <h3>API</h3>
+      <pre>
+valueCountsBinned(
+  series: Series&lt;Scalar&gt;,
+  bins: number,
+  options?: {
+    sort?: boolean;      // default: true
+    ascending?: boolean; // default: false
+    normalize?: boolean; // default: false
+  }
+): Series&lt;number&gt;</pre>
+    </div>
+
+    <div class="card">
+      <h2>Examples</h2>
+
+      <h3>Basic binning</h3>
+      <pre>
+import { Series, valueCountsBinned } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+const vc = valueCountsBinned(s, 2);
+// Index: ["(0.995, 3.0]", "(3.0, 5.005]"]
+// Values: [3, 2]  ← sorted by count (default)</pre>
+
+      <h3>Interval order (sort=false)</h3>
+      <pre>
+const vc2 = valueCountsBinned(s, 2, { sort: false });
+// Index: ["(0.995, 3.0]", "(3.0, 5.005]"]
+// Values: [3, 2]  ← in interval order</pre>
+
+      <h3>Proportions (normalize=true)</h3>
+      <pre>
+const vc3 = valueCountsBinned(s, 2, { normalize: true });
+// Index: ["(0.995, 3.0]", "(3.0, 5.005]"]
+// Values: [0.6, 0.4]</pre>
+
+      <h3>Handling NaN / null</h3>
+      <pre>
+const s2 = new Series({ data: [1, null, 2, NaN, 3, 4, 5] });
+const vc4 = valueCountsBinned(s2, 2);
+// NaN and null values are excluded.  Total = 5.</pre>
+    </div>
+
+    <p>
+      <a href="index.html">← Back to playground index</a>
+      &nbsp;|&nbsp;
+      <span class="tag">stats</span>
+      <span class="tag">binning</span>
+      <span class="tag">value_counts</span>
+    </p>
+
+    <script type="module">
+      // Minimal pure-JS demo (no bundler) — implements the same logic inline.
+
+      function fmt(n, normalize) {
+        return normalize ? n.toFixed(4) : String(n);
+      }
+
+      function equalWidthEdges(nums, n) {
+        let lo = Infinity, hi = -Infinity;
+        for (const v of nums) if (Number.isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+        if (!Number.isFinite(lo)) throw new Error("No finite values");
+        if (lo === hi) throw new Error("All values equal — cannot bin");
+        const w = (hi - lo) / n;
+        const eps = w * 0.001;
+        const edges = Array.from({ length: n + 1 }, (_, i) => lo + i * w);
+        edges[0] -= eps;
+        edges[n] += eps;
+        return edges;
+      }
+
+      function intervalLabel(lo, hi) { return `(${lo.toPrecision(4)}, ${hi.toPrecision(4)}]`; }
+
+      function valueCountsBinned(nums, bins, { sort = true, ascending = false, normalize = false } = {}) {
+        const edges = equalWidthEdges(nums.filter(Number.isFinite), bins);
+        const labels = Array.from({ length: bins }, (_, i) => intervalLabel(edges[i], edges[i + 1]));
+        const counts = new Map(labels.map(l => [l, 0]));
+        for (const v of nums) {
+          if (!Number.isFinite(v)) continue;
+          for (let i = 0; i < bins; i++) {
+            if (v > edges[i] && v <= edges[i + 1]) { counts.set(labels[i], (counts.get(labels[i]) || 0) + 1); break; }
+          }
+        }
+        let pairs = labels.map(l => [l, counts.get(l) || 0]);
+        if (sort) {
+          pairs.sort((a, b) => ascending ? a[1] - b[1] : b[1] - a[1]);
+        } else if (ascending) {
+          pairs = pairs.reverse();
+        }
+        const total = pairs.reduce((s, [, c]) => s + c, 0);
+        const div = normalize && total > 0 ? total : 1;
+        return pairs.map(([l, c]) => [l, c / div]);
+      }
+
+      window.runDemo = function () {
+        try {
+          const raw = document.getElementById("data-input").value;
+          const nums = raw.split(",").map(s => {
+            const n = Number(s.trim());
+            return isNaN(n) ? NaN : n;
+          });
+          const bins = parseInt(document.getElementById("bins-input").value, 10);
+          const sort = document.getElementById("sort-input").value === "true";
+          const ascending = document.getElementById("ascending-input").value === "true";
+          const normalize = document.getElementById("normalize-input").value === "true";
+
+          const result = valueCountsBinned(nums, bins, { sort, ascending, normalize });
+
+          let html = `<table><tr><th>Interval</th><th>${normalize ? "Proportion" : "Count"}</th></tr>`;
+          for (const [label, val] of result) {
+            html += `<tr><td><code>${label}</code></td><td>${fmt(val, normalize)}</td></tr>`;
+          }
+          html += "</table>";
+          html += `<p style="color:#555;margin-top:0.5rem">Total: ${result.reduce((s,[,v])=>s+v,0).toFixed(normalize?4:0)}</p>`;
+          document.getElementById("output").innerHTML = html;
+        } catch (err) {
+          document.getElementById("output").innerHTML =
+            `<pre style="color:#c0392b">${err.message}</pre>`;
+        }
+      };
+    </script>
+  </body>
+</html>

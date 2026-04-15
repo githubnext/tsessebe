@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Period &amp; PeriodIndex</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .875rem; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; }
+    th { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>Period &amp; PeriodIndex</h1>
+<p class="subtitle">
+  Fixed-frequency time spans — mirrors
+  <code>pandas.Period</code> and <code>pandas.PeriodIndex</code>.
+</p>
+
+<section>
+  <h2>1 — Supported frequencies</h2>
+  <p>
+    A <code>Period</code> represents a single time span at a fixed frequency.
+    tsb supports eight frequencies:
+  </p>
+  <table>
+    <tr><th>Code</th><th>Alias</th><th>Description</th><th>Example string</th></tr>
+    <tr><td><code>"A"</code></td><td><code>"Y"</code></td><td>Calendar year</td><td><code>2024</code></td></tr>
+    <tr><td><code>"Q"</code></td><td>—</td><td>Calendar quarter</td><td><code>2024Q2</code></td></tr>
+    <tr><td><code>"M"</code></td><td>—</td><td>Calendar month</td><td><code>2024-03</code></td></tr>
+    <tr><td><code>"W"</code></td><td>—</td><td>ISO week (Mon–Sun)</td><td><code>2024-01-01/2024-01-07</code></td></tr>
+    <tr><td><code>"D"</code></td><td>—</td><td>Day</td><td><code>2024-01-15</code></td></tr>
+    <tr><td><code>"H"</code></td><td>—</td><td>Hour</td><td><code>2024-01-15 14:00</code></td></tr>
+    <tr><td><code>"T"</code></td><td><code>"min"</code></td><td>Minute</td><td><code>2024-01-15 14:35</code></td></tr>
+    <tr><td><code>"S"</code></td><td>—</td><td>Second</td><td><code>2024-01-15 14:35:42</code></td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>2 — Creating periods</h2>
+  <p>Create periods from dates, strings, or directly from ordinals:</p>
+  <pre><code id="ex2-code">import { Period } from "tsb";
+
+// From a Date object
+const m = Period.fromDate(new Date("2024-03-15T00:00:00Z"), "M");
+console.log(m.toString());            // "2024-03"
+console.log(m.startTime.toISOString());  // "2024-03-01T00:00:00.000Z"
+console.log(m.endTime.toISOString());    // "2024-03-31T23:59:59.999Z"
+
+// From a string
+const q = Period.fromString("2024Q3", "Q");
+console.log(q.toString());            // "2024Q3"
+console.log(q.startTime.toISOString()); // "2024-07-01T00:00:00.000Z"
+
+// Direct construction from ordinal
+const p = new Period(54, "M");   // 54 months after Jan 1970 = July 2024
+console.log(p.toString());       // "2024-07"
+</code></pre>
+  <div id="ex2-output" class="output">Run to see output</div>
+</section>
+
+<section>
+  <h2>3 — Period arithmetic</h2>
+  <p>
+    Periods support shift (<code>add</code>), difference (<code>diff</code>),
+    and comparison. Arithmetic is always within the same frequency.
+  </p>
+  <pre><code id="ex3-code">import { Period } from "tsb";
+
+const jan = Period.fromDate(new Date("2024-01-01T00:00:00Z"), "M");
+const apr = jan.add(3);
+console.log(apr.toString());    // "2024-04"
+
+const dec = Period.fromDate(new Date("2024-12-01T00:00:00Z"), "M");
+console.log(dec.diff(jan));     // 11  (months between)
+
+// Comparison
+console.log(jan.compareTo(dec) < 0);  // true  (jan is earlier)
+console.log(jan.equals(jan.add(0)));  // true
+
+// contains: does a Date fall within a Period?
+const march15 = new Date("2024-03-15T00:00:00Z");
+const march = Period.fromDate(march15, "M");
+console.log(march.contains(march15));   // true
+console.log(march.contains(new Date("2024-04-01T00:00:00Z"))); // false
+</code></pre>
+  <div id="ex3-output" class="output">Run to see output</div>
+</section>
+
+<section>
+  <h2>4 — Frequency conversion with asfreq</h2>
+  <p>
+    <code>asfreq()</code> converts a period to a different frequency.
+    The <code>how</code> parameter picks the start or end of the current period
+    as the anchor point.
+  </p>
+  <pre><code id="ex4-code">import { Period } from "tsb";
+
+const q2 = Period.fromString("2024Q2", "Q");
+
+// "start": April (first month of Q2)
+console.log(q2.asfreq("M", "start").toString());  // "2024-04"
+
+// "end": June (last month of Q2)
+console.log(q2.asfreq("M", "end").toString());    // "2024-06"
+
+// Going coarser: month → year
+const aug = Period.fromString("2024-08", "M");
+console.log(aug.asfreq("A").toString());           // "2024"
+console.log(aug.asfreq("Q").toString());           // "2024Q3"
+</code></pre>
+  <div id="ex4-output" class="output">Run to see output</div>
+</section>
+
+<section>
+  <h2>5 — PeriodIndex: building ranges</h2>
+  <p>
+    A <code>PeriodIndex</code> is an ordered sequence of periods at a uniform
+    frequency, suitable for use as a row index.
+  </p>
+  <pre><code id="ex5-code">import { Period, PeriodIndex } from "tsb";
+
+// All four quarters of 2024
+const start = Period.fromDate(new Date("2024-01-01T00:00:00Z"), "Q");
+const end   = Period.fromDate(new Date("2024-12-31T00:00:00Z"), "Q");
+const quarters = PeriodIndex.fromRange(start, end);
+console.log(quarters.size);          // 4
+console.log(quarters.at(0).toString()); // "2024Q1"
+console.log(quarters.at(-1).toString()); // "2024Q4"
+
+// periodRange: start + count
+const months = PeriodIndex.periodRange(
+  Period.fromDate(new Date("2024-01-01T00:00:00Z"), "M"),
+  12,
+);
+console.log(months.size);            // 12
+console.log(months.at(11).toString()); // "2024-12"
+
+// Iteration
+for (const q of quarters) {
+  console.log(q.toString());
+}
+</code></pre>
+  <div id="ex5-output" class="output">Run to see output</div>
+</section>
+
+<section>
+  <h2>6 — PeriodIndex: lookup and transformation</h2>
+  <pre><code id="ex6-code">import { Period, PeriodIndex } from "tsb";
+
+const idx = PeriodIndex.periodRange(
+  Period.fromDate(new Date("2024-01-01T00:00:00Z"), "M"),
+  6,  // Jan–Jun 2024
+);
+
+// Position lookup
+const mar = Period.fromString("2024-03", "M");
+console.log(idx.getLoc(mar));         // 2
+console.log(idx.contains(mar));       // true
+
+// Shift the whole index
+const shifted = idx.shift(6);
+console.log(shifted.at(0).toString()); // "2024-07"
+console.log(shifted.at(5).toString()); // "2024-12"
+
+// Convert to different frequency
+const asQtr = idx.asfreq("Q", "start");
+console.log(asQtr.freq);             // "Q"
+// Note: some months map to the same quarter → duplicates
+console.log(asQtr.unique().size);    // 2 (Q1 and Q2)
+
+// Get Date arrays
+const starts = idx.toDatetimeStart();
+console.log(starts[0]?.toISOString()); // "2024-01-01T00:00:00.000Z"
+</code></pre>
+  <div id="ex6-output" class="output">Run to see output</div>
+</section>
+
+<section>
+  <h2>7 — Weekly periods</h2>
+  <p>
+    Weekly periods span Monday–Sunday. The string representation shows the
+    full range: <code>YYYY-MM-DD/YYYY-MM-DD</code>.
+  </p>
+  <pre><code id="ex7-code">import { Period, PeriodIndex } from "tsb";
+
+// 1970-01-01 is a Thursday — it belongs to week 0 (Mon 1969-12-29 → Sun 1970-01-04)
+const w0 = Period.fromDate(new Date("1970-01-01T00:00:00Z"), "W");
+console.log(w0.ordinal);               // 0
+console.log(w0.startTime.toISOString()); // "1969-12-29T00:00:00.000Z"
+console.log(w0.endTime.toISOString());   // "1970-01-04T23:59:59.999Z"
+console.log(w0.toString());            // "1969-12-29/1970-01-04"
+
+// Build a 4-week index
+const fourWeeks = PeriodIndex.periodRange(
+  Period.fromDate(new Date("2024-01-01T00:00:00Z"), "W"),
+  4,
+);
+for (const w of fourWeeks) {
+  console.log(w.toString());
+}
+</code></pre>
+  <div id="ex7-output" class="output">Run to see output</div>
+</section>
+
+<section>
+  <h2>8 — Sub-daily periods</h2>
+  <pre><code id="ex8-code">import { Period } from "tsb";
+
+// Hourly
+const h = Period.fromDate(new Date("2024-03-15T14:35:00Z"), "H");
+console.log(h.toString());   // "2024-03-15 14:00"
+console.log(h.durationMs);  // 3_600_000
+
+// Minutely (alias "min")
+const t = Period.fromDate(new Date("2024-03-15T14:35:42Z"), "min");
+console.log(t.toString());   // "2024-03-15 14:35"
+console.log(t.freq);         // "T"
+
+// Secondly
+const s = Period.fromDate(new Date("2024-03-15T14:35:42.500Z"), "S");
+console.log(s.toString());   // "2024-03-15 14:35:42"
+console.log(s.durationMs);  // 1_000
+</code></pre>
+  <div id="ex8-output" class="output">Run to see output</div>
+</section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    if (typeof window.runTsbExample === "function") {
+      ["ex2", "ex3", "ex4", "ex5", "ex6", "ex7", "ex8"].forEach((id) => {
+        const code = document.getElementById(`${id}-code`)?.textContent ?? "";
+        window.runTsbExample(code, `${id}-output`);
+      });
+    }
+  });
+</script>
+</body>
+</html>

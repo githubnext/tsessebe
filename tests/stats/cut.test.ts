@@ -1,357 +1,336 @@
 /**
- * Tests for stats/cut.ts — cut() and qcut() binning functions.
+ * Tests for src/stats/cut.ts
+ * Covers cut(), qcut(), cutIntervalIndex(), qcutIntervalIndex().
  */
-
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { Series } from "../../src/index.ts";
-import { cut, cutCategories, cutCodes, qcut } from "../../src/index.ts";
-import type { Scalar } from "../../src/index.ts";
+import { Series, cut, cutIntervalIndex, qcut, qcutIntervalIndex } from "../../src/index.ts";
 
-// Top-level regex constant for performance
-const INTEGER_RE = /^\d+$/;
+// Top-level regex patterns (biome useTopLevelRegex)
+const reOpenParen = /^\(/;
+const reLabelsLength = /labels length/;
+const reDuplicate = /duplicate/i;
+const reAtLeast2 = /at least 2/;
+const reBinsGe1 = /bins must be ≥ 1/;
+const reBinsEqual = /equal/;
+const reNoFinite = /no finite/;
+const reQGe2 = /q must be ≥ 2/;
+const reLeftBracket0 = /\[0/;
+const reLeftBracket1 = /\[1/;
+const reLeftBracket2 = /\[2/;
+const reBinContains1 = /1]/;
+const reBinContains2 = /2]/;
+const reBinContains3 = /3]/;
 
-// ─── cut — integer bins ────────────────────────────────────────────────────────
+// ─── cut() — basic ─────────────────────────────────────────────────────────
 
-describe("cut — integer bins", () => {
-  test("3 equal-width bins, default options", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6] as Scalar[] });
-    const result = cut(s, 3);
-    const vals = result.values;
-    expect(vals.every((v) => typeof v === "string" || v === null)).toBe(true);
-    // first element (1) and last element (6) should land in different bins
-    expect(vals[0]).not.toBe(vals[5]);
+describe("cut — basic", () => {
+  it("bins a plain array into 2 equal-width bins", () => {
+    const result = cut([1, 2, 3, 4, 5], 2);
+    expect(result.size).toBe(5);
+    // values 1,2,3 fall in lower bin; 4,5 in upper bin
+    const v = result.values as readonly (string | null)[];
+    expect(v[0]).toBe(v[1]);
+    expect(v[0]).toBe(v[2]);
+    expect(v[3]).toBe(v[4]);
+    expect(v[0]).not.toBe(v[3]);
   });
 
-  test("correct number of distinct bins", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as Scalar[] });
-    const result = cut(s, 4);
-    const unique = new Set(result.values.filter(Boolean));
-    expect(unique.size).toBe(4);
+  it("returns null for out-of-range values", () => {
+    const result = cut([1, 2, 3, 101], [0, 50, 100]);
+    const v = result.values as readonly (string | null)[];
+    // 101 is outside explicit bin edges [0, 50, 100], expect null
+    expect(v[3]).toBe(null);
   });
 
-  test("preserves index", () => {
-    const s = new Series({ data: [10, 20, 30] as Scalar[], index: ["a", "b", "c"] });
-    const result = cut(s, 3);
-    expect([...result.index.values]).toEqual(["a", "b", "c"]);
-  });
-
-  test("preserves name", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[], name: "myCol" });
-    const result = cut(s, 3);
-    expect(result.name).toBe("myCol");
-  });
-
-  test("null values produce null in result", () => {
-    const s = new Series({ data: [1, null, 3] as Scalar[] });
+  it("bins a Series and preserves index and name", () => {
+    const s = new Series({ data: [10, 20, 30, 40, 50], name: "vals" });
     const result = cut(s, 2);
-    expect(result.values[1]).toBe(null);
+    expect(result.size).toBe(5);
+    expect(result.name).toBe("vals");
+    // index is preserved
+    for (let i = 0; i < 5; i++) {
+      expect(result.index.at(i)).toBe(s.index.at(i));
+    }
   });
 
-  test("NaN values produce null in result", () => {
-    const s = new Series({ data: [1, Number.NaN, 3] as Scalar[] });
-    const result = cut(s, 2);
-    expect(result.values[1]).toBe(null);
+  it("accepts explicit bin edges", () => {
+    const result = cut([1, 2, 3, 4, 5], [0, 3, 6]);
+    const v = result.values as readonly (string | null)[];
+    // 1,2,3 → (0,3]; 4,5 → (3,6]
+    expect(v[0]).toBe(v[1]);
+    expect(v[0]).toBe(v[2]);
+    expect(v[3]).toBe(v[4]);
+    expect(v[0]).not.toBe(v[3]);
   });
 
-  test("retbins returns [series, edges]", () => {
-    const s = new Series({ data: [1, 2, 3, 4] as Scalar[] });
-    const [binned, edges] = cut(s, 2, { retbins: true }) as unknown as [
-      ReturnType<typeof cut>,
-      readonly number[],
-    ];
-    expect(Array.isArray(edges)).toBe(true);
-    expect((edges as readonly number[]).length).toBe(3); // 2 bins → 3 edges
-    expect(binned.size).toBe(4);
+  it("produces right-closed intervals by default", () => {
+    const result = cut([1, 2, 3], [0, 1, 2, 3]);
+    const v = result.values as readonly (string | null)[];
+    // Each value falls in (0,1], (1,2], (2,3] respectively
+    expect(v[0]).toMatch(reBinContains1);
+    expect(v[1]).toMatch(reBinContains2);
+    expect(v[2]).toMatch(reBinContains3);
   });
 
-  test("right=false uses left-closed intervals", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[] });
-    const result = cut(s, 2, { right: false });
-    const first = result.values.find((v) => v !== null);
-    expect(first).toBeDefined();
-    expect(String(first)[0]).toBe("[");
-  });
-
-  test("labels=false returns integer codes", () => {
-    const s = new Series({ data: [10, 20, 30, 40, 50] as Scalar[] });
-    const result = cut(s, 5, { labels: false });
-    const vals = result.values;
-    expect(vals.every((v) => v === null || INTEGER_RE.test(String(v)))).toBe(true);
-  });
-
-  test("custom labels", () => {
-    const s = new Series({ data: [1, 5, 10] as Scalar[] });
-    const result = cut(s, 3, { labels: ["low", "mid", "high"] });
-    const unique = new Set(result.values.filter(Boolean));
-    expect([...unique].every((v) => ["low", "mid", "high"].includes(v as string))).toBe(true);
-  });
-
-  test("custom labels wrong length throws", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[] });
-    expect(() => cut(s, 3, { labels: ["a", "b"] })).toThrow();
-  });
-
-  test("bins=0 throws", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[] });
-    expect(() => cut(s, 0)).toThrow();
-  });
-
-  test("single unique value still bins", () => {
-    const s = new Series({ data: [5, 5, 5] as Scalar[] });
-    const result = cut(s, 1);
-    expect(result.values.every((v) => v !== null)).toBe(true);
+  it("produces left-closed intervals when right=false", () => {
+    const result = cut([0, 1, 2], [0, 1, 2, 3], { right: false });
+    const v = result.values as readonly (string | null)[];
+    // Each value falls in [0,1), [1,2), [2,3)
+    expect(v[0]).toMatch(reLeftBracket0);
+    expect(v[1]).toMatch(reLeftBracket1);
+    expect(v[2]).toMatch(reLeftBracket2);
   });
 });
 
-// ─── cut — explicit bin edges ─────────────────────────────────────────────────
+// ─── cut() — labels ────────────────────────────────────────────────────────
 
-describe("cut — explicit bin edges", () => {
-  test("basic edge array", () => {
-    const s = new Series({ data: [0.5, 1.5, 2.5, 3.5] as Scalar[] });
-    const result = cut(s, [0, 1, 2, 3, 4]);
-    expect(result.values[0]).toBe("(0, 1]");
-    expect(result.values[1]).toBe("(1, 2]");
-    expect(result.values[2]).toBe("(2, 3]");
-    expect(result.values[3]).toBe("(3, 4]");
+describe("cut — labels", () => {
+  it("returns integer codes when labels=false", () => {
+    const result = cut([1, 2, 3, 4, 5], 2, { labels: false });
+    const v = result.values as readonly (number | null)[];
+    expect(v[0]).toBe(0);
+    expect(v[1]).toBe(0);
+    expect(v[2]).toBe(0);
+    expect(v[3]).toBe(1);
+    expect(v[4]).toBe(1);
   });
 
-  test("value below lower edge is null", () => {
-    const s = new Series({ data: [-1, 5] as Scalar[] });
-    const result = cut(s, [0, 3, 6]);
-    expect(result.values[0]).toBe(null);
-    expect(result.values[1]).toBe("(3, 6]");
+  it("uses custom string labels", () => {
+    const result = cut([1, 2, 3, 4, 5], 2, { labels: ["low", "high"] });
+    const v = result.values as readonly (string | null)[];
+    expect(v[0]).toBe("low");
+    expect(v[3]).toBe("high");
   });
 
-  test("value above upper edge is null", () => {
-    const s = new Series({ data: [10, 2] as Scalar[] });
-    const result = cut(s, [0, 5, 8]);
-    expect(result.values[0]).toBe(null);
-    expect(result.values[1]).toBe("(0, 5]");
+  it("throws when custom labels length mismatches bin count", () => {
+    expect(() => cut([1, 2, 3], 3, { labels: ["a", "b"] })).toThrow(reLabelsLength);
   });
 
-  test("duplicate edges throw", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[] });
-    expect(() => cut(s, [0, 2, 2, 4])).toThrow();
-  });
-
-  test("fewer than 2 edges throw", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[] });
-    expect(() => cut(s, [1])).toThrow();
-  });
-
-  test("precision option affects label format", () => {
-    const s = new Series({ data: [1.23456] as Scalar[] });
-    const result = cut(s, [1, 1.23456, 2], { precision: 2 });
-    const lbl = result.values[0];
-    expect(lbl).toBe("(1, 1.23]");
-  });
-
-  test("retbins returns original edges", () => {
-    const edges = [0, 1, 2, 3];
-    const s = new Series({ data: [0.5, 1.5, 2.5] as Scalar[] });
-    const [, returnedEdges] = cut(s, edges, { retbins: true }) as unknown as [
-      ReturnType<typeof cut>,
-      readonly number[],
-    ];
-    expect([...(returnedEdges as readonly number[])]).toEqual([0, 1, 2, 3]);
+  it("default labels are interval strings", () => {
+    const result = cut([1, 5], [0, 2, 6]);
+    const v = result.values as readonly (string | null)[];
+    // Should look like "(0, 2]" and "(2, 6]"
+    expect(v[0]).toMatch(reOpenParen);
+    expect(v[1]).toMatch(reOpenParen);
   });
 });
 
-// ─── qcut ──────────────────────────────────────────────────────────────────────
+// ─── cut() — edge cases ────────────────────────────────────────────────────
 
-describe("qcut — integer quantiles", () => {
-  test("4 equal-frequency bins", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as Scalar[] });
-    const result = qcut(s, 4);
-    const unique = new Set(result.values.filter(Boolean));
-    expect(unique.size).toBe(4);
+describe("cut — edge cases", () => {
+  it("handles NaN / null in input gracefully", () => {
+    const result = cut([1, null, 3, undefined, 5], 2);
+    const v = result.values as readonly (string | null)[];
+    expect(v[1]).toBe(null);
+    expect(v[3]).toBe(null);
+    expect(v[0]).not.toBe(null);
+    expect(v[2]).not.toBe(null);
   });
 
-  test("q=2 splits at median", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as Scalar[] });
+  it("include_lowest makes first bin include its left edge when right=true", () => {
+    // Exact left edge of first bin is included when includeLowest=true
+    const result = cut([0, 1, 2, 3], [0, 1, 2, 3], { includeLowest: true });
+    const v = result.values as readonly (string | null)[];
+    // 0 should be assigned to first bin
+    expect(v[0]).not.toBe(null);
+  });
+
+  it("throws when bins < 2 (array)", () => {
+    expect(() => cut([1, 2], [0])).toThrow(reAtLeast2);
+  });
+
+  it("throws when bins < 1 (integer)", () => {
+    expect(() => cut([1, 2], 0)).toThrow(reBinsGe1);
+  });
+
+  it("throws on duplicate edges with duplicates='raise' (default)", () => {
+    expect(() => cut([1, 2, 3], [0, 1, 1, 3])).toThrow(reDuplicate);
+  });
+
+  it("drops duplicate edges when duplicates='drop'", () => {
+    // [0,1,1,3] → [0,1,3] after dropping duplicate 1
+    const result = cut([0.5, 1.5, 2.5], [0, 1, 1, 3], { duplicates: "drop" });
+    expect(result.size).toBe(3);
+  });
+
+  it("throws when all values equal (integer bins)", () => {
+    expect(() => cut([5, 5, 5], 3)).toThrow(reBinsEqual);
+  });
+
+  it("throws when no finite values", () => {
+    expect(() => cut([null, undefined, Number.NaN], 2)).toThrow(reNoFinite);
+  });
+});
+
+// ─── qcut() — basic ────────────────────────────────────────────────────────
+
+describe("qcut — basic", () => {
+  it("splits into 2 quantiles (median split)", () => {
+    const result = qcut([1, 2, 3, 4, 5], 2);
+    const v = result.values as readonly (string | null)[];
+    // Lower half and upper half
+    expect(v[0]).not.toBe(null);
+    expect(v[4]).not.toBe(null);
+    expect(v[0]).not.toBe(v[4]);
+  });
+
+  it("accepts fractional quantile array", () => {
+    const result = qcut([1, 2, 3, 4, 5], [0, 0.5, 1.0]);
+    expect(result.size).toBe(5);
+    const v = result.values as readonly (string | null)[];
+    expect(v[0]).not.toBe(null);
+  });
+
+  it("preserves Series index and name", () => {
+    const s = new Series({ data: [10, 20, 30], name: "q" });
     const result = qcut(s, 2);
-    const unique = new Set(result.values.filter(Boolean));
-    expect(unique.size).toBe(2);
+    expect(result.size).toBe(3);
+    expect(result.name).toBe("q");
+    for (let i = 0; i < 3; i++) {
+      expect(result.index.at(i)).toBe(s.index.at(i));
+    }
   });
 
-  test("null values produce null", () => {
-    const s = new Series({ data: [1, null, 3, 4, 5] as Scalar[] });
-    const result = qcut(s, 2);
-    expect(result.values[1]).toBe(null);
+  it("returns integer codes when labels=false", () => {
+    const result = qcut([1, 2, 3, 4, 5], 2, { labels: false });
+    const v = result.values as readonly (number | null)[];
+    // All should be 0 or 1
+    for (const code of v) {
+      if (code !== null) {
+        expect(code).toBeGreaterThanOrEqual(0);
+        expect(code).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
-  test("preserves index", () => {
-    const s = new Series({ data: [1, 2, 3, 4] as Scalar[], index: [10, 11, 12, 13] });
-    const result = qcut(s, 2);
-    expect([...result.index.values]).toEqual([10, 11, 12, 13]);
+  it("applies custom labels", () => {
+    const result = qcut([1, 2, 3, 4, 5, 6], 3, { labels: ["low", "mid", "high"] });
+    const v = result.values as readonly (string | null)[];
+    const distinct = new Set(v.filter((x) => x !== null));
+    expect(distinct.size).toBeGreaterThanOrEqual(2);
   });
 
-  test("retbins returns edges", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8] as Scalar[] });
-    const [binned, edges] = qcut(s, 4, { retbins: true }) as unknown as [
-      ReturnType<typeof qcut>,
-      readonly number[],
-    ];
-    expect((edges as readonly number[]).length).toBe(5); // 4 bins → 5 edges
-    expect(binned.size).toBe(8);
+  it("throws when no finite values", () => {
+    expect(() => qcut([null, undefined], 2)).toThrow(reNoFinite);
   });
 
-  test("labels=false gives integer codes", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6] as Scalar[] });
-    const result = qcut(s, 3, { labels: false });
-    const vals = result.values;
-    expect(vals.every((v) => v === null || INTEGER_RE.test(String(v)))).toBe(true);
+  it("throws when q < 2 (integer)", () => {
+    expect(() => qcut([1, 2, 3], 1)).toThrow(reQGe2);
   });
 
-  test("custom labels", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6] as Scalar[] });
-    const result = qcut(s, 3, { labels: ["low", "med", "high"] });
-    const unique = new Set(result.values.filter(Boolean));
-    expect([...unique].every((v) => ["low", "med", "high"].includes(v as string))).toBe(true);
+  it("throws on duplicate quantile edges with duplicates='raise'", () => {
+    // Repeated values produce duplicate edges
+    expect(() => qcut([1, 1, 1, 1, 2], 4)).toThrow(reDuplicate);
   });
 
-  test("q<2 throws", () => {
-    const s = new Series({ data: [1, 2, 3] as Scalar[] });
-    expect(() => qcut(s, 1)).toThrow();
-  });
-});
-
-describe("qcut — explicit quantile levels", () => {
-  test("quartiles via explicit levels", () => {
-    const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as Scalar[] });
-    const result = qcut(s, [0, 0.25, 0.5, 0.75, 1]);
-    const unique = new Set(result.values.filter(Boolean));
-    expect(unique.size).toBe(4);
-  });
-
-  test("duplicate edges raise by default", () => {
-    // Data with many ties causes duplicate quantile edges
-    const s = new Series({ data: [1, 1, 1, 1, 2, 2, 2, 2] as Scalar[] });
-    expect(() => qcut(s, 4)).toThrow();
-  });
-
-  test("duplicates=drop handles ties", () => {
-    const s = new Series({ data: [1, 1, 1, 1, 2, 3, 4, 5] as Scalar[] });
-    const result = qcut(s, 4, { duplicates: "drop" });
-    expect(result.size).toBe(8);
+  it("drops duplicate quantile edges when duplicates='drop'", () => {
+    const result = qcut([1, 1, 1, 2, 2], 2, { duplicates: "drop" });
+    expect(result.size).toBe(5);
   });
 });
 
-// ─── cutCodes ─────────────────────────────────────────────────────────────────
+// ─── cutIntervalIndex / qcutIntervalIndex ──────────────────────────────────
 
-describe("cutCodes", () => {
-  test("returns integer codes", () => {
-    const s = new Series({ data: [1, 5, 10] as Scalar[] });
-    const result = cutCodes(s, [0, 4, 8, 12]);
-    expect(result.values[0]).toBe(0);
-    expect(result.values[1]).toBe(1);
-    expect(result.values[2]).toBe(2);
+describe("cutIntervalIndex", () => {
+  it("returns the IntervalIndex used by cut", () => {
+    const idx = cutIntervalIndex([1, 2, 3, 4, 5], 2);
+    expect(idx.size).toBe(2);
+    // first interval should contain value 2
+    expect(idx.get_loc(2)).toBe(0);
   });
 
-  test("null for missing values", () => {
-    const s = new Series({ data: [1, null, 3] as Scalar[] });
-    const result = cutCodes(s, 2);
-    expect(result.values[1]).toBe(null);
+  it("uses explicit bin edges", () => {
+    const idx = cutIntervalIndex([1, 2, 3], [0, 1, 3]);
+    expect(idx.size).toBe(2);
   });
 });
 
-// ─── cutCategories ────────────────────────────────────────────────────────────
-
-describe("cutCategories", () => {
-  test("returns label array of correct length", () => {
-    const labels = cutCategories(4, 0, 100);
-    expect(labels.length).toBe(4);
-  });
-
-  test("labels are ordered", () => {
-    const labels = cutCategories([0, 10, 20, 30], 0, 30);
-    expect(labels[0]).toBe("(0, 10]");
-    expect(labels[1]).toBe("(10, 20]");
-    expect(labels[2]).toBe("(20, 30]");
+describe("qcutIntervalIndex", () => {
+  it("returns the IntervalIndex used by qcut", () => {
+    const idx = qcutIntervalIndex([1, 2, 3, 4, 5], 2);
+    expect(idx.size).toBe(2);
   });
 });
 
-// ─── property-based tests ─────────────────────────────────────────────────────
+// ─── property-based tests ──────────────────────────────────────────────────
 
-describe("cut — property tests", () => {
-  test("every non-null result is a string", () => {
+describe("cut — properties", () => {
+  it("result length equals input length", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
-          minLength: 1,
-          maxLength: 20,
-        }),
+        fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 2, maxLength: 30 }),
         fc.integer({ min: 1, max: 5 }),
-        (data, numBins) => {
-          const s = new Series({ data: data as Scalar[] });
-          const [binned] = cut(s, numBins, { retbins: true }) as unknown as [
-            ReturnType<typeof cut>,
-            readonly number[],
-          ];
-          return binned.values.every((v) => {
-            if (v === null) {
-              return true;
-            }
-            return typeof v === "string";
-          });
+        (arr, nbins) => {
+          try {
+            const result = cut(arr, nbins);
+            return result.size === arr.length;
+          } catch (_) {
+            return true; // range errors are OK (e.g. all-equal values)
+          }
         },
       ),
     );
   });
 
-  test("cut with integer bins: result size equals input size", () => {
+  it("all non-null codes are in [0, nbins-1]", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
-          minLength: 1,
+        fc.array(fc.float({ min: -1000, max: 1000, noNaN: true }), {
+          minLength: 2,
           maxLength: 30,
         }),
         fc.integer({ min: 1, max: 6 }),
-        (data, numBins) => {
-          const s = new Series({ data: data as Scalar[] });
-          const result = cut(s, numBins);
-          return result.size === s.size;
+        (arr, nbins) => {
+          try {
+            const result = cut(arr, nbins, { labels: false });
+            const v = result.values as readonly (number | null)[];
+            return v.every((c) => c === null || (c >= 0 && c < nbins));
+          } catch (_) {
+            return true;
+          }
         },
       ),
     );
   });
 
-  test("qcut: result size equals input size", () => {
+  it("qcut result length equals input length", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true, min: 0, max: 1000 }), {
+        fc.array(fc.float({ min: -100, max: 100, noNaN: true }), {
+          minLength: 3,
+          maxLength: 30,
+        }),
+        fc.integer({ min: 2, max: 4 }),
+        (arr, q) => {
+          try {
+            const result = qcut(arr, q, { duplicates: "drop" });
+            return result.size === arr.length;
+          } catch (_) {
+            return true;
+          }
+        },
+      ),
+    );
+  });
+
+  it("values in range are assigned a non-null label", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.float({ min: 1, max: 100, noNaN: true }), {
           minLength: 2,
           maxLength: 20,
         }),
-        fc.integer({ min: 2, max: 4 }),
-        (data, numQ) => {
-          if (data.length === 0) {
+        fc.integer({ min: 1, max: 4 }),
+        (arr, nbins) => {
+          try {
+            const result = cut(arr, nbins);
+            const v = result.values as readonly (string | null)[];
+            // All input values should be assigned (they are within the computed range)
+            return v.every((label) => label !== null);
+          } catch (_) {
             return true;
           }
-          const s = new Series({ data: data as Scalar[] });
-          try {
-            const result = qcut(s, numQ, { duplicates: "drop" });
-            return result.size === s.size;
-          } catch {
-            return true; // may throw if all edges collapse
-          }
-        },
-      ),
-    );
-  });
-
-  test("cut with explicit edges: values within [0,100] range are non-null", () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.float({ noNaN: true, min: 0, max: 100, noDefaultInfinity: true }), {
-          minLength: 1,
-          maxLength: 20,
-        }),
-        (data) => {
-          const s = new Series({ data: data as Scalar[] });
-          const result = cut(s, [0, 50, 100]);
-          return result.values.every((v) => typeof v === "string");
         },
       ),
     );

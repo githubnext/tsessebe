@@ -3,146 +3,234 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tsb — selectDtypes</title>
+  <title>tsb — select_dtypes</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
-    h1 { color: #4f46e5; }
-    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
-    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
-    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
-    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
-    .tag { display: inline-block; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 4px; }
-    a { color: #4f46e5; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #e5e7eb; padding: 6px 12px; text-align: left; font-size: 14px; }
-    th { background: #f3f4f6; font-weight: 600; }
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #222; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.9rem; }
+    .result { background: #e8f5e9; border-left: 4px solid #43a047; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    .error  { background: #ffebee; border-left: 4px solid #e53935; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    button { margin-top: 0.5rem; padding: 0.4rem 1rem; background: #0969da; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0550ae; }
+    textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.9rem; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; background: #fff; min-height: 140px; }
+    a { color: #0969da; }
+    table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.75rem; text-align: left; font-family: monospace; font-size: 0.9rem; }
+    th { background: #f0f0f0; }
   </style>
 </head>
 <body>
-  <p><a href="index.html">← tsb playground</a></p>
-  <h1>🔍 selectDtypes</h1>
+  <h1>🔍 <code>select_dtypes</code></h1>
   <p>
-    <strong><code>selectDtypes(df, { include, exclude })</code></strong> returns a new DataFrame
-    containing only columns whose dtype satisfies the filter — just like
-    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.select_dtypes.html"><code>DataFrame.select_dtypes()</code></a>.
+    Return a subset of DataFrame columns matching given dtype selectors —
+    mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.select_dtypes.html" target="_blank">pandas.DataFrame.select_dtypes()</a>.
   </p>
-  <p>Equivalent Python: <code>df.select_dtypes(include=["number"])</code></p>
 
-  <h2>Generic type aliases</h2>
+  <h2>Overview</h2>
   <table>
-    <thead><tr><th>Alias</th><th>Matches dtypes</th></tr></thead>
-    <tbody>
-      <tr><td><code>"number"</code></td><td>int*, uint*, float*</td></tr>
-      <tr><td><code>"integer"</code></td><td>int*, uint*</td></tr>
-      <tr><td><code>"signed"</code></td><td>int*</td></tr>
-      <tr><td><code>"unsigned"</code></td><td>uint*</td></tr>
-      <tr><td><code>"floating"</code></td><td>float*</td></tr>
-      <tr><td><code>"bool"</code></td><td>bool</td></tr>
-      <tr><td><code>"string"</code></td><td>string</td></tr>
-      <tr><td><code>"datetime"</code></td><td>datetime</td></tr>
-      <tr><td><code>"category"</code></td><td>category</td></tr>
-      <tr><td><code>"object"</code></td><td>object</td></tr>
-    </tbody>
+    <tr><th>Selector</th><th>Matches</th></tr>
+    <tr><td><code>"number"</code></td><td>int, uint, float dtypes</td></tr>
+    <tr><td><code>"integer"</code></td><td>int and uint dtypes</td></tr>
+    <tr><td><code>"signed integer"</code></td><td>int dtypes only (int8–int64)</td></tr>
+    <tr><td><code>"unsigned integer"</code></td><td>uint dtypes only (uint8–uint64)</td></tr>
+    <tr><td><code>"floating"</code></td><td>float dtypes (float32, float64)</td></tr>
+    <tr><td><code>"bool"</code></td><td>boolean dtype</td></tr>
+    <tr><td><code>"string"</code></td><td>string dtype</td></tr>
+    <tr><td><code>"object"</code></td><td>object dtype</td></tr>
+    <tr><td><code>"datetime"</code></td><td>datetime dtype</td></tr>
+    <tr><td><code>"timedelta"</code></td><td>timedelta dtype</td></tr>
+    <tr><td><code>"category"</code></td><td>category dtype</td></tr>
+    <tr><td><code>"int64"</code> etc.</td><td>exact concrete dtype name</td></tr>
   </table>
 
-  <!-- Demo 1: include number -->
-  <h2>1 · Include numeric columns only</h2>
-  <div class="demo">
-    <pre>const df = DataFrame.fromColumns({
-  age:    [25, 30, 35],
-  score:  [9.1, 8.2, 7.5],
+  <h2>1 · include: keep only numeric columns</h2>
+  <pre>import { DataFrame } from "tsb";
+import { selectDtypes } from "tsb";
+
+const df = DataFrame.fromColumns({
+  age:    [25, 30, 22],
+  score:  [88.5, 92.0, 77.3],
   name:   ["Alice", "Bob", "Carol"],
   active: [true, false, true],
 });
 
-selectDtypes(df, { include: ["number"] }).columns.values;
-// → ["age", "score"]</pre>
-    <div class="output" id="demo1"></div>
-  </div>
+const nums = selectDtypes(df, { include: "number" });
+// Keeps: age (int64), score (float64)
+// Drops: name (string), active (bool)
+console.log(nums.columns.toArray()); // ["age", "score"]</pre>
+  <div id="out1" class="result">Click Run to evaluate</div>
+  <button onclick="run1()">▶ Run</button>
 
-  <!-- Demo 2: exclude number -->
-  <h2>2 · Exclude numeric columns</h2>
-  <div class="demo">
-    <pre>selectDtypes(df, { exclude: ["number"] }).columns.values;
-// → ["name", "active"]</pre>
-    <div class="output" id="demo2"></div>
-  </div>
+  <h2>2 · exclude: drop boolean and string columns</h2>
+  <pre>const withoutBoolStr = selectDtypes(df, { exclude: ["bool", "string"] });
+// Keeps: age (int64), score (float64)
+console.log(withoutBoolStr.columns.toArray()); // ["age", "score"]</pre>
+  <div id="out2" class="result">Click Run to evaluate</div>
+  <button onclick="run2()">▶ Run</button>
 
-  <!-- Demo 3: include + exclude -->
-  <h2>3 · Include number, exclude floating → integers only</h2>
-  <div class="demo">
-    <pre>selectDtypes(df, { include: ["number"], exclude: ["floating"] }).columns.values;
-// → ["age"]</pre>
-    <div class="output" id="demo3"></div>
-  </div>
+  <h2>3 · include + exclude combined</h2>
+  <pre>// Include all numeric, but exclude float64
+const intOnly = selectDtypes(df, { include: "number", exclude: "floating" });
+// Keeps: age (int64)
+console.log(intOnly.columns.toArray()); // ["age"]</pre>
+  <div id="out3" class="result">Click Run to evaluate</div>
+  <button onclick="run3()">▶ Run</button>
 
-  <!-- Demo 4: exact dtype name -->
-  <h2>4 · Exact dtype name</h2>
-  <div class="demo">
-    <pre>selectDtypes(df, { include: ["bool"] }).columns.values;
-// → ["active"]</pre>
-    <div class="output" id="demo4"></div>
-  </div>
+  <h2>4 · Concrete dtype name selector</h2>
+  <pre>const floatOnly = selectDtypes(df, { include: "float64" });
+console.log(floatOnly.columns.toArray()); // ["score"]</pre>
+  <div id="out4" class="result">Click Run to evaluate</div>
+  <button onclick="run4()">▶ Run</button>
 
-  <!-- Demo 5: datetime -->
-  <h2>5 · Select datetime columns</h2>
-  <div class="demo">
-    <pre>const df2 = DataFrame.fromColumns({
-  created: [new Date("2024-01-01"), new Date("2024-06-01")],
-  value:   [100, 200],
+  <h2>5 · Inspect column dtypes</h2>
+  <div id="out5" class="result">Click Run to evaluate</div>
+  <button onclick="run5()">▶ Run dtype inspection</button>
+
+  <h2>6 · Interactive: try your own</h2>
+  <textarea id="user-code">// Build a custom DataFrame and call selectDtypes
+const df = DataFrame.fromColumns({
+  x: [1, 2, 3],
+  y: [1.1, 2.2, 3.3],
+  z: ["a", "b", "c"],
 });
-
-selectDtypes(df2, { include: ["datetime"] }).columns.values;
-// → ["created"]</pre>
-    <div class="output" id="demo5"></div>
-  </div>
-
-  <!-- Demo 6: no options -->
-  <h2>6 · No options — returns DataFrame unchanged</h2>
-  <div class="demo">
-    <pre>selectDtypes(df).columns.values;
-// → ["age", "score", "name", "active"]  (all columns)</pre>
-    <div class="output" id="demo6"></div>
-  </div>
+const result = selectDtypes(df, { include: "number" });
+return result.columns.toArray().join(", ");
+</textarea>
+  <button onclick="runUser()">▶ Run</button>
+  <div id="out-user" class="result">Output will appear here</div>
 
   <script type="module">
-    import { DataFrame, selectDtypes, Series } from "./runtime.js";
+    // ── minimal tsb stub (browser-runnable subset) ─────────────────────────
 
-    function render(id, value) {
-      document.getElementById(id).textContent =
-        value instanceof DataFrame
-          ? JSON.stringify(value.toRecords(), null, 2)
-          : JSON.stringify(value, null, 2);
+    function inferDtype(values) {
+      if (values.length === 0) return { kind: "float", name: "float64" };
+      const sample = values.find(v => v !== null && v !== undefined);
+      if (sample === undefined) return { kind: "float", name: "float64" };
+      if (typeof sample === "boolean") return { kind: "bool", name: "bool" };
+      if (typeof sample === "number") {
+        const isInt = values.every(v => v === null || v === undefined || (typeof v === "number" && Number.isFinite(v) && Number.isInteger(v)));
+        return isInt ? { kind: "int", name: "int64" } : { kind: "float", name: "float64" };
+      }
+      if (typeof sample === "string") return { kind: "string", name: "string" };
+      if (sample instanceof Date) return { kind: "datetime", name: "datetime" };
+      return { kind: "object", name: "object" };
     }
 
-    const df = DataFrame.fromColumns({
-      age:    [25, 30, 35],
-      score:  [9.1, 8.2, 7.5],
-      name:   ["Alice", "Bob", "Carol"],
-      active: [true, false, true],
-    });
+    class Series {
+      constructor({ data, dtype, name }) {
+        this.values = [...data];
+        this.dtype = dtype ?? inferDtype(data);
+        this.name = name ?? null;
+        this.size = data.length;
+      }
+    }
 
-    // Demo 1
-    render("demo1", [...selectDtypes(df, { include: ["number"] }).columns.values]);
+    class DataFrame {
+      constructor(cols) {
+        this._cols = cols;
+        this.columns = { toArray: () => Object.keys(cols) };
+        this.shape = [Object.values(cols)[0]?.values.length ?? 0, Object.keys(cols).length];
+      }
+      static fromColumns(obj) {
+        const cols = {};
+        for (const [k, v] of Object.entries(obj)) {
+          cols[k] = Array.isArray(v) ? new Series({ data: v }) : v;
+        }
+        return new DataFrame(cols);
+      }
+      col(name) { return this._cols[name]; }
+    }
 
-    // Demo 2
-    render("demo2", [...selectDtypes(df, { exclude: ["number"] }).columns.values]);
+    function selectDtypes(df, opts) {
+      const includes = [].concat(opts.include ?? []);
+      const excludes = [].concat(opts.exclude ?? []);
+      if (includes.length === 0 && excludes.length === 0) throw new Error("At least one of include or exclude must be provided");
 
-    // Demo 3
-    render("demo3", [...selectDtypes(df, { include: ["number"], exclude: ["floating"] }).columns.values]);
+      function matches(dtype, sels) {
+        const { kind, name } = dtype;
+        for (const sel of sels) {
+          if (sel === "number" && (kind === "int" || kind === "uint" || kind === "float")) return true;
+          if (sel === "integer" && (kind === "int" || kind === "uint")) return true;
+          if (sel === "signed integer" && kind === "int") return true;
+          if (sel === "unsigned integer" && kind === "uint") return true;
+          if (sel === "floating" && kind === "float") return true;
+          if (sel === kind) return true;
+          if (sel === name) return true;
+        }
+        return false;
+      }
 
-    // Demo 4
-    render("demo4", [...selectDtypes(df, { include: ["bool"] }).columns.values]);
+      const kept = {};
+      for (const colName of df.columns.toArray()) {
+        const s = df.col(colName);
+        let keep = true;
+        if (includes.length > 0 && !matches(s.dtype, includes)) keep = false;
+        if (excludes.length > 0 && matches(s.dtype, excludes)) keep = false;
+        if (keep) kept[colName] = s;
+      }
+      return new DataFrame(kept);
+    }
 
-    // Demo 5
-    const df2 = DataFrame.fromColumns({
-      created: [new Date("2024-01-01"), new Date("2024-06-01")],
-      value:   [100, 200],
-    });
-    render("demo5", [...selectDtypes(df2, { include: ["datetime"] }).columns.values]);
+    // ── demo helpers ────────────────────────────────────────────────────────
 
-    // Demo 6
-    render("demo6", [...selectDtypes(df).columns.values]);
+    function makeDf() {
+      return DataFrame.fromColumns({
+        age:    [25, 30, 22],
+        score:  [88.5, 92.0, 77.3],
+        name:   ["Alice", "Bob", "Carol"],
+        active: [true, false, true],
+      });
+    }
+
+    window.run1 = function() {
+      const df = makeDf();
+      const nums = selectDtypes(df, { include: "number" });
+      document.getElementById("out1").textContent = `Columns: [${nums.columns.toArray().join(", ")}]\nKept: age (int64), score (float64)`;
+    };
+
+    window.run2 = function() {
+      const df = makeDf();
+      const res = selectDtypes(df, { exclude: ["bool", "string"] });
+      document.getElementById("out2").textContent = `Columns: [${res.columns.toArray().join(", ")}]\nDropped: name (string), active (bool)`;
+    };
+
+    window.run3 = function() {
+      const df = makeDf();
+      const res = selectDtypes(df, { include: "number", exclude: "floating" });
+      document.getElementById("out3").textContent = `Columns: [${res.columns.toArray().join(", ")}]\nKept int64 only (excluded float64)`;
+    };
+
+    window.run4 = function() {
+      const df = makeDf();
+      const res = selectDtypes(df, { include: "float64" });
+      document.getElementById("out4").textContent = `Columns: [${res.columns.toArray().join(", ")}]\nOnly exact float64 match: score`;
+    };
+
+    window.run5 = function() {
+      const df = makeDf();
+      let out = "Column → dtype\n";
+      for (const col of df.columns.toArray()) {
+        const s = df.col(col);
+        out += `  ${col.padEnd(8)} → ${s.dtype.name} (${s.dtype.kind})\n`;
+      }
+      document.getElementById("out5").textContent = out;
+    };
+
+    window.runUser = function() {
+      const code = document.getElementById("user-code").value;
+      const out = document.getElementById("out-user");
+      try {
+        const fn = new Function("DataFrame", "selectDtypes", "Series", code);
+        const result = fn(DataFrame, selectDtypes, Series);
+        out.className = "result";
+        out.textContent = result !== undefined ? String(result) : "(no return value)";
+      } catch(e) {
+        out.className = "error";
+        out.textContent = String(e);
+      }
+    };
   </script>
 </body>
 </html>

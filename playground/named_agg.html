@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — NamedAgg Tutorial</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+    h1 { font-size: 1.4rem; }
+    main { max-width: 860px; margin: 2rem auto; padding: 0 1.5rem; }
+    section { margin-bottom: 2.5rem; }
+    h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+    p { margin-bottom: 0.75rem; color: #8b949e; }
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    code { font-family: var(--font-mono); font-size: 0.9em; color: var(--accent); }
+    .demo { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .demo-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      flex: 1;
+      min-width: 260px;
+    }
+    .demo-box h3 { font-size: 0.85rem; color: #8b949e; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    table { border-collapse: collapse; font-family: var(--font-mono); font-size: 0.82rem; width: 100%; }
+    th { background: #21262d; color: var(--accent); padding: 0.3rem 0.7rem; text-align: left; border: 1px solid var(--border); }
+    td { padding: 0.3rem 0.7rem; border: 1px solid var(--border); }
+    .badge {
+      display: inline-block;
+      background: #1f6feb;
+      color: #fff;
+      border-radius: 4px;
+      padding: 0.15rem 0.45rem;
+      font-size: 0.75rem;
+      margin-left: 0.4rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html">← tsb</a>
+  <h1>NamedAgg <span class="badge">groupby</span></h1>
+</header>
+<main>
+
+  <section>
+    <h2>What is NamedAgg?</h2>
+    <p>
+      <code>NamedAgg</code> lets you rename output columns from a groupby aggregation while
+      simultaneously choosing <em>which source column</em> to aggregate and <em>how</em>.
+      It mirrors <code>pandas.NamedAgg</code>.
+    </p>
+    <p>
+      Without <code>NamedAgg</code>, <code>agg()</code> keeps the original column names.
+      With <code>aggNamed()</code> you control the output name independently.
+    </p>
+  </section>
+
+  <section>
+    <h2>Basic Usage</h2>
+    <pre>import { DataFrame, namedAgg } from "tsb";
+
+const df = DataFrame.fromColumns({
+  dept:      ["eng", "eng", "hr",  "hr",  "eng"],
+  salary:    [100,   120,   80,    90,    110  ],
+  headcount: [1,     1,     1,     1,     1    ],
+  score:     [4.0,   5.0,   3.0,   4.0,   3.5  ],
+});
+
+const result = df.groupby("dept").aggNamed({
+  total_salary:   namedAgg("salary",    "sum"),
+  avg_salary:     namedAgg("salary",    "mean"),
+  employees:      namedAgg("headcount", "sum"),
+  avg_score:      namedAgg("score",     "mean"),
+});
+
+// result:
+//         | total_salary | avg_salary | employees | avg_score
+// eng     | 330          | 110        | 3         | 4.167
+// hr      | 170          | 85         | 2         | 3.5</pre>
+
+    <div class="demo">
+      <div class="demo-box">
+        <h3>Input DataFrame</h3>
+        <table>
+          <tr><th>dept</th><th>salary</th><th>headcount</th><th>score</th></tr>
+          <tr><td>eng</td><td>100</td><td>1</td><td>4.0</td></tr>
+          <tr><td>eng</td><td>120</td><td>1</td><td>5.0</td></tr>
+          <tr><td>hr</td><td>80</td><td>1</td><td>3.0</td></tr>
+          <tr><td>hr</td><td>90</td><td>1</td><td>4.0</td></tr>
+          <tr><td>eng</td><td>110</td><td>1</td><td>3.5</td></tr>
+        </table>
+      </div>
+      <div class="demo-box">
+        <h3>aggNamed result</h3>
+        <table>
+          <tr><th>(index)</th><th>total_salary</th><th>avg_salary</th><th>employees</th></tr>
+          <tr><td>eng</td><td>330</td><td>110</td><td>3</td></tr>
+          <tr><td>hr</td><td>170</td><td>85</td><td>2</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Aggregate Same Column Multiple Ways</h2>
+    <p>A key advantage of <code>NamedAgg</code> is applying multiple functions to the same source column simultaneously:</p>
+    <pre>df.groupby("dept").aggNamed({
+  min_salary: namedAgg("salary", "min"),
+  max_salary: namedAgg("salary", "max"),
+  salary_count: namedAgg("salary", "count"),
+});</pre>
+  </section>
+
+  <section>
+    <h2>Custom Aggregation Functions</h2>
+    <p>Pass any function <code>(vals: readonly Scalar[]) =&gt; Scalar</code> as the <code>aggfunc</code>:</p>
+    <pre>const salaryRange = (vals: readonly Scalar[]) =&gt; {
+  const nums = vals.filter((v): v is number =&gt; typeof v === "number");
+  return Math.max(...nums) - Math.min(...nums);
+};
+
+df.groupby("dept").aggNamed({
+  salary_range: namedAgg("salary", salaryRange),
+});</pre>
+  </section>
+
+  <section>
+    <h2>Using the NamedAgg Class Directly</h2>
+    <p><code>namedAgg(col, fn)</code> is shorthand for <code>new NamedAgg(col, fn)</code>:</p>
+    <pre>import { NamedAgg } from "tsb";
+
+const spec = new NamedAgg("salary", "sum");
+console.log(spec.column);  // "salary"
+console.log(spec.aggfunc); // "sum"</pre>
+  </section>
+
+  <section>
+    <h2>asIndex=false</h2>
+    <p>Pass <code>false</code> as the second argument to include the group key as a regular column:</p>
+    <pre>df.groupby("dept").aggNamed(
+  { total_salary: namedAgg("salary", "sum") },
+  false,  // asIndex
+);
+// result has columns: ["dept", "total_salary"]</pre>
+  </section>
+
+  <section>
+    <h2>API Reference</h2>
+    <pre>// Factory function (recommended)
+namedAgg(column: string, aggfunc: AggName | AggFn): NamedAgg
+
+// Class constructor
+new NamedAgg(column: string, aggfunc: AggName | AggFn)
+
+// GroupBy method
+DataFrameGroupBy.aggNamed(spec: NamedAggSpec, asIndex?: boolean): DataFrame
+
+// Type guard
+isNamedAggSpec(spec: unknown): spec is NamedAggSpec
+
+// Types
+type NamedAggSpec = Readonly&lt;Record&lt;string, NamedAgg&gt;&gt;
+type AggName = "sum" | "mean" | "min" | "max" | "count" | "std" | "first" | "last" | "size"
+type AggFn = (values: readonly Scalar[]) =&gt; Scalar</pre>
+  </section>
+
+  <section>
+    <h2>Pandas Equivalent</h2>
+    <pre># Python / pandas
+import pandas as pd
+
+df.groupby("dept").agg(
+    total_salary=pd.NamedAgg(column="salary", aggfunc="sum"),
+    avg_salary=pd.NamedAgg(column="salary", aggfunc="mean"),
+)</pre>
+  </section>
+
+</main>
+</body>
+</html>

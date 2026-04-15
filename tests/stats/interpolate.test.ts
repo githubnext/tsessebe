@@ -1,352 +1,437 @@
 /**
- * Tests for src/stats/interpolate.ts — interpolateSeries and interpolateDataFrame.
+ * Tests for src/stats/interpolate.ts
+ *
+ * Covers:
+ *  - linear interpolation (interior, leading/trailing, limit, limitDirection)
+ *  - ffill / pad / zero
+ *  - bfill / backfill
+ *  - nearest
+ *  - limit parameter
+ *  - DataFrame column-wise and row-wise
+ *  - property-based tests (fast-check)
  */
-import { describe, expect, it } from "bun:test";
+
+import { describe, expect, test } from "bun:test";
 import fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  interpolateDataFrame,
-  interpolateSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series, dataFrameInterpolate, interpolateSeries } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function s(data: readonly Scalar[], name?: string): Series<Scalar> {
-  return new Series({ data: [...data], name: name ?? null });
+function mkSeries(data: (number | null)[]): Series<Scalar> {
+  return new Series({ data });
 }
 
-function approxEqual(a: number, b: number, eps = 1e-9): boolean {
-  return Math.abs(a - b) < eps;
+function vals(s: Series<Scalar>): readonly Scalar[] {
+  return s.values;
 }
 
-// ─── interpolateSeries — linear ───────────────────────────────────────────────
+// ─── linear ───────────────────────────────────────────────────────────────────
 
 describe("interpolateSeries — linear (default)", () => {
-  it("fills a single interior NaN with midpoint", () => {
-    const out = interpolateSeries(s([1, null, 3]));
-    expect(out.values[1]).toBe(2);
+  test("basic interior gap", () => {
+    const s = mkSeries([1, null, null, 4]);
+    const result = vals(interpolateSeries(s));
+    expect(result[0]).toBe(1);
+    expect(result[1]).toBeCloseTo(2);
+    expect(result[2]).toBeCloseTo(3);
+    expect(result[3]).toBe(4);
   });
 
-  it("fills multiple interior NaN values proportionally", () => {
-    const out = interpolateSeries(s([0, null, null, null, 4]));
-    const vals = out.values as number[];
-    expect(approxEqual(vals[1] as number, 1)).toBe(true);
-    expect(approxEqual(vals[2] as number, 2)).toBe(true);
-    expect(approxEqual(vals[3] as number, 3)).toBe(true);
+  test("single missing in middle", () => {
+    const s = mkSeries([0, null, 10]);
+    const result = vals(interpolateSeries(s));
+    expect(result[1]).toBeCloseTo(5);
   });
 
-  it("leaves leading NaN unfilled (no extrapolation)", () => {
-    const out = interpolateSeries(s([null, null, 3, 4]));
-    expect(out.values[0]).toBeNull();
-    expect(out.values[1]).toBeNull();
-    expect(out.values[2]).toBe(3);
+  test("leading NaN left untouched", () => {
+    const s = mkSeries([null, null, 2, 4]);
+    const result = vals(interpolateSeries(s));
+    expect(result[0]).toBeNull();
+    expect(result[1]).toBeNull();
+    expect(result[2]).toBe(2);
+    expect(result[3]).toBe(4);
   });
 
-  it("leaves trailing NaN unfilled (no extrapolation)", () => {
-    const out = interpolateSeries(s([1, 2, null, null]));
-    expect(out.values[2]).toBeNull();
-    expect(out.values[3]).toBeNull();
+  test("trailing NaN left untouched", () => {
+    const s = mkSeries([1, 3, null, null]);
+    const result = vals(interpolateSeries(s));
+    expect(result[0]).toBe(1);
+    expect(result[1]).toBe(3);
+    expect(result[2]).toBeNull();
+    expect(result[3]).toBeNull();
   });
 
-  it("handles NaN float values as missing", () => {
-    const out = interpolateSeries(s([0, Number.NaN, 2]));
-    expect(approxEqual(out.values[1] as number, 1)).toBe(true);
+  test("NaN values also treated as missing", () => {
+    const s = new Series({ data: [0, Number.NaN, 4] });
+    const result = vals(interpolateSeries(s));
+    expect(result[1]).toBeCloseTo(2);
   });
 
-  it("does not modify non-NaN values", () => {
-    const out = interpolateSeries(s([1, null, 3, null, 7]));
-    expect(out.values[0]).toBe(1);
-    expect(out.values[2]).toBe(3);
-    expect(out.values[4]).toBe(7);
+  test("multiple gaps", () => {
+    const s = mkSeries([0, null, 4, null, null, 9]);
+    const result = vals(interpolateSeries(s));
+    expect(result[1]).toBeCloseTo(2); // gap1: 0→4, pos1: 2
+    // gap2: 4→9 over 3 steps
+    expect(result[3]).toBeCloseTo(4 + 5 * (1 / 3)); // 5.667
+    expect(result[4]).toBeCloseTo(4 + 5 * (2 / 3)); // 7.333
   });
 
-  it("handles all-NaN series gracefully", () => {
-    const out = interpolateSeries(s([null, null, null]));
-    expect(out.values[0]).toBeNull();
-    expect(out.values[1]).toBeNull();
-    expect(out.values[2]).toBeNull();
+  test("already complete series — unchanged", () => {
+    const s = mkSeries([1, 2, 3]);
+    const result = vals(interpolateSeries(s));
+    expect(result).toEqual([1, 2, 3]);
   });
 
-  it("handles single-element series", () => {
-    const out = interpolateSeries(s([42]));
-    expect(out.values[0]).toBe(42);
+  test("all missing — unchanged", () => {
+    const s = mkSeries([null, null, null]);
+    const result = vals(interpolateSeries(s));
+    expect(result[0]).toBeNull();
+    expect(result[1]).toBeNull();
+    expect(result[2]).toBeNull();
   });
 
-  it("handles no missing values — returns equal series", () => {
-    const out = interpolateSeries(s([1, 2, 3, 4, 5]));
-    expect([...out.values]).toEqual([1, 2, 3, 4, 5]);
+  test("single value series — unchanged", () => {
+    const s = mkSeries([5]);
+    const result = vals(interpolateSeries(s));
+    expect(result[0]).toBe(5);
   });
 
-  it("preserves series name", () => {
-    const out = interpolateSeries(s([1, null, 3], "myName"));
-    expect(out.name).toBe("myName");
+  test("limit=1 forward — fills only first NaN in gap", () => {
+    const s = mkSeries([0, null, null, null, 4]);
+    const result = vals(interpolateSeries(s, { limit: 1 }));
+    expect(result[1]).toBeCloseTo(1); // filled
+    expect(result[2]).toBeNull(); // not filled (limit reached)
+    expect(result[3]).toBeNull(); // not filled
   });
 
-  it("respects limit — fills at most N consecutive NaN from each neighbour", () => {
-    // [0, null, null, null, null, 5] with limit=1
-    // From left: fill only pos 1 (1 step); from right: fill only pos 4 (1 step)
-    // Positions 2 and 3 remain NaN
-    const out = interpolateSeries(s([0, null, null, null, null, 5]), { limit: 1 });
-    expect(out.values[1]).not.toBeNull(); // filled from left
-    expect(out.values[4]).not.toBeNull(); // filled from right
-    expect(out.values[2]).toBeNull();
-    expect(out.values[3]).toBeNull();
-  });
-});
-
-// ─── interpolateSeries — pad / ffill ─────────────────────────────────────────
-
-describe("interpolateSeries — pad / ffill", () => {
-  it("forward-fills NaN with preceding non-NaN", () => {
-    const out = interpolateSeries(s([1, null, null, 4]), { method: "pad" });
-    expect(out.values[1]).toBe(1);
-    expect(out.values[2]).toBe(1);
-    expect(out.values[3]).toBe(4);
+  test("limit=1 backward — fills only last NaN in gap", () => {
+    const s = mkSeries([0, null, null, null, 4]);
+    const result = vals(interpolateSeries(s, { limit: 1, limitDirection: "backward" }));
+    expect(result[1]).toBeNull(); // not filled
+    expect(result[2]).toBeNull(); // not filled
+    expect(result[3]).toBeCloseTo(3); // filled
   });
 
-  it("ffill is alias for pad", () => {
-    const o1 = interpolateSeries(s([1, null, 2]), { method: "pad" });
-    const o2 = interpolateSeries(s([1, null, 2]), { method: "ffill" });
-    expect([...o1.values]).toEqual([...o2.values]);
+  test("limit=1 both — fills first and last NaN in gap", () => {
+    const s = mkSeries([0, null, null, null, 4]);
+    const result = vals(interpolateSeries(s, { limit: 1, limitDirection: "both" }));
+    expect(result[1]).toBeCloseTo(1); // filled from left
+    expect(result[2]).toBeNull(); // not filled (middle)
+    expect(result[3]).toBeCloseTo(3); // filled from right
   });
 
-  it("does not fill leading NaN (no previous value)", () => {
-    const out = interpolateSeries(s([null, 1, null]), { method: "pad" });
-    expect(out.values[0]).toBeNull();
-    expect(out.values[2]).toBe(1);
-  });
-
-  it("respects limit", () => {
-    const out = interpolateSeries(s([1, null, null, null, 5]), { method: "pad", limit: 1 });
-    expect(out.values[1]).toBe(1);
-    expect(out.values[2]).toBeNull();
-    expect(out.values[3]).toBeNull();
+  test("preserves index and name", () => {
+    const s = new Series({ data: [1, null, 3], name: "x" });
+    const result = interpolateSeries(s);
+    expect(result.name).toBe("x");
+    expect(result.index.values).toEqual(s.index.values);
   });
 });
 
-// ─── interpolateSeries — backfill / bfill ────────────────────────────────────
+// ─── ffill ────────────────────────────────────────────────────────────────────
 
-describe("interpolateSeries — backfill / bfill", () => {
-  it("backward-fills NaN with next non-NaN", () => {
-    const out = interpolateSeries(s([null, null, 3]), { method: "backfill" });
-    expect(out.values[0]).toBe(3);
-    expect(out.values[1]).toBe(3);
+describe("interpolateSeries — ffill / pad / zero", () => {
+  test("ffill basic", () => {
+    const s = mkSeries([1, null, null, 4, null]);
+    const result = vals(interpolateSeries(s, { method: "ffill" }));
+    expect(result).toEqual([1, 1, 1, 4, 4]);
   });
 
-  it("bfill is alias for backfill", () => {
-    const o1 = interpolateSeries(s([null, 2, null]), { method: "backfill" });
-    const o2 = interpolateSeries(s([null, 2, null]), { method: "bfill" });
-    expect([...o1.values]).toEqual([...o2.values]);
+  test("pad is alias for ffill", () => {
+    const s = mkSeries([null, 2, null]);
+    const ffillResult = vals(interpolateSeries(s, { method: "ffill" }));
+    const padResult = vals(interpolateSeries(s, { method: "pad" }));
+    expect(padResult).toEqual(ffillResult);
   });
 
-  it("does not fill trailing NaN (no next value)", () => {
-    const out = interpolateSeries(s([1, null, null]), { method: "backfill" });
-    expect(out.values[1]).toBeNull();
-    expect(out.values[2]).toBeNull();
+  test("zero is alias for ffill (step function)", () => {
+    const s = mkSeries([null, 2, null]);
+    const ffillResult = vals(interpolateSeries(s, { method: "ffill" }));
+    const zeroResult = vals(interpolateSeries(s, { method: "zero" }));
+    expect(zeroResult).toEqual(ffillResult);
   });
 
-  it("respects limit", () => {
-    const out = interpolateSeries(s([0, null, null, null, 4]), { method: "bfill", limit: 1 });
-    expect(out.values[3]).toBe(4);
-    expect(out.values[2]).toBeNull();
-    expect(out.values[1]).toBeNull();
+  test("ffill leading NaN stays null (no left anchor)", () => {
+    const s = mkSeries([null, null, 3]);
+    const result = vals(interpolateSeries(s, { method: "ffill" }));
+    expect(result[0]).toBeNull();
+    expect(result[1]).toBeNull();
+    expect(result[2]).toBe(3);
+  });
+
+  test("ffill with limit=1", () => {
+    const s = mkSeries([1, null, null, null]);
+    const result = vals(interpolateSeries(s, { method: "ffill", limit: 1 }));
+    expect(result[0]).toBe(1);
+    expect(result[1]).toBe(1); // filled
+    expect(result[2]).toBeNull(); // limit reached
+    expect(result[3]).toBeNull(); // limit reached
   });
 });
 
-// ─── interpolateSeries — nearest ─────────────────────────────────────────────
+// ─── bfill ────────────────────────────────────────────────────────────────────
+
+describe("interpolateSeries — bfill / backfill", () => {
+  test("bfill basic", () => {
+    const s = mkSeries([null, 2, null, null, 5]);
+    const result = vals(interpolateSeries(s, { method: "bfill" }));
+    expect(result).toEqual([2, 2, 5, 5, 5]);
+  });
+
+  test("backfill is alias for bfill", () => {
+    const s = mkSeries([null, 2, null]);
+    const bfillResult = vals(interpolateSeries(s, { method: "bfill" }));
+    const backfillResult = vals(interpolateSeries(s, { method: "backfill" }));
+    expect(backfillResult).toEqual(bfillResult);
+  });
+
+  test("bfill trailing NaN stays null (no right anchor)", () => {
+    const s = mkSeries([1, null, null]);
+    const result = vals(interpolateSeries(s, { method: "bfill" }));
+    expect(result[0]).toBe(1);
+    expect(result[1]).toBeNull();
+    expect(result[2]).toBeNull();
+  });
+
+  test("bfill with limit=1", () => {
+    const s = mkSeries([null, null, null, 4]);
+    const result = vals(interpolateSeries(s, { method: "bfill", limit: 1 }));
+    expect(result[3]).toBe(4);
+    expect(result[2]).toBe(4); // filled
+    expect(result[1]).toBeNull(); // limit reached
+    expect(result[0]).toBeNull(); // limit reached
+  });
+});
+
+// ─── nearest ──────────────────────────────────────────────────────────────────
 
 describe("interpolateSeries — nearest", () => {
-  it("fills with left neighbour when equidistant (tie-break forward)", () => {
-    // [0, null, 2] — pos 1 is equidistant; prefer left (0)
-    const out = interpolateSeries(s([0, null, 2]), { method: "nearest" });
-    expect(out.values[1]).toBe(0);
+  test("nearest basic — closer to left", () => {
+    const s = mkSeries([1, null, null, 4]);
+    const result = vals(interpolateSeries(s, { method: "nearest" }));
+    // position 1: dist-left=1, dist-right=2 → use left (1)
+    expect(result[1]).toBe(1);
+    // position 2: dist-left=2, dist-right=1 → use right (4)
+    expect(result[2]).toBe(4);
   });
 
-  it("fills with nearest non-NaN neighbour", () => {
-    // [1, null, null, null, 5] — pos 1 nearest=1, pos 3 nearest=5, pos 2 nearest left tie
-    const out = interpolateSeries(s([1, null, null, null, 5]), { method: "nearest" });
-    expect(out.values[1]).toBe(1); // 1 step left, 3 steps right → left
-    expect(out.values[3]).toBe(5); // 3 steps left, 1 step right → right
+  test("nearest tie goes to right", () => {
+    const s = mkSeries([1, null, 3]);
+    const result = vals(interpolateSeries(s, { method: "nearest" }));
+    // position 1: dist-left=1, dist-right=1 → tie → right wins
+    expect(result[1]).toBe(3);
   });
 
-  it("respects limit", () => {
-    const out = interpolateSeries(s([0, null, null, 3]), { method: "nearest", limit: 1 });
-    expect(out.values[1]).toBe(0); // 1 away from left → within limit
-    expect(out.values[2]).toBeNull(); // nearest is 3 (1 away) but limit=1 already used... 
-    // Actually nearest fills per-position, limit is distance-based.
-  });
-});
-
-// ─── interpolateSeries — limitArea ───────────────────────────────────────────
-
-describe("interpolateSeries — limitArea", () => {
-  it("limitArea=inside: fills only interior NaN values", () => {
-    // [null, 1, null, 3, null] — leading null and trailing null are outside
-    const out = interpolateSeries(s([null, 1, null, 3, null]), {
-      method: "linear",
-      limitArea: "inside",
-    });
-    expect(out.values[0]).toBeNull(); // leading — outside
-    expect(out.values[2]).toBe(2); // interior — filled
-    expect(out.values[4]).toBeNull(); // trailing — outside
+  test("nearest leading NaN uses right anchor", () => {
+    const s = mkSeries([null, null, 5]);
+    const result = vals(interpolateSeries(s, { method: "nearest" }));
+    expect(result[0]).toBe(5);
+    expect(result[1]).toBe(5);
   });
 
-  it("limitArea=outside: fills only edge NaN values (linear has no extrapolation)", () => {
-    // Linear doesn't extrapolate, so "outside" means leading/trailing remain as-is even more so
-    const out = interpolateSeries(s([null, 1, null, 3, null]), {
-      method: "pad",
-      limitArea: "outside",
-    });
-    // pad can't fill leading (no prev value), trailing gets filled by pad
-    expect(out.values[4]).toBe(3); // trailing — outside → filled by pad
-    expect(out.values[2]).toBeNull(); // interior — should NOT be filled
+  test("nearest trailing NaN uses left anchor", () => {
+    const s = mkSeries([3, null, null]);
+    const result = vals(interpolateSeries(s, { method: "nearest" }));
+    expect(result[1]).toBe(3);
+    expect(result[2]).toBe(3);
   });
 });
 
-// ─── interpolateDataFrame — axis=0 (columns) ─────────────────────────────────
+// ─── DataFrame ────────────────────────────────────────────────────────────────
 
-describe("interpolateDataFrame — axis=0 (columns)", () => {
-  it("interpolates each column independently", () => {
-    const df = DataFrame.fromColumns({
-      a: [1, null, 3] as Scalar[],
-      b: [null, 2, null] as Scalar[],
-    });
-    const out = interpolateDataFrame(df);
-    expect(out.col("a").values[1]).toBe(2);
-    // b has null on both sides of 2, can't fill
-    expect(out.col("b").values[0]).toBeNull();
-    expect(out.col("b").values[2]).toBeNull();
+describe("dataFrameInterpolate", () => {
+  test("column-wise (axis=0, default) — linear", () => {
+    const df = DataFrame.fromColumns({ a: [1, null, 3], b: [10, null, 30] });
+    const out = dataFrameInterpolate(df);
+    expect(out.col("a").values[1]).toBeCloseTo(2);
+    expect(out.col("b").values[1]).toBeCloseTo(20);
   });
 
-  it("default axis is 0", () => {
-    const df = DataFrame.fromColumns({ x: [0, null, 4] as Scalar[] });
-    const out1 = interpolateDataFrame(df);
-    const out2 = interpolateDataFrame(df, { axis: 0 });
-    expect([...out1.col("x").values]).toEqual([...out2.col("x").values]);
+  test("column-wise with ffill", () => {
+    const df = DataFrame.fromColumns({ x: [5, null, null], y: [null, 2, null] });
+    const out = dataFrameInterpolate(df, { method: "ffill" });
+    expect(out.col("x").values).toEqual([5, 5, 5]);
+    expect(out.col("y").values[0]).toBeNull();
+    expect(out.col("y").values[1]).toBe(2);
+    expect(out.col("y").values[2]).toBe(2);
   });
 
-  it("preserves column names and index", () => {
-    const df = DataFrame.fromColumns({ a: [1, null, 3] as Scalar[], b: [4, 5, 6] as Scalar[] });
-    const out = interpolateDataFrame(df);
-    expect([...out.columns.values]).toEqual(["a", "b"]);
-    expect(out.index.size).toBe(3);
-  });
-});
-
-// ─── interpolateDataFrame — axis=1 (rows) ────────────────────────────────────
-
-describe("interpolateDataFrame — axis=1 (rows)", () => {
-  it("interpolates across each row", () => {
-    const df = DataFrame.fromColumns({
-      a: [1, 0] as Scalar[],
-      b: [null, null] as Scalar[],
-      c: [3, 4] as Scalar[],
-    });
-    const out = interpolateDataFrame(df, { axis: 1 });
-    expect(out.col("b").values[0]).toBe(2); // row 0: 1,null,3 → 2
-    expect(out.col("b").values[1]).toBe(2); // row 1: 0,null,4 → 2
+  test("row-wise (axis=1) — linear", () => {
+    const df = DataFrame.fromColumns({ a: [1, 4], b: [null, null], c: [3, 8] });
+    const out = dataFrameInterpolate(df, { axis: 1 });
+    expect(out.col("b").values[0]).toBeCloseTo(2); // row 0: 1, _, 3 → 2
+    expect(out.col("b").values[1]).toBeCloseTo(6); // row 1: 4, _, 8 → 6
   });
 
-  it("axis='columns' is same as axis=1", () => {
-    const df = DataFrame.fromColumns({
-      a: [1] as Scalar[],
-      b: [null] as Scalar[],
-      c: [3] as Scalar[],
-    });
-    const out1 = interpolateDataFrame(df, { axis: 1 });
-    const out2 = interpolateDataFrame(df, { axis: "columns" });
-    expect([...out1.col("b").values]).toEqual([...out2.col("b").values]);
+  test("axis='columns' alias for axis=1", () => {
+    const df = DataFrame.fromColumns({ a: [0], b: [null], c: [4] });
+    const out1 = dataFrameInterpolate(df, { axis: 1 });
+    const out2 = dataFrameInterpolate(df, { axis: "columns" });
+    expect(out1.col("b").values).toEqual(out2.col("b").values);
+  });
+
+  test("with limit", () => {
+    const df = DataFrame.fromColumns({ a: [1, null, null, null, 5] });
+    const out = dataFrameInterpolate(df, { limit: 1 });
+    expect(out.col("a").values[1]).toBeCloseTo(2); // filled
+    expect(out.col("a").values[2]).toBeNull(); // not filled
+    expect(out.col("a").values[3]).toBeNull(); // not filled
+  });
+
+  test("bfill axis=1", () => {
+    const df = DataFrame.fromColumns({ a: [null, null], b: [2, null], c: [4, 6] });
+    const out = dataFrameInterpolate(df, { method: "bfill", axis: 1 });
+    expect(out.col("a").values[0]).toBe(2); // row 0: null,2,4 → bfill → 2
+    expect(out.col("a").values[1]).toBe(6); // row 1: null,null,6 → bfill → 6
   });
 });
 
-// ─── property-based tests ─────────────────────────────────────────────────────
+// ─── helpers for property tests ───────────────────────────────────────────────
 
-describe("interpolateSeries — property-based", () => {
-  it("linear: non-NaN values are never changed", () => {
+/** Find the range [first, last] of known (non-null) positions. Returns [-1,-1] if none. */
+function knownRange(data: (number | null)[]): { first: number; last: number } {
+  let first = -1;
+  let last = -1;
+  for (let i = 0; i < data.length; i++) {
+    if (data[i] !== null) {
+      if (first === -1) {
+        first = i;
+      }
+      last = i;
+    }
+  }
+  return { first, last };
+}
+
+/** Assert that no value in the range [from, to] is NaN or null. */
+function assertNoMissingInRange(rv: readonly Scalar[], from: number, to: number): void {
+  for (let i = from; i <= to; i++) {
+    const v = rv[i];
+    if (typeof v === "number") {
+      expect(Number.isNaN(v)).toBe(false);
+    } else {
+      expect(v).not.toBeNull();
+    }
+  }
+}
+
+// ─── property tests ───────────────────────────────────────────────────────────
+
+describe("interpolateSeries — property tests", () => {
+  test("linear: known values are never changed", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(fc.float({ noNaN: true }), fc.constant(null)), {
+        fc.array(fc.option(fc.float({ noNaN: true, noDefaultInfinity: true }), { nil: null }), {
           minLength: 1,
           maxLength: 20,
         }),
         (data) => {
-          const series = new Series({ data: data as Scalar[] });
-          const out = interpolateSeries(series);
+          const s = new Series({ data });
+          const result = interpolateSeries(s);
           for (let i = 0; i < data.length; i++) {
             const orig = data[i];
             if (orig !== null) {
-              expect(out.values[i]).toBeCloseTo(orig as number, 9);
+              expect(result.values[i]).toBeCloseTo(orig as number, 10);
             }
           }
         },
       ),
-      { numRuns: 200 },
     );
   });
 
-  it("linear: interpolated values are monotone between neighbours", () => {
+  test("linear: no NaN introduced between two known values", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(fc.float({ noNaN: true, min: 0, max: 100 }), fc.constant(null)), {
-          minLength: 3,
-          maxLength: 15,
+        fc.array(fc.option(fc.float({ noNaN: true, noDefaultInfinity: true }), { nil: null }), {
+          minLength: 2,
+          maxLength: 20,
         }),
         (data) => {
-          const series = new Series({ data: data as Scalar[] });
-          const out = interpolateSeries(series);
-          const vals = out.values as (number | null)[];
-          for (let i = 1; i < vals.length - 1; i++) {
-            const prev = vals[i - 1];
-            const curr = vals[i];
-            const next = vals[i + 1];
-            if (prev !== null && curr !== null && next !== null) {
-              const inOrder = (prev <= curr && curr <= next) || (prev >= curr && curr >= next);
-              expect(inOrder).toBe(true);
-            }
+          const s = new Series({ data });
+          const result = interpolateSeries(s);
+          const { first, last } = knownRange(data);
+          if (first === -1 || first === last) {
+            return;
           }
+          assertNoMissingInRange(result.values, first, last);
         },
       ),
-      { numRuns: 200 },
     );
   });
 
-  it("pad: no NaN is introduced", () => {
+  test("ffill: length is preserved", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(fc.integer({ min: -100, max: 100 }), fc.constant(null)), {
+        fc.array(fc.option(fc.integer(), { nil: null }), { minLength: 0, maxLength: 30 }),
+        (data) => {
+          const s = new Series({ data });
+          const result = interpolateSeries(s, { method: "ffill" });
+          expect(result.values.length).toBe(data.length);
+        },
+      ),
+    );
+  });
+
+  test("bfill: length is preserved", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.option(fc.integer(), { nil: null }), { minLength: 0, maxLength: 30 }),
+        (data) => {
+          const s = new Series({ data });
+          const result = interpolateSeries(s, { method: "bfill" });
+          expect(result.values.length).toBe(data.length);
+        },
+      ),
+    );
+  });
+
+  test("ffill then bfill: no missing values remain", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.oneof(fc.integer({ min: -100, max: 100 }), fc.constant(null as null)), {
           minLength: 1,
           maxLength: 20,
         }),
         (data) => {
-          const series = new Series({ data: data as Scalar[] });
-          const out = interpolateSeries(series, { method: "pad" });
-          // number of nulls in output ≤ number in input
-          const inNulls = data.filter((v) => v === null).length;
-          const outNulls = (out.values as Scalar[]).filter((v) => v === null).length;
-          expect(outNulls).toBeLessThanOrEqual(inNulls);
+          // At least one known value must exist
+          if (!data.some((v) => v !== null)) {
+            return;
+          }
+          const s = new Series({ data });
+          const step1 = interpolateSeries(s, { method: "ffill" });
+          const step2 = interpolateSeries(step1, { method: "bfill" });
+          for (const v of step2.values) {
+            expect(v).not.toBeNull();
+          }
         },
       ),
-      { numRuns: 200 },
     );
   });
 
-  it("output length always equals input length", () => {
+  test("nearest: result length equals input length", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(fc.float({ noNaN: true }), fc.constant(null)), {
-          minLength: 0,
-          maxLength: 20,
-        }),
-        fc.constantFrom("linear" as const, "pad" as const, "bfill" as const, "nearest" as const),
-        (data, method) => {
-          const series = new Series({ data: data as Scalar[] });
-          const out = interpolateSeries(series, { method });
-          expect(out.values.length).toBe(data.length);
+        fc.array(fc.option(fc.integer(), { nil: null }), { minLength: 0, maxLength: 20 }),
+        (data) => {
+          const s = new Series({ data });
+          const result = interpolateSeries(s, { method: "nearest" });
+          expect(result.values.length).toBe(data.length);
         },
       ),
-      { numRuns: 300 },
+    );
+  });
+
+  test("linear: output length equals input length", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.option(fc.integer(), { nil: null }), { minLength: 0, maxLength: 30 }),
+        (data) => {
+          const s = new Series({ data });
+          const result = interpolateSeries(s);
+          expect(result.values.length).toBe(data.length);
+        },
+      ),
     );
   });
 });

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — fillna</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: .75rem 0; font-size: .9rem; }
+    th, td { text-align: left; padding: .4rem .8rem; border: 1px solid #ddd; }
+    th { background: #f0f0f0; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>fillna</h1>
+<p class="subtitle">
+  Fill missing values with a constant, forward fill, or backward fill —
+  mirrors <code>pandas.Series.fillna()</code> and <code>pandas.DataFrame.fillna()</code>.
+</p>
+
+<!-- ─── 1. Scalar fill ───────────────────────────────────────────────────── -->
+<section>
+  <h2>1 · Scalar fill</h2>
+  <p>
+    Pass <code>{ value: scalar }</code> to replace every missing element
+    (<code>null</code>, <code>undefined</code>, <code>NaN</code>) with a constant.
+  </p>
+  <pre><code>import { Series, fillnaSeries } from "tsb";
+
+const s = new Series({ data: [1, null, null, 4] });
+fillnaSeries(s, { value: 0 }).values;
+// → [1, 0, 0, 4]
+
+const t = new Series({ data: [NaN, 2, NaN] });
+fillnaSeries(t, { value: 99 }).values;
+// → [99, 2, 99]</code></pre>
+  <div class="output">[1, 0, 0, 4]
+[99, 2, 99]</div>
+</section>
+
+<!-- ─── 2. Forward fill ──────────────────────────────────────────────────── -->
+<section>
+  <h2>2 · Forward fill (ffill / pad)</h2>
+  <p>
+    <code>method: "ffill"</code> (alias <code>"pad"</code>) carries the last known value
+    forward into subsequent missing positions.  Leading <code>null</code>s (before the
+    first known value) are left unchanged.
+  </p>
+  <pre><code>import { Series, fillnaSeries } from "tsb";
+
+const s = new Series({ data: [null, 1, null, null, 4] });
+fillnaSeries(s, { method: "ffill" }).values;
+// → [null, 1, 1, 1, 4]
+
+// Trailing nulls are filled too
+const t = new Series({ data: [1, null, null] });
+fillnaSeries(t, { method: "ffill" }).values;
+// → [1, 1, 1]</code></pre>
+  <div class="output">[null, 1, 1, 1, 4]
+[1, 1, 1]</div>
+</section>
+
+<!-- ─── 3. Backward fill ─────────────────────────────────────────────────── -->
+<section>
+  <h2>3 · Backward fill (bfill / backfill)</h2>
+  <p>
+    <code>method: "bfill"</code> (alias <code>"backfill"</code>) carries the next known
+    value backward into preceding missing positions.  Trailing <code>null</code>s (after
+    the last known value) are left unchanged.
+  </p>
+  <pre><code>import { Series, fillnaSeries } from "tsb";
+
+const s = new Series({ data: [null, null, 3, null, 5] });
+fillnaSeries(s, { method: "bfill" }).values;
+// → [3, 3, 3, 5, 5]
+
+// Leading nulls are filled from the first known value
+const t = new Series({ data: [null, null, 10] });
+fillnaSeries(t, { method: "bfill" }).values;
+// → [10, 10, 10]</code></pre>
+  <div class="output">[3, 3, 3, 5, 5]
+[10, 10, 10]</div>
+</section>
+
+<!-- ─── 4. limit ─────────────────────────────────────────────────────────── -->
+<section>
+  <h2>4 · Limiting the fill — <code>limit</code></h2>
+  <p>
+    <code>limit</code> caps the number of consecutive missing values filled per
+    run.  Positions beyond the limit remain missing.
+  </p>
+  <pre><code>import { Series, fillnaSeries } from "tsb";
+
+// Only fill up to 1 consecutive missing value
+const s = new Series({ data: [1, null, null, null, 5] });
+fillnaSeries(s, { method: "ffill", limit: 1 }).values;
+// → [1, 1, null, null, 5]
+
+// bfill with limit=2
+fillnaSeries(s, { method: "bfill", limit: 2 }).values;
+// → [null, null, 5, 5, 5]</code></pre>
+  <div class="output">[1, 1, null, null, 5]
+[null, null, 5, 5, 5]</div>
+</section>
+
+<!-- ─── 5. DataFrame scalar fill ────────────────────────────────────────── -->
+<section>
+  <h2>5 · DataFrame — scalar fill</h2>
+  <p>
+    <code>fillnaDataFrame(df, { value: 0 })</code> fills every missing cell in
+    every column.
+  </p>
+  <pre><code>import { DataFrame, fillnaDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, null, 3],
+  b: [null, 2, null],
+});
+
+const result = fillnaDataFrame(df, { value: 0 });
+result.col("a").values; // [1, 0, 3]
+result.col("b").values; // [0, 2, 0]</code></pre>
+  <div class="output">a: [1, 0, 3]
+b: [0, 2, 0]</div>
+</section>
+
+<!-- ─── 6. DataFrame per-column fill ─────────────────────────────────────── -->
+<section>
+  <h2>6 · DataFrame — per-column fill map</h2>
+  <p>
+    Pass a plain object <code>{ colName: fillValue }</code> to use a different
+    fill value for each column.  Columns absent from the map are left unchanged.
+  </p>
+  <pre><code>import { DataFrame, fillnaDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [null, 2, null],
+  b: [1,    null, 3],
+  c: [null, null, null],
+});
+
+const result = fillnaDataFrame(df, { value: { a: -1, b: 99 } });
+result.col("a").values; // [-1, 2, -1]
+result.col("b").values; // [1, 99, 3]
+result.col("c").values; // [null, null, null]  ← untouched</code></pre>
+  <div class="output">a: [-1, 2, -1]
+b: [1, 99, 3]
+c: [null, null, null]</div>
+</section>
+
+<!-- ─── 7. DataFrame method fill ─────────────────────────────────────────── -->
+<section>
+  <h2>7 · DataFrame — method fill (axis=0 / axis=1)</h2>
+  <p>
+    <code>method</code> fills propagate along an axis.  The default
+    <code>axis=0</code> fills <em>down each column</em>; <code>axis=1</code>
+    fills <em>across each row</em>.
+  </p>
+  <pre><code>import { DataFrame, fillnaDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [1, null, null],
+  b: [null, 2, null],
+  c: [null, null, 3],
+});
+
+// axis=0 (default): ffill down each column
+const byCol = fillnaDataFrame(df, { method: "ffill" });
+byCol.col("a").values; // [1, 1, 1]
+byCol.col("b").values; // [null, 2, 2]
+byCol.col("c").values; // [null, null, 3]
+
+// axis=1: bfill across each row
+const byRow = fillnaDataFrame(df, { method: "bfill", axis: 1 });
+// row 0: [1, null, null] → bfill → [1, null, null]
+// row 1: [null, 2, null] → bfill → [2, 2, null]
+// row 2: [null, null, 3] → bfill → [3, 3, 3]</code></pre>
+  <div class="output">axis=0 ffill:
+  a: [1, 1, 1]
+  b: [null, 2, 2]
+  c: [null, null, 3]
+
+axis=1 bfill:
+  row 0: [1, null, null]
+  row 1: [2, 2, null]
+  row 2: [3, 3, 3]</div>
+</section>
+
+<!-- ─── 8. Series fill-value from Series index ───────────────────────────── -->
+<section>
+  <h2>8 · DataFrame — fill values from a Series</h2>
+  <p>
+    When <code>value</code> is a <code>Series&lt;Scalar&gt;</code>, its index labels
+    are matched to DataFrame column names.  This is the TypeScript equivalent of
+    <code>df.fillna(series)</code> in pandas.
+  </p>
+  <pre><code>import { DataFrame, Series, fillnaDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  price:  [10, null, 30],
+  volume: [null, 200, null],
+});
+
+// Use Series index labels as column selectors
+const fills = new Series({
+  data:  [0, 0],
+  index: ["price", "volume"],
+});
+
+const result = fillnaDataFrame(df, { value: fills });
+result.col("price").values;  // [10, 0, 30]
+result.col("volume").values; // [0, 200, 0]</code></pre>
+  <div class="output">price:  [10, 0, 30]
+volume: [0, 200, 0]</div>
+</section>
+
+<!-- ─── API summary ──────────────────────────────────────────────────────── -->
+<section>
+  <h2>API summary</h2>
+  <table>
+    <tr><th>Function</th><th>Signature (simplified)</th><th>Description</th></tr>
+    <tr>
+      <td><code>fillnaSeries</code></td>
+      <td><code>(series, { value?, method?, limit? })</code></td>
+      <td>Fill missing values in a Series</td>
+    </tr>
+    <tr>
+      <td><code>fillnaDataFrame</code></td>
+      <td><code>(df, { value?, method?, limit?, axis? })</code></td>
+      <td>Fill missing values in a DataFrame</td>
+    </tr>
+  </table>
+
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr>
+      <td><code>value</code></td>
+      <td><code>Scalar | ColumnFillMap | Series</code></td>
+      <td>—</td>
+      <td>Constant or per-column fill value</td>
+    </tr>
+    <tr>
+      <td><code>method</code></td>
+      <td><code>"ffill" | "pad" | "bfill" | "backfill"</code></td>
+      <td>—</td>
+      <td>Propagation direction</td>
+    </tr>
+    <tr>
+      <td><code>limit</code></td>
+      <td><code>number</code></td>
+      <td><code>Infinity</code></td>
+      <td>Max consecutive fills per run</td>
+    </tr>
+    <tr>
+      <td><code>axis</code></td>
+      <td><code>0 | 1 | "index" | "columns"</code></td>
+      <td><code>0</code></td>
+      <td>Direction for method-based fill on DataFrames</td>
+    </tr>
+  </table>
+</section>
+
+</body>
+</html>

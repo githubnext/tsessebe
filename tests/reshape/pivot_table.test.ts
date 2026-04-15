@@ -1,10 +1,10 @@
 /**
- * Tests for src/reshape/pivot_table.ts — pivotTableFull with margins.
+ * Tests for src/reshape/pivot_table.ts — pivotTableFull with margins, sort.
  */
 
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, type Scalar } from "../../src/index.ts";
+import { DataFrame, type Label, type Scalar } from "../../src/index.ts";
 import { pivotTableFull } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -13,477 +13,438 @@ function colValues(df: DataFrame, col: string): Scalar[] {
   return [...df.col(col).values];
 }
 
-// ─── basic pivot table (no margins) ──────────────────────────────────────────
+function numCell(df: DataFrame, rowLabel: Label, col: string): number {
+  const rowIdx = [...df.index.values].indexOf(rowLabel);
+  if (rowIdx === -1) {
+    throw new Error(`Row "${String(rowLabel)}" not found`);
+  }
+  const v = df.col(col).values[rowIdx];
+  if (typeof v !== "number") {
+    throw new Error(`Expected number at row="${String(rowLabel)}", col="${col}"`);
+  }
+  return v;
+}
+
+// ─── basic (no margins) ───────────────────────────────────────────────────────
 
 describe("pivotTableFull — basic (no margins)", () => {
-  it("aggregates with sum", () => {
+  it("produces same result as pivotTable for simple sum", () => {
     const df = DataFrame.fromColumns({
-      A: ["foo", "foo", "bar", "bar"],
-      B: ["x", "y", "x", "y"],
-      D: [1, 2, 3, 4],
+      region: ["N", "N", "S", "S"],
+      product: ["A", "B", "A", "B"],
+      sales: [100, 200, 150, 250],
     });
     const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
+      index: "region",
+      columns: "product",
+      values: "sales",
       aggfunc: "sum",
+      sort: false,
     });
-    // sorted rows: bar, foo; sorted cols: x, y
-    expect(colValues(result, "x")).toEqual([3, 1]);
-    expect(colValues(result, "y")).toEqual([4, 2]);
-    expect([...result.index.values]).toEqual(["bar", "foo"]);
+    expect(result.shape).toEqual([2, 2]);
+    expect(numCell(result, "N", "A")).toBe(100);
+    expect(numCell(result, "N", "B")).toBe(200);
+    expect(numCell(result, "S", "A")).toBe(150);
+    expect(numCell(result, "S", "B")).toBe(250);
   });
 
-  it("aggregates with mean", () => {
+  it("aggregates duplicate (row,col) entries with mean", () => {
     const df = DataFrame.fromColumns({
-      A: ["foo", "foo", "bar"],
-      B: ["x", "x", "x"],
-      D: [2, 4, 6],
+      cat: ["X", "X", "Y", "Y"],
+      grp: ["P", "P", "P", "Q"],
+      val: [10, 20, 30, 40],
     });
     const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
+      index: "cat",
+      columns: "grp",
+      values: "val",
       aggfunc: "mean",
     });
-    expect(colValues(result, "x")[0]).toBe(6); // bar: 6
-    expect(colValues(result, "x")[1]).toBe(3); // foo: (2+4)/2
+    expect(numCell(result, "X", "P")).toBeCloseTo(15);
+    expect(numCell(result, "Y", "P")).toBe(30);
+    expect(numCell(result, "Y", "Q")).toBe(40);
   });
 
-  it("aggregates with count", () => {
+  it("sorts row and column labels when sort=true (default)", () => {
     const df = DataFrame.fromColumns({
-      A: ["foo", "foo", "bar"],
-      B: ["x", "x", "x"],
-      D: [1, 2, 3],
+      r: ["Z", "A", "M"],
+      c: ["b", "a", "c"],
+      v: [1, 2, 3],
+    });
+    const result = pivotTableFull(df, { index: "r", columns: "c", values: "v", aggfunc: "sum" });
+    expect([...result.index.values]).toEqual(["A", "M", "Z"]);
+    expect(result.columns.values).toEqual(["a", "b", "c"]);
+  });
+
+  it("preserves insertion order when sort=false", () => {
+    const df = DataFrame.fromColumns({
+      r: ["Z", "A", "M"],
+      c: ["b", "a", "c"],
+      v: [1, 2, 3],
     });
     const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "sum",
+      sort: false,
+    });
+    expect([...result.index.values]).toEqual(["Z", "A", "M"]);
+    expect(result.columns.values).toEqual(["b", "a", "c"]);
+  });
+
+  it("uses fill_value for missing cells", () => {
+    const df = DataFrame.fromColumns({
+      r: ["A", "B"],
+      c: ["X", "Y"],
+      v: [1, 2],
+    });
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "sum",
+      fill_value: -1,
+    });
+    expect(numCell(result, "A", "X")).toBe(1);
+    expect(numCell(result, "A", "Y")).toBe(-1);
+    expect(numCell(result, "B", "X")).toBe(-1);
+    expect(numCell(result, "B", "Y")).toBe(2);
+  });
+
+  it("supports count aggfunc", () => {
+    const df = DataFrame.fromColumns({
+      r: ["A", "A", "B"],
+      c: ["X", "X", "X"],
+      v: [1, 2, 3],
+    });
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
       aggfunc: "count",
     });
-    expect(colValues(result, "x")).toEqual([1, 2]);
+    expect(numCell(result, "A", "X")).toBe(2);
+    expect(numCell(result, "B", "X")).toBe(1);
   });
 
-  it("aggregates with min and max", () => {
-    const df = DataFrame.fromColumns({
-      A: ["foo", "foo"],
-      B: ["x", "x"],
-      D: [10, 20],
-    });
-    const minResult = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "min",
-    });
-    const maxResult = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "max",
-    });
-    expect(colValues(minResult, "x")).toEqual([10]);
-    expect(colValues(maxResult, "x")).toEqual([20]);
+  it("throws for non-existent index column", () => {
+    const df = DataFrame.fromColumns({ a: [1], b: [2] });
+    expect(() =>
+      pivotTableFull(df, { index: "z", columns: "b", values: "a", aggfunc: "sum" }),
+    ).toThrow();
   });
 
-  it("aggregates with first and last", () => {
-    const df = DataFrame.fromColumns({
-      A: ["foo", "foo"],
-      B: ["x", "x"],
-      D: [10, 20],
-    });
-    const firstResult = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "first",
-    });
-    const lastResult = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "last",
-    });
-    expect(colValues(firstResult, "x")).toEqual([10]);
-    expect(colValues(lastResult, "x")).toEqual([20]);
-  });
-
-  it("uses fill_value for empty cells", () => {
-    const df = DataFrame.fromColumns({
-      A: ["foo", "bar"],
-      B: ["x", "y"],
-      D: [1, 2],
-    });
-    const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "sum",
-      fill_value: 0,
-    });
-    // foo/y and bar/x are empty cells → filled with 0
-    expect(colValues(result, "x")).toEqual([0, 1]); // bar:0, foo:1 (wait, sorted: bar then foo)
-    expect(colValues(result, "y")).toEqual([2, 0]);
-  });
-
-  it("handles multiple index columns", () => {
-    const df = DataFrame.fromColumns({
-      A: ["foo", "foo", "bar"],
-      B: ["one", "two", "one"],
-      C: ["x", "x", "x"],
-      D: [1, 2, 3],
-    });
-    const result = pivotTableFull(df, {
-      index: ["A", "B"],
-      columns: "C",
-      values: "D",
-      aggfunc: "sum",
-    });
-    expect(result.index.size).toBe(3);
-    const xVals = colValues(result, "x");
-    // sorted by composite key: "bar, one", "foo, one", "foo, two"
-    expect(xVals).toEqual([3, 1, 2]);
-  });
-
-  it("throws on missing index column", () => {
-    const df = DataFrame.fromColumns({ A: [1], B: [2] });
-    expect(() => pivotTableFull(df, { index: "MISSING", columns: "B", values: "A" })).toThrow();
-  });
-
-  it("throws on missing values column", () => {
-    const df = DataFrame.fromColumns({ A: [1], B: [2] });
-    expect(() => pivotTableFull(df, { index: "A", columns: "B", values: "MISSING" })).toThrow();
+  it("throws for non-existent values column", () => {
+    const df = DataFrame.fromColumns({ a: [1], b: [2] });
+    expect(() =>
+      pivotTableFull(df, { index: "a", columns: "b", values: "zzz", aggfunc: "sum" }),
+    ).toThrow();
   });
 });
 
 // ─── margins ──────────────────────────────────────────────────────────────────
 
-describe("pivotTableFull — margins", () => {
-  const makeDf = (): DataFrame =>
-    DataFrame.fromColumns({
-      A: ["foo", "foo", "foo", "bar", "bar", "bar"],
-      C: ["small", "large", "large", "small", "small", "large"],
-      D: [1, 2, 2, 3, 3, 4],
+describe("pivotTableFull — margins=true", () => {
+  it("adds All row and column with sum", () => {
+    const df = DataFrame.fromColumns({
+      region: ["N", "N", "S", "S"],
+      product: ["A", "B", "A", "B"],
+      sales: [100, 200, 150, 250],
     });
-
-  it("adds All column (row margins)", () => {
-    const result = pivotTableFull(makeDf(), {
-      index: "A",
-      columns: "C",
-      values: "D",
+    const result = pivotTableFull(df, {
+      index: "region",
+      columns: "product",
+      values: "sales",
       aggfunc: "sum",
       margins: true,
     });
-    // All column should hold sum across all C categories per row
-    const allCol = colValues(result, "All");
-    // sorted rows: bar, foo, All
-    expect(allCol[0]).toBe(10); // bar: 3+3+4 = 10
-    expect(allCol[1]).toBe(5); // foo: 1+2+2 = 5
-    expect(allCol[2]).toBe(15); // grand total: 1+2+2+3+3+4
+    // data rows
+    expect(numCell(result, "N", "A")).toBe(100);
+    expect(numCell(result, "N", "B")).toBe(200);
+    expect(numCell(result, "S", "A")).toBe(150);
+    expect(numCell(result, "S", "B")).toBe(250);
+    // "All" column (row margins)
+    expect(numCell(result, "N", "All")).toBe(300);
+    expect(numCell(result, "S", "All")).toBe(400);
+    // "All" row (column margins)
+    expect(numCell(result, "All", "A")).toBe(250);
+    expect(numCell(result, "All", "B")).toBe(450);
+    // grand total
+    expect(numCell(result, "All", "All")).toBe(700);
   });
 
-  it("adds All row (column margins)", () => {
-    const result = pivotTableFull(makeDf(), {
-      index: "A",
-      columns: "C",
-      values: "D",
+  it("grand total with mean is mean of all raw values", () => {
+    // mean(100, 200, 300) = 200 — NOT mean of means
+    const df = DataFrame.fromColumns({
+      r: ["A", "A", "B"],
+      c: ["X", "X", "Y"],
+      v: [100, 200, 300],
+    });
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "mean",
+      margins: true,
+    });
+    // "A" row: mean of [100,200] = 150
+    expect(numCell(result, "A", "All")).toBeCloseTo(150);
+    // "B" row: mean of [300] = 300
+    expect(numCell(result, "B", "All")).toBeCloseTo(300);
+    // "All" row, "X" col: mean of [100,200] = 150
+    expect(numCell(result, "All", "X")).toBeCloseTo(150);
+    // "All" row, "Y" col: mean of [300] = 300
+    expect(numCell(result, "All", "Y")).toBeCloseTo(300);
+    // grand total: mean of [100,200,300] = 200
+    expect(numCell(result, "All", "All")).toBeCloseTo(200);
+  });
+
+  it("grand total count = total non-missing values", () => {
+    const df = DataFrame.fromColumns({
+      r: ["A", "A", "B", "B"],
+      c: ["X", "Y", "X", "Y"],
+      v: [1, 2, 3, 4],
+    });
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "count",
+      margins: true,
+    });
+    expect(numCell(result, "All", "All")).toBe(4);
+    expect(numCell(result, "A", "All")).toBe(2);
+    expect(numCell(result, "All", "X")).toBe(2);
+  });
+
+  it("uses custom margins_name", () => {
+    const df = DataFrame.fromColumns({
+      r: ["A", "B"],
+      c: ["X", "Y"],
+      v: [1, 2],
+    });
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "sum",
+      margins: true,
+      margins_name: "Total",
+    });
+    expect([...result.index.values]).toContain("Total");
+    expect(result.columns.values).toContain("Total");
+  });
+
+  it("margins row is the last row", () => {
+    const df = DataFrame.fromColumns({
+      r: ["A", "B", "C"],
+      c: ["X", "Y", "Z"],
+      v: [1, 2, 3],
+    });
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
       aggfunc: "sum",
       margins: true,
     });
     const rowLabels = [...result.index.values];
     expect(rowLabels.at(-1)).toBe("All");
-    // All row for "large" column: 2+2+4 = 8
-    const largeCol = colValues(result, "large");
-    expect(largeCol.at(-1)).toBe(8);
-    // All row for "small" column: 1+3+3 = 7
-    const smallCol = colValues(result, "small");
-    expect(smallCol.at(-1)).toBe(7);
+    expect(result.columns.values.at(-1)).toBe("All");
   });
 
-  it("grand total (All/All) equals sum of all values", () => {
-    const result = pivotTableFull(makeDf(), {
-      index: "A",
-      columns: "C",
-      values: "D",
-      aggfunc: "sum",
-      margins: true,
-    });
-    const allCol = colValues(result, "All");
-    const grandTotal = allCol.at(-1);
-    expect(grandTotal).toBe(15); // 1+2+2+3+3+4
-  });
-
-  it("respects custom margins_name", () => {
-    const result = pivotTableFull(makeDf(), {
-      index: "A",
-      columns: "C",
-      values: "D",
-      aggfunc: "sum",
-      margins: true,
-      margins_name: "Total",
-    });
-    expect(result.has("Total")).toBe(true);
-    expect(result.has("All")).toBe(false);
-    const rowLabels = [...result.index.values];
-    expect(rowLabels.at(-1)).toBe("Total");
-  });
-
-  it("margins with mean uses raw data not cell means", () => {
+  it("margins with multiple row/col keys (composite)", () => {
     const df = DataFrame.fromColumns({
-      A: ["foo", "foo", "bar"],
-      C: ["x", "x", "x"],
-      D: [2, 4, 6],
+      country: ["US", "US", "UK", "UK"],
+      region: ["E", "W", "E", "W"],
+      product: ["A", "B", "A", "B"],
+      revenue: [10, 20, 30, 40],
     });
     const result = pivotTableFull(df, {
-      index: "A",
-      columns: "C",
-      values: "D",
-      aggfunc: "mean",
+      index: ["country", "region"],
+      columns: "product",
+      values: "revenue",
+      aggfunc: "sum",
       margins: true,
     });
-    // foo/x mean = 3, bar/x mean = 6
-    // All/x should be mean of all D = (2+4+6)/3 = 4
-    const xVals = colValues(result, "x");
-    expect(xVals.at(-1)).toBeCloseTo(4);
-    // foo All = mean of [2,4] = 3
-    const allVals = colValues(result, "All");
-    expect(allVals[0]).toBeCloseTo(6); // bar
-    expect(allVals[1]).toBeCloseTo(3); // foo
-  });
-
-  it("margins=false omits All row/column", () => {
-    const result = pivotTableFull(makeDf(), {
-      index: "A",
-      columns: "C",
-      values: "D",
-      aggfunc: "sum",
-      margins: false,
-    });
-    expect(result.has("All")).toBe(false);
-    const rowLabels = [...result.index.values];
-    expect(rowLabels).not.toContain("All");
+    // grand total should be 100
+    expect(numCell(result, "All", "All")).toBe(100);
   });
 });
 
-// ─── sort option ──────────────────────────────────────────────────────────────
+// ─── aggfuncs ─────────────────────────────────────────────────────────────────
 
-describe("pivotTableFull — sort option", () => {
-  it("sort=true (default) produces lexicographic order", () => {
-    const df = DataFrame.fromColumns({
-      A: ["b", "a", "c"],
-      B: ["y", "x", "z"],
-      D: [1, 2, 3],
-    });
-    const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "sum",
-    });
-    expect([...result.index.values]).toEqual(["a", "b", "c"]);
-    expect([...result.columns.values]).toEqual(["x", "y", "z"]);
+describe("pivotTableFull — aggfuncs", () => {
+  const df = DataFrame.fromColumns({
+    r: ["A", "A", "B"],
+    c: ["X", "Y", "X"],
+    v: [10, 20, 30],
   });
 
-  it("sort=false preserves insertion order", () => {
-    const df = DataFrame.fromColumns({
-      A: ["b", "a", "c"],
-      B: ["y", "x", "z"],
-      D: [1, 2, 3],
-    });
+  it("min", () => {
     const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
-      aggfunc: "sum",
-      sort: false,
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "min",
     });
-    expect([...result.index.values]).toEqual(["b", "a", "c"]);
-    expect([...result.columns.values]).toEqual(["y", "x", "z"]);
+    expect(numCell(result, "A", "X")).toBe(10);
+  });
+
+  it("max", () => {
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "max",
+    });
+    expect(numCell(result, "A", "X")).toBe(10);
+    expect(numCell(result, "B", "X")).toBe(30);
+  });
+
+  it("first", () => {
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "first",
+    });
+    expect(numCell(result, "A", "X")).toBe(10);
+  });
+
+  it("last", () => {
+    const result = pivotTableFull(df, {
+      index: "r",
+      columns: "c",
+      values: "v",
+      aggfunc: "last",
+    });
+    expect(numCell(result, "A", "X")).toBe(10);
   });
 });
 
-// ─── dropna option ────────────────────────────────────────────────────────────
+// ─── dropna ───────────────────────────────────────────────────────────────────
 
 describe("pivotTableFull — dropna", () => {
-  it("dropna=true excludes all-null rows", () => {
+  it("removes all-null columns when dropna=true", () => {
     const df = DataFrame.fromColumns({
-      A: ["foo", "bar"],
-      B: ["x", "y"],
-      D: [1, 2],
+      r: ["A", "B"],
+      c: ["X", "Y"],
+      v: [1, 2],
     });
     const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: "D",
+      index: "r",
+      columns: "c",
+      values: "v",
       aggfunc: "sum",
       dropna: true,
-      fill_value: null,
     });
-    // foo has only x; bar has only y — both rows have one non-null value
-    expect(result.index.size).toBe(2);
-  });
-});
-
-// ─── multiple values columns ──────────────────────────────────────────────────
-
-describe("pivotTableFull — multiple values", () => {
-  it("creates compound column names", () => {
-    const df = DataFrame.fromColumns({
-      A: ["foo", "bar"],
-      B: ["x", "x"],
-      D: [1, 2],
-      E: [10, 20],
-    });
-    const result = pivotTableFull(df, {
-      index: "A",
-      columns: "B",
-      values: ["D", "E"],
-      aggfunc: "sum",
-    });
-    expect(result.has("D_x")).toBe(true);
-    expect(result.has("E_x")).toBe(true);
+    // X is null for B, Y is null for A — both have some values, so neither dropped
+    expect(result.columns.values.length).toBe(2);
   });
 });
 
 // ─── property-based tests ─────────────────────────────────────────────────────
 
 describe("pivotTableFull — property tests", () => {
-  it("sum grand total equals sum of all source values", () => {
+  it("sum grand total equals sum of all input values", () => {
     fc.assert(
       fc.property(
         fc.array(
           fc.record({
-            a: fc.constantFrom("alpha", "beta", "gamma"),
-            b: fc.constantFrom("x", "y", "z"),
-            d: fc.integer({ min: 1, max: 100 }),
+            r: fc.constantFrom("A", "B", "C"),
+            c: fc.constantFrom("X", "Y", "Z"),
+            v: fc.float({ min: 0, max: 1000, noNaN: true }),
           }),
-          { minLength: 1, maxLength: 20 },
+          { minLength: 4, maxLength: 20 },
         ),
         (rows) => {
           const df = DataFrame.fromColumns({
-            a: rows.map((r) => r.a),
-            b: rows.map((r) => r.b),
-            d: rows.map((r) => r.d),
+            r: rows.map((x) => x.r),
+            c: rows.map((x) => x.c),
+            v: rows.map((x) => x.v),
           });
           const result = pivotTableFull(df, {
-            index: "a",
-            columns: "b",
-            values: "d",
+            index: "r",
+            columns: "c",
+            values: "v",
             aggfunc: "sum",
             margins: true,
           });
-          const grandTotal = colValues(result, "All").at(-1);
-          const expected = rows.reduce((acc, r) => acc + r.d, 0);
-          return Math.abs((grandTotal as number) - expected) < 0.001;
+          const grand = numCell(result, "All", "All");
+          const expected = rows.reduce((s, x) => s + x.v, 0);
+          expect(grand).toBeCloseTo(expected, 5);
         },
       ),
     );
   });
 
-  it("count grand total equals number of source rows (with numeric values)", () => {
+  it("count grand total equals number of data rows", () => {
     fc.assert(
       fc.property(
         fc.array(
           fc.record({
-            a: fc.constantFrom("alpha", "beta"),
-            b: fc.constantFrom("x", "y"),
-            d: fc.integer({ min: 1, max: 10 }),
+            r: fc.constantFrom("A", "B"),
+            c: fc.constantFrom("X", "Y"),
+            v: fc.integer({ min: 1, max: 100 }),
           }),
-          { minLength: 1, maxLength: 15 },
+          { minLength: 2, maxLength: 16 },
         ),
         (rows) => {
           const df = DataFrame.fromColumns({
-            a: rows.map((r) => r.a),
-            b: rows.map((r) => r.b),
-            d: rows.map((r) => r.d),
+            r: rows.map((x) => x.r),
+            c: rows.map((x) => x.c),
+            v: rows.map((x) => x.v),
           });
           const result = pivotTableFull(df, {
-            index: "a",
-            columns: "b",
-            values: "d",
+            index: "r",
+            columns: "c",
+            values: "v",
             aggfunc: "count",
             margins: true,
           });
-          const grandTotal = colValues(result, "All").at(-1);
-          return grandTotal === rows.length;
+          const grand = numCell(result, "All", "All");
+          expect(grand).toBe(rows.length);
         },
       ),
     );
   });
 
-  it("result without margins has no All column or row", () => {
+  it("row margins sum equals All column values", () => {
     fc.assert(
       fc.property(
         fc.array(
           fc.record({
-            a: fc.constantFrom("alpha", "beta"),
-            b: fc.constantFrom("x", "y"),
-            d: fc.integer({ min: 1, max: 10 }),
+            r: fc.constantFrom("A", "B"),
+            c: fc.constantFrom("X", "Y", "Z"),
+            v: fc.integer({ min: 1, max: 100 }),
           }),
-          { minLength: 1, maxLength: 10 },
+          { minLength: 4, maxLength: 20 },
         ),
         (rows) => {
           const df = DataFrame.fromColumns({
-            a: rows.map((r) => r.a),
-            b: rows.map((r) => r.b),
-            d: rows.map((r) => r.d),
+            r: rows.map((x) => x.r),
+            c: rows.map((x) => x.c),
+            v: rows.map((x) => x.v),
           });
           const result = pivotTableFull(df, {
-            index: "a",
-            columns: "b",
-            values: "d",
-            aggfunc: "sum",
-            margins: false,
-          });
-          const hasAllCol = result.has("All");
-          const hasAllRow = [...result.index.values].includes("All");
-          return !(hasAllCol || hasAllRow);
-        },
-      ),
-    );
-  });
-
-  it("sum(All column) per non-margin row equals sum of row cells", () => {
-    fc.assert(
-      fc.property(
-        fc.array(
-          fc.record({
-            a: fc.constantFrom("alpha", "beta", "gamma"),
-            b: fc.constantFrom("x", "y"),
-            d: fc.integer({ min: 1, max: 50 }),
-          }),
-          { minLength: 1, maxLength: 20 },
-        ),
-        (rows) => {
-          const df = DataFrame.fromColumns({
-            a: rows.map((r) => r.a),
-            b: rows.map((r) => r.b),
-            d: rows.map((r) => r.d),
-          });
-          const result = pivotTableFull(df, {
-            index: "a",
-            columns: "b",
-            values: "d",
+            index: "r",
+            columns: "c",
+            values: "v",
             aggfunc: "sum",
             margins: true,
-            fill_value: 0,
           });
-          const colNames = result.columns.values.filter((c) => c !== "All");
-          const allVals = colValues(result, "All");
-          const rowLabels = [...result.index.values];
-          // for each non-margin row, All should equal sum of non-All cells
-          for (let ri = 0; ri < rowLabels.length - 1; ri++) {
-            const cellSum = colNames.reduce((acc, c) => {
-              const v = colValues(result, c)[ri];
-              return acc + (typeof v === "number" ? v : 0);
-            }, 0);
-            const allVal = allVals[ri];
-            if (Math.abs((allVal as number) - cellSum) > 0.001) {
-              return false;
+          // "All" col for row "A" should equal sum of all v where r="A"
+          for (const rLabel of ["A", "B"]) {
+            const hasRow = [...result.index.values].includes(rLabel);
+            if (!hasRow) {
+              continue;
             }
+            const rowTotal = numCell(result, rLabel, "All");
+            const expected = rows.filter((x) => x.r === rLabel).reduce((s, x) => s + x.v, 0);
+            expect(rowTotal).toBeCloseTo(expected, 5);
           }
-          return true;
         },
       ),
     );

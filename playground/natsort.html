@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — natsort</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>natsort</h1>
+    <p>Natural-order sorting for strings — mirrors the <code>natsort</code> package used by pandas.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        Standard lexicographic sort places <code>"file10"</code> <em>before</em> <code>"file2"</code> because
+        <code>"1" &lt; "2"</code>. Natural sort compares <strong>embedded numbers numerically</strong>, so
+        <code>"file2"</code> correctly sorts before <code>"file10"</code>.
+      </p>
+      <p>
+        tsb exports four helpers:
+        <code>natCompare(a, b)</code> — comparator for <code>Array.sort</code>;
+        <code>natSorted(arr)</code> — returns a new naturally-sorted array;
+        <code>natSortKey(s)</code> — returns the token array used internally;
+        <code>natArgSort(arr)</code> — returns the permutation indices (like <code>pandas.Index.argsort</code>).
+      </p>
+      <p>
+        Mirrors
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.Index.sort_values.html" target="_blank"><code>pandas.Index.sort_values(key=natsort_keygen())</code></a>
+        and
+        <a href="https://natsort.readthedocs.io/en/stable/api.html" target="_blank"><code>natsort.natsorted()</code></a>.
+      </p>
+    </section>
+
+    <section>
+      <h2>1 · Basic usage</h2>
+      <pre><code>import { natSorted, natCompare, natSortKey, natArgSort } from "tsb";
+
+// File names sort by embedded number
+const files = ["file10.txt", "file2.txt", "file1.txt"];
+console.log(natSorted(files));
+// → ["file1.txt", "file2.txt", "file10.txt"]
+
+// Version strings
+const versions = ["1.10.0", "1.9.0", "1.2.0", "2.0.0"];
+console.log(natSorted(versions));
+// → ["1.2.0", "1.9.0", "1.10.0", "2.0.0"]
+
+// Use as Array.sort comparator
+const copy = [...files];
+copy.sort(natCompare);
+// → ["file1.txt", "file2.txt", "file10.txt"]</code></pre>
+    </section>
+
+    <section>
+      <h2>2 · Options</h2>
+      <pre><code>// ignoreCase — text tokens are folded to lower-case
+const words = ["Banana", "apple", "Cherry"];
+natSorted(words, { ignoreCase: true });
+// → ["apple", "Banana", "Cherry"]
+
+// reverse — descending natural order
+natSorted(["file1", "file10", "file2"], { reverse: true });
+// → ["file10", "file2", "file1"]</code></pre>
+    </section>
+
+    <section>
+      <h2>3 · Sorting objects with a key function</h2>
+      <pre><code>const rows = [
+  { path: "img/photo10.jpg" },
+  { path: "img/photo2.jpg" },
+  { path: "img/photo1.jpg" },
+];
+
+// key extracts the string to sort by
+import { natSorted } from "tsb";
+const sorted = natSorted(rows, { key: r => r.path });
+sorted.map(r => r.path);
+// → ["img/photo1.jpg", "img/photo2.jpg", "img/photo10.jpg"]</code></pre>
+    </section>
+
+    <section>
+      <h2>4 · natSortKey — inspect the token representation</h2>
+      <pre><code>import { natSortKey } from "tsb";
+
+natSortKey("file10.txt");   // → ["file", 10, ".txt"]
+natSortKey("007bonds");     // → [7, "bonds"]  (leading zeros stripped)
+natSortKey("abc");          // → ["abc"]
+natSortKey("42");           // → [42]
+
+// ignoreCase folds text tokens
+natSortKey("File10.TXT", { ignoreCase: true });
+// → ["file", 10, ".txt"]</code></pre>
+    </section>
+
+    <section>
+      <h2>5 · natArgSort — permutation indices</h2>
+      <pre><code>import { natArgSort } from "tsb";
+
+const arr = ["file10", "file2", "file1"];
+const idx = natArgSort(arr);
+// → [2, 1, 0]   (indices of "file1", "file2", "file10")
+
+idx.map(i => arr[i]);
+// → ["file1", "file2", "file10"]
+
+// Use with a tsb Index to sort labels naturally:
+// index.argsort() uses default lexicographic order;
+// natArgSort(index.values) gives natural order.</code></pre>
+    </section>
+
+    <section>
+      <h2>6 · Comparison with lexicographic sort</h2>
+      <pre><code>const data = ["item1", "item12", "item2", "item20", "item3"];
+
+// Lexicographic (default Array.sort)
+[...data].sort();
+// → ["item1", "item12", "item2", "item20", "item3"]  ← wrong
+
+// Natural sort
+natSorted(data);
+// → ["item1", "item2", "item3", "item12", "item20"]  ← correct</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built by <a href="https://github.com/githubnext/autoloop" style="color: var(--accent);">Autoloop</a> — an automated research and experimentation platform.</p>
+  </footer>
+</body>
+</html>

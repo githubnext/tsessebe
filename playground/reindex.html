@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — reindex</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>reindex</h1>
+    <p>Align a Series or DataFrame to a new axis — mirrors <code>pandas.Series.reindex</code> / <code>pandas.DataFrame.reindex</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <strong>reindex</strong> lets you align a Series or DataFrame to a new index,
+        filling gaps with a fill value or propagating adjacent values.
+      </p>
+      <ul>
+        <li><code>reindexSeries(s, newLabels)</code> — realign a Series to new labels.</li>
+        <li><code>reindexDataFrame(df, { index?, columns? })</code> — realign rows and/or columns.</li>
+      </ul>
+      <p>
+        Missing labels get <code>null</code> by default, or any <code>fillValue</code> you choose.
+        You can also propagate values using <code>method: "ffill"</code> (forward fill),
+        <code>"bfill"</code> (backward fill), or <code>"nearest"</code>.
+      </p>
+      <p>
+        See also:
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.reindex.html" target="_blank"><code>pandas.Series.reindex</code></a>
+        ·
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.reindex.html" target="_blank"><code>pandas.DataFrame.reindex</code></a>
+      </p>
+    </section>
+
+    <section>
+      <h2>1 · reindexSeries — basics</h2>
+      <pre><code>import { Series, Index, reindexSeries } from "tsb";
+
+const s = new Series({ data: [10, 20, 30], index: new Index(["a", "b", "c"]) });
+
+// Reorder labels
+reindexSeries(s, ["c", "a", "b"]).toArray();
+// → [30, 10, 20]
+
+// Extend with new labels → null by default
+reindexSeries(s, ["a", "b", "c", "d"]).toArray();
+// → [10, 20, 30, null]
+
+// Extend with custom fill value
+reindexSeries(s, ["a", "b", "c", "d"], { fillValue: 0 }).toArray();
+// → [10, 20, 30, 0]
+
+// Drop labels
+reindexSeries(s, ["a", "c"]).toArray();
+// → [10, 30]</code></pre>
+    </section>
+
+    <section>
+      <h2>2 · Fill methods</h2>
+      <pre><code>import { Series, Index, reindexSeries } from "tsb";
+
+const temps = new Series({
+  data: [15, 18, 22],
+  index: new Index([0, 2, 5]),  // sparse integer index
+});
+
+// Forward fill — carry last known value forward
+reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "ffill" }).toArray();
+// → [15, 15, 18, 18, 18, 22]
+//       ^^       ^^ ^^      ← filled from left
+
+// Backward fill — carry next known value backward
+reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "bfill" }).toArray();
+// → [15, 18, 18, 22, 22, 22]
+//       ^^       ^^  ^^  ← filled from right
+
+// Nearest — use closest value (prefer right on tie)
+reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "nearest" }).toArray();
+// → [15, 15, 18, 18, 22, 22]
+
+// Limit — cap consecutive fills
+reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "ffill", limit: 1 }).toArray();
+// → [15, 15, 18, null, null, 22]
+//       ^^       ^^ only 1 consecutive fill</code></pre>
+    </section>
+
+    <section>
+      <h2>3 · reindexDataFrame — rows</h2>
+      <pre><code>import { DataFrame, reindexDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  open:  [100, 102, 105],
+  close: [ 98, 104, 107],
+});
+// shape [3, 2], RangeIndex [0, 1, 2]
+
+// Extend to 5 rows — new rows filled with null
+reindexDataFrame(df, { index: [0, 1, 2, 3, 4] }).col("open").toArray();
+// → [100, 102, 105, null, null]
+
+// Forward-fill new rows
+reindexDataFrame(df, { index: [0, 1, 2, 3, 4], method: "ffill" }).col("open").toArray();
+// → [100, 102, 105, 105, 105]</code></pre>
+    </section>
+
+    <section>
+      <h2>4 · reindexDataFrame — columns</h2>
+      <pre><code>import { DataFrame, reindexDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+
+// Reorder columns
+reindexDataFrame(df, { columns: ["b", "a"] }).columns.toArray();
+// → ["b", "a"]
+
+// Add a new column filled with 0
+const r = reindexDataFrame(df, { columns: ["a", "b", "c"], fillValue: 0 });
+r.col("c").toArray();
+// → [0, 0, 0]</code></pre>
+    </section>
+
+    <section>
+      <h2>5 · Reindex rows and columns simultaneously</h2>
+      <pre><code>import { DataFrame, reindexDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  x: [1, 2, 3],
+  y: [4, 5, 6],
+});
+
+const r = reindexDataFrame(df, {
+  index:    [0, 1, 2, 3],   // extend to 4 rows
+  columns:  ["x", "y", "z"], // add column "z"
+  fillValue: -1,
+});
+// shape [4, 3]
+r.col("z").toArray();  // → [-1, -1, -1, -1]
+r.col("x").toArray();  // → [1, 2, 3, -1]</code></pre>
+    </section>
+
+    <section>
+      <h2>6 · Pandas equivalents</h2>
+      <pre><code># Python / pandas equivalent
+import pandas as pd
+
+s = pd.Series([10, 20, 30], index=["a", "b", "c"])
+
+# reindexSeries(s, newLabels)  →  s.reindex(newLabels)
+s.reindex(["a", "b", "c", "d"])       # NaN for "d"
+s.reindex(["a", "b", "c", "d"], fill_value=0)
+s.reindex(range(5), method="ffill")    # forward fill gaps
+
+df = pd.DataFrame({"a": [1,2,3], "b": [4,5,6]})
+
+# reindexDataFrame(df, { index, columns })
+df.reindex([0, 1, 2, 3])
+df.reindex(columns=["a", "b", "c"])
+df.reindex(index=[0,1,2,3], columns=["a","b","c"], fill_value=0)</code></pre>
+    </section>
+  </main>
+</body>
+</html>

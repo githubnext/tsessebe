@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — DateOffset</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .875rem; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; }
+    th { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>DateOffset</h1>
+<p class="subtitle">
+  Calendar-aware date arithmetic — mirrors
+  <code>pandas.tseries.offsets</code>.
+</p>
+
+<section>
+  <h2>1 — Available offsets</h2>
+  <p>
+    tsb provides eleven offset types for shifting dates by calendar-aware units.
+    All operations work in UTC to avoid DST surprises.
+  </p>
+  <table>
+    <tr><th>Class</th><th>pandas equivalent</th><th>Description</th></tr>
+    <tr><td><code>Day(n)</code></td><td><code>Day(n)</code></td><td>n calendar days</td></tr>
+    <tr><td><code>Hour(n)</code></td><td><code>Hour(n)</code></td><td>n hours</td></tr>
+    <tr><td><code>Minute(n)</code></td><td><code>Minute(n)</code></td><td>n minutes</td></tr>
+    <tr><td><code>Second(n)</code></td><td><code>Second(n)</code></td><td>n seconds</td></tr>
+    <tr><td><code>Milli(n)</code></td><td><code>Milli(n)</code></td><td>n milliseconds</td></tr>
+    <tr><td><code>Week(n, {weekday?})</code></td><td><code>Week(n, weekday)</code></td><td>n weeks, optional weekday alignment</td></tr>
+    <tr><td><code>MonthEnd(n)</code></td><td><code>MonthEnd(n)</code></td><td>n month-ends (last day of month)</td></tr>
+    <tr><td><code>MonthBegin(n)</code></td><td><code>MonthBegin(n)</code></td><td>n month-starts (first day of month)</td></tr>
+    <tr><td><code>YearEnd(n)</code></td><td><code>YearEnd(n)</code></td><td>n year-ends (Dec 31)</td></tr>
+    <tr><td><code>YearBegin(n)</code></td><td><code>YearBegin(n)</code></td><td>n year-starts (Jan 1)</td></tr>
+    <tr><td><code>BusinessDay(n)</code></td><td><code>BDay(n)</code></td><td>n business days (Mon–Fri)</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>2 — Fixed-time offsets (Day, Hour, Minute, Second, Milli)</h2>
+  <p>
+    These offsets add a fixed number of milliseconds. Every date is "on offset"
+    so <code>rollforward</code> and <code>rollback</code> are no-ops.
+  </p>
+  <pre><code>import { Day, Hour, Minute, Second, Milli } from "tsb";
+
+const d = new Date(Date.UTC(2024, 0, 1));   // 2024-01-01T00:00:00Z
+
+new Day(3).apply(d).toISOString();          // "2024-01-04T00:00:00.000Z"
+new Day(-1).apply(d).toISOString();         // "2023-12-31T00:00:00.000Z"
+new Hour(2).apply(d).toISOString();         // "2024-01-01T02:00:00.000Z"
+new Minute(90).apply(d).toISOString();      // "2024-01-01T01:30:00.000Z"
+new Second(30).apply(d).toISOString();      // "2024-01-01T00:00:30.000Z"
+new Milli(500).apply(d).getTime() - d.getTime();  // 500</code></pre>
+  <div class="output">2024-01-04T00:00:00.000Z
+2023-12-31T00:00:00.000Z
+2024-01-01T02:00:00.000Z
+2024-01-01T01:30:00.000Z
+2024-01-01T00:00:30.000Z
+500</div>
+</section>
+
+<section>
+  <h2>3 — Week offset</h2>
+  <p>
+    <code>Week(n)</code> adds <code>n × 7</code> days. With an optional
+    <code>weekday</code> (pandas convention: <code>0</code> = Monday … <code>6</code> = Sunday),
+    the offset snaps to the nearest occurrence of that weekday.
+  </p>
+  <pre><code>import { Week } from "tsb";
+
+const wed = new Date(Date.UTC(2024, 0, 17));   // Wednesday 2024-01-17
+const mon = new Date(Date.UTC(2024, 0, 15));   // Monday    2024-01-15
+
+// Plain week — no alignment
+new Week(2).apply(wed).toISOString().slice(0, 10);     // "2024-01-31"
+
+// Weekday-aligned (weekday=0 → Monday)
+const wk = new Week(1, { weekday: 0 });
+wk.apply(wed).toISOString().slice(0, 10);    // "2024-01-22" (next Mon)
+wk.apply(mon).toISOString().slice(0, 10);    // "2024-01-22" (Mon → next Mon)
+
+// Rollforward / rollback
+wk.rollforward(wed).toISOString().slice(0, 10);  // "2024-01-22"
+wk.rollback(wed).toISOString().slice(0, 10);     // "2024-01-15"
+
+// onOffset
+wk.onOffset(mon);   // true
+wk.onOffset(wed);   // false</code></pre>
+  <div class="output">"2024-01-31"
+"2024-01-22"
+"2024-01-22"
+"2024-01-22"
+"2024-01-15"
+true
+false</div>
+</section>
+
+<section>
+  <h2>4 — MonthEnd &amp; MonthBegin</h2>
+  <p>
+    Anchored to the last and first day of each calendar month respectively.
+    Non-anchor dates are snapped before counting remaining steps.
+  </p>
+  <pre><code>import { MonthEnd, MonthBegin } from "tsb";
+
+const mid = new Date(Date.UTC(2024, 0, 15));   // 2024-01-15
+const end = new Date(Date.UTC(2024, 0, 31));   // 2024-01-31
+
+// MonthEnd
+new MonthEnd(1).apply(mid).toISOString().slice(0, 10);    // "2024-01-31"
+new MonthEnd(2).apply(mid).toISOString().slice(0, 10);    // "2024-02-29" (leap)
+new MonthEnd(1).apply(end).toISOString().slice(0, 10);    // "2024-02-29"
+new MonthEnd(-1).apply(mid).toISOString().slice(0, 10);   // "2023-12-31"
+
+new MonthEnd(0).rollforward(mid).toISOString().slice(0, 10); // "2024-01-31"
+new MonthEnd(0).rollback(mid).toISOString().slice(0, 10);    // "2023-12-31"
+
+// MonthBegin
+new MonthBegin(1).apply(mid).toISOString().slice(0, 10);  // "2024-02-01"
+new MonthBegin(-1).apply(mid).toISOString().slice(0, 10); // "2024-01-01"
+
+new MonthBegin(0).rollforward(mid).toISOString().slice(0, 10); // "2024-02-01"
+new MonthBegin(0).rollback(mid).toISOString().slice(0, 10);    // "2024-01-01"</code></pre>
+  <div class="output">"2024-01-31"
+"2024-02-29"
+"2024-02-29"
+"2023-12-31"
+"2024-01-31"
+"2023-12-31"
+"2024-02-01"
+"2024-01-01"
+"2024-02-01"
+"2024-01-01"</div>
+</section>
+
+<section>
+  <h2>5 — YearEnd &amp; YearBegin</h2>
+  <p>
+    <code>YearEnd</code> anchors to December 31; <code>YearBegin</code>
+    anchors to January 1.
+  </p>
+  <pre><code>import { YearEnd, YearBegin } from "tsb";
+
+const d = new Date(Date.UTC(2024, 6, 4));   // 2024-07-04
+
+new YearEnd(1).apply(d).toISOString().slice(0, 10);    // "2024-12-31"
+new YearEnd(2).apply(d).toISOString().slice(0, 10);    // "2025-12-31"
+new YearEnd(-1).apply(d).toISOString().slice(0, 10);   // "2023-12-31"
+
+new YearBegin(1).apply(d).toISOString().slice(0, 10);  // "2025-01-01"
+new YearBegin(-1).apply(d).toISOString().slice(0, 10); // "2024-01-01"
+
+const yr2024 = new Date(Date.UTC(2024, 11, 31));
+new YearEnd(0).rollforward(yr2024).toISOString().slice(0, 10);  // "2024-12-31"
+new YearEnd(0).rollback(d).toISOString().slice(0, 10);          // "2023-12-31"</code></pre>
+  <div class="output">"2024-12-31"
+"2025-12-31"
+"2023-12-31"
+"2025-01-01"
+"2024-01-01"
+"2024-12-31"
+"2023-12-31"</div>
+</section>
+
+<section>
+  <h2>6 — BusinessDay</h2>
+  <p>
+    Advances by weekdays only (Monday–Friday), skipping Saturday and Sunday.
+    Starting from a non-business-day, each step moves to the next
+    (or previous) business day.
+  </p>
+  <pre><code>import { BusinessDay } from "tsb";
+
+const fri = new Date(Date.UTC(2024, 0, 12));   // Friday 2024-01-12
+const sat = new Date(Date.UTC(2024, 0, 13));   // Saturday
+
+new BusinessDay(1).apply(fri).toISOString().slice(0, 10);   // "2024-01-15" (Mon)
+new BusinessDay(3).apply(fri).toISOString().slice(0, 10);   // "2024-01-17" (Wed)
+new BusinessDay(-1).apply(fri).toISOString().slice(0, 10);  // "2024-01-11" (Thu)
+
+// From Saturday — first step lands on next Monday
+new BusinessDay(1).apply(sat).toISOString().slice(0, 10);   // "2024-01-15"
+new BusinessDay(-1).apply(sat).toISOString().slice(0, 10);  // "2024-01-12" (Fri)
+
+// Rolling
+new BusinessDay(0).rollforward(sat).toISOString().slice(0, 10); // "2024-01-15"
+new BusinessDay(0).rollback(sat).toISOString().slice(0, 10);    // "2024-01-12"
+
+new BusinessDay(0).onOffset(fri);   // true
+new BusinessDay(0).onOffset(sat);   // false</code></pre>
+  <div class="output">"2024-01-15"
+"2024-01-17"
+"2024-01-11"
+"2024-01-15"
+"2024-01-12"
+"2024-01-15"
+"2024-01-12"
+true
+false</div>
+</section>
+
+<section>
+  <h2>7 — multiply &amp; negate</h2>
+  <p>
+    Every offset class supports <code>multiply(factor)</code> and
+    <code>negate()</code> to produce a scaled or reversed copy.
+  </p>
+  <pre><code>import { Day, MonthEnd, BusinessDay } from "tsb";
+
+new Day(3).multiply(4).n;          // 12
+new MonthEnd(2).negate().n;        // -2
+new BusinessDay(5).multiply(2).n;  // 10
+
+// negate is equivalent to multiply(-1)
+const bday = new BusinessDay(3);
+const fri = new Date(Date.UTC(2024, 0, 12));
+
+bday.negate().apply(bday.apply(fri)).toISOString().slice(0, 10); // "2024-01-12"</code></pre>
+  <div class="output">12
+-2
+10
+"2024-01-12"</div>
+</section>
+
+<section>
+  <h2>8 — Static factory methods</h2>
+  <p>Every class also provides a static <code>of(n)</code> factory:</p>
+  <pre><code>import { Day, MonthEnd, Week, BusinessDay } from "tsb";
+
+const d = new Date(Date.UTC(2024, 0, 15));
+
+Day.of(5).apply(d).toISOString().slice(0, 10);          // "2024-01-20"
+MonthEnd.of(1).apply(d).toISOString().slice(0, 10);     // "2024-01-31"
+Week.of(1, { weekday: 0 }).apply(d).toISOString().slice(0, 10); // "2024-01-22"
+BusinessDay.of(2).apply(d).toISOString().slice(0, 10);  // "2024-01-17"</code></pre>
+  <div class="output">"2024-01-20"
+"2024-01-31"
+"2024-01-22"
+"2024-01-17"</div>
+</section>
+
+</body>
+</html>

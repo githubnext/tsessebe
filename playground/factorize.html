@@ -1,152 +1,154 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tsb — factorize</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
-    h1 { color: #4f46e5; }
-    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
-    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
-    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
-    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
-    .tag { display: inline-block; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 4px; }
-    a { color: #4f46e5; }
-  </style>
-</head>
-<body>
-  <p><a href="index.html">← tsb playground</a></p>
-  <h1>🔢 factorize</h1>
-  <p>
-    <strong><code>factorize</code></strong> encodes an array of values as integer codes, just like
-    <a href="https://pandas.pydata.org/docs/reference/api/pandas.factorize.html"><code>pandas.factorize()</code></a>.
-    Each unique value gets a 0-based code; missing values get a sentinel (default <code>-1</code>).
-  </p>
-  <p>Equivalent Python: <code>pandas.factorize(values)</code> / <code>Series.factorize()</code></p>
-  <textarea id="python-equivalent" readonly style="width:100%;height:60px;font-family:monospace;font-size:13px;background:#fffde7;border:1px solid #f9a825;border-radius:4px;padding:8px;">
-import pandas as pd
-codes, uniques = pd.factorize(["cat", "dog", "cat", None, "dog"])
-  </textarea>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — factorize: integer encoding</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 2rem; }
+      h1 { color: #58a6ff; font-size: 1.8rem; margin-bottom: .5rem; }
+      h2 { color: #79c0ff; font-size: 1.2rem; margin: 2rem 0 .75rem; }
+      p  { color: #8b949e; margin-bottom: 1rem; max-width: 800px; }
+      code { background: #161b22; padding: .1rem .4rem; border-radius: 4px; font-family: monospace; font-size: .9em; color: #a5d6ff; }
+      .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; max-width: 900px; }
+      textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: monospace; font-size: .85rem; padding: .75rem; resize: vertical; min-height: 160px; }
+      button { background: #238636; color: #fff; border: none; border-radius: 6px; padding: .5rem 1.25rem; cursor: pointer; font-size: .9rem; margin-top: .75rem; }
+      button:hover { background: #2ea043; }
+      pre { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .82rem; margin-top: .75rem; white-space: pre-wrap; word-break: break-all; min-height: 60px; }
+      .tag { display: inline-block; background: #388bfd26; color: #58a6ff; border: 1px solid #388bfd; border-radius: 12px; padding: .1rem .6rem; font-size: .75rem; margin-left: .5rem; vertical-align: middle; }
+    </style>
+  </head>
+  <body>
+    <h1>factorize <span class="tag">tsb</span></h1>
+    <p>
+      Integer encoding of categorical values — the TypeScript port of
+      <code>pandas.factorize()</code> and <code>Series.factorize()</code>.
+      Maps each unique value to a monotonically increasing integer code,
+      returning both the <strong>codes</strong> array and the
+      <strong>uniques</strong> array.
+    </p>
+    <p>
+      Missing values (null / undefined / NaN) receive code <code>-1</code>
+      by default.  Useful as a lightweight alternative to full dummy encoding
+      when you need ordinal indices for categorical data.
+    </p>
 
-  <!-- Demo 1: Basic encoding -->
-  <h2>1 · Basic encoding (first-seen order)</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize(["cat", "dog", "cat", null, "dog"]);
-// codes:   [0, 1, 0, -1, 1]
-// uniques: ["cat", "dog"]</pre>
-    <div class="output" id="demo1"></div>
-  </div>
+    <h2>1. Basic factorize — first-seen order</h2>
+    <div class="card">
+      <p>
+        By default, unique values appear in <strong>first-seen order</strong>,
+        matching pandas' behaviour for object arrays.
+      </p>
+      <textarea id="basic-code">
+const values = ["banana", "apple", "banana", "cherry", "apple"];
+const { codes, uniques } = tsb.factorize(values);
 
-  <!-- Demo 2: Sorted encoding -->
-  <h2>2 · Sorted encoding (<code>sort: true</code>)</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize(["banana", "apple", "cherry", "apple"], { sort: true });
-// codes:   [1, 0, 2, 0]
-// uniques: ["apple", "banana", "cherry"]</pre>
-    <div class="output" id="demo2"></div>
-  </div>
+console.log("codes  :", codes);
+// [0, 1, 0, 2, 1]
 
-  <!-- Demo 3: Custom naValue -->
-  <h2>3 · Custom missing sentinel (<code>naValue</code>)</h2>
-  <div class="demo">
-    <pre>const { codes } = factorize(["a", null, undefined, "b", "a"], { naValue: -99 });
-// codes: [0, -99, -99, 1, 0]</pre>
-    <div class="output" id="demo3"></div>
-  </div>
+console.log("uniques:", uniques);
+// ["banana", "apple", "cherry"]
 
-  <!-- Demo 4: Numeric values -->
-  <h2>4 · Numeric values</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize([3, 1, 4, 1, 5, 9, 2, 6]);
-// codes:   [0, 1, 2, 1, 3, 4, 5, 6]
-// uniques: [3, 1, 4, 5, 9, 2, 6]</pre>
-    <div class="output" id="demo4"></div>
-  </div>
+// Reconstruct originals from codes + uniques
+const reconstructed = codes.map(c => uniques[c]);
+console.log("round-trip:", reconstructed);
+      </textarea>
+      <button onclick="run('basic')">▶ Run</button>
+      <pre id="basic-out">Click ▶ Run to execute</pre>
+    </div>
 
-  <!-- Demo 5: All missing -->
-  <h2>5 · All-missing input</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize([null, null, undefined]);
-// codes:   [-1, -1, -1]
-// uniques: []</pre>
-    <div class="output" id="demo5"></div>
-  </div>
+    <h2>2. Sorted uniques</h2>
+    <div class="card">
+      <p>
+        Pass <code>sort: true</code> to sort unique values before assigning
+        codes.  Numbers are sorted numerically; strings lexicographically.
+      </p>
+      <textarea id="sort-code">
+const nums = [30, 10, 20, 10, 30];
+const { codes, uniques } = tsb.factorize(nums, { sort: true });
 
-  <!-- Demo 6: Mixed types with NaN -->
-  <h2>6 · NaN is treated as missing</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize([1, NaN, 2, NaN, 1]);
-// codes:   [0, -1, 1, -1, 0]
-// uniques: [1, 2]</pre>
-    <div class="output" id="demo6"></div>
-  </div>
+console.log("sorted uniques:", uniques);
+// [10, 20, 30]
 
-  <!-- Demo 7: Boolean values -->
-  <h2>7 · Boolean values</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize([true, false, true, null, false]);
-// codes:   [0, 1, 0, -1, 1]
-// uniques: [true, false]</pre>
-    <div class="output" id="demo7"></div>
-  </div>
+console.log("codes         :", codes);
+// [2, 0, 1, 0, 2]
+      </textarea>
+      <button onclick="run('sort')">▶ Run</button>
+      <pre id="sort-out">Click ▶ Run to execute</pre>
+    </div>
 
-  <!-- Demo 8: Treat null as regular value -->
-  <h2>8 · Treat <code>null</code> as a regular value (<code>naValue: null</code>)</h2>
-  <div class="demo">
-    <pre>const { codes, uniques } = factorize(["x", null, "y", null], { naValue: null });
-// null gets a real code alongside "x" and "y"</pre>
-    <div class="output" id="demo8"></div>
-  </div>
+    <h2>3. Missing values → sentinel code -1</h2>
+    <div class="card">
+      <p>
+        Null, undefined, and NaN receive code <code>-1</code> by default and
+        are not included in <code>uniques</code>.  Set
+        <code>useNaSentinel: false</code> to treat them as regular values.
+      </p>
+      <textarea id="na-code">
+const mixed = ["a", null, "b", null, "a"];
+const { codes: withSentinel, uniques: u1 } = tsb.factorize(mixed);
+console.log("with sentinel — codes  :", withSentinel);
+// [0, -1, 1, -1, 0]
+console.log("with sentinel — uniques:", u1);
+// ["a", "b"]
 
-  <script>
-    // Minimal factorize implementation for the playground
-    function isMissing(v) {
-      return v === null || v === undefined || (typeof v === "number" && isNaN(v));
-    }
+const { codes: noSentinel, uniques: u2 } = tsb.factorize(mixed, { useNaSentinel: false });
+console.log("no sentinel   — codes  :", noSentinel);
+// [0, 1, 2, 1, 0]  (null gets its own code)
+console.log("no sentinel   — uniques:", u2);
+// ["a", null, "b"]
+      </textarea>
+      <button onclick="run('na')">▶ Run</button>
+      <pre id="na-out">Click ▶ Run to execute</pre>
+    </div>
 
-    function factorize(values, opts = {}) {
-      const { sort = false, naValue = -1 } = opts;
-      const na = naValue === null ? -1 : naValue;
-      const treatNaAsValue = naValue === null;
-      const rawUniques = [];
-      const seen = new Set();
-      for (const v of values) {
-        if (isMissing(v)) {
-          if (treatNaAsValue && !seen.has(null)) { seen.add(null); rawUniques.push(null); }
-          continue;
+    <h2>4. seriesFactorize — works on a Series</h2>
+    <div class="card">
+      <p>
+        <code>seriesFactorize</code> accepts a <code>Series</code> and returns
+        <code>{ codes: Series&lt;number&gt;, uniques: Series&lt;T&gt; }</code>.
+      </p>
+      <textarea id="series-code">
+const s = new tsb.Series({ data: ["red", "blue", "red", "green", "blue"], name: "color" });
+const { codes, uniques } = tsb.seriesFactorize(s);
+
+console.log("codes  :", codes.values);
+// [0, 1, 0, 2, 1]
+
+console.log("uniques:", uniques.values);
+// ["red", "blue", "green"]
+
+// The codes Series inherits the name
+console.log("codes.name:", codes.name);
+// "color"
+      </textarea>
+      <button onclick="run('series')">▶ Run</button>
+      <pre id="series-out">Click ▶ Run to execute</pre>
+    </div>
+
+    <script type="module">
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
+
+      window.run = function run(id) {
+        const code = document.getElementById(id + "-code").value;
+        const out   = document.getElementById(id + "-out");
+        const logs  = [];
+        const orig  = console.log;
+        console.log = (...args) => {
+          logs.push(args.map(a => typeof a === "string" ? a : JSON.stringify(a, null, 2)).join(" "));
+        };
+        try {
+          // eslint-disable-next-line no-new-func
+          new Function("tsb", code)(tsb);
+          out.textContent = logs.join("\n") || "(no output)";
+        } catch (e) {
+          out.textContent = "Error: " + String(e);
+        } finally {
+          console.log = orig;
         }
-        if (!seen.has(v)) { seen.add(v); rawUniques.push(v); }
-      }
-      const ordered = sort
-        ? [...rawUniques].sort((a, b) => {
-            if (a === null && b === null) return 0;
-            if (a === null) return -1;
-            if (b === null) return 1;
-            return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0;
-          })
-        : rawUniques;
-      const codeMap = new Map(ordered.map((u, i) => [u, i]));
-      const codes = values.map(v => {
-        if (isMissing(v)) return treatNaAsValue ? (codeMap.get(null) ?? na) : na;
-        return codeMap.get(v) ?? na;
-      });
-      return { codes, uniques: ordered };
-    }
-
-    function show(id, { codes, uniques }) {
-      document.getElementById(id).textContent =
-        `codes:   [${codes.join(", ")}]\nuniques: [${uniques.map(u => JSON.stringify(u)).join(", ")}]`;
-    }
-
-    show("demo1", factorize(["cat", "dog", "cat", null, "dog"]));
-    show("demo2", factorize(["banana", "apple", "cherry", "apple"], { sort: true }));
-    show("demo3", factorize(["a", null, undefined, "b", "a"], { naValue: -99 }));
-    show("demo4", factorize([3, 1, 4, 1, 5, 9, 2, 6]));
-    show("demo5", factorize([null, null, undefined]));
-    show("demo6", factorize([1, NaN, 2, NaN, 1]));
-    show("demo7", factorize([true, false, true, null, false]));
-    show("demo8", factorize(["x", null, "y", null], { naValue: null }));
-  </script>
-</body>
+      };
+    </script>
+  </body>
 </html>

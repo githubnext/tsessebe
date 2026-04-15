@@ -1,32 +1,31 @@
 /**
- * pivot_table — enhanced pivot table with margins (row/column totals).
+ * pivot_table — full pivot table with margins (grand totals) support.
  *
- * Mirrors `pandas.pivot_table()` with full margins support:
- * - All aggregation functions: mean, sum, min, max, count, first, last
- * - `margins=true` adds an "All" row and "All" column with marginal aggregates
- * - `margins_name` customises the All label (default `"All"`)
- * - `sort=true` sorts row and column labels lexicographically (default `true`)
- * - `fill_value` replaces empty cells
- * - `dropna` skips rows whose column-group key is all-NaN
+ * Extends `pivotTable` from `pivot.ts` with:
+ * - **`margins`**: add a grand-total row and column (default `false`)
+ * - **`margins_name`**: label for the grand-total row/column (default `"All"`)
+ * - **`sort`**: sort row and column labels alphabetically (default `true`)
+ *
+ * Mirrors `pandas.pivot_table`.
  *
  * @example
  * ```ts
- * import { DataFrame, pivotTableFull } from "tsb";
- *
  * const df = DataFrame.fromColumns({
- *   A: ["foo","foo","foo","bar","bar","bar"],
- *   B: ["one","one","two","two","one","one"],
- *   C: ["small","large","large","small","small","large"],
- *   D: [1, 2, 2, 3, 3, 4],
+ *   region: ["North","North","South","South"],
+ *   product: ["A","B","A","B"],
+ *   sales:   [100, 200, 150, 250],
  * });
- *
- * pivotTableFull(df, { index: "A", columns: "C", values: "D",
- *                       aggfunc: "sum", margins: true });
- * // C     large  small  All
- * // A
- * // bar   4      3      7
- * // foo   4      1      5
- * // All   8      4      12
+ * pivotTableFull(df, {
+ *   index:   "region",
+ *   columns: "product",
+ *   values:  "sales",
+ *   aggfunc: "sum",
+ *   margins: true,
+ * });
+ * //          A    B    All
+ * // North   100  200  300
+ * // South   150  250  400
+ * // All     250  450  700
  * ```
  *
  * @module
@@ -35,293 +34,75 @@
 import { DataFrame } from "../core/index.ts";
 import { Index } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
+import type { AggFuncName, PivotTableOptions } from "./pivot.ts";
 
-// ─── public API types ─────────────────────────────────────────────────────────
+// ─── public types ──────────────────────────────────────────────────────────────
 
-/** Aggregation function for {@link pivotTableFull}. */
-export type PivotAggFunc = "mean" | "sum" | "min" | "max" | "count" | "first" | "last";
-
-/** Options for {@link pivotTableFull}. */
-export interface PivotTableFullOptions {
-  /** Column(s) to use as row index. */
-  readonly index: string | readonly string[];
-  /** Column(s) to use as column headers. */
-  readonly columns: string | readonly string[];
-  /** Column(s) to aggregate. Defaults to all remaining columns. */
-  readonly values?: string | readonly string[];
-  /** Aggregation function. Default `"mean"`. */
-  readonly aggfunc?: PivotAggFunc;
-  /** Fill value for empty cells. Default `null`. */
-  readonly fill_value?: Scalar;
-  /** Skip rows with no non-null values. Default `false`. */
-  readonly dropna?: boolean;
-  /** Add row and column totals. Default `false`. */
+/**
+ * Options for {@link pivotTableFull}.
+ *
+ * Extends {@link PivotTableOptions} with margins, margins_name, and sort.
+ */
+export interface PivotTableFullOptions extends PivotTableOptions {
+  /**
+   * If `true`, add a grand-total row and column to the result.
+   * The totals are computed by applying `aggfunc` over all raw values
+   * (not over already-aggregated cell values).
+   * Default `false`.
+   */
   readonly margins?: boolean;
-  /** Label for the margins row/column. Default `"All"`. */
+  /**
+   * Label for the grand-total row and column when `margins` is `true`.
+   * Default `"All"`.
+   */
   readonly margins_name?: string;
-  /** Sort row and column labels lexicographically. Default `true`. */
+  /**
+   * Sort row and column labels alphabetically before assembling the result.
+   * Default `true`.
+   */
   readonly sort?: boolean;
 }
 
-// ─── internal sentinel ────────────────────────────────────────────────────────
+// ─── private helpers ──────────────────────────────────────────────────────────
 
-/** Internal key used to represent the margins (All) group. */
-// biome-ignore lint/nursery/noSecrets: not a secret — composite delimiter for internal keying
-const MARGIN_SENTINEL = "\x02\x03MARGIN\x03\x02";
-
-// ─── utility helpers ──────────────────────────────────────────────────────────
-
-/** Coerce string-or-array to string[]. */
-function toArr(v: string | readonly string[]): string[] {
-  return typeof v === "string" ? [v] : [...v];
-}
-
-/** True when a Scalar is missing (null / undefined / NaN). */
+/** True when a scalar is missing. */
 function isMissing(v: Scalar): boolean {
   return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
 }
 
-/** Read a single cell from a DataFrame column. */
-function readCell(df: DataFrame, col: string, ri: number): Scalar {
-  return (df.col(col).values as readonly Scalar[])[ri] ?? null;
+/** Normalise a string | string[] to string[]. */
+function toArr(x: string | readonly string[]): string[] {
+  return typeof x === "string" ? [x] : [...x];
 }
 
-/** Build a composite row/column key from one or more column values. */
-function makeKey(df: DataFrame, cols: string[], ri: number): string {
-  return cols.map((c) => String(readCell(df, c, ri))).join("\x00");
+/** Read a scalar from a DataFrame column by row position. */
+function getVal(df: DataFrame, col: string, ri: number): Scalar {
+  return df.col(col).values[ri] ?? null;
 }
 
-/** Convert a composite key to a display label. */
-function keyLabel(key: string): Label {
-  const parts = key.split("\x00");
-  return (parts.length === 1 ? parts[0] : parts.join(", ")) as Label;
+/** Build a composite key from multiple columns at a given row position. */
+function makeKey(df: DataFrame, cols: readonly string[], ri: number): string {
+  return cols.map((c) => String(getVal(df, c, ri))).join("\x00");
 }
 
-/** Push a number into a map-of-arrays, creating the bucket when absent. */
-function push(groups: Map<string, number[]>, key: string, v: number): void {
-  let b = groups.get(key);
-  if (b === undefined) {
-    b = [];
-    groups.set(key, b);
+/** Collect unique keys in insertion order from a key-generation function. */
+function collectUniqueKeys(n: number, keyFn: (i: number) => string): string[] {
+  const order: string[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < n; i++) {
+    const k = keyFn(i);
+    if (!seen.has(k)) {
+      seen.add(k);
+      order.push(k);
+    }
   }
-  b.push(v);
+  return order;
 }
 
-/** Append to an array only when the item is not already present. */
-function pushUnique(arr: string[], item: string): void {
-  if (!arr.includes(item)) {
-    arr.push(item);
-  }
-}
-
-// ─── aggregation ──────────────────────────────────────────────────────────────
-
-/** Reduce a non-empty numeric array with the given aggregation function. */
-function applyAggFunc(nums: number[], fn: PivotAggFunc): number {
-  if (fn === "count") {
-    return nums.length;
-  }
-  if (fn === "first") {
-    return nums[0] as number;
-  }
-  if (fn === "last") {
-    return nums.at(-1) as number;
-  }
-  if (fn === "min") {
-    return Math.min(...nums);
-  }
-  if (fn === "max") {
-    return Math.max(...nums);
-  }
-  const total = nums.reduce((a, b) => a + b, 0);
-  if (fn === "sum") {
-    return total;
-  }
-  return total / nums.length; // mean
-}
-
-/** Aggregate the bucket for a cell key, or return fill value when empty. */
-function aggregateCell(
-  groups: Map<string, number[]>,
-  cellKey: string,
-  fn: PivotAggFunc,
-  fillValue: Scalar,
-): Scalar {
-  const bucket = groups.get(cellKey);
-  if (bucket === undefined || bucket.length === 0) {
-    return fn === "count" ? 0 : fillValue;
-  }
-  return applyAggFunc(bucket, fn);
-}
-
-// ─── group collection ─────────────────────────────────────────────────────────
-
-/** Collect the observation at (rk, ck, valCol) into all relevant buckets. */
-function collectObservation(
-  groups: Map<string, number[]>,
-  rk: string,
-  ck: string,
-  valCol: string,
-  v: number,
-  withMargins: boolean,
-): void {
-  push(groups, `${rk}\x01${ck}\x01${valCol}`, v);
-  if (withMargins) {
-    push(groups, `${rk}\x01${MARGIN_SENTINEL}\x01${valCol}`, v);
-    push(groups, `${MARGIN_SENTINEL}\x01${ck}\x01${valCol}`, v);
-    push(groups, `${MARGIN_SENTINEL}\x01${MARGIN_SENTINEL}\x01${valCol}`, v);
-  }
-}
-
-interface GroupsData {
-  readonly rowKeys: string[];
-  readonly colKeys: string[];
-  readonly groups: Map<string, number[]>;
-}
-
-/** Scan the DataFrame and populate all group buckets. */
-function collectGroups(
+/** Resolve which value columns to aggregate. */
+function resolveValuesCols(
   df: DataFrame,
-  idxCols: string[],
-  colCols: string[],
-  valuesCols: string[],
-  withMargins: boolean,
-): GroupsData {
-  const nRows = df.index.size;
-  const rowKeys: string[] = [];
-  const colKeys: string[] = [];
-  const groups: Map<string, number[]> = new Map();
-
-  for (let ri = 0; ri < nRows; ri++) {
-    const rk = makeKey(df, idxCols, ri);
-    const ck = makeKey(df, colCols, ri);
-    pushUnique(rowKeys, rk);
-    pushUnique(colKeys, ck);
-    for (const valCol of valuesCols) {
-      const v = readCell(df, valCol, ri);
-      if (!isMissing(v) && typeof v === "number") {
-        collectObservation(groups, rk, ck, valCol, v, withMargins);
-      }
-    }
-  }
-
-  return { rowKeys, colKeys, groups };
-}
-
-// ─── result construction ──────────────────────────────────────────────────────
-
-/** Build the ordered list of output column names. */
-function buildColumnNames(
-  colKeys: string[],
-  valuesCols: string[],
-  isSingle: boolean,
-  withMargins: boolean,
-  marginsName: string,
-): string[] {
-  const keys = withMargins ? [...colKeys, MARGIN_SENTINEL] : colKeys;
-  const names: string[] = [];
-  for (const ck of keys) {
-    const label = ck === MARGIN_SENTINEL ? marginsName : ck;
-    for (const vc of valuesCols) {
-      names.push(isSingle ? label : `${vc}_${label}`);
-    }
-  }
-  return names;
-}
-
-/** Compute one data row for a given row key. */
-function computeRow(
-  rk: string,
-  colKeys: string[],
-  valuesCols: string[],
-  isSingle: boolean,
-  groups: Map<string, number[]>,
-  fn: PivotAggFunc,
-  fillValue: Scalar,
-  withMargins: boolean,
-  marginsName: string,
-): Record<string, Scalar> {
-  const keys = withMargins ? [...colKeys, MARGIN_SENTINEL] : colKeys;
-  const row: Record<string, Scalar> = {};
-  for (const ck of keys) {
-    const label = ck === MARGIN_SENTINEL ? marginsName : ck;
-    for (const vc of valuesCols) {
-      const colName = isSingle ? label : `${vc}_${label}`;
-      row[colName] = aggregateCell(groups, `${rk}\x01${ck}\x01${vc}`, fn, fillValue);
-    }
-  }
-  return row;
-}
-
-/** Check whether every value in a row record is missing. */
-function rowIsAllMissing(row: Record<string, Scalar>): boolean {
-  return Object.values(row).every((v) => isMissing(v));
-}
-
-interface AssembleOptions {
-  readonly rowKeys: string[];
-  readonly colKeys: string[];
-  readonly valuesCols: string[];
-  readonly groups: Map<string, number[]>;
-  readonly fn: PivotAggFunc;
-  readonly fillValue: Scalar;
-  readonly dropna: boolean;
-  readonly withMargins: boolean;
-  readonly marginsName: string;
-  readonly sort: boolean;
-}
-
-/** Build the output DataFrame from aggregated groups. */
-function assembleDataFrame(opts: AssembleOptions): DataFrame {
-  const orderedRows = opts.sort ? [...opts.rowKeys].sort() : opts.rowKeys;
-  const orderedCols = opts.sort ? [...opts.colKeys].sort() : opts.colKeys;
-  const isSingle = opts.valuesCols.length === 1;
-
-  const colNames = buildColumnNames(
-    orderedCols,
-    opts.valuesCols,
-    isSingle,
-    opts.withMargins,
-    opts.marginsName,
-  );
-
-  const dataRows: Record<string, Scalar>[] = [];
-  const rowLabels: Label[] = [];
-
-  const allRowKeys = opts.withMargins ? [...orderedRows, MARGIN_SENTINEL] : orderedRows;
-  for (const rk of allRowKeys) {
-    const row = computeRow(
-      rk,
-      orderedCols,
-      opts.valuesCols,
-      isSingle,
-      opts.groups,
-      opts.fn,
-      opts.fillValue,
-      opts.withMargins,
-      opts.marginsName,
-    );
-    if (opts.dropna && rk !== MARGIN_SENTINEL && rowIsAllMissing(row)) {
-      continue;
-    }
-    dataRows.push(row);
-    rowLabels.push(rk === MARGIN_SENTINEL ? (opts.marginsName as Label) : keyLabel(rk));
-  }
-
-  const outCols: Record<string, readonly Scalar[]> = {};
-  for (const name of colNames) {
-    outCols[name] = dataRows.map((r) => r[name] ?? null);
-  }
-
-  return DataFrame.fromColumns(outCols, { index: new Index<Label>(rowLabels) });
-}
-
-// ─── values resolution ────────────────────────────────────────────────────────
-
-/** Determine which columns to aggregate (explicit or all non-index/column cols). */
-function resolveValues(
-  df: DataFrame,
-  optValues: PivotTableFullOptions["values"],
+  optValues: PivotTableOptions["values"],
   idxCols: string[],
   colCols: string[],
 ): string[] {
@@ -338,35 +119,148 @@ function resolveValues(
   return df.columns.values.filter((c) => !exclude.has(c));
 }
 
-// ─── public API ───────────────────────────────────────────────────────────────
+/** Compute an aggregation over an array of raw numeric values. */
+function aggregate(nums: number[], fn: AggFuncName): number {
+  if (fn === "count") {
+    return nums.length;
+  }
+  if (nums.length === 0) {
+    return Number.NaN;
+  }
+  if (fn === "first") {
+    return nums[0] as number;
+  }
+  if (fn === "last") {
+    return nums.at(-1) as number;
+  }
+  if (fn === "min") {
+    return Math.min(...nums);
+  }
+  if (fn === "max") {
+    return Math.max(...nums);
+  }
+  if (fn === "sum") {
+    return nums.reduce((s, v) => s + v, 0);
+  }
+  // mean
+  return nums.reduce((s, v) => s + v, 0) / nums.length;
+}
 
 /**
- * Create a pivot table with optional row/column margin totals.
+ * Bucket key for a (rowKey, colKey, valueCol) triple.
+ * Uses \x01 as separator (different from \x00 used inside multi-col keys).
+ */
+function bucketKey(rk: string, ck: string, valCol: string): string {
+  return `${rk}\x01${ck}\x01${valCol}`;
+}
+
+/** Build all raw-value buckets for the pivot table. */
+function buildBuckets(
+  df: DataFrame,
+  idxCols: string[],
+  colCols: string[],
+  valuesCols: string[],
+): {
+  rowKeyOrder: string[];
+  colKeyOrder: string[];
+  buckets: Map<string, number[]>;
+} {
+  const n = df.index.size;
+  const rowKeyFn = (ri: number): string => makeKey(df, idxCols, ri);
+  const colKeyFn = (ri: number): string => makeKey(df, colCols, ri);
+
+  const rowKeyOrder = collectUniqueKeys(n, rowKeyFn);
+  const colKeyOrder = collectUniqueKeys(n, colKeyFn);
+
+  const buckets = new Map<string, number[]>();
+
+  for (let ri = 0; ri < n; ri++) {
+    const rk = rowKeyFn(ri);
+    const ck = colKeyFn(ri);
+    for (const valCol of valuesCols) {
+      const key = bucketKey(rk, ck, valCol);
+      let bucket = buckets.get(key);
+      if (bucket === undefined) {
+        bucket = [];
+        buckets.set(key, bucket);
+      }
+      const v = getVal(df, valCol, ri);
+      if (!isMissing(v) && typeof v === "number") {
+        bucket.push(v);
+      }
+    }
+  }
+
+  return { rowKeyOrder, colKeyOrder, buckets };
+}
+
+/** Compute the aggregated cell value, applying fill_value when empty. */
+function cellValue(
+  rk: string,
+  ck: string,
+  valCol: string,
+  buckets: Map<string, number[]>,
+  aggfunc: AggFuncName,
+  fillValue: Scalar,
+): Scalar {
+  const bucket = buckets.get(bucketKey(rk, ck, valCol));
+  if (bucket === undefined || bucket.length === 0) {
+    return aggfunc === "count" ? 0 : fillValue;
+  }
+  return aggregate(bucket, aggfunc);
+}
+
+/** Compute the margin value for a (merged-key, valCol) pair by concatenating buckets. */
+function marginValue(
+  keys: string[],
+  fixedKey: string,
+  valCol: string,
+  buckets: Map<string, number[]>,
+  fixedIsRow: boolean,
+  aggfunc: AggFuncName,
+  fillValue: Scalar,
+): Scalar {
+  const combined: number[] = [];
+  for (const k of keys) {
+    const bkey = fixedIsRow ? bucketKey(fixedKey, k, valCol) : bucketKey(k, fixedKey, valCol);
+    const bucket = buckets.get(bkey);
+    if (bucket) {
+      combined.push(...bucket);
+    }
+  }
+  if (combined.length === 0) {
+    return aggfunc === "count" ? 0 : fillValue;
+  }
+  return aggregate(combined, aggfunc);
+}
+
+/** Convert a composite row key to a display Label. */
+function rowKeyToLabel(rk: string): Label {
+  const parts = rk.split("\x00");
+  // parts[0] is string | undefined; ?? null gives string | null, a subset of Label
+  const single = parts[0] ?? null;
+  return parts.length === 1 ? single : parts.join(", ");
+}
+
+// ─── main export ──────────────────────────────────────────────────────────────
+
+/**
+ * Create a full pivot table with optional grand-total margins.
  *
- * Mirrors `pandas.pivot_table()` — an enhanced version of {@link pivotTable}
- * that adds `margins`, `margins_name`, and `sort` options.
+ * Mirrors `pandas.pivot_table` / `pandas.DataFrame.pivot_table`.
  *
  * @param df      - Source DataFrame.
- * @param options - Pivot table options.
- * @returns         Aggregated pivot DataFrame, with optional All row/column.
- *
- * @example
- * ```ts
- * import { DataFrame, pivotTableFull } from "tsb";
- *
- * const df = DataFrame.fromColumns({
- *   A: ["foo","foo","foo","bar","bar","bar"],
- *   C: ["small","large","large","small","small","large"],
- *   D: [1, 2, 2, 3, 3, 4],
- * });
- *
- * pivotTableFull(df, { index: "A", columns: "C", values: "D",
- *                       aggfunc: "sum", margins: true });
- * // rows: foo, bar, All
- * // cols: large, small, All
- * ```
+ * @param options - Full pivot table options.
+ * @returns       A new aggregated DataFrame.
  */
 export function pivotTableFull(df: DataFrame, options: PivotTableFullOptions): DataFrame {
+  const aggfunc: AggFuncName = options.aggfunc ?? "mean";
+  const fillValue: Scalar = options.fill_value ?? null;
+  const dropna: boolean = options.dropna ?? false;
+  const margins: boolean = options.margins ?? false;
+  const marginsName: string = options.margins_name ?? "All";
+  const sort: boolean = options.sort ?? true;
+
   const idxCols = toArr(options.index);
   const colCols = toArr(options.columns);
 
@@ -376,21 +270,115 @@ export function pivotTableFull(df: DataFrame, options: PivotTableFullOptions): D
     }
   }
 
-  const valuesCols = resolveValues(df, options.values, idxCols, colCols);
-  const withMargins = options.margins === true;
+  const valuesCols = resolveValuesCols(df, options.values, idxCols, colCols);
+  const { rowKeyOrder, colKeyOrder, buckets } = buildBuckets(df, idxCols, colCols, valuesCols);
 
-  const { rowKeys, colKeys, groups } = collectGroups(df, idxCols, colCols, valuesCols, withMargins);
+  // Optionally sort row and column keys
+  const finalRowOrder = sort ? [...rowKeyOrder].sort() : rowKeyOrder;
+  const finalColOrder = sort ? [...colKeyOrder].sort() : colKeyOrder;
 
-  return assembleDataFrame({
-    rowKeys,
-    colKeys,
-    valuesCols,
-    groups,
-    fn: options.aggfunc ?? "mean",
-    fillValue: options.fill_value ?? null,
-    dropna: options.dropna === true,
-    withMargins,
-    marginsName: options.margins_name ?? "All",
-    sort: options.sort !== false,
+  const isSingleValue = valuesCols.length === 1;
+
+  // Build output column name list
+  const outColNames: string[] = [];
+  for (const ck of finalColOrder) {
+    for (const valCol of valuesCols) {
+      outColNames.push(isSingleValue ? ck : `${valCol}_${ck}`);
+    }
+  }
+  if (margins) {
+    for (const valCol of valuesCols) {
+      outColNames.push(isSingleValue ? marginsName : `${valCol}_${marginsName}`);
+    }
+  }
+
+  // Build output column arrays
+  const outCols: Record<string, Scalar[]> = {};
+  for (const name of outColNames) {
+    outCols[name] = [];
+  }
+
+  // Fill data rows
+  for (const rk of finalRowOrder) {
+    for (const ck of finalColOrder) {
+      for (const valCol of valuesCols) {
+        const name = isSingleValue ? ck : `${valCol}_${ck}`;
+        const v = cellValue(rk, ck, valCol, buckets, aggfunc, fillValue);
+        outCols[name]?.push(v);
+      }
+    }
+    if (margins) {
+      // "All" column for this row: aggregate across all column groups
+      for (const valCol of valuesCols) {
+        const allColName = isSingleValue ? marginsName : `${valCol}_${marginsName}`;
+        const v = marginValue(colKeyOrder, rk, valCol, buckets, true, aggfunc, fillValue);
+        outCols[allColName]?.push(v);
+      }
+    }
+  }
+
+  // Build row index labels
+  const rowIndexLabels: Label[] = finalRowOrder.map(rowKeyToLabel);
+
+  // Append margins row ("All" row) if requested
+  if (margins) {
+    for (const ck of finalColOrder) {
+      for (const valCol of valuesCols) {
+        const name = isSingleValue ? ck : `${valCol}_${ck}`;
+        const v = marginValue(rowKeyOrder, ck, valCol, buckets, false, aggfunc, fillValue);
+        outCols[name]?.push(v);
+      }
+    }
+    // Grand total (corner cell)
+    for (const valCol of valuesCols) {
+      const allColName = isSingleValue ? marginsName : `${valCol}_${marginsName}`;
+      const grandBucket: number[] = [];
+      for (const rk of rowKeyOrder) {
+        for (const ck of colKeyOrder) {
+          const bucket = buckets.get(bucketKey(rk, ck, valCol));
+          if (bucket) {
+            grandBucket.push(...bucket);
+          }
+        }
+      }
+      const v =
+        grandBucket.length === 0
+          ? aggfunc === "count"
+            ? 0
+            : fillValue
+          : aggregate(grandBucket, aggfunc);
+      outCols[allColName]?.push(v);
+    }
+    rowIndexLabels.push(marginsName);
+  }
+
+  // Apply dropna: remove all-missing columns and rows
+  if (dropna) {
+    const colsToKeep = outColNames.filter((name) => outCols[name]?.some((v) => !isMissing(v)));
+    const keptCols: Record<string, Scalar[]> = {};
+    for (const name of colsToKeep) {
+      const c = outCols[name];
+      if (c !== undefined) {
+        keptCols[name] = c;
+      }
+    }
+    const rowsToKeep = rowIndexLabels.map((_, ri) =>
+      colsToKeep.some((name) => !isMissing(keptCols[name]?.[ri] ?? null)),
+    );
+    const keptLabels = rowIndexLabels.filter((_, ri) => rowsToKeep[ri]);
+    const filteredCols: Record<string, Scalar[]> = {};
+    for (const name of colsToKeep) {
+      const c = keptCols[name];
+      if (c !== undefined) {
+        filteredCols[name] = c.filter((_, ri) => rowsToKeep[ri]);
+      }
+    }
+    return DataFrame.fromColumns(filteredCols, {
+      index: new Index<Label>(keptLabels),
+    });
+  }
+
+  return DataFrame.fromColumns(outCols, {
+    index: new Index<Label>(rowIndexLabels),
   });
 }

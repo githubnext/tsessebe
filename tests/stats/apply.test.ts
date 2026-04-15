@@ -1,317 +1,321 @@
-/**
- * Tests for stats/apply.ts
- */
-
 import { describe, expect, test } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
-import {
-  applyDataFrame,
-  applyExpandDataFrame,
-  applySeries,
-  mapDataFrame,
-  mapSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series, applySeries, applymap, dataFrameApply } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
-// ─── applySeries ───────────────────────────────────────────────────────────────
+// ─── applySeries ──────────────────────────────────────────────────────────────
 
-describe("applySeries", () => {
-  test("squares each value", () => {
-    const s = new Series({ data: [1, 2, 3, 4] });
-    expect(applySeries(s, (v) => (v as number) ** 2).values).toEqual([1, 4, 9, 16]);
+describe("applySeries — basic transforms", () => {
+  const s = new Series({ data: [1, 2, 3, 4] as Scalar[], name: "nums" });
+
+  test("doubles each value", () => {
+    const r = applySeries(s, (v) => (v as number) * 2);
+    expect([...r.values]).toEqual([2, 4, 6, 8]);
   });
 
-  test("string transform", () => {
-    const s = new Series({ data: ["a", "b", "c"] });
-    expect(applySeries(s, (v) => String(v).toUpperCase()).values).toEqual(["A", "B", "C"]);
+  test("returns squared values", () => {
+    const r = applySeries(s, (v) => (v as number) ** 2);
+    expect([...r.values]).toEqual([1, 4, 9, 16]);
   });
 
-  test("null values passed to fn", () => {
-    const s = new Series<Scalar>({ data: [1, null, 3] });
-    expect(applySeries(s, (v) => (v === null ? 0 : (v as number) * 2)).values).toEqual([2, 0, 6]);
+  test("preserves original index", () => {
+    const si = new Series({ data: [10, 20] as Scalar[], index: ["a", "b"] });
+    const r = applySeries(si, (v) => v);
+    expect([...r.index.values]).toEqual(["a", "b"]);
   });
 
-  test("fn receives label", () => {
-    const s = new Series({ data: [10, 20], index: ["x", "y"] });
-    const labels: string[] = [];
-    applySeries(s, (v, label) => {
-      labels.push(String(label));
+  test("preserves name", () => {
+    const r = applySeries(s, (v) => v);
+    expect(r.name).toBe("nums");
+  });
+
+  test("fn receives label as second argument", () => {
+    const si = new Series({ data: [1, 2, 3] as Scalar[], index: ["x", "y", "z"] });
+    const labels: unknown[] = [];
+    applySeries(si, (v, lbl) => {
+      labels.push(lbl);
       return v;
     });
-    expect(labels).toEqual(["x", "y"]);
+    expect(labels).toEqual(["x", "y", "z"]);
   });
 
-  test("fn receives index position", () => {
-    const s = new Series({ data: [5, 6, 7] });
-    expect(applySeries(s, (_v, _l, i) => i).values).toEqual([0, 1, 2]);
+  test("passes through null unchanged when fn returns it", () => {
+    const sn = new Series({ data: [1, null, 3] as Scalar[] });
+    const r = applySeries(sn, (v) => (v === null ? null : (v as number) + 10));
+    expect([...r.values]).toEqual([11, null, 13]);
   });
 
-  test("preserves name and index", () => {
-    const s = new Series({ data: [1, 2], index: ["a", "b"], name: "test" });
-    const result = applySeries(s, (v) => v);
-    expect(result.name).toBe("test");
-    expect(result.index.at(1)).toBe("b");
+  test("empty series returns empty series", () => {
+    const se = new Series({ data: [] as Scalar[] });
+    const r = applySeries(se, (v) => v);
+    expect(r.size).toBe(0);
   });
 
-  // property: apply identity function returns same values
-  test("property: identity preserves all values", () => {
+  test("can map to strings", () => {
+    const r = applySeries(s, (v) => `val=${v as number}`);
+    expect([...r.values]).toEqual(["val=1", "val=2", "val=3", "val=4"]);
+  });
+
+  test("identity fn is a no-op", () => {
+    const r = applySeries(s, (v) => v);
+    expect([...r.values]).toEqual([...s.values]);
+  });
+});
+
+describe("applySeries — property-based", () => {
+  test("output length equals input length", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer({ min: -1000, max: 1000 }), { minLength: 1, maxLength: 20 }),
-        (data) => {
-          const s = new Series({ data: data as Scalar[] });
-          const result = applySeries(s, (v) => v);
-          return (result.values as number[]).every((v, i) => v === data[i]);
-        },
-      ),
+      fc.property(fc.array(fc.integer({ min: -100, max: 100 }), { maxLength: 50 }), (data) => {
+        const s = new Series({ data: data as Scalar[] });
+        const r = applySeries(s, (v) => (v as number) * 3);
+        return r.size === s.size;
+      }),
     );
   });
 
-  // property: apply constant function returns constant values
-  test("property: constant function fills result", () => {
+  test("identity preserves all values", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { minLength: 1, maxLength: 10 }),
-        fc.integer(),
-        (data, k) => {
-          const s = new Series({ data: data as Scalar[] });
-          const result = applySeries(s, () => k);
-          return (result.values as number[]).every((v) => v === k);
-        },
-      ),
+      fc.property(fc.array(fc.float({ noNaN: true }), { maxLength: 40 }), (data) => {
+        const s = new Series({ data: data as Scalar[] });
+        const r = applySeries(s, (v) => v);
+        return r.values.every((v, i) => v === s.values[i]);
+      }),
     );
   });
 });
 
-// ─── mapSeries ─────────────────────────────────────────────────────────────────
+// ─── applymap ─────────────────────────────────────────────────────────────────
 
-describe("mapSeries", () => {
-  test("function mapper behaves like applySeries", () => {
-    const s = new Series({ data: [1, 2, 3] });
-    expect(mapSeries(s, (v) => (v as number) * 10).values).toEqual([10, 20, 30]);
+describe("applymap — basic transforms", () => {
+  const df = DataFrame.fromColumns({ a: [1, 2, 3] as Scalar[], b: [4, 5, 6] as Scalar[] });
+
+  test("doubles every cell", () => {
+    const r = applymap(df, (v) => (v as number) * 2);
+    expect([...r.col("a").values]).toEqual([2, 4, 6]);
+    expect([...r.col("b").values]).toEqual([8, 10, 12]);
   });
 
-  test("plain object lookup", () => {
-    const s = new Series({ data: ["a", "b", "c"] });
-    expect(mapSeries(s, { a: 1, b: 2, c: 3 }).values).toEqual([1, 2, 3]);
+  test("preserves shape", () => {
+    const r = applymap(df, (v) => v);
+    expect(r.shape).toEqual([3, 2]);
   });
 
-  test("Map lookup", () => {
-    const s = new Series({ data: [1, 2, 3] });
-    const lookup = new Map<Scalar, Scalar>([
-      [1, "one"],
-      [2, "two"],
-      [3, "three"],
-    ]);
-    expect(mapSeries(s, lookup).values).toEqual(["one", "two", "three"]);
+  test("preserves column names", () => {
+    const r = applymap(df, (v) => v);
+    expect([...r.columns.values]).toEqual(["a", "b"]);
   });
 
-  test("missing lookup key returns null", () => {
-    const s = new Series({ data: ["a", "z"] });
-    expect(mapSeries(s, { a: 1 }).values).toEqual([1, null]);
+  test("preserves row index", () => {
+    const dfi = DataFrame.fromColumns({ x: [1, 2] as Scalar[] }, { index: ["r0", "r1"] });
+    const r = applymap(dfi, (v) => v);
+    expect([...r.index.values]).toEqual(["r0", "r1"]);
   });
 
-  test("preserves index and name", () => {
-    const s = new Series({ data: [1, 2], name: "x" });
-    const result = mapSeries(s, (v) => v);
-    expect(result.name).toBe("x");
-  });
-});
-
-// ─── applyDataFrame ───────────────────────────────────────────────────────────
-
-describe("applyDataFrame", () => {
-  test("sum of each column (axis=0)", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
-    const result = applyDataFrame(df, (col) =>
-      (col.values as number[]).reduce((acc, v) => acc + v, 0),
-    );
-    expect(result.values).toEqual([6, 15]);
-    expect(result.index.at(0)).toBe("a");
-    expect(result.index.at(1)).toBe("b");
-  });
-
-  test("max of each column (axis=0)", () => {
-    const df = DataFrame.fromColumns({ x: [3, 1, 2], y: [5, 10, 4] });
-    const result = applyDataFrame(df, (col) => Math.max(...(col.values as number[])));
-    expect(result.values).toEqual([3, 10]);
-  });
-
-  test("sum of each row (axis=1)", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
-    const result = applyDataFrame(
-      df,
-      (row) => (row.values as number[]).reduce((acc, v) => acc + v, 0),
-      { axis: 1 },
-    );
-    expect(result.values).toEqual([4, 6]);
-  });
-
-  test("fn receives column name (axis=0)", () => {
-    const df = DataFrame.fromColumns({ a: [1], b: [2] });
-    const names: string[] = [];
-    applyDataFrame(df, (_col, label) => {
-      names.push(String(label));
-      return 0;
+  test("fn receives colName as second argument", () => {
+    const seen: string[] = [];
+    applymap(df, (v, name) => {
+      if (!seen.includes(name)) {
+        seen.push(name);
+      }
+      return v;
     });
-    expect(names).toEqual(["a", "b"]);
+    expect(seen.sort()).toEqual(["a", "b"]);
   });
 
-  test("fn receives row label (axis=1)", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2] });
-    const labels: string[] = [];
-    applyDataFrame(
+  test("can use colName in transform", () => {
+    const r = applymap(df, (v, col) => `${col}:${v as number}`);
+    expect(r.col("a").values[0]).toBe("a:1");
+    expect(r.col("b").values[1]).toBe("b:5");
+  });
+
+  test("handles nulls: fn decides behaviour", () => {
+    const dfn = DataFrame.fromColumns({ a: [1, null, 3] as Scalar[] });
+    const r = applymap(dfn, (v) => (v === null ? 0 : v));
+    expect([...r.col("a").values]).toEqual([1, 0, 3]);
+  });
+
+  test("empty DataFrame returns empty DataFrame", () => {
+    const empty = DataFrame.fromColumns({ a: [] as Scalar[] });
+    const r = applymap(empty, (v) => v);
+    expect(r.shape).toEqual([0, 1]);
+  });
+});
+
+describe("applymap — property-based", () => {
+  test("cell count equals rows × cols", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.array(fc.integer({ min: 0, max: 99 }), { minLength: 2, maxLength: 2 }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
+        (rows) => {
+          const df = DataFrame.fromRecords(
+            rows.map((r) => ({ c0: r[0] as number, c1: r[1] as number })),
+          );
+          const result = applymap(df, (v) => (v as number) + 1);
+          return result.shape[0] === df.shape[0] && result.shape[1] === df.shape[1];
+        },
+      ),
+    );
+  });
+});
+
+// ─── dataFrameApply — axis=0 (column aggregation) ────────────────────────────
+
+describe("dataFrameApply — axis=0 (default)", () => {
+  const df = DataFrame.fromColumns({ a: [1, 2, 3] as Scalar[], b: [10, 20, 30] as Scalar[] });
+
+  test("column sum", () => {
+    const r = dataFrameApply(df, (col) => col.sum());
+    expect([...r.values]).toEqual([6, 60]);
+  });
+
+  test("result is indexed by column names", () => {
+    const r = dataFrameApply(df, (col) => col.sum());
+    expect([...r.index.values]).toEqual(["a", "b"]);
+  });
+
+  test("column mean", () => {
+    const r = dataFrameApply(df, (col) => col.mean());
+    expect([...r.values]).toEqual([2, 20]);
+  });
+
+  test("column max", () => {
+    const r = dataFrameApply(df, (col) => col.max());
+    expect([...r.values]).toEqual([3, 30]);
+  });
+
+  test("column min", () => {
+    const r = dataFrameApply(df, (col) => col.min());
+    expect([...r.values]).toEqual([1, 10]);
+  });
+
+  test("explicit axis=0 matches default", () => {
+    const r0 = dataFrameApply(df, (col) => col.sum(), { axis: 0 });
+    const rDefault = dataFrameApply(df, (col) => col.sum());
+    expect([...r0.values]).toEqual([...rDefault.values]);
+  });
+
+  test("explicit axis='index' matches default", () => {
+    const ri = dataFrameApply(df, (col) => col.sum(), { axis: "index" });
+    const rDefault = dataFrameApply(df, (col) => col.sum());
+    expect([...ri.values]).toEqual([...rDefault.values]);
+  });
+
+  test("single column DataFrame", () => {
+    const single = DataFrame.fromColumns({ x: [5, 10, 15] as Scalar[] });
+    const r = dataFrameApply(single, (col) => col.sum());
+    expect(r.size).toBe(1);
+    expect(r.values[0]).toBe(30);
+  });
+});
+
+// ─── dataFrameApply — axis=1 (row aggregation) ───────────────────────────────
+
+describe("dataFrameApply — axis=1", () => {
+  const df = DataFrame.fromColumns({ a: [1, 2, 3] as Scalar[], b: [10, 20, 30] as Scalar[] });
+
+  test("row sum", () => {
+    const r = dataFrameApply(df, (row) => row.sum(), { axis: 1 });
+    expect([...r.values]).toEqual([11, 22, 33]);
+  });
+
+  test("result length equals number of rows", () => {
+    const r = dataFrameApply(df, (row) => row.sum(), { axis: 1 });
+    expect(r.size).toBe(3);
+  });
+
+  test("result is indexed by row labels", () => {
+    const dfi = DataFrame.fromColumns(
+      { a: [1, 2] as Scalar[], b: [3, 4] as Scalar[] },
+      { index: ["r0", "r1"] },
+    );
+    const r = dataFrameApply(dfi, (row) => row.sum(), { axis: 1 });
+    expect([...r.index.values]).toEqual(["r0", "r1"]);
+  });
+
+  test("row fn receives Series with column-name index", () => {
+    const colsSeen: string[][] = [];
+    dataFrameApply(
       df,
-      (_row, label) => {
-        labels.push(String(label));
+      (row) => {
+        colsSeen.push([...row.index.values] as string[]);
         return 0;
       },
       { axis: 1 },
     );
-    expect(labels).toEqual(["0", "1"]);
+    for (const cols of colsSeen) {
+      expect(cols).toEqual(["a", "b"]);
+    }
   });
 
-  // property: apply len returns column/row sizes
-  test("property: length of each column equals row count", () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.integer({ min: 1, max: 100 }), { minLength: 1, maxLength: 10 }),
-        fc.array(fc.integer({ min: 1, max: 100 }), { minLength: 1, maxLength: 10 }),
-        (col1, col2) => {
-          const len = Math.min(col1.length, col2.length);
-          const df = DataFrame.fromColumns({
-            a: col1.slice(0, len) as Scalar[],
-            b: col2.slice(0, len) as Scalar[],
-          });
-          const result = applyDataFrame(df, (col) => col.size);
-          return (result.values as number[]).every((v) => v === len);
-        },
-      ),
-    );
-  });
-});
-
-// ─── applyExpandDataFrame ────────────────────────────────────────────────────
-
-describe("applyExpandDataFrame", () => {
-  test("double each column (axis=0)", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
-    const result = applyExpandDataFrame(
-      df,
-      (col) =>
-        new Series<Scalar>({
-          data: (col.values as number[]).map((v) => v * 2),
-          index: col.index,
-          name: col.name,
-        }),
-    );
-    expect(result.col("a").values).toEqual([2, 4, 6]);
-    expect(result.col("b").values).toEqual([8, 10, 12]);
+  test("axis='columns' matches axis=1", () => {
+    const r1 = dataFrameApply(df, (row) => row.sum(), { axis: 1 });
+    const rCols = dataFrameApply(df, (row) => row.sum(), { axis: "columns" });
+    expect([...r1.values]).toEqual([...rCols.values]);
   });
 
-  test("apply returning same Series (identity)", () => {
-    const df = DataFrame.fromColumns({ x: [10, 20], y: [30, 40] });
-    const result = applyExpandDataFrame(df, (col) => col);
-    expect(result.col("x").values).toEqual([10, 20]);
-    expect(result.col("y").values).toEqual([30, 40]);
+  test("row mean", () => {
+    const r = dataFrameApply(df, (row) => row.mean(), { axis: 1 });
+    expect([...r.values]).toEqual([5.5, 11, 16.5]);
   });
 
-  test("axis=1: transform each row into scaled version", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
-    // Each row → multiply all values by row index
-    const result = applyExpandDataFrame(
-      df,
-      (row, label) => {
-        const scale = (label as number) + 1;
-        return new Series<Scalar>({
-          data: (row.values as number[]).map((v) => v * scale),
-          index: row.index,
-          name: String(label),
-        });
-      },
-      { axis: 1 },
-    );
-    expect(result.col("a").values).toEqual([1 * 1, 2 * 2]);
-    expect(result.col("b").values).toEqual([3 * 1, 4 * 2]);
+  test("single row DataFrame", () => {
+    const single = DataFrame.fromColumns({ a: [7] as Scalar[], b: [3] as Scalar[] });
+    const r = dataFrameApply(single, (row) => row.sum(), { axis: 1 });
+    expect(r.size).toBe(1);
+    expect(r.values[0]).toBe(10);
   });
 
-  test("result has same number of rows as input", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3] });
-    const result = applyExpandDataFrame(df, (col) => col);
-    expect(result.index.size).toBe(3);
+  test("empty DataFrame returns empty series for axis=1", () => {
+    const empty = DataFrame.fromColumns({ a: [] as Scalar[], b: [] as Scalar[] });
+    const r = dataFrameApply(empty, (row) => row.sum(), { axis: 1 });
+    expect(r.size).toBe(0);
   });
 });
 
-// ─── mapDataFrame ─────────────────────────────────────────────────────────────
+// ─── property-based: dataFrameApply ──────────────────────────────────────────
 
-describe("mapDataFrame", () => {
-  test("squares all values", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
-    const result = mapDataFrame(df, (v) => (v as number) ** 2);
-    expect(result.col("a").values).toEqual([1, 4, 9]);
-    expect(result.col("b").values).toEqual([16, 25, 36]);
-  });
-
-  test("fn receives row label and col name", () => {
-    const df = DataFrame.fromColumns({ a: [100] });
-    const meta: [string, string][] = [];
-    mapDataFrame(df, (v, rowLabel, colName) => {
-      meta.push([String(rowLabel), colName]);
-      return v;
-    });
-    expect(meta[0]).toEqual(["0", "a"]);
-  });
-
-  test("null values passed to fn", () => {
-    const df = DataFrame.fromColumns<Scalar>({ a: [null, 2] });
-    const result = mapDataFrame(df, (v) => (v === null ? -1 : (v as number) * 10));
-    expect(result.col("a").values).toEqual([-1, 20]);
-  });
-
-  test("preserves shape and index", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
-    const result = mapDataFrame(df, (v) => v);
-    expect(result.index.size).toBe(2);
-    expect(result.columns.values).toEqual(["a", "b"]);
-  });
-
-  // property: identity map preserves all values
-  test("property: identity map preserves all values", () => {
+describe("dataFrameApply — property-based", () => {
+  test("axis=0 result size equals number of columns", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 6 }),
-        fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 6 }),
-        (col1, col2) => {
-          const len = Math.min(col1.length, col2.length);
-          const df = DataFrame.fromColumns({
-            a: col1.slice(0, len) as Scalar[],
-            b: col2.slice(0, len) as Scalar[],
-          });
-          const result = mapDataFrame(df, (v) => v);
-          const origA = df.col("a").values;
-          const origB = df.col("b").values;
-          return (
-            (result.col("a").values as Scalar[]).every((v, i) => v === origA[i]) &&
-            (result.col("b").values as Scalar[]).every((v, i) => v === origB[i])
-          );
+        fc.array(fc.integer({ min: 1, max: 100 }), { minLength: 1, maxLength: 5 }),
+        fc.integer({ min: 1, max: 10 }),
+        (vals, nRows) => {
+          const colData: Record<string, Scalar[]> = {};
+          for (let i = 0; i < vals.length; i++) {
+            colData[`c${i}`] = new Array<Scalar>(nRows).fill(vals[i] as Scalar);
+          }
+          const df = DataFrame.fromColumns(colData);
+          const r = dataFrameApply(df, (col) => col.sum());
+          return r.size === vals.length;
         },
       ),
     );
   });
 
-  // property: constant map fills all cells with that constant
-  test("property: constant map", () => {
+  test("axis=1 result size equals number of rows", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.integer(), { minLength: 1, maxLength: 6 }),
-        fc.integer(),
-        (data, k) => {
-          const df = DataFrame.fromColumns({ a: data as Scalar[] });
-          const result = mapDataFrame(df, () => k);
-          return (result.col("a").values as number[]).every((v) => v === k);
+        fc.array(fc.integer({ min: 0, max: 50 }), { minLength: 1, maxLength: 20 }),
+        (data) => {
+          const df = DataFrame.fromColumns({ a: data as Scalar[], b: data as Scalar[] });
+          const r = dataFrameApply(df, (row) => row.sum(), { axis: 1 });
+          return r.size === data.length;
         },
       ),
+    );
+  });
+
+  test("applySeries then applymap produce consistent transforms", () => {
+    fc.assert(
+      fc.property(fc.array(fc.integer({ min: 1, max: 50 }), { maxLength: 30 }), (data) => {
+        const s = new Series({ data: data as Scalar[] });
+        const doubled = applySeries(s, (v) => (v as number) * 2);
+        return doubled.values.every((v, i) => v === (s.values[i] as number) * 2);
+      }),
     );
   });
 });

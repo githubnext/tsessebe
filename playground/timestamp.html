@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Timestamp</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --yellow: #d29922;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; line-height: 1.6; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+    header h1 { font-size: 1.4rem; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); font-size: 0.9rem; }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+    h2 { color: var(--accent); margin: 2rem 0 0.75rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; }
+    input, select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; width: 100%; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1.2rem; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+    button:hover { opacity: 0.85; }
+    .output { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.82rem; white-space: pre-wrap; max-height: 380px; overflow-y: auto; color: var(--green); margin-top: 1rem; }
+    .error { color: var(--red) !important; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+    th, td { border: 1px solid var(--border); padding: 0.4rem 0.75rem; text-align: left; }
+    th { background: var(--surface); color: var(--muted); font-weight: 500; }
+    td { font-family: monospace; }
+    .pill { display: inline-block; background: var(--border); border-radius: 3px; padding: 0.1rem 0.4rem; font-family: monospace; font-size: 0.8rem; }
+    .back { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
+    .back:hover { color: var(--accent); }
+    .row { display: flex; gap: 0.5rem; align-items: flex-end; }
+    .row > * { flex: 1; }
+    .row button { flex: 0 0 auto; }
+    .kv { display: flex; gap: 0.5rem; font-size: 0.85rem; padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
+    .kv:last-child { border-bottom: none; }
+    .kv-key { color: var(--muted); flex: 0 0 160px; }
+    .kv-val { color: var(--text); font-family: monospace; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 3px; font-size: 0.75rem; font-weight: 600; }
+    .badge.aware { background: #1f3a5f; color: var(--accent); }
+    .badge.naive { background: #3a2a0a; color: var(--yellow); }
+  </style>
+</head>
+<body>
+<header>
+  <h1>tsb — <span>Timestamp</span></h1>
+  <p>A single point in time · mirrors <code>pandas.Timestamp</code></p>
+</header>
+<main>
+  <a href="index.html" class="back">← back to index</a>
+
+  <h2>API Reference</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Method / Property</th><th>Description</th><th>pandas equivalent</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill">new Timestamp(str)</span></td><td>Parse ISO string (with optional tz option)</td><td><code>pd.Timestamp(str)</code></td></tr>
+        <tr><td><span class="pill">Timestamp.now(tz?)</span></td><td>Current time</td><td><code>pd.Timestamp.now()</code></td></tr>
+        <tr><td><span class="pill">Timestamp.today()</span></td><td>Today at midnight</td><td><code>pd.Timestamp.today()</code></td></tr>
+        <tr><td><span class="pill">.year .month .day</span></td><td>Date components</td><td>same</td></tr>
+        <tr><td><span class="pill">.hour .minute .second</span></td><td>Time components</td><td>same</td></tr>
+        <tr><td><span class="pill">.dayofweek</span></td><td>0=Mon … 6=Sun</td><td><code>.dayofweek</code></td></tr>
+        <tr><td><span class="pill">.dayofyear .quarter .week</span></td><td>Calendar properties</td><td>same</td></tr>
+        <tr><td><span class="pill">.is_month_start .is_month_end</span></td><td>Calendar boundary checks</td><td>same</td></tr>
+        <tr><td><span class="pill">.isoformat(sep, timespec)</span></td><td>ISO string output</td><td><code>.isoformat()</code></td></tr>
+        <tr><td><span class="pill">.strftime(fmt)</span></td><td>Format string (%Y-%m-%d etc.)</td><td><code>.strftime()</code></td></tr>
+        <tr><td><span class="pill">.floor(freq) .ceil(freq) .round(freq)</span></td><td>Round to frequency</td><td>same</td></tr>
+        <tr><td><span class="pill">.normalize()</span></td><td>Truncate to midnight</td><td><code>.normalize()</code></td></tr>
+        <tr><td><span class="pill">.tz_localize(tz)</span></td><td>Attach timezone to naive</td><td><code>.tz_localize()</code></td></tr>
+        <tr><td><span class="pill">.tz_convert(tz)</span></td><td>Convert to another timezone</td><td><code>.tz_convert()</code></td></tr>
+        <tr><td><span class="pill">.add(Timedelta)</span></td><td>Shift forward by a duration</td><td><code>ts + td</code></td></tr>
+        <tr><td><span class="pill">.sub(ts|td)</span></td><td>Subtract timestamp or timedelta</td><td><code>ts - ts2</code></td></tr>
+        <tr><td><span class="pill">.day_name() .month_name()</span></td><td>English name strings</td><td>same</td></tr>
+        <tr><td><span class="pill">.timestamp()</span></td><td>Unix seconds (float)</td><td><code>.timestamp()</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Interactive Inspector</h2>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>Datetime string</label>
+        <input type="text" id="ts-input" value="2024-06-15T12:30:45.123Z" placeholder="ISO or date-only string" />
+      </div>
+      <div>
+        <label>Timezone (optional, e.g. America/New_York)</label>
+        <input type="text" id="ts-tz" placeholder="leave blank for naive" />
+      </div>
+    </div>
+    <button onclick="inspectTs()" style="margin-top:0.75rem">Inspect</button>
+    <div class="output" id="ts-out">Click "Inspect" to explore a Timestamp.</div>
+  </div>
+
+  <h2>strftime Formatter</h2>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <label>Datetime</label>
+        <input type="text" id="fmt-ts" value="2024-06-15T09:05:03Z" />
+      </div>
+      <div>
+        <label>Format string</label>
+        <input type="text" id="fmt-str" value="%A, %B %d %Y — %H:%M:%S" />
+      </div>
+    </div>
+    <button onclick="runStrftime()" style="margin-top:0.75rem">Format</button>
+    <div class="output" id="fmt-out"></div>
+  </div>
+
+  <h2>Rounding</h2>
+  <div class="card">
+    <div class="grid3">
+      <div>
+        <label>Datetime</label>
+        <input type="text" id="round-ts" value="2024-01-15T10:37:29.500Z" />
+      </div>
+      <div>
+        <label>Frequency</label>
+        <select id="round-freq">
+          <option value="H">H — Hour</option>
+          <option value="T">T — Minute</option>
+          <option value="S">S — Second</option>
+          <option value="D">D — Day</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button onclick="runRound()">Run floor / ceil / round</button>
+      </div>
+    </div>
+    <div class="output" id="round-out"></div>
+  </div>
+
+  <h2>Arithmetic</h2>
+  <div class="card">
+    <div class="grid3">
+      <div>
+        <label>Base timestamp</label>
+        <input type="text" id="arith-ts" value="2024-06-15T12:00:00Z" />
+      </div>
+      <div>
+        <label>Days offset</label>
+        <input type="number" id="arith-days" value="7" />
+      </div>
+      <div>
+        <label>Hours offset</label>
+        <input type="number" id="arith-hours" value="3" />
+      </div>
+    </div>
+    <button onclick="runArith()" style="margin-top:0.75rem">Compute</button>
+    <div class="output" id="arith-out"></div>
+  </div>
+
+  <h2>Timezone Conversion</h2>
+  <div class="card">
+    <div class="grid3">
+      <div>
+        <label>UTC datetime</label>
+        <input type="text" id="tz-ts" value="2024-01-15T15:00:00Z" />
+      </div>
+      <div>
+        <label>Target timezone</label>
+        <select id="tz-target">
+          <option value="America/New_York">America/New_York</option>
+          <option value="America/Los_Angeles">America/Los_Angeles</option>
+          <option value="Europe/London">Europe/London</option>
+          <option value="Europe/Paris">Europe/Paris</option>
+          <option value="Asia/Tokyo">Asia/Tokyo</option>
+          <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+          <option value="Australia/Sydney">Australia/Sydney</option>
+          <option value="UTC">UTC</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button onclick="runTzConvert()">Convert</button>
+      </div>
+    </div>
+    <div class="output" id="tz-out"></div>
+  </div>
+
+  <h2>Now / Today</h2>
+  <div class="card">
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+      <button onclick="runNow('UTC')">Timestamp.now("UTC")</button>
+      <button onclick="runNow(null)">Timestamp.now() — naive</button>
+      <button onclick="runToday()">Timestamp.today()</button>
+    </div>
+    <div class="output" id="now-out">Click a button above.</div>
+  </div>
+</main>
+
+<script type="module">
+// ─── inline Timestamp implementation (self-contained for playground) ─────────
+
+const MS_PER_SECOND = 1_000;
+const MS_PER_MINUTE = 60_000;
+const MS_PER_HOUR = 3_600_000;
+const MS_PER_DAY = 86_400_000;
+
+const WEEKDAY_NAMES = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+const WEEKDAY_ABBR  = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const MONTH_NAMES   = ["","January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTH_ABBR    = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function pad(n, len) { return String(Math.abs(n)).padStart(len, "0"); }
+function daysInMonth(year, month) { return new Date(year, month, 0).getDate(); }
+function isLeapYear(year) { return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0; }
+function dayOfYear(year, month, day) {
+  return Math.round((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / MS_PER_DAY) + 1;
+}
+
+function getLocalParts(utcMs, tz) {
+  if (!tz) {
+    const d = new Date(utcMs);
+    const jsDow = d.getUTCDay();
+    return {
+      year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
+      hour: d.getUTCHours(), minute: d.getUTCMinutes(), second: d.getUTCSeconds(),
+      weekday: jsDow === 0 ? 6 : jsDow - 1,
+    };
+  }
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", second:"2-digit", hour12: false,
+  }).formatToParts(new Date(utcMs));
+  let year=0, month=0, day=0, hour=0, minute=0, second=0;
+  for (const p of parts) {
+    if (p.type==="year") year=+p.value;
+    else if (p.type==="month") month=+p.value;
+    else if (p.type==="day") day=+p.value;
+    else if (p.type==="hour") hour=+p.value%24;
+    else if (p.type==="minute") minute=+p.value;
+    else if (p.type==="second") second=+p.value;
+  }
+  const jsDow = new Date(Date.UTC(year, month-1, day)).getUTCDay();
+  return { year, month, day, hour, minute, second, weekday: jsDow===0?6:jsDow-1 };
+}
+
+function utcOffsetMinutes(utcMs, tz) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit",
+    hour:"2-digit", minute:"2-digit", second:"2-digit", hour12: false,
+  }).formatToParts(new Date(utcMs));
+  let year=0, month=0, day=0, hour=0, minute=0, second=0;
+  for (const p of parts) {
+    if (p.type==="year") year=+p.value;
+    else if (p.type==="month") month=+p.value;
+    else if (p.type==="day") day=+p.value;
+    else if (p.type==="hour") hour=+p.value%24;
+    else if (p.type==="minute") minute=+p.value;
+    else if (p.type==="second") second=+p.value;
+  }
+  return (Date.UTC(year,month-1,day,hour,minute,second) - utcMs) / MS_PER_MINUTE;
+}
+
+function wallClockToUtc(wallMs, tz) {
+  const off1 = utcOffsetMinutes(wallMs, tz);
+  const utc1 = wallMs - off1 * MS_PER_MINUTE;
+  const off2 = utcOffsetMinutes(utc1, tz);
+  return wallMs - off2 * MS_PER_MINUTE;
+}
+
+const RE_DT = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|([+-])(\d{2}):?(\d{2}))?$/;
+const RE_D  = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function parseString(s, tzHint) {
+  const t = s.trim();
+  const mDt = RE_DT.exec(t);
+  if (mDt) {
+    const [,yr,mo,dy,hr,mn,sc,fr,tzS,tzSn,tzH,tzM] = mDt;
+    let ms = 0;
+    if (fr) ms = Math.floor(+fr.padEnd(6,"0").slice(0,6) / 1000);
+    const wallMs = Date.UTC(+yr,+mo-1,+dy,+hr,+mn,+sc,ms);
+    if (tzS === "Z") return { utcMs: wallMs, parsedTz: "UTC" };
+    if (tzSn) {
+      const sign = tzSn === "+" ? 1 : -1;
+      return { utcMs: wallMs - sign*(+tzH*MS_PER_HOUR++(tzM||0)*MS_PER_MINUTE), parsedTz: tzHint||"UTC" };
+    }
+    if (tzHint) return { utcMs: wallClockToUtc(wallMs, tzHint), parsedTz: tzHint };
+    return { utcMs: wallMs, parsedTz: null };
+  }
+  const mD = RE_D.exec(t);
+  if (mD) {
+    const wallMs = Date.UTC(+mD[1],+mD[2]-1,+mD[3]);
+    if (tzHint) return { utcMs: wallClockToUtc(wallMs, tzHint), parsedTz: tzHint };
+    return { utcMs: wallMs, parsedTz: null };
+  }
+  throw new Error(`Cannot parse: "${s}"`);
+}
+
+function freqMs(freq) {
+  const u = freq.toUpperCase();
+  if (u==="S") return MS_PER_SECOND;
+  if (u==="T"||u==="MIN") return MS_PER_MINUTE;
+  if (u==="H") return MS_PER_HOUR;
+  if (u==="D") return MS_PER_DAY;
+  const m = /^(\d+)(.+)$/.exec(freq);
+  if (m) return +m[1] * freqMs(m[2]);
+  return MS_PER_SECOND;
+}
+
+class Timestamp {
+  constructor(input, opts={}) {
+    const tz = opts.tz ?? null;
+    if (typeof input === "object" && input && "_raw" in input) {
+      this._utcMs = input.utcMs; this._tz = input.tz; this._us = input.us; this._ns = input.ns;
+      return;
+    }
+    if (input instanceof Timestamp) {
+      this._utcMs = input._utcMs; this._tz = tz ?? input._tz; this._us = input._us; this._ns = input._ns;
+      return;
+    }
+    if (input instanceof Date) { this._utcMs = input.getTime(); this._tz = tz; this._us = 0; this._ns = 0; return; }
+    if (typeof input === "number") {
+      const unit = opts.unit ?? "ms";
+      let utcMs, us=0;
+      if (unit==="s") utcMs = Math.trunc(input)*MS_PER_SECOND;
+      else if (unit==="ms") utcMs = Math.trunc(input);
+      else if (unit==="us") { utcMs=Math.trunc(input/1000); us=Math.trunc(input%1000); }
+      else utcMs = Math.trunc(input);
+      this._utcMs = utcMs; this._tz = tz; this._us = us; this._ns = opts.nanosecond??0;
+      return;
+    }
+    const { utcMs, parsedTz } = parseString(input, tz);
+    this._utcMs = utcMs; this._tz = tz ?? parsedTz; this._us = 0; this._ns = 0;
+  }
+  static _raw(utcMs, tz, us, ns) { return new Timestamp({_raw:true, utcMs, tz, us, ns}); }
+  static now(tz=null) { return new Timestamp(Date.now(), { tz }); }
+  static today() { const n = new Date(); return new Timestamp(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())); }
+  static fromisoformat(s) { return new Timestamp(s); }
+  static fromtimestamp(ts,tz=null) { return new Timestamp(ts, {unit:"s",tz}); }
+
+  _parts() { return this.__parts || (this.__parts = getLocalParts(this._utcMs, this._tz)); }
+  get year()     { return this._parts().year; }
+  get month()    { return this._parts().month; }
+  get day()      { return this._parts().day; }
+  get hour()     { return this._parts().hour; }
+  get minute()   { return this._parts().minute; }
+  get second()   { return this._parts().second; }
+  get millisecond() { return this._utcMs % 1000; }
+  get microsecond() { return (this._utcMs % 1000) * 1000 + this._us; }
+  get nanosecond() { return this._ns; }
+  get dayofweek() { return this._parts().weekday; }
+  get weekday()  { return this.dayofweek; }
+  get dayofyear(){ return dayOfYear(this.year, this.month, this.day); }
+  get quarter()  { return Math.ceil(this.month / 3); }
+  get week() {
+    const d = new Date(Date.UTC(this.year, this.month-1, this.day));
+    const thu = new Date(d); thu.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));
+    const ys = new Date(Date.UTC(thu.getUTCFullYear(),0,1));
+    return Math.ceil(((thu-ys)/MS_PER_DAY+1)/7);
+  }
+  get tz()       { return this._tz; }
+  get tzinfo()   { return this._tz; }
+  get is_leap_year()    { return isLeapYear(this.year); }
+  get is_month_start()  { return this.day === 1; }
+  get is_month_end()    { return this.day === daysInMonth(this.year, this.month); }
+  get is_quarter_start(){ return this.day===1 && [1,4,7,10].includes(this.month); }
+  get is_quarter_end()  { return this.day===daysInMonth(this.year,this.month) && [3,6,9,12].includes(this.month); }
+  get is_year_start()   { return this.month===1 && this.day===1; }
+  get is_year_end()     { return this.month===12 && this.day===31; }
+
+  timestamp() { return this._utcMs / MS_PER_SECOND; }
+  date()      { return { year: this.year, month: this.month, day: this.day }; }
+  time()      { return { hour: this.hour, minute: this.minute, second: this.second, microsecond: this.microsecond }; }
+  toDate()    { return new Date(this._utcMs); }
+  valueOf()   { return this._utcMs; }
+
+  isoformat(sep="T", timespec="auto") {
+    const { year,month,day,hour,minute,second } = this._parts();
+    const ms = this._utcMs % 1000;
+    const spec = timespec==="auto" ? (ms||this._us ? "microseconds" : "seconds") : timespec;
+    const date = `${pad(year,4)}-${pad(month,2)}-${pad(day,2)}`;
+    let time;
+    if (spec==="seconds") time = `${pad(hour,2)}:${pad(minute,2)}:${pad(second,2)}`;
+    else if (spec==="milliseconds") time = `${pad(hour,2)}:${pad(minute,2)}:${pad(second,2)}.${pad(ms,3)}`;
+    else time = `${pad(hour,2)}:${pad(minute,2)}:${pad(second,2)}.${pad(ms*1000+this._us,6)}`;
+    let tzSuffix = "";
+    if (this._tz==="UTC") tzSuffix = "+00:00";
+    else if (this._tz) {
+      const off = utcOffsetMinutes(this._utcMs, this._tz);
+      const sign = off>=0?"+":"-"; const a=Math.abs(off);
+      tzSuffix = `${sign}${pad(Math.floor(a/60),2)}:${pad(a%60,2)}`;
+    }
+    return `${date}${sep}${time}${tzSuffix}`;
+  }
+
+  strftime(fmt) {
+    const { year,month,day,hour,minute,second,weekday } = this._parts();
+    const ms = this._utcMs % 1000;
+    const h12 = hour%12===0?12:hour%12;
+    const tzOff = this._tz ? (() => {
+      const o=utcOffsetMinutes(this._utcMs,this._tz); const sign=o>=0?"+":"-"; const a=Math.abs(o);
+      return `${sign}${pad(Math.floor(a/60),2)}${pad(a%60,2)}`;
+    })() : "";
+    const jsDow = weekday===6?0:weekday+1;
+    return fmt.replace(/%[A-Za-z%n]/g, tok => {
+      switch(tok) {
+        case "%Y": return pad(year,4); case "%y": return pad(year%100,2);
+        case "%m": return pad(month,2); case "%d": return pad(day,2);
+        case "%H": return pad(hour,2); case "%I": return pad(h12,2);
+        case "%M": return pad(minute,2); case "%S": return pad(second,2);
+        case "%f": return pad(ms*1000+this._us,6);
+        case "%j": return pad(dayOfYear(year,month,day),3);
+        case "%A": return WEEKDAY_NAMES[weekday]||""; case "%a": return WEEKDAY_ABBR[weekday]||"";
+        case "%B": return MONTH_NAMES[month]||""; case "%b": return MONTH_ABBR[month]||"";
+        case "%p": return hour<12?"AM":"PM";
+        case "%Z": return this._tz||""; case "%z": return tzOff;
+        case "%w": return String(jsDow); case "%%": return "%"; case "%n": return "\n";
+        default: return tok;
+      }
+    });
+  }
+
+  floor(freq) { const u=freqMs(freq); return Timestamp._raw(Math.floor(this._utcMs/u)*u, this._tz,0,0); }
+  ceil(freq)  { const u=freqMs(freq); return Timestamp._raw(Math.ceil(this._utcMs/u)*u, this._tz,0,0); }
+  round(freq) { const u=freqMs(freq); return Timestamp._raw(Math.round(this._utcMs/u)*u, this._tz,0,0); }
+  normalize() { return this.floor("D"); }
+
+  tz_localize(tz) {
+    if (this._tz) throw new Error("Already tz-aware");
+    return Timestamp._raw(wallClockToUtc(this._utcMs, tz), tz, this._us, this._ns);
+  }
+  tz_convert(tz) {
+    if (!this._tz) throw new Error("Timestamp is naive");
+    return Timestamp._raw(this._utcMs, tz, this._us, this._ns);
+  }
+
+  add(td) { return Timestamp._raw(this._utcMs + td.totalMs, this._tz, this._us, this._ns); }
+  sub(other) {
+    if (other instanceof Timestamp) return { totalMilliseconds: this._utcMs - other._utcMs };
+    return Timestamp._raw(this._utcMs - other.totalMs, this._tz, this._us, this._ns);
+  }
+
+  eq(o) { return this._utcMs === o._utcMs; }
+  lt(o) { return this._utcMs < o._utcMs; }
+  gt(o) { return this._utcMs > o._utcMs; }
+
+  day_name()   { return WEEKDAY_NAMES[this.dayofweek]||""; }
+  month_name() { return MONTH_NAMES[this.month]||""; }
+  toString()   { return this.isoformat(); }
+}
+
+function fmtDuration(ms) {
+  const sign = ms < 0 ? "-" : "+";
+  const abs = Math.abs(ms);
+  const d = Math.floor(abs/MS_PER_DAY);
+  const h = Math.floor((abs%MS_PER_DAY)/MS_PER_HOUR);
+  const m = Math.floor((abs%MS_PER_HOUR)/MS_PER_MINUTE);
+  const s = Math.floor((abs%MS_PER_MINUTE)/MS_PER_SECOND);
+  const parts = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m) parts.push(`${m}m`);
+  if (s) parts.push(`${s}s`);
+  return sign + (parts.length ? parts.join(" ") : "0s");
+}
+
+// ─── UI handlers ────────────────────────────────────────────────────────────
+
+window.inspectTs = function() {
+  const out = document.getElementById("ts-out");
+  try {
+    const input = document.getElementById("ts-input").value.trim();
+    const tzOpt = document.getElementById("ts-tz").value.trim() || undefined;
+    const ts = new Timestamp(input, tzOpt ? { tz: tzOpt } : {});
+
+    const lines = [
+      `Timestamp: ${ts.toString()}`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+      `Timezone:    ${ts.tz ?? "(naive)"}`,
+      ``,
+      `── Date ──────────────────────────────────────`,
+      `  year:         ${ts.year}`,
+      `  month:        ${ts.month}  (${ts.month_name()})`,
+      `  day:          ${ts.day}`,
+      `  dayofweek:    ${ts.dayofweek}  (${ts.day_name()}, 0=Mon…6=Sun)`,
+      `  dayofyear:    ${ts.dayofyear}`,
+      `  week:         ${ts.week}`,
+      `  quarter:      ${ts.quarter}`,
+      ``,
+      `── Time ──────────────────────────────────────`,
+      `  hour:         ${ts.hour}`,
+      `  minute:       ${ts.minute}`,
+      `  second:       ${ts.second}`,
+      `  millisecond:  ${ts.millisecond}`,
+      `  microsecond:  ${ts.microsecond}`,
+      ``,
+      `── Calendar flags ────────────────────────────`,
+      `  is_month_start:    ${ts.is_month_start}`,
+      `  is_month_end:      ${ts.is_month_end}`,
+      `  is_quarter_start:  ${ts.is_quarter_start}`,
+      `  is_quarter_end:    ${ts.is_quarter_end}`,
+      `  is_year_start:     ${ts.is_year_start}`,
+      `  is_year_end:       ${ts.is_year_end}`,
+      `  is_leap_year:      ${ts.is_leap_year}`,
+      ``,
+      `── Conversions ───────────────────────────────`,
+      `  timestamp():  ${ts.timestamp().toFixed(3)}  (Unix seconds)`,
+      `  isoformat():  ${ts.isoformat()}`,
+      `  strftime("%Y-%m-%d %H:%M:%S"):  ${ts.strftime("%Y-%m-%d %H:%M:%S")}`,
+    ];
+    out.textContent = lines.join("\n");
+    out.className = "output";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "output error";
+  }
+};
+
+window.runStrftime = function() {
+  const out = document.getElementById("fmt-out");
+  try {
+    const ts = new Timestamp(document.getElementById("fmt-ts").value.trim());
+    const fmt = document.getElementById("fmt-str").value;
+    out.textContent = `Input:  ${ts.isoformat()}\nFormat: ${fmt}\nResult: ${ts.strftime(fmt)}`;
+    out.className = "output";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "output error";
+  }
+};
+
+window.runRound = function() {
+  const out = document.getElementById("round-out");
+  try {
+    const ts = new Timestamp(document.getElementById("round-ts").value.trim());
+    const freq = document.getElementById("round-freq").value;
+    const floored = ts.floor(freq);
+    const ceiled  = ts.ceil(freq);
+    const rounded = ts.round(freq);
+    out.textContent = [
+      `Input:         ${ts.isoformat()}`,
+      `Frequency:     ${freq}`,
+      ``,
+      `floor("${freq}"):  ${floored.isoformat()}`,
+      `ceil("${freq}"):   ${ceiled.isoformat()}`,
+      `round("${freq}"):  ${rounded.isoformat()}`,
+    ].join("\n");
+    out.className = "output";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "output error";
+  }
+};
+
+window.runArith = function() {
+  const out = document.getElementById("arith-out");
+  try {
+    const ts = new Timestamp(document.getElementById("arith-ts").value.trim());
+    const days = +document.getElementById("arith-days").value || 0;
+    const hours = +document.getElementById("arith-hours").value || 0;
+    const totalMs = days * MS_PER_DAY + hours * MS_PER_HOUR;
+    const td = { totalMs };
+
+    const later   = ts.add(td);
+    const earlier = ts.sub(td);
+    const diff = later.sub(ts).totalMilliseconds;
+
+    out.textContent = [
+      `Base:      ${ts.isoformat()}`,
+      `Delta:     ${days}d ${hours}h  (${totalMs.toLocaleString()} ms)`,
+      ``,
+      `add(delta):  ${later.isoformat()}`,
+      `sub(delta):  ${earlier.isoformat()}`,
+      `later.sub(base) → ${fmtDuration(diff)}`,
+    ].join("\n");
+    out.className = "output";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "output error";
+  }
+};
+
+window.runTzConvert = function() {
+  const out = document.getElementById("tz-out");
+  try {
+    const ts = new Timestamp(document.getElementById("tz-ts").value.trim());
+    const tzTarget = document.getElementById("tz-target").value;
+    // Ensure source is UTC-aware.
+    const src = ts.tz ? ts : ts.tz_localize("UTC");
+    const converted = src.tz_convert(tzTarget);
+    const offMin = utcOffsetMinutes(src._utcMs, tzTarget);
+    const sign = offMin >= 0 ? "+" : "-";
+    const a = Math.abs(offMin);
+    const offStr = `${sign}${pad(Math.floor(a/60),2)}:${pad(a%60,2)}`;
+
+    out.textContent = [
+      `Source (UTC):  ${src.isoformat()}`,
+      `Target tz:     ${tzTarget}  (UTC${offStr})`,
+      ``,
+      `Converted:     ${converted.isoformat()}`,
+      ``,
+      `  year:    ${converted.year}`,
+      `  month:   ${converted.month}  (${converted.month_name()})`,
+      `  day:     ${converted.day}`,
+      `  hour:    ${converted.hour}`,
+      `  minute:  ${converted.minute}`,
+      `  second:  ${converted.second}`,
+    ].join("\n");
+    out.className = "output";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "output error";
+  }
+};
+
+window.runNow = function(tz) {
+  const out = document.getElementById("now-out");
+  try {
+    const ts = Timestamp.now(tz);
+    out.textContent = [
+      `Timestamp.now(${tz ? '"'+tz+'"' : ''})`,
+      `  isoformat:  ${ts.isoformat()}`,
+      `  unix secs:  ${ts.timestamp().toFixed(3)}`,
+      `  day_name:   ${ts.day_name()}`,
+      `  month_name: ${ts.month_name()}`,
+      `  tz:         ${ts.tz ?? "(naive)"}`,
+    ].join("\n");
+    out.className = "output";
+  } catch(e) {
+    out.textContent = "Error: " + e.message;
+    out.className = "output error";
+  }
+};
+
+window.runToday = function() {
+  const out = document.getElementById("now-out");
+  const ts = Timestamp.today();
+  out.textContent = [
+    `Timestamp.today()`,
+    `  isoformat:  ${ts.isoformat()}`,
+    `  year:  ${ts.year}  month:  ${ts.month}  day:  ${ts.day}`,
+    `  hour:  ${ts.hour}  (always 0 for today())`,
+  ].join("\n");
+  out.className = "output";
+};
+</script>
+</body>
+</html>

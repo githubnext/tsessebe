@@ -1,24 +1,12 @@
 /**
- * crosstab — cross-tabulation of two or more factors.
+ * crosstab — compute a cross-tabulation of two or more factors.
  *
- * Mirrors `pandas.crosstab`:
- *   - `crosstab(index, columns)` → frequency table (count of co-occurrences)
- *   - Supports `values` + `aggfunc` for aggregated cross-tabulations
- *   - Supports `normalize` (all / index / columns) for proportion tables
- *   - Supports `margins` for row/column totals
- *   - Supports `dropna` to exclude NaN combinations
+ * Mirrors `pandas.crosstab(index, columns, values, rownames, colnames,
+ * aggfunc, margins, margins_name, dropna, normalize)`.
  *
- * @example
- * ```ts
- * import { crosstab, Series } from "tsb";
- * const a = new Series({ data: ["foo","foo","bar","bar"], name: "A" });
- * const b = new Series({ data: ["one","two","one","two"], name: "B" });
- * const ct = crosstab(a, b);
- * // col  one  two
- * // A
- * // bar   1    1
- * // foo   1    1
- * ```
+ * By default, counts the number of observations where the row factor equals
+ * row `r` **and** the column factor equals column `c`.  When `values` and
+ * `aggfunc` are provided, aggregates those values instead of counting.
  *
  * @module
  */
@@ -28,360 +16,346 @@ import { Index } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
-// ─── public API types ─────────────────────────────────────────────────────────
+// ─── public types ─────────────────────────────────────────────────────────────
 
-/** Aggregation function name for {@link crosstab}. */
-export type CrosstabAggFunc = "count" | "sum" | "mean" | "min" | "max";
+/** Aggregation function that reduces a non-empty array of numbers to a scalar. */
+export type AggFunc = (values: readonly number[]) => number;
 
-/** Normalize mode: proportions over all cells, rows, or columns. */
-export type CrosstabNormalize = boolean | "all" | "index" | "columns";
+/** Normalize mode for {@link CrosstabOptions}. */
+export type Normalize = boolean | "index" | "columns" | "all";
 
 /** Options for {@link crosstab}. */
 export interface CrosstabOptions {
   /**
-   * Values to aggregate. If omitted, counts co-occurrences.
+   * Numeric values to aggregate.  When provided, `aggfunc` must also be
+   * supplied.  Length must equal the length of `index`.
    */
-  readonly values?: Series<Scalar> | readonly Scalar[];
+  readonly values?: readonly Scalar[];
   /**
-   * Aggregation function when `values` is provided. Default `"count"`.
+   * Function used to aggregate `values` within each cell.
+   * Required when `values` is provided; ignored otherwise.
+   *
+   * @example `(vs) => vs.reduce((s, v) => s + v, 0) / vs.length` (mean)
    */
-  readonly aggfunc?: CrosstabAggFunc;
+  readonly aggfunc?: AggFunc;
   /**
-   * If `true` or a string, add row/column totals.
-   * Default `false`.
+   * Name for the row-axis index in the resulting DataFrame.
+   * @defaultValue `"row"`
+   */
+  readonly rowname?: string;
+  /**
+   * Name for the column-axis labels in the resulting DataFrame.
+   * @defaultValue `"col"`
+   */
+  readonly colname?: string;
+  /**
+   * Whether to add row and column margin totals.
+   * @defaultValue `false`
    */
   readonly margins?: boolean;
   /**
-   * Label for the margins row/column. Default `"All"`.
+   * Label for the margins row/column.
+   * @defaultValue `"All"`
    */
-  readonly margins_name?: string;
+  readonly marginsName?: string;
   /**
-   * Normalise values:
-   *   - `"all"` or `true` → divide by grand total
-   *   - `"index"` → divide each row by its row total
-   *   - `"columns"` → divide each column by its column total
-   *   - `false` (default) → no normalisation
-   */
-  readonly normalize?: CrosstabNormalize;
-  /**
-   * If `true` (default), exclude combinations where either factor is NaN/null.
+   * If `true` (default), exclude missing values (null / undefined / NaN)
+   * from both the row and column factors.
+   * If `false`, treat missing values as a category (rendered as `"NaN"`).
+   * @defaultValue `true`
    */
   readonly dropna?: boolean;
+  /**
+   * Normalize cell values to proportions:
+   * - `false` (default) — raw counts / aggregated values
+   * - `true` or `"all"` — divide each cell by the grand total
+   * - `"index"` — divide each cell by its row total
+   * - `"columns"` — divide each cell by its column total
+   * @defaultValue `false`
+   */
+  readonly normalize?: Normalize;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-/** Convert a Series or array to a plain Scalar array. */
-function toScalarArray(x: Series<Scalar> | readonly Scalar[]): readonly Scalar[] {
-  if (x instanceof Series) {
-    return x.values as readonly Scalar[];
-  }
-  return x;
-}
-
-/** True when a value is missing (null / undefined / NaN). */
+/** True when the value is missing (null / undefined / NaN). */
 function isMissing(v: Scalar): boolean {
   return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
 }
 
-/** Aggregate a numeric bucket according to `aggfunc`. */
-function aggregateBucket(nums: number[], fn: CrosstabAggFunc): number {
-  if (fn === "count") {
-    return nums.length;
+/**
+ * Stable string key for any scalar, matching the `factorize` approach:
+ * prefix with `typeof` to keep `null`, `undefined`, `NaN`, and the string
+ * `"null"` apart.
+ */
+function scalarKey(v: Scalar): string {
+  if (v === null) {
+    return "object:null";
   }
-  if (nums.length === 0) {
-    return Number.NaN;
+  if (v === undefined) {
+    return "undefined:undefined";
   }
-  if (fn === "sum") {
-    return nums.reduce((s, v) => s + v, 0);
+  if (typeof v === "number" && Number.isNaN(v)) {
+    return "number:NaN";
   }
-  if (fn === "mean") {
-    return nums.reduce((s, v) => s + v, 0) / nums.length;
-  }
-  if (fn === "min") {
-    return Math.min(...nums);
-  }
-  // max
-  return Math.max(...nums);
+  return `${typeof v}:${String(v)}`;
 }
 
-/** Add an observation to the cell map. */
-function pushObservation(
-  cellMap: Map<string, number[]>,
-  rowKey: string,
-  colKey: string,
-  value: number,
-): void {
-  const key = `${rowKey}\x00${colKey}`;
-  let bucket = cellMap.get(key);
-  if (bucket === undefined) {
-    bucket = [];
-    cellMap.set(key, bucket);
-  }
-  bucket.push(value);
+/** Render a scalar as a human-readable label string. Missing → `"NaN"`. */
+function labelStr(v: Scalar): string {
+  return isMissing(v) ? "NaN" : String(v);
 }
 
-/** Build ordered row/column key arrays and the cell map. */
-function buildCellMap(
-  rowVals: readonly Scalar[],
-  colVals: readonly Scalar[],
-  valVals: readonly Scalar[] | null,
-  dropna: boolean,
-): {
-  rowKeys: string[];
-  colKeys: string[];
-  rowOrder: string[];
-  colOrder: string[];
-  cellMap: Map<string, number[]>;
-} {
-  const rowKeys: string[] = rowVals.map((v) => String(v));
-  const colKeys: string[] = colVals.map((v) => String(v));
-  const rowOrder: string[] = [];
-  const colOrder: string[] = [];
-  const seenRow = new Set<string>();
-  const seenCol = new Set<string>();
-  const cellMap = new Map<string, number[]>();
+/**
+ * Collect unique values in first-seen order from `vals`.
+ * Missing values are included only when `dropna` is `false`.
+ */
+function collectUniques(vals: readonly Scalar[], dropna: boolean): Scalar[] {
+  const seen = new Set<string>();
+  const out: Scalar[] = [];
+  for (const v of vals) {
+    if (dropna && isMissing(v)) {
+      continue;
+    }
+    const key = scalarKey(v);
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(v);
+    }
+  }
+  return out;
+}
 
-  const n = rowKeys.length;
+// ─── core implementation ───────────────────────────────────────────────────────
+
+/**
+ * Build a cross-tabulation frequency table (or aggregation table) from two
+ * equal-length arrays of factor values.
+ *
+ * @param index   - Row factor values.  Must have the same length as `columns`.
+ * @param columns - Column factor values.
+ * @param options - Additional options (aggregation, margins, normalization, …).
+ * @returns A `DataFrame` whose rows represent `index` categories, whose
+ *   column names represent `columns` categories, and whose cells contain
+ *   counts or aggregated values.
+ *
+ * @example
+ * ```ts
+ * const idx = ["foo", "foo", "bar", "bar"];
+ * const col = ["A", "B", "A", "B"];
+ * const ct = crosstab(idx, col);
+ * // DataFrame:
+ * //       A  B
+ * // bar   1  1
+ * // foo   1  1
+ * ```
+ */
+export function crosstab(
+  index: readonly Scalar[] | Series<Scalar>,
+  columns: readonly Scalar[] | Series<Scalar>,
+  options: CrosstabOptions = {},
+): DataFrame {
+  const {
+    values,
+    aggfunc,
+    rowname = "row",
+    margins = false,
+    marginsName = "All",
+    dropna = true,
+    normalize = false,
+  } = options;
+
+  // Flatten Series to plain arrays.
+  const rowVals: readonly Scalar[] = index instanceof Series ? (index.values as Scalar[]) : index;
+  const colVals: readonly Scalar[] =
+    columns instanceof Series ? (columns.values as Scalar[]) : columns;
+
+  if (rowVals.length !== colVals.length) {
+    throw new RangeError(
+      `crosstab: index and columns must have the same length (got ${rowVals.length} vs ${colVals.length})`,
+    );
+  }
+
+  if (values !== undefined && aggfunc === undefined) {
+    throw new TypeError("crosstab: `aggfunc` is required when `values` is provided");
+  }
+
+  const n = rowVals.length;
+
+  // Collect unique row / column categories in first-seen order.
+  const rowUniques = collectUniques(rowVals, dropna);
+  const colUniques = collectUniques(colVals, dropna);
+
+  // Build lookup maps: scalarKey → 0-based position.
+  const rowPos = new Map<string, number>();
+  for (let i = 0; i < rowUniques.length; i++) {
+    rowPos.set(scalarKey(rowUniques[i] as Scalar), i);
+  }
+  const colPos = new Map<string, number>();
+  for (let i = 0; i < colUniques.length; i++) {
+    colPos.set(scalarKey(colUniques[i] as Scalar), i);
+  }
+
+  const nRows = rowUniques.length;
+  const nCols = colUniques.length;
+
+  // Initialize accumulator structures.
+  // counts[r][c] = frequency of (rowUniques[r], colUniques[c]) pairs.
+  const counts: number[][] = Array.from({ length: nRows }, () => new Array<number>(nCols).fill(0));
+  // buckets[r][c] = collected numeric values for aggregation (when values+aggfunc provided).
+  const buckets: Array<Array<number[] | undefined>> | null =
+    values !== undefined
+      ? Array.from({ length: nRows }, () =>
+          Array.from<undefined, number[] | undefined>({ length: nCols }, () => undefined),
+        )
+      : null;
+
+  // Populate accumulators.
   for (let i = 0; i < n; i++) {
-    const rv = rowVals[i];
-    const cv = colVals[i];
+    const rv = rowVals[i] as Scalar;
+    const cv = colVals[i] as Scalar;
     if (dropna && (isMissing(rv) || isMissing(cv))) {
       continue;
     }
-    const rk = rowKeys[i] ?? "";
-    const ck = colKeys[i] ?? "";
-    if (!seenRow.has(rk)) {
-      seenRow.add(rk);
-      rowOrder.push(rk);
+    const ri = rowPos.get(scalarKey(rv));
+    const ci = colPos.get(scalarKey(cv));
+    if (ri === undefined || ci === undefined) {
+      continue;
     }
-    if (!seenCol.has(ck)) {
-      seenCol.add(ck);
-      colOrder.push(ck);
-    }
-    const value = valVals !== null ? (valVals[i] as number) : 1;
-    pushObservation(cellMap, rk, ck, value);
-  }
 
-  return { rowKeys, colKeys, rowOrder, colOrder, cellMap };
-}
-
-/** Build matrix using direct key lookup. */
-function buildMatrixDirect(
-  rowOrder: readonly string[],
-  colOrder: readonly string[],
-  cellMap: Map<string, number[]>,
-  aggfunc: CrosstabAggFunc,
-): number[][] {
-  return rowOrder.map((rk) =>
-    colOrder.map((ck) => {
-      const key = `${rk}\x00${ck}`;
-      const bucket = cellMap.get(key);
-      if (bucket === undefined || bucket.length === 0) {
-        return aggfunc === "count" ? 0 : Number.NaN;
+    if (buckets !== null && values !== undefined) {
+      const sv = values[i] as Scalar;
+      if (typeof sv === "number" && !Number.isNaN(sv)) {
+        const cell = buckets[ri];
+        if (cell !== undefined) {
+          const existing = cell[ci];
+          if (existing === undefined) {
+            cell[ci] = [sv];
+          } else {
+            existing.push(sv);
+          }
+        }
       }
-      return aggregateBucket(bucket, aggfunc);
-    }),
-  );
-}
-
-/** Sum all non-NaN cells in a matrix. */
-function sumAll(matrix: number[][]): number {
-  let total = 0;
-  for (const row of matrix) {
-    for (const v of row) {
-      total += Number.isNaN(v) ? 0 : v;
+    } else {
+      const row = counts[ri];
+      if (row !== undefined) {
+        row[ci] = (row[ci] ?? 0) + 1;
+      }
     }
   }
-  return total;
-}
 
-/** Sum non-NaN cells excluding the last row and last column (margins). */
-function sumExcludeMargins(matrix: number[][]): number {
-  const nRows = matrix.length;
-  const nCols = nRows > 0 ? (matrix[0]?.length ?? 0) : 0;
-  let total = 0;
-  for (let ri = 0; ri < nRows - 1; ri++) {
-    for (let ci = 0; ci < nCols - 1; ci++) {
-      total += Number.isNaN(matrix[ri]?.[ci] ?? Number.NaN) ? 0 : (matrix[ri]?.[ci] ?? 0);
-    }
-  }
-  return total;
-}
-
-/** Divide every cell by `total`. */
-function divideMatrix(matrix: number[][], total: number): number[][] {
-  return matrix.map((row) => row.map((v) => (Number.isNaN(v) ? Number.NaN : v / total)));
-}
-
-/** Normalise by grand total, optionally ignoring the margins row/col. */
-function normalizeAll(matrix: number[][], withMargins: boolean): number[][] {
-  const total = withMargins ? sumExcludeMargins(matrix) : sumAll(matrix);
-  return divideMatrix(matrix, total);
-}
-
-/** Normalise each row by its row total. */
-function normalizeByIndex(matrix: number[][]): number[][] {
-  return matrix.map((row) => {
-    const rowTotal = row.reduce((s, v) => s + (Number.isNaN(v) ? 0 : v), 0);
-    return row.map((v) => (Number.isNaN(v) ? Number.NaN : v / rowTotal));
-  });
-}
-
-/** Normalise each column by its column total. */
-function normalizeByColumns(matrix: number[][]): number[][] {
-  const nCols = matrix.length > 0 ? (matrix[0]?.length ?? 0) : 0;
-  const colTotals = new Array<number>(nCols).fill(0);
-  for (const row of matrix) {
-    row.forEach((v, ci) => {
-      colTotals[ci] = (colTotals[ci] ?? 0) + (Number.isNaN(v) ? 0 : v);
-    });
-  }
-  return matrix.map((row) =>
-    row.map((v, ci) => {
-      const ct = colTotals[ci] ?? 1;
-      return Number.isNaN(v) ? Number.NaN : v / ct;
+  // Resolve cell values from counts or aggregated buckets.
+  const cells: number[][] = Array.from({ length: nRows }, (_, ri) =>
+    Array.from({ length: nCols }, (_, ci) => {
+      if (buckets !== null && aggfunc !== undefined) {
+        const arr = buckets[ri]?.[ci];
+        return arr !== undefined && arr.length > 0 ? aggfunc(arr) : 0;
+      }
+      return counts[ri]?.[ci] ?? 0;
     }),
   );
-}
 
-/** Apply normalisation to a matrix. */
-function normalizeMatrix(
-  matrix: number[][],
-  mode: CrosstabNormalize,
-  withMargins: boolean,
-): number[][] {
-  if (mode === false) {
-    return matrix;
-  }
-  const actualMode = mode === true ? "all" : mode;
-  if (actualMode === "all") {
-    return normalizeAll(matrix, withMargins);
-  }
-  if (actualMode === "index") {
-    return normalizeByIndex(matrix);
-  }
-  return normalizeByColumns(matrix);
-}
-
-/** Add margins (All row + All column) to matrix, rowOrder, colOrder. */
-function addMargins(
-  matrix: number[][],
-  rowOrder: readonly string[],
-  colOrder: readonly string[],
-  marginsName: string,
-): { matrix: number[][]; rowOrder: string[]; colOrder: string[] } {
-  const nCols = colOrder.length;
-  const newMatrix = matrix.map((row) => {
-    const rowSum = row.reduce((s, v) => s + (Number.isNaN(v) ? 0 : v), 0);
-    return [...row, rowSum];
-  });
-  const colSums = new Array<number>(nCols).fill(0);
-  for (const row of matrix) {
-    row.forEach((v, ci) => {
-      colSums[ci] = (colSums[ci] ?? 0) + (Number.isNaN(v) ? 0 : v);
-    });
-  }
-  const grandTotal = colSums.reduce((s, v) => s + v, 0);
-  newMatrix.push([...colSums, grandTotal]);
-
-  return {
-    matrix: newMatrix,
-    rowOrder: [...rowOrder, marginsName],
-    colOrder: [...colOrder, marginsName],
-  };
-}
-
-/** Resolve final layout (optionally applying margins then normalization). */
-function resolveFinalLayout(
-  matrix: number[][],
-  rowOrder: string[],
-  colOrder: string[],
-  opts: Required<Pick<CrosstabOptions, "margins" | "margins_name" | "normalize">>,
-): { matrix: number[][]; rowOrder: string[]; colOrder: string[] } {
-  const { margins, margins_name: marginsName, normalize } = opts;
-  const withMargins = margins === true;
-
-  let mat = matrix;
-  let ro = rowOrder;
-  let co = colOrder;
-
-  if (withMargins) {
-    const result = addMargins(mat, ro, co, marginsName);
-    mat = result.matrix;
-    ro = result.rowOrder;
-    co = result.colOrder;
-  }
-
+  // Apply normalization before adding margins.
   if (normalize !== false) {
-    mat = normalizeMatrix(mat, normalize, withMargins);
+    const mode: "all" | "index" | "columns" = normalize === true ? "all" : normalize;
+    if (mode === "all") {
+      let grand = 0;
+      for (const row of cells) {
+        for (const v of row) {
+          grand += v;
+        }
+      }
+      if (grand !== 0) {
+        for (const row of cells) {
+          for (let c = 0; c < row.length; c++) {
+            row[c] = (row[c] ?? 0) / grand;
+          }
+        }
+      }
+    } else if (mode === "index") {
+      for (const row of cells) {
+        const total = row.reduce((s, v) => s + v, 0);
+        if (total !== 0) {
+          for (let c = 0; c < row.length; c++) {
+            row[c] = (row[c] ?? 0) / total;
+          }
+        }
+      }
+    } else {
+      // "columns": divide by column totals
+      for (let c = 0; c < nCols; c++) {
+        let total = 0;
+        for (const row of cells) {
+          total += row[c] ?? 0;
+        }
+        if (total !== 0) {
+          for (const row of cells) {
+            row[c] = (row[c] ?? 0) / total;
+          }
+        }
+      }
+    }
   }
 
-  return { matrix: mat, rowOrder: ro, colOrder: co };
+  // Build column data: column-label → array of row values.
+  const colData: Record<string, Scalar[]> = {};
+  for (let ci = 0; ci < nCols; ci++) {
+    const name = labelStr(colUniques[ci] as Scalar);
+    colData[name] = cells.map((row) => row[ci] ?? 0);
+  }
+
+  // Build row labels.
+  const rowLabels: Label[] = rowUniques.map((v) => labelStr(v as Scalar) as Label);
+
+  // Add margin totals when requested.
+  let finalRowLabels = rowLabels;
+  if (margins) {
+    // Append column-total to each column array.
+    for (let ci = 0; ci < nCols; ci++) {
+      const name = labelStr(colUniques[ci] as Scalar);
+      const col = colData[name];
+      if (col !== undefined) {
+        col.push(col.reduce((s: number, v) => s + (typeof v === "number" ? v : 0), 0));
+      }
+    }
+    // Add an "All" column with row totals (and grand total in the last cell).
+    const allCol: Scalar[] = cells.map((row) => row.reduce((s, v) => s + v, 0));
+    allCol.push(allCol.reduce((s: number, v) => s + (typeof v === "number" ? v : 0), 0));
+    colData[marginsName] = allCol;
+    finalRowLabels = [...rowLabels, marginsName as Label];
+  }
+
+  // Build the DataFrame.
+  const rowIndex = new Index<Label>(finalRowLabels, rowname);
+  const colMap = new Map<string, Series<Scalar>>();
+  for (const [name, data] of Object.entries(colData)) {
+    colMap.set(name, new Series({ data, index: rowIndex as Index<Label> }));
+  }
+  return new DataFrame(colMap, rowIndex);
 }
 
-// ─── main export ──────────────────────────────────────────────────────────────
+// ─── Series overload ──────────────────────────────────────────────────────────
 
 /**
- * Compute a simple cross-tabulation of two Series (frequency count).
+ * Cross-tabulate two `Series<Scalar>` objects, using their `.name` properties
+ * as the default row / column axis names.
  *
- * @param rowSeries - Series (or array) to use as row factor.
- * @param colSeries - Series (or array) to use as column factor.
- * @param options   - Optional configuration.
- * @returns         A DataFrame where rows = unique row-factor values,
- *                  columns = unique column-factor values, cells = counts
- *                  (or aggregated values when `values` is provided).
+ * @example
+ * ```ts
+ * const a = new Series({ data: ["foo", "foo", "bar"], name: "A" });
+ * const b = new Series({ data: ["x", "y", "x"], name: "B" });
+ * const ct = seriesCrosstab(a, b);
+ * ```
  */
-export function crosstab(
-  rowSeries: Series<Scalar> | readonly Scalar[],
-  colSeries: Series<Scalar> | readonly Scalar[],
-  options: CrosstabOptions = {},
+export function seriesCrosstab(
+  index: Series<Scalar>,
+  columns: Series<Scalar>,
+  options: Omit<CrosstabOptions, "rowname" | "colname"> & {
+    readonly rowname?: string;
+    readonly colname?: string;
+  } = {},
 ): DataFrame {
-  const rowVals = toScalarArray(rowSeries);
-  const colVals = toScalarArray(colSeries);
-  if (rowVals.length !== colVals.length) {
-    throw new RangeError("crosstab: index and columns must have the same length.");
-  }
-
-  const aggfunc: CrosstabAggFunc =
-    options.values !== undefined ? (options.aggfunc ?? "mean") : "count";
-  const dropna: boolean = options.dropna ?? true;
-  const margins: boolean = options.margins === true;
-  const marginsName: string = options.margins_name ?? "All";
-  const normalize: CrosstabNormalize = options.normalize ?? false;
-
-  const valVals: readonly Scalar[] | null =
-    options.values !== undefined ? toScalarArray(options.values) : null;
-
-  const { rowOrder, colOrder, cellMap } = buildCellMap(rowVals, colVals, valVals, dropna);
-
-  const matrix = buildMatrixDirect(rowOrder, colOrder, cellMap, aggfunc);
-
-  const layout = resolveFinalLayout(matrix, rowOrder, colOrder, {
-    margins,
-    margins_name: marginsName,
-    normalize,
-  });
-
-  const outCols: Record<string, Scalar[]> = {};
-  for (let ci = 0; ci < layout.colOrder.length; ci++) {
-    const colName = layout.colOrder[ci] ?? "";
-    outCols[colName] = layout.matrix.map((row) => row[ci] ?? null);
-  }
-
-  return DataFrame.fromColumns(outCols, {
-    index: new Index<Label>(layout.rowOrder as Label[]),
-  });
-}
-
-/**
- * Compute a cross-tabulation directly from two same-length arrays
- * (convenience wrapper for array inputs).
- */
-export function crosstabSeries(
-  rowData: readonly Scalar[],
-  colData: readonly Scalar[],
-  options: CrosstabOptions = {},
-): DataFrame {
-  return crosstab(rowData, colData, options);
+  const rowname = options.rowname ?? (typeof index.name === "string" ? index.name : "row");
+  const colname = options.colname ?? (typeof columns.name === "string" ? columns.name : "col");
+  return crosstab(index, columns, { ...options, rowname, colname });
 }

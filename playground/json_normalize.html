@@ -1,490 +1,199 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>tsb — jsonNormalize</title>
-  <style>
-    :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --border: #30363d;
-      --text: #e6edf3;
-      --accent: #58a6ff;
-      --green: #3fb950;
-      --orange: #d29922;
-      --red: #f85149;
-      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, sans-serif;
-      line-height: 1.6;
-      padding: 2rem;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    a { color: var(--accent); }
-    h1 { color: var(--accent); margin-bottom: 0.5rem; }
-    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
-    p { color: #8b949e; margin-bottom: 1rem; }
-    code {
-      font-family: var(--font-mono);
-      font-size: 0.875em;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 0.3rem;
-      padding: 0.1rem 0.4rem;
-    }
-    .back { margin-bottom: 2rem; display: inline-block; }
-    #playground-loading {
-      position: fixed;
-      inset: 0;
-      background: rgba(13, 17, 23, 0.92);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      gap: 1rem;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #playground-status { color: #8b949e; font-size: 0.9rem; }
-    .section {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    .playground-block { margin-top: 1rem; }
-    .playground-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.4rem 0.75rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: 0.5rem 0.5rem 0 0;
-      font-size: 0.75rem;
-      color: #8b949e;
-    }
-    .playground-label { font-weight: 600; color: var(--accent); }
-    .playground-actions { display: flex; gap: 0.5rem; }
-    .playground-run, .playground-reset {
-      padding: 0.2rem 0.6rem;
-      border-radius: 0.3rem;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-size: 0.75rem;
-      cursor: pointer;
-    }
-    .playground-run:not(:disabled):hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-    .playground-run:disabled { opacity: 0.5; cursor: not-allowed; }
-    .playground-reset:hover { background: var(--border); }
-    .playground-editor {
-      width: 100%;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-bottom: none;
-      padding: 0.75rem;
-      resize: vertical;
-      min-height: 120px;
-      tab-size: 2;
-      outline: none;
-    }
-    .playground-editor:focus { border-color: var(--accent); }
-    .playground-python { display: none; }
-    .playground-output {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-top: 1px dashed var(--border);
-      padding: 0.75rem;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      white-space: pre-wrap;
-      color: #8b949e;
-      min-height: 2.5rem;
-      border-radius: 0 0 0.5rem 0.5rem;
-    }
-    .playground-output.has-output { color: var(--green); }
-    .playground-output.has-error { color: var(--red); }
-    .playground-hint { font-size: 0.7rem; color: #484f58; margin-top: 0.25rem; text-align: right; }
-    pre.api-reference-code {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      padding: 1rem;
-      font-family: var(--font-mono);
-      font-size: 0.82rem;
-      overflow-x: auto;
-      margin-top: 0.75rem;
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.88rem; }
-    th { background: var(--bg); color: var(--accent); text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); }
-    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); color: #c9d1d9; vertical-align: top; }
-    td code { font-size: 0.8em; }
-    footer {
-      text-align: center;
-      padding: 2rem 0;
-      color: #8b949e;
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
-    }
-  </style>
-</head>
-<body>
-  <div id="playground-loading">
-    <div class="spinner"></div>
-    <div id="playground-status">Initializing playground…</div>
-  </div>
-  <a class="back" href="index.html">← Back to roadmap</a>
-  <h1>🔀 jsonNormalize — Interactive Playground</h1>
-  <p>Flatten semi-structured nested JSON into a tabular <strong style="color: var(--text);">DataFrame</strong>
-    with <code>jsonNormalize()</code>. Mirrors
-    <a href="https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html">pandas
-    <code>json_normalize()</code></a>: flattens nested dicts, unpacks nested arrays of records,
-    and adds parent-level metadata columns.<br>
-    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
-    (or Ctrl+Enter) to execute it live in your browser.</strong>
-  </p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · json_normalize</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --green: #3fb950;
+        --yellow: #d29922;
+        --red: #f85149;
+        --code-bg: #1f2937;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.6; }
+      header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; gap: 1rem; }
+      header a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+      header h1 { font-size: 1.4rem; font-weight: 600; }
+      main { max-width: 900px; margin: 0 auto; padding: 2rem; }
+      section { margin-bottom: 2.5rem; }
+      h2 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin-bottom: 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+      p { margin-bottom: 0.75rem; color: var(--muted); font-size: 0.95rem; }
+      code { background: var(--code-bg); padding: 0.1em 0.4em; border-radius: 4px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.88em; }
+      pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; font-family: "SFMono-Regular", Consolas, monospace; line-height: 1.5; }
+      .playground { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
+      .field-row { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+      label { font-size: 0.88rem; color: var(--muted); }
+      textarea, input[type="text"] { background: var(--code-bg); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.85rem; padding: 0.5rem; width: 100%; }
+      textarea { min-height: 120px; resize: vertical; }
+      button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.5rem 1.2rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+      button:hover { opacity: 0.85; }
+      .output { margin-top: 1rem; min-height: 60px; }
+      .output.error { color: var(--red); font-family: monospace; font-size: 0.85rem; white-space: pre-wrap; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+      th { background: var(--code-bg); color: var(--accent); padding: 0.4rem 0.6rem; text-align: left; border: 1px solid var(--border); }
+      td { padding: 0.35rem 0.6rem; border: 1px solid var(--border); }
+      tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a href="index.html">← tsb</a>
+      <h1>json_normalize</h1>
+    </header>
+    <main>
 
-  <!-- 1 · Flat objects -->
-  <div class="section">
-    <h2>1 · Flatten nested objects</h2>
-    <p>By default, <code>jsonNormalize()</code> flattens nested objects using
-      <code>"."</code> as the separator. Use the <code>sep</code> option to
-      change it, and <code>maxLevel</code> to limit depth.</p>
-    <div class="playground-block">
-      <div class="playground-header">
-        <span class="playground-label">TypeScript</span>
-        <div class="playground-actions">
-          <button class="playground-run" disabled>▶ Run</button>
-          <button class="playground-reset">↺ Reset</button>
-        </div>
-      </div>
-      <textarea class="playground-editor" spellcheck="false">import { jsonNormalize } from "tsb";
+      <section>
+        <h2>Overview</h2>
+        <p>
+          <code>jsonNormalize(data, options?)</code> flattens semi-structured (nested) JSON into
+          a flat <code>DataFrame</code> — mirroring <code>pandas.json_normalize()</code>.
+        </p>
+        <p>Key options:</p>
+        <ul style="color:var(--muted);font-size:0.95rem;padding-left:1.5rem;margin-bottom:0.75rem;">
+          <li><code>sep</code> — separator for nested key paths (default <code>"."</code>)</li>
+          <li><code>recordPath</code> — path to a nested array of child records</li>
+          <li><code>meta</code> — parent fields to attach to every child row</li>
+          <li><code>metaPrefix</code> / <code>recordPrefix</code> — column prefixes</li>
+          <li><code>maxLevel</code> — limit nesting depth</li>
+          <li><code>errors</code> — <code>"raise"</code> (default) or <code>"ignore"</code> for missing meta keys</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Example 1 — flatten nested dicts</h2>
+        <pre>import { jsonNormalize } from "tsb";
 
 const data = [
-  { id: 1, name: { first: "Alice", last: "Smith" }, score: 95 },
-  { id: 2, name: { first: "Bob",   last: "Jones" }, score: 87 },
-  { id: 3, name: { first: "Carol", last: "Lee"   }, score: 91 },
+  { id: 1, info: { name: "Alice", city: "NY" } },
+  { id: 2, info: { name: "Bob",   city: "LA" } },
 ];
 
 const df = jsonNormalize(data);
-console.log("columns:", [...df.columns.values]);
-console.log("first names:", [...df.col("name.first").values]);
-console.log("last names:", [...df.col("name.last").values]);
-console.log("scores:", [...df.col("score").values]);</textarea>
-      <textarea class="playground-python" style="display:none">import pandas as pd
+// id  info.name  info.city
+// 1   Alice      NY
+// 2   Bob        LA</pre>
+      </section>
 
-data = [
-    {"id": 1, "name": {"first": "Alice", "last": "Smith"}, "score": 95},
-    {"id": 2, "name": {"first": "Bob",   "last": "Jones"}, "score": 87},
-    {"id": 3, "name": {"first": "Carol", "last": "Lee"},   "score": 91},
-]
-
-df = pd.json_normalize(data)
-print("columns:", list(df.columns))
-print("first names:", list(df["name.first"]))
-print("last names:", list(df["name.last"]))
-print("scores:", list(df["score"]))</textarea>
-      <div class="playground-output">Click ▶ Run to execute</div>
-      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
-    </div>
-  </div>
-
-  <!-- 2 · recordPath -->
-  <div class="section">
-    <h2>2 · Unpack nested arrays with <code>recordPath</code></h2>
-    <p>Use <code>recordPath</code> to unpack a nested array of records.
-      Combine with <code>meta</code> to bring parent-level fields alongside
-      each unpacked row.</p>
-    <div class="playground-block">
-      <div class="playground-header">
-        <span class="playground-label">TypeScript</span>
-        <div class="playground-actions">
-          <button class="playground-run" disabled>▶ Run</button>
-          <button class="playground-reset">↺ Reset</button>
-        </div>
-      </div>
-      <textarea class="playground-editor" spellcheck="false">import { jsonNormalize } from "tsb";
-
-const data = [
-  {
-    school: "MIT",
-    students: [
-      { name: "Alice", grade: "A" },
-      { name: "Bob",   grade: "B+" },
-    ],
-  },
-  {
-    school: "Harvard",
-    students: [
-      { name: "Carol", grade: "A-" },
-    ],
-  },
+      <section>
+        <h2>Example 2 — recordPath + meta</h2>
+        <pre>const orders = [
+  { orderId: "A1", customer: "Alice", items: [{ sku: "X", qty: 2 }, { sku: "Y", qty: 1 }] },
+  { orderId: "B2", customer: "Bob",   items: [{ sku: "Z", qty: 5 }] },
 ];
 
-const df = jsonNormalize(data, {
-  recordPath: "students",
-  meta: ["school"],
+const df = jsonNormalize(orders, {
+  recordPath: "items",
+  meta: ["orderId", "customer"],
 });
-console.log("shape:", df.shape);
-console.log("columns:", [...df.columns.values]);
-console.log("school:", [...df.col("school").values]);
-console.log("name:", [...df.col("name").values]);
-console.log("grade:", [...df.col("grade").values]);</textarea>
-      <textarea class="playground-python" style="display:none">import pandas as pd
+// sku  qty  orderId  customer
+// X    2    A1       Alice
+// Y    1    A1       Alice
+// Z    5    B2       Bob</pre>
+      </section>
 
-data = [
-    {
-        "school": "MIT",
-        "students": [
-            {"name": "Alice", "grade": "A"},
-            {"name": "Bob",   "grade": "B+"},
-        ],
-    },
-    {
-        "school": "Harvard",
-        "students": [
-            {"name": "Carol", "grade": "A-"},
-        ],
-    },
-]
+      <section>
+        <h2>Example 3 — maxLevel</h2>
+        <pre>const data = [{ a: { b: { c: { d: 99 } } } }];
 
-df = pd.json_normalize(data, record_path="students", meta=["school"])
-print("shape:", df.shape)
-print("columns:", list(df.columns))
-print("school:", list(df["school"]))
-print("name:", list(df["name"]))
-print("grade:", list(df["grade"]))</textarea>
-      <div class="playground-output">Click ▶ Run to execute</div>
-      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
-    </div>
-  </div>
+jsonNormalize(data, { maxLevel: 1 });
+// a.b  →  {"c":{"d":99}}   (depth 2 is not expanded)</pre>
+      </section>
 
-  <!-- 3 · Custom sep and maxLevel -->
-  <div class="section">
-    <h2>3 · Custom separator and depth limit</h2>
-    <p>Use <code>sep</code> to change the key separator (default <code>"."</code>)
-      and <code>maxLevel</code> to stop flattening at a given nesting depth.
-      Objects deeper than <code>maxLevel</code> are serialised to JSON strings.</p>
-    <div class="playground-block">
-      <div class="playground-header">
-        <span class="playground-label">TypeScript</span>
-        <div class="playground-actions">
-          <button class="playground-run" disabled>▶ Run</button>
-          <button class="playground-reset">↺ Reset</button>
+      <section>
+        <h2>Interactive playground</h2>
+        <div class="playground">
+          <div class="field-row">
+            <label>JSON input (array of objects or single object)</label>
+            <textarea id="json-input">[
+  { "id": 1, "name": "Alice", "address": { "city": "NY", "zip": "10001" } },
+  { "id": 2, "name": "Bob",   "address": { "city": "LA", "zip": "90001" } }
+]</textarea>
+          </div>
+          <div class="field-row">
+            <label>recordPath (optional, e.g. <code>items</code> or <code>a.b</code> for nested)</label>
+            <input type="text" id="record-path" placeholder="leave blank for flat normalization" />
+          </div>
+          <div class="field-row">
+            <label>meta fields (comma-separated, e.g. <code>id,name</code>)</label>
+            <input type="text" id="meta-fields" placeholder="leave blank" />
+          </div>
+          <div class="field-row">
+            <label>sep (separator for nested keys, default <code>.</code>)</label>
+            <input type="text" id="sep" value="." style="width:4rem" />
+          </div>
+          <div class="field-row">
+            <label>maxLevel (blank = unlimited)</label>
+            <input type="text" id="max-level" placeholder="blank = unlimited" style="width:6rem" />
+          </div>
+          <button onclick="runExample()">Normalize →</button>
+          <div class="output" id="output"></div>
         </div>
-      </div>
-      <textarea class="playground-editor" spellcheck="false">import { jsonNormalize } from "tsb";
+      </section>
 
-const data = [
-  { a: { b: { c: 42 } }, x: 1 },
-  { a: { b: { c: 99 } }, x: 2 },
-];
+    </main>
 
-// Default: unlimited depth → flattens a.b.c
-const dfFull = jsonNormalize(data);
-console.log("unlimited depth columns:", [...dfFull.columns.values]);
-console.log("a.b.c values:", [...dfFull.col("a.b.c").values]);
+    <script type="module">
+      import { jsonNormalize } from "./tsb.js";
 
-// maxLevel=1: only flatten one level deep
-const dfShallow = jsonNormalize(data, { maxLevel: 1 });
-console.log("\nmaxLevel=1 columns:", [...dfShallow.columns.values]);
+      function dfToTable(df) {
+        const cols = [...df.columns.values];
+        if (cols.length === 0) return "<em style='color:var(--muted)'>empty DataFrame</em>";
+        let html = "<table><tr>";
+        for (const c of cols) html += `<th>${c}</th>`;
+        html += "</tr>";
+        const nRows = df.shape[0];
+        for (let r = 0; r < nRows; r++) {
+          html += "<tr>";
+          for (const c of cols) {
+            const v = df.col(c).values[r];
+            html += `<td>${v === null || v === undefined ? "<em style='color:var(--muted)'>null</em>" : v}</td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</table>";
+        return html;
+      }
 
-// Custom separator
-const dfSep = jsonNormalize(data, { sep: "__" });
-console.log("\ncustom sep '__' columns:", [...dfSep.columns.values]);</textarea>
-      <textarea class="playground-python" style="display:none">import pandas as pd
+      window.runExample = function () {
+        const out = document.getElementById("output");
+        try {
+          const rawJson = document.getElementById("json-input").value.trim();
+          const recordPathRaw = document.getElementById("record-path").value.trim();
+          const metaRaw = document.getElementById("meta-fields").value.trim();
+          const sep = document.getElementById("sep").value || ".";
+          const maxLevelRaw = document.getElementById("max-level").value.trim();
 
-data = [
-    {"a": {"b": {"c": 42}}, "x": 1},
-    {"a": {"b": {"c": 99}}, "x": 2},
-]
+          const data = JSON.parse(rawJson);
+          const opts = { sep };
 
-# Default: unlimited depth
-df_full = pd.json_normalize(data)
-print("unlimited depth columns:", list(df_full.columns))
-print("a.b.c values:", list(df_full["a.b.c"]))
+          if (recordPathRaw) {
+            const parts = recordPathRaw.split(".");
+            opts.recordPath = parts.length === 1 ? parts[0] : parts;
+          }
+          if (metaRaw) {
+            opts.meta = metaRaw.split(",").map(s => s.trim()).filter(Boolean);
+          }
+          if (maxLevelRaw !== "") {
+            const n = parseInt(maxLevelRaw, 10);
+            if (!isNaN(n)) opts.maxLevel = n;
+          }
 
-# max_level=1: only flatten one level
-df_shallow = pd.json_normalize(data, max_level=1)
-print("\nmax_level=1 columns:", list(df_shallow.columns))
-
-# Custom sep
-df_sep = pd.json_normalize(data, sep="__")
-print("\ncustom sep '__' columns:", list(df_sep.columns))</textarea>
-      <div class="playground-output">Click ▶ Run to execute</div>
-      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
-    </div>
-  </div>
-
-  <!-- 4 · Nested recordPath and meta prefix -->
-  <div class="section">
-    <h2>4 · Nested <code>recordPath</code> and prefixes</h2>
-    <p>Navigate to deeply nested arrays with an array path. Use
-      <code>recordPrefix</code> and <code>metaPrefix</code> to avoid column
-      name collisions.</p>
-    <div class="playground-block">
-      <div class="playground-header">
-        <span class="playground-label">TypeScript</span>
-        <div class="playground-actions">
-          <button class="playground-run" disabled>▶ Run</button>
-          <button class="playground-reset">↺ Reset</button>
-        </div>
-      </div>
-      <textarea class="playground-editor" spellcheck="false">import { jsonNormalize } from "tsb";
-
-// The array is nested at: org → dept → employees
-const data = {
-  org: "Acme",
-  dept: {
-    name: "Engineering",
-    employees: [
-      { name: "Alice", level: 5 },
-      { name: "Bob",   level: 3 },
-    ],
-  },
-};
-
-const df = jsonNormalize(data, {
-  recordPath: ["dept", "employees"],
-  meta: ["org", ["dept", "name"]],
-  metaPrefix: "meta_",
-  recordPrefix: "emp_",
-});
-console.log("columns:", [...df.columns.values]);
-console.log("emp_name:", [...df.col("emp_name").values]);
-console.log("meta_org:", [...df.col("meta_org").values]);
-console.log("meta_dept.name:", [...df.col("meta_dept.name").values]);</textarea>
-      <textarea class="playground-python" style="display:none">import pandas as pd
-
-data = {
-    "org": "Acme",
-    "dept": {
-        "name": "Engineering",
-        "employees": [
-            {"name": "Alice", "level": 5},
-            {"name": "Bob",   "level": 3},
-        ],
-    },
-}
-
-df = pd.json_normalize(
-    data,
-    record_path=["dept", "employees"],
-    meta=["org", ["dept", "name"]],
-    meta_prefix="meta_",
-    record_prefix="emp_",
-)
-print("columns:", list(df.columns))
-print("emp_name:", list(df["emp_name"]))
-print("meta_org:", list(df["meta_org"]))
-print("meta_dept.name:", list(df["meta_dept.name"]))</textarea>
-      <div class="playground-output">Click ▶ Run to execute</div>
-      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
-    </div>
-  </div>
-
-  <!-- API reference -->
-  <div class="section">
-    <h2>API Reference</h2>
-    <p>Flatten semi-structured JSON into a flat DataFrame. Mirrors
-      <code>pandas.json_normalize()</code>.</p>
-    <pre class="api-reference-code"><code>jsonNormalize(
-  data: JsonObject | readonly JsonObject[],
-  options?: JsonNormalizeOptions,
-): DataFrame
-
-interface JsonNormalizeOptions {
-  recordPath?:   string | readonly string[];   // path to nested record array
-  meta?:         ReadonlyArray&lt;string | readonly string[]&gt;;  // parent fields to include
-  metaPrefix?:   string;                       // prefix for meta columns (default "")
-  recordPrefix?: string;                       // prefix for record columns (default "")
-  sep?:          string;                       // key separator (default ".")
-  maxLevel?:     number;                       // max flatten depth (default: unlimited)
-  errors?:       "raise" | "ignore";           // complex meta values (default "raise")
-}</code></pre>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Option</th>
-          <th>Type</th>
-          <th>Default</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>recordPath</code></td>
-          <td><code>string | string[]</code></td>
-          <td>—</td>
-          <td>Path to the nested array of records to unpack. String key or array of keys for nested paths.</td>
-        </tr>
-        <tr>
-          <td><code>meta</code></td>
-          <td><code>Array&lt;string | string[]&gt;</code></td>
-          <td>—</td>
-          <td>Parent-level fields to include as metadata columns in each unpacked row.</td>
-        </tr>
-        <tr>
-          <td><code>metaPrefix</code></td>
-          <td><code>string</code></td>
-          <td><code>""</code></td>
-          <td>Prefix prepended to metadata column names.</td>
-        </tr>
-        <tr>
-          <td><code>recordPrefix</code></td>
-          <td><code>string</code></td>
-          <td><code>""</code></td>
-          <td>Prefix prepended to record column names.</td>
-        </tr>
-        <tr>
-          <td><code>sep</code></td>
-          <td><code>string</code></td>
-          <td><code>"."</code></td>
-          <td>Separator used when joining nested key names.</td>
-        </tr>
-        <tr>
-          <td><code>maxLevel</code></td>
-          <td><code>number</code></td>
-          <td>unlimited</td>
-          <td>Maximum nesting depth to flatten. Objects deeper than this level are serialised to JSON strings.</td>
-        </tr>
-        <tr>
-          <td><code>errors</code></td>
-          <td><code>"raise" | "ignore"</code></td>
-          <td><code>"raise"</code></td>
-          <td>Behaviour when a meta path yields a complex value: <code>"raise"</code> serialises it, <code>"ignore"</code> uses <code>null</code>.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <footer>
-    <p>
-      <a href="index.html">tsb playground</a> ·
-      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
-    </p>
-  </footer>
-  <script type="module" src="playground-runtime.js"></script>
-</body>
+          const df = jsonNormalize(data, opts);
+          out.className = "output";
+          out.innerHTML = dfToTable(df);
+        } catch (e) {
+          out.className = "output error";
+          out.textContent = String(e);
+        }
+      };
+    </script>
+  </body>
 </html>

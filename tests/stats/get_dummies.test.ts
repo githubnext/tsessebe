@@ -1,308 +1,278 @@
 /**
- * Tests for get_dummies / fromDummies — one-hot encoding.
+ * Tests for src/stats/get_dummies.ts
+ *
+ * Covers: getDummies (Series → DataFrame), dataFrameGetDummies,
+ * prefix / prefixSep / dummyNa / dropFirst options,
+ * and property-based tests via fast-check.
  */
 
 import { describe, expect, it } from "bun:test";
-import fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  fromDummies,
-  getDummies,
-  getDummiesDataFrame,
-  getDummiesSeries,
-} from "../../src/index.ts";
+import * as fc from "fast-check";
+import { RangeIndex } from "../../src/core/range-index.ts";
+import { DataFrame, Series } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
+import { dataFrameGetDummies, getDummies } from "../../src/stats/get_dummies.ts";
 
-// ─── getDummiesSeries ─────────────────────────────────────────────────────────
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
-describe("getDummiesSeries", () => {
-  it("encodes a string series with default prefix", () => {
-    const s = new Series<Scalar>({ data: ["cat", "dog", "cat", "fish"], name: "animal" });
-    const df = getDummiesSeries(s);
-    expect(df.columns.values).toEqual(["animal_cat", "animal_dog", "animal_fish"]);
-    expect(df.col("animal_cat").values).toEqual([1, 0, 1, 0]);
-    expect(df.col("animal_dog").values).toEqual([0, 1, 0, 0]);
-    expect(df.col("animal_fish").values).toEqual([0, 0, 0, 1]);
+function s(data: readonly Scalar[]): Series<Scalar> {
+  return new Series({ data: [...data] });
+}
+
+// ─── getDummies — basic ───────────────────────────────────────────────────────
+
+describe("getDummies — basic Series", () => {
+  it("returns empty DataFrame for empty Series", () => {
+    const df = getDummies(s([]));
+    expect(df.columns.size).toBe(0);
+    expect(df.shape[0]).toBe(0);
   });
 
-  it("uses custom prefix and separator", () => {
-    const s = new Series<Scalar>({ data: ["a", "b"], name: "x" });
-    const df = getDummiesSeries(s, { prefix: "col", prefixSep: "__" });
-    expect(df.columns.values).toEqual(["col__a", "col__b"]);
+  it("creates one binary column per unique value", () => {
+    const df = getDummies(s(["a", "b", "a", "c"]));
+    expect(df.columns.values).toEqual(["a", "b", "c"]);
+    expect(df.col("a").values).toEqual([1, 0, 1, 0]);
+    expect(df.col("b").values).toEqual([0, 1, 0, 0]);
+    expect(df.col("c").values).toEqual([0, 0, 0, 1]);
   });
 
-  it("drops first level when dropFirst=true", () => {
-    const s = new Series<Scalar>({ data: ["a", "b", "c"] });
-    const df = getDummiesSeries(s, { dropFirst: true });
-    expect(df.columns.values.length).toBe(2);
-    // alphabetically sorted: a, b, c → drop a → b, c
-    expect(df.columns.values).toEqual(["_b", "_c"]);
+  it("columns appear in first-seen order", () => {
+    const df = getDummies(s(["c", "b", "a", "c"]));
+    expect(df.columns.values).toEqual(["c", "b", "a"]);
   });
 
-  it("includes NaN column when dummyNa=true", () => {
-    const s = new Series<Scalar>({ data: ["a", null, "b"], name: "x" });
-    const df = getDummiesSeries(s, { dummyNa: true });
-    expect(df.columns.values).toContain("x_nan");
-    expect(df.col("x_nan").values).toEqual([0, 1, 0]);
+  it("numeric values become column names", () => {
+    const df = getDummies(s([1, 2, 1]));
+    expect(df.columns.values).toEqual(["1", "2"]);
+    expect(df.col("1").values).toEqual([1, 0, 1]);
   });
 
-  it("ignores NaN by default", () => {
-    const s = new Series<Scalar>({ data: ["a", null, "b"], name: "x" });
-    const df = getDummiesSeries(s);
-    expect(df.columns.values).not.toContain("x_nan");
-    expect(df.col("x_a").values).toEqual([1, 0, 0]);
+  it("handles single unique value", () => {
+    const df = getDummies(s(["x", "x", "x"]));
+    expect(df.columns.values).toEqual(["x"]);
+    expect(df.col("x").values).toEqual([1, 1, 1]);
   });
 
-  it("unnamed series uses empty prefix", () => {
-    const s = new Series<Scalar>({ data: ["a", "b"] });
-    const df = getDummiesSeries(s);
-    expect(df.columns.values).toEqual(["_a", "_b"]);
+  it("missing values are encoded as 0 by default", () => {
+    const df = getDummies(s(["a", null, "b", Number.NaN]));
+    expect(df.columns.values).toEqual(["a", "b"]);
+    expect(df.col("a").values).toEqual([1, 0, 0, 0]);
+    expect(df.col("b").values).toEqual([0, 0, 1, 0]);
   });
 
-  it("preserves row index from series", () => {
-    const s = new Series<Scalar>({ data: ["a", "b"], index: [10, 20], name: "x" });
-    const df = getDummiesSeries(s);
-    expect(df.index.values).toEqual([10, 20]);
-  });
-
-  it("handles boolean series", () => {
-    const s = new Series<Scalar>({ data: [true, false, true], name: "flag" });
-    const df = getDummiesSeries(s);
-    expect(df.columns.values).toEqual(["flag_false", "flag_true"]);
-  });
-
-  it("handles numeric series", () => {
-    const s = new Series<Scalar>({ data: [1, 2, 1, 3], name: "num" });
-    const df = getDummiesSeries(s);
-    expect(df.columns.values).toEqual(["num_1", "num_2", "num_3"]);
-    expect(df.col("num_1").values).toEqual([1, 0, 1, 0]);
-  });
-
-  it("empty series returns empty DataFrame", () => {
-    const s = new Series<Scalar>({ data: [], name: "x" });
-    const df = getDummiesSeries(s);
-    expect(df.columns.values.length).toBe(0);
-    expect(df.index.size).toBe(0);
-  });
-
-  it("single-element series", () => {
-    const s = new Series<Scalar>({ data: ["only"], name: "x" });
-    const df = getDummiesSeries(s);
-    expect(df.col("x_only").values).toEqual([1]);
-  });
-
-  it("all-NaN series with dummyNa=true only has nan column", () => {
-    const s = new Series<Scalar>({ data: [null, null], name: "x" });
-    const df = getDummiesSeries(s, { dummyNa: true });
-    expect(df.columns.values).toEqual(["x_nan"]);
-    expect(df.col("x_nan").values).toEqual([1, 1]);
+  it("columns have correct row count", () => {
+    const df = getDummies(s(["a", "b", "c", "a"]));
+    for (const c of df.columns.values as string[]) {
+      expect(df.col(c).size).toBe(4);
+    }
   });
 });
 
-// ─── getDummiesDataFrame ──────────────────────────────────────────────────────
+// ─── getDummies — prefix / prefixSep ─────────────────────────────────────────
 
-describe("getDummiesDataFrame", () => {
-  it("encodes categorical columns, preserves numeric", () => {
-    const df = DataFrame.fromColumns({
-      x: [1, 2, 3],
-      color: ["red", "blue", "red"],
-    });
-    const result = getDummiesDataFrame(df);
-    expect(result.columns.values).toContain("x");
-    expect(result.columns.values).toContain("color_blue");
-    expect(result.columns.values).toContain("color_red");
-    expect(result.col("x").values).toEqual([1, 2, 3]);
-    expect(result.col("color_blue").values).toEqual([0, 1, 0]);
+describe("getDummies — prefix option", () => {
+  it("prepends prefix with default sep '_'", () => {
+    const df = getDummies(s(["red", "blue"]), { prefix: "color" });
+    expect(df.columns.values).toEqual(["color_red", "color_blue"]);
+  });
+
+  it("uses custom prefixSep", () => {
+    const df = getDummies(s(["x", "y"]), { prefix: "v", prefixSep: "-" });
+    expect(df.columns.values).toEqual(["v-x", "v-y"]);
+  });
+
+  it("empty prefix string yields no prefix", () => {
+    const df = getDummies(s(["a", "b"]), { prefix: "" });
+    expect(df.columns.values).toEqual(["a", "b"]);
+  });
+
+  it("null prefix yields no prefix", () => {
+    const df = getDummies(s(["a", "b"]), { prefix: null });
+    expect(df.columns.values).toEqual(["a", "b"]);
+  });
+});
+
+// ─── getDummies — dummyNa ─────────────────────────────────────────────────────
+
+describe("getDummies — dummyNa option", () => {
+  it("adds NaN column when dummyNa=true", () => {
+    const df = getDummies(s(["a", null, "b"]), { dummyNa: true });
+    expect(df.columns.values).toContain("NaN");
+    expect(df.col("NaN").values).toEqual([0, 1, 0]);
+  });
+
+  it("NaN column reflects NaN values too", () => {
+    const df = getDummies(s(["a", Number.NaN, "b"]), { dummyNa: true });
+    expect(df.col("NaN").values).toEqual([0, 1, 0]);
+  });
+
+  it("NaN column is named with prefix when provided", () => {
+    const df = getDummies(s(["a", null]), { dummyNa: true, prefix: "col" });
+    expect(df.columns.values).toContain("col_NaN");
+  });
+
+  it("no NaN column when dummyNa=false (default)", () => {
+    const df = getDummies(s(["a", null, "b"]));
+    expect((df.columns.values as string[]).includes("NaN")).toBe(false);
+  });
+});
+
+// ─── getDummies — dropFirst ───────────────────────────────────────────────────
+
+describe("getDummies — dropFirst option", () => {
+  it("drops first category column", () => {
+    const df = getDummies(s(["a", "b", "c"]), { dropFirst: true });
+    // first category "a" is dropped
+    expect(df.columns.values).toEqual(["b", "c"]);
+  });
+
+  it("single unique value → empty DataFrame when dropFirst=true", () => {
+    const df = getDummies(s(["a", "a"]), { dropFirst: true });
+    expect(df.columns.size).toBe(0);
+  });
+
+  it("dropFirst=false (default) keeps all columns", () => {
+    const df = getDummies(s(["a", "b"]), { dropFirst: false });
+    expect(df.columns.values).toEqual(["a", "b"]);
+  });
+});
+
+// ─── dataFrameGetDummies ──────────────────────────────────────────────────────
+
+describe("dataFrameGetDummies — basic", () => {
+  it("encodes string columns, preserves numeric columns", () => {
+    const df = DataFrame.fromColumns({ color: ["red", "blue", "red"], n: [1, 2, 3] });
+    const result = dataFrameGetDummies(df);
+    // String column 'color' expanded; numeric column 'n' kept
+    expect((result.columns.values as string[]).includes("n")).toBe(true);
+    expect((result.columns.values as string[]).includes("color")).toBe(false);
+    expect((result.columns.values as string[]).includes("color_red")).toBe(true);
+    expect((result.columns.values as string[]).includes("color_blue")).toBe(true);
     expect(result.col("color_red").values).toEqual([1, 0, 1]);
+    expect(result.col("color_blue").values).toEqual([0, 1, 0]);
+    expect(result.col("n").values).toEqual([1, 2, 3]);
   });
 
-  it("encodes only specified columns", () => {
-    const df = DataFrame.fromColumns({
-      a: ["x", "y"],
-      b: ["p", "q"],
-      n: [1, 2],
-    });
-    const result = getDummiesDataFrame(df, { columns: ["a"] });
-    expect(result.columns.values).toContain("a_x");
-    expect(result.columns.values).toContain("a_y");
-    expect(result.columns.values).toContain("b");
-    expect(result.columns.values).toContain("n");
-    expect(result.columns.values).not.toContain("b_p");
+  it("target specific columns via columns option", () => {
+    const df = DataFrame.fromColumns({ a: ["x", "y"], b: ["p", "q"], n: [1, 2] });
+    const result = dataFrameGetDummies(df, { columns: ["a"] });
+    // Only 'a' is encoded; 'b' and 'n' kept
+    expect((result.columns.values as string[]).includes("b")).toBe(true);
+    expect((result.columns.values as string[]).includes("n")).toBe(true);
+    expect((result.columns.values as string[]).includes("a")).toBe(false);
+    expect((result.columns.values as string[]).includes("a_x")).toBe(true);
   });
 
-  it("applies prefix array aligned to encoded columns", () => {
-    const df = DataFrame.fromColumns({ a: ["x", "y"], b: ["p", "q"] });
-    const result = getDummiesDataFrame(df, { prefix: ["pfxA", "pfxB"] });
-    expect(result.columns.values).toContain("pfxA_x");
-    expect(result.columns.values).toContain("pfxB_p");
+  it("empty DataFrame returns empty DataFrame", () => {
+    const df = new DataFrame(new Map(), new RangeIndex(0));
+    const result = dataFrameGetDummies(df);
+    expect(result.columns.size).toBe(0);
   });
 
-  it("applies record prefix mapping", () => {
-    const df = DataFrame.fromColumns({ color: ["r", "g"] });
-    const result = getDummiesDataFrame(df, { prefix: { color: "clr" } });
-    expect(result.columns.values).toContain("clr_r");
-    expect(result.columns.values).toContain("clr_g");
-  });
-
-  it("dropFirst drops first level", () => {
-    const df = DataFrame.fromColumns({ cat: ["a", "b", "c"] });
-    const result = getDummiesDataFrame(df, { dropFirst: true });
-    // sorted levels: a, b, c → drop a → cat_b, cat_c
-    expect(result.columns.values).toEqual(["cat_b", "cat_c"]);
-  });
-
-  it("dummyNa includes nan column", () => {
-    const df = DataFrame.fromColumns({ cat: ["a", null, "b"] });
-    const result = getDummiesDataFrame(df, { dummyNa: true });
-    expect(result.columns.values).toContain("cat_nan");
-  });
-
-  it("all numeric DataFrame returns unchanged", () => {
-    const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
-    const result = getDummiesDataFrame(df);
-    expect(result.columns.values).toEqual(["a", "b"]);
-  });
-
-  it("preserves row index", () => {
-    const df = DataFrame.fromColumns({ cat: ["a", "b"] }, { index: [5, 10] });
-    const result = getDummiesDataFrame(df);
-    expect(result.index.values).toEqual([5, 10]);
-  });
-});
-
-// ─── getDummies (unified) ─────────────────────────────────────────────────────
-
-describe("getDummies (unified)", () => {
-  it("dispatches to getDummiesSeries for Series input", () => {
-    const s = new Series<Scalar>({ data: ["a", "b"], name: "x" });
-    const result = getDummies(s);
-    expect(result.columns.values).toContain("x_a");
-  });
-
-  it("dispatches to getDummiesDataFrame for DataFrame input", () => {
+  it("uses global prefix override", () => {
     const df = DataFrame.fromColumns({ cat: ["a", "b"] });
-    const result = getDummies(df);
-    expect(result.columns.values).toContain("cat_a");
-  });
-});
-
-// ─── fromDummies ──────────────────────────────────────────────────────────────
-
-describe("fromDummies", () => {
-  it("reconstructs a series from dummy columns", () => {
-    const df = DataFrame.fromColumns({
-      x_a: [1, 0, 1, 0],
-      x_b: [0, 1, 0, 0],
-      x_c: [0, 0, 0, 1],
-    });
-    const s = fromDummies(df, { sep: "_" });
-    expect([...s.values]).toEqual(["a", "b", "a", "c"]);
-    expect(s.name).toBe("x");
+    const result = dataFrameGetDummies(df, { prefix: "x" });
+    expect((result.columns.values as string[]).includes("x_a")).toBe(true);
+    expect((result.columns.values as string[]).includes("x_b")).toBe(true);
   });
 
-  it("uses null for all-zero rows by default", () => {
-    const df = DataFrame.fromColumns({
-      x_a: [1, 0],
-      x_b: [0, 0],
-    });
-    const s = fromDummies(df);
-    expect(s.values[1]).toBeNull();
-  });
-
-  it("uses defaultCategory for all-zero rows when provided", () => {
-    const df = DataFrame.fromColumns({
-      x_a: [1, 0],
-      x_b: [0, 0],
-    });
-    const s = fromDummies(df, { defaultCategory: "unknown" });
-    expect(s.values[1]).toBe("unknown");
-  });
-
-  it("throws if row has multiple active dummies", () => {
-    const df = DataFrame.fromColumns({
-      x_a: [1, 1],
-      x_b: [1, 0],
-    });
-    expect(() => fromDummies(df)).toThrow(RangeError);
-  });
-
-  it("empty DataFrame returns empty Series", () => {
-    const df = DataFrame.fromColumns({});
-    const s = fromDummies(df);
-    expect(s.values.length).toBe(0);
-  });
-
-  it("columns without sep produce null name", () => {
-    const df = DataFrame.fromColumns({ a: [1, 0], b: [0, 1] });
-    const s = fromDummies(df, { sep: "_" });
-    // no "_" in column names → prefix="" for all → seriesName=""→null
-    expect(s.name).toBeNull();
-  });
-
-  it("round-trips getDummiesSeries → fromDummies", () => {
-    const original = new Series<Scalar>({
-      data: ["alpha", "beta", "alpha", "gamma"],
-      name: "word",
-    });
-    const dummies = getDummiesSeries(original);
-    const recovered = fromDummies(dummies, { sep: "_" });
-    expect([...recovered.values]).toEqual(["alpha", "beta", "alpha", "gamma"]);
-    expect(recovered.name).toBe("word");
+  it("dropFirst on DataFrame columns", () => {
+    const df = DataFrame.fromColumns({ cat: ["a", "b", "c"] });
+    const result = dataFrameGetDummies(df, { dropFirst: true });
+    // "a" dropped, only "cat_b" and "cat_c"
+    expect(result.columns.values).toEqual(["cat_b", "cat_c"]);
   });
 });
 
 // ─── property-based tests ─────────────────────────────────────────────────────
 
-describe("getDummiesSeries — property tests", () => {
-  it("each row has exactly one 1 (no NaN, no dropFirst)", () => {
+describe("getDummies — property tests", () => {
+  it("each row sums to 1 for non-missing values (no prefix, no dummyNa)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.constantFrom("a", "b", "c", "d"), { minLength: 1, maxLength: 30 }),
+        fc.array(fc.constantFrom("a", "b", "c"), { minLength: 1, maxLength: 20 }),
         (data) => {
-          const s = new Series<Scalar>({ data, name: "v" });
-          const df = getDummiesSeries(s);
+          const series = s(data);
+          const df = getDummies(series);
+          const cols = df.columns.values as string[];
           for (let i = 0; i < data.length; i++) {
-            const rowSum = df.columns.values.reduce((sum, c) => {
-              const v = df.col(c).values[i];
-              return sum + (typeof v === "number" ? v : 0);
-            }, 0);
-            if (rowSum !== 1) {
-              return false;
+            const rowSum = cols.reduce((acc, c) => acc + (df.col(c).values[i] as number), 0);
+            expect(rowSum).toBe(1);
+          }
+        },
+      ),
+    );
+  });
+
+  it("column count equals unique non-missing value count", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.constantFrom("a", "b", "c", "d"), { minLength: 0, maxLength: 30 }),
+        (data) => {
+          const unique = new Set(data).size;
+          const df = getDummies(s(data));
+          expect(df.columns.size).toBe(unique);
+        },
+      ),
+    );
+  });
+
+  it("all values in dummy columns are 0 or 1", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.constantFrom("x", "y", "z"), { minLength: 1, maxLength: 20 }),
+        (data) => {
+          const df = getDummies(s(data));
+          for (const c of df.columns.values as string[]) {
+            for (const v of df.col(c).values) {
+              expect(v === 0 || v === 1).toBe(true);
             }
           }
-          return true;
         },
       ),
     );
   });
 
-  it("number of dummy columns equals number of unique non-null values", () => {
+  it("dropFirst reduces column count by exactly 1 (when >0 categories)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.constantFrom("x", "y", "z", null), { minLength: 0, maxLength: 20 }),
+        fc.array(fc.constantFrom("a", "b", "c"), { minLength: 1, maxLength: 20 }),
         (data) => {
-          const s = new Series<Scalar>({ data, name: "v" });
-          const df = getDummiesSeries(s);
-          const unique = new Set(data.filter((v) => v !== null));
-          return df.columns.values.length === unique.size;
+          const dfAll = getDummies(s(data));
+          const dfDrop = getDummies(s(data), { dropFirst: true });
+          if (dfAll.columns.size > 0) {
+            expect(dfDrop.columns.size).toBe(dfAll.columns.size - 1);
+          }
         },
       ),
     );
   });
 
-  it("round-trip: getDummies → fromDummies recovers original values", () => {
+  it("prefix prepends to every column name", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.constantFrom("cat", "dog", "fish"), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.constantFrom("a", "b", "c"), { minLength: 1, maxLength: 10 }),
+        fc.string({ minLength: 1, maxLength: 5 }),
+        (data, pfx) => {
+          const df = getDummies(s(data), { prefix: pfx });
+          for (const c of df.columns.values as string[]) {
+            expect((c as string).startsWith(`${pfx}_`)).toBe(true);
+          }
+        },
+      ),
+    );
+  });
+
+  it("dummyNa adds exactly one extra column for mixed null/non-null input", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.constantFrom("a", "b", null), { minLength: 2, maxLength: 20 }),
         (data) => {
-          const s = new Series<Scalar>({ data, name: "animal" });
-          const dummies = getDummiesSeries(s);
-          const recovered = fromDummies(dummies, { sep: "_" });
-          return (
-            recovered.values.length === data.length &&
-            recovered.values.every((v, i) => v === data[i])
-          );
+          const hasNull = data.some((v) => v === null);
+          const dfBase = getDummies(s(data as Scalar[]));
+          const dfNa = getDummies(s(data as Scalar[]), { dummyNa: true });
+          const expectedExtra = hasNull ? 1 : 1; // NaN col always added when dummyNa=true
+          expect(dfNa.columns.size).toBe(dfBase.columns.size + expectedExtra);
         },
       ),
     );

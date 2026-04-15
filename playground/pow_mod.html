@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — pow / mod / floordiv</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; font-size: .875rem; margin: .75rem 0; }
+    th, td { border: 1px solid #ddd; padding: .4rem .75rem; text-align: left; }
+    th { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>pow / mod / floordiv</h1>
+<p class="subtitle">
+  Element-wise exponentiation, modulo, and floor-division for Series and DataFrame —
+  mirroring <code>pandas.Series.pow</code>, <code>.mod</code>, and <code>.floordiv</code>.
+</p>
+
+<section>
+  <h2>Overview</h2>
+  <p>All three operations work element-wise on <code>Series</code> and <code>DataFrame</code>:</p>
+  <table>
+    <thead><tr><th>Function</th><th>pandas equivalent</th><th>Operator</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>seriesPow(s, other)</code></td><td><code>s.pow(other)</code></td><td><code>**</code></td><td>Raise to power</td></tr>
+      <tr><td><code>seriesMod(s, other)</code></td><td><code>s.mod(other)</code></td><td><code>%</code></td><td>Modulo (Python/pandas sign rule)</td></tr>
+      <tr><td><code>seriesFloorDiv(s, other)</code></td><td><code>s.floordiv(other)</code></td><td><code>//</code></td><td>Floor division (rounds toward −∞)</td></tr>
+      <tr><td><code>dataFramePow(df, other)</code></td><td><code>df.pow(other)</code></td><td><code>**</code></td><td>Column-wise exponentiation</td></tr>
+      <tr><td><code>dataFrameMod(df, other)</code></td><td><code>df.mod(other)</code></td><td><code>%</code></td><td>Column-wise modulo</td></tr>
+      <tr><td><code>dataFrameFloorDiv(df, other)</code></td><td><code>df.floordiv(other)</code></td><td><code>//</code></td><td>Column-wise floor division</td></tr>
+    </tbody>
+  </table>
+  <p>The <code>other</code> operand may be a <strong>scalar number</strong> or another <strong>Series / DataFrame</strong>
+  of the same shape (positional alignment). Missing values (<code>null</code> / <code>NaN</code>) propagate unchanged.</p>
+</section>
+
+<section>
+  <h2>seriesPow — exponentiation</h2>
+  <pre><code>import { Series, seriesPow } from "tsb";
+
+// Scalar exponent: each element raised to the power 2
+const s = new Series({ data: [1, 2, 3, 4, 5], name: "x" });
+console.log(seriesPow(s, 2).values);
+// [1, 4, 9, 16, 25]
+
+// Series exponent: element-wise pairing
+const exponents = new Series({ data: [1, 2, 3, 4, 5] });
+console.log(seriesPow(s, exponents).values);
+// [1, 4, 27, 256, 3125]
+
+// Square root via pow(0.5)
+const sq = new Series({ data: [4, 9, 16, 25] });
+console.log(seriesPow(sq, 0.5).values);
+// [2, 3, 4, 5]</code></pre>
+  <div class="output">[1, 4, 9, 16, 25]
+[1, 4, 27, 256, 3125]
+[2, 3, 4, 5]</div>
+</section>
+
+<section>
+  <h2>seriesMod — Python-style modulo</h2>
+  <div class="note">
+    <strong>Sign rule:</strong> Unlike JavaScript's <code>%</code> operator (which follows C semantics),
+    <code>seriesMod</code> uses <strong>Python / pandas semantics</strong>: the result always has the
+    same sign as the <em>divisor</em>. For example, <code>-7 mod 3 = 2</code> (not <code>-1</code>).
+  </div>
+  <pre><code>import { Series, seriesMod } from "tsb";
+
+// Positive divisor: result is always in [0, divisor)
+const s = new Series({ data: [-7, -4, 0, 3, 10] });
+console.log(seriesMod(s, 3).values);
+// [2, 2, 0, 0, 1]
+
+// JavaScript % would give different results for negatives:
+// [-7 % 3, -4 % 3, 0 % 3, 3 % 3, 10 % 3] = [-1, -1, 0, 0, 1]
+
+// Series divisor: element-wise
+const divisors = new Series({ data: [3, 4, 5, 6, 7] });
+console.log(seriesMod(s, divisors).values);
+// [2, 0, 0, 3, 3]
+
+// Missing values propagate unchanged
+const withNull = new Series({ data: [10, null, 15] });
+console.log(seriesMod(withNull, 4).values);
+// [2, null, 3]</code></pre>
+  <div class="output">[2, 2, 0, 0, 1]
+[2, 0, 0, 3, 3]
+[2, null, 3]</div>
+</section>
+
+<section>
+  <h2>seriesFloorDiv — floor division</h2>
+  <div class="note">
+    <strong>Rounding rule:</strong> <code>seriesFloorDiv</code> rounds toward <strong>−∞</strong>
+    (Python / pandas <code>//</code> semantics). This differs from JavaScript's
+    <code>Math.trunc</code> for negative values: <code>-7 // 2 = -4</code> (not <code>-3</code>).
+  </div>
+  <pre><code>import { Series, seriesFloorDiv } from "tsb";
+
+const s = new Series({ data: [7, -7, 10, -10, 0] });
+
+// Floor division by scalar
+console.log(seriesFloorDiv(s, 2).values);
+// [3, -4, 5, -5, 0]
+// Note: -7 // 2 = -4 (floor toward -∞, not -3 from trunc)
+
+// Compare with Math.trunc:
+// Math.trunc(-7/2) = Math.trunc(-3.5) = -3  ← different!
+
+// Series divisor
+const divisors = new Series({ data: [2, 3, 4, 5, 1] });
+console.log(seriesFloorDiv(s, divisors).values);
+// [3, -3, 2, -2, 0]
+
+// The div-mod identity: floordiv(a,b)*b + mod(a,b) === a (for integers)
+// -7 = (-4)*2 + 1  ✓  (not (-3)*2 + (-1) which is JS % behavior)</code></pre>
+  <div class="output">[3, -4, 5, -5, 0]
+[3, -3, 2, -2, 0]</div>
+</section>
+
+<section>
+  <h2>DataFrame operations</h2>
+  <pre><code>import { DataFrame, dataFramePow, dataFrameMod, dataFrameFloorDiv } from "tsb";
+
+const df = DataFrame.fromColumns({
+  a: [2,  3,  4],
+  b: [7, -7, 10],
+});
+
+// dataFramePow: raise every cell to the power 2
+console.log("pow(2):");
+console.log(dataFramePow(df, 2).col("a").values);  // [4, 9, 16]
+console.log(dataFramePow(df, 2).col("b").values);  // [49, 49, 100]
+
+// dataFrameMod: element-wise modulo by scalar
+console.log("mod(3):");
+console.log(dataFrameMod(df, 3).col("a").values);  // [2, 0, 1]
+console.log(dataFrameMod(df, 3).col("b").values);  // [1, 2, 1]
+
+// dataFrameFloorDiv: floor division by scalar
+console.log("floordiv(3):");
+console.log(dataFrameFloorDiv(df, 3).col("a").values);  // [0, 1, 1]
+console.log(dataFrameFloorDiv(df, 3).col("b").values);  // [2, -3, 3]
+
+// DataFrame × DataFrame: column-aligned
+const df2 = DataFrame.fromColumns({ a: [1, 2, 3], b: [3, 4, 5] });
+console.log("pow(df2):");
+console.log(dataFramePow(df, df2).col("a").values);  // [2, 9, 64]</code></pre>
+  <div class="output">pow(2):
+[4, 9, 16]
+[49, 49, 100]
+mod(3):
+[2, 0, 1]
+[1, 2, 1]
+floordiv(3):
+[0, 1, 1]
+[2, -3, 3]
+pow(df2):
+[2, 9, 64]</div>
+</section>
+
+<section>
+  <h2>Pandas comparison</h2>
+  <pre><code># pandas equivalent
+import pandas as pd
+
+s = pd.Series([-7, 0, 7, 10])
+print(s.pow(2))       # [49, 0, 49, 100]
+print(s.mod(3))       # [2, 0, 1, 1]   (Python sign rule)
+print(s.floordiv(2))  # [-4, 0, 3, 5]  (floor toward -∞)
+
+df = pd.DataFrame({"a": [2, 3, 4], "b": [7, -7, 10]})
+print(df.pow(2))       # a: [4,9,16]  b: [49,49,100]
+print(df.mod(3))       # a: [2,0,1]   b: [1,2,1]
+print(df.floordiv(3))  # a: [0,1,1]   b: [2,-3,3]</code></pre>
+</section>
+
+</body>
+</html>

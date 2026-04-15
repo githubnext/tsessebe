@@ -1,346 +1,168 @@
 /**
- * apply — function application and mapping for Series and DataFrame.
+ * apply — element-wise and axis-wise function application for Series and DataFrame.
  *
  * Mirrors the following pandas methods:
- * - `Series.apply(func)` — apply a function element-wise to a Series
- * - `Series.map(func | dict)` — map values via function or lookup table
- * - `DataFrame.apply(func, axis=0)` — apply a function to each column/row (returns Series)
- * - `DataFrame.apply(func, axis=0, result_type="expand")` — apply returning a DataFrame
- * - `DataFrame.applymap(func)` / `DataFrame.map(func)` — element-wise mapping
+ * - `Series.apply(fn)` — apply a function to each element of a Series.
+ * - `DataFrame.applymap(fn)` / `DataFrame.map(fn)` — apply element-wise to every cell.
+ * - `DataFrame.apply(fn, axis=0|1)` — apply fn to each column or each row.
  *
- * All functions are **pure** (return new objects; inputs are unchanged).
+ * All functions are **pure** (return new Series/DataFrame; inputs are unchanged).
  *
  * @module
  */
 
 import { DataFrame } from "../core/index.ts";
+import { Index } from "../core/index.ts";
 import { Series } from "../core/index.ts";
-import type { Axis, Label, Scalar } from "../types.ts";
+import type { Label, Scalar } from "../types.ts";
 
-// ─── public types ──────────────────────────────────────────────────────────────
+// ─── public types ─────────────────────────────────────────────────────────────
 
-/** A lookup map used in {@link mapSeries}. */
-export type MapLookup = ReadonlyMap<Scalar, Scalar> | Readonly<Record<string, Scalar>>;
-
-/** Options for {@link applyDataFrame}. */
-export interface ApplyDataFrameOptions {
+/**
+ * Options for {@link dataFrameApply}.
+ *
+ * Controls which axis the aggregating function is applied along.
+ */
+export interface DataFrameApplyOptions {
   /**
-   * Axis along which to apply the function.
-   * - `0` or `"index"` (default): apply to each **column** (function receives a column Series)
-   * - `1` or `"columns"`: apply to each **row** (function receives a row Series)
+   * Axis along which `fn` is applied.
+   *
+   * - `0` / `"index"` (default): apply `fn` to each **column** Series →
+   *   the result has one value per column, indexed by column names.
+   * - `1` / `"columns"`: apply `fn` to each **row** Series →
+   *   the result has one value per row, indexed by row labels.
    */
-  readonly axis?: Axis;
-}
-
-/** Options for {@link applyExpandDataFrame}. */
-export interface ApplyExpandDataFrameOptions {
-  /**
-   * Axis along which to apply the function.
-   * - `0` or `"index"` (default): apply to each **column** (function receives a column Series)
-   * - `1` or `"columns"`: apply to each **row** (function receives a row Series)
-   */
-  readonly axis?: Axis;
+  readonly axis?: 0 | 1 | "index" | "columns";
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-/** Build a row Series from a DataFrame at position `r`. */
-function rowSeries(df: DataFrame, r: number): Series<Scalar> {
-  const colNames = df.columns.values;
-  const data: Scalar[] = new Array<Scalar>(colNames.length);
-  const labels: Label[] = new Array<Label>(colNames.length);
-  for (let c = 0; c < colNames.length; c++) {
-    const colName = colNames[c];
-    if (colName === undefined) {
-      data[c] = null;
-      labels[c] = c;
-      continue;
-    }
-    data[c] = df.col(colName).iat(r);
-    labels[c] = colName;
-  }
-  return new Series<Scalar>({ data, index: labels, name: String(df.index.at(r)) });
+/** Build an `Index<Label>` from an array of strings for column-name axes. */
+function colIndex(names: readonly string[]): Index<Label> {
+  return new Index<Label>(names as readonly Label[]);
 }
 
-/** Resolve an object-literal lookup to a Map. */
-function toMap(lookup: MapLookup): ReadonlyMap<Scalar, Scalar> {
-  if (lookup instanceof Map) {
-    return lookup;
+/** Extract a single row from a DataFrame as a Series (columns as index). */
+function extractRow(df: DataFrame, rowIdx: number, colIdx: Index<Label>): Series<Scalar> {
+  const rowData: Scalar[] = [];
+  for (const name of df.columns.values) {
+    const col = df.col(name);
+    rowData.push(col.values[rowIdx] as Scalar);
   }
-  return new Map(Object.entries(lookup as Readonly<Record<string, Scalar>>));
+  return new Series<Scalar>({ data: rowData, index: colIdx });
+}
+
+/** Apply fn to each column of a DataFrame; return one value per column. */
+function applyAxis0(df: DataFrame, fn: (slice: Series<Scalar>) => Scalar): Series<Scalar> {
+  const results: Scalar[] = [];
+  for (const name of df.columns.values) {
+    results.push(fn(df.col(name)));
+  }
+  return new Series<Scalar>({ data: results, index: colIndex(df.columns.values) });
+}
+
+/** Apply fn to each row of a DataFrame; return one value per row. */
+function applyAxis1(df: DataFrame, fn: (slice: Series<Scalar>) => Scalar): Series<Scalar> {
+  const nRows = df.index.size;
+  const results: Scalar[] = new Array<Scalar>(nRows);
+  const colIdx = colIndex(df.columns.values);
+  for (let i = 0; i < nRows; i++) {
+    results[i] = fn(extractRow(df, i, colIdx));
+  }
+  return new Series<Scalar>({ data: results, index: df.index });
 }
 
 // ─── applySeries ──────────────────────────────────────────────────────────────
 
 /**
- * Apply a function element-wise to each value in a Series.
+ * Apply a function to each element of a Series.
  *
- * Non-numeric values are passed to `fn` unchanged — `fn` controls what happens to them.
+ * The function receives the element value and its label.  The returned Series
+ * preserves the original index and name.
+ *
  * Mirrors `pandas.Series.apply(func)`.
  *
  * @example
  * ```ts
  * import { Series, applySeries } from "tsb";
- * const s = new Series({ data: [1, 4, 9] });
- * applySeries(s, (v) => Math.sqrt(v as number)).values; // [1, 2, 3]
+ * const s = new Series({ data: [1, 2, 3], name: "x" });
+ * applySeries(s, (v) => (v as number) * 2).values; // [2, 4, 6]
  * ```
  */
 export function applySeries(
   series: Series<Scalar>,
-  fn: (value: Scalar, label: Label, index: number) => Scalar,
+  fn: (value: Scalar, label: Label) => Scalar,
 ): Series<Scalar> {
-  const n = series.size;
+  const n = series.values.length;
   const out: Scalar[] = new Array<Scalar>(n);
   for (let i = 0; i < n; i++) {
-    out[i] = fn(series.iat(i), series.index.at(i), i);
+    out[i] = fn(series.values[i] as Scalar, series.index.at(i));
   }
   return new Series<Scalar>({ data: out, index: series.index, name: series.name });
 }
 
-// ─── mapSeries ────────────────────────────────────────────────────────────────
-
-/**
- * Map values of a Series via a function, a `Map`, or a plain object lookup table.
- *
- * - **Function**: applied element-wise (same as {@link applySeries}).
- * - **Map / Record**: values not found in the lookup become `null` (matching pandas NaN).
- *
- * Mirrors `pandas.Series.map(arg)`.
- *
- * @example
- * ```ts
- * import { Series, mapSeries } from "tsb";
- * const s = new Series({ data: ["a", "b", "c"] });
- * mapSeries(s, { a: 1, b: 2, c: 3 }).values; // [1, 2, 3]
- * mapSeries(s, (v) => String(v).toUpperCase()).values; // ["A", "B", "C"]
- * ```
- */
-export function mapSeries(
-  series: Series<Scalar>,
-  mapper: ((value: Scalar, label: Label, index: number) => Scalar) | MapLookup,
-): Series<Scalar> {
-  if (typeof mapper === "function") {
-    return applySeries(series, mapper);
-  }
-  const lookup = toMap(mapper);
-  const n = series.size;
-  const out: Scalar[] = new Array<Scalar>(n);
-  for (let i = 0; i < n; i++) {
-    const v = series.iat(i);
-    out[i] = lookup.has(v) ? (lookup.get(v) ?? null) : null;
-  }
-  return new Series<Scalar>({ data: out, index: series.index, name: series.name });
-}
-
-// ─── applyDataFrame ───────────────────────────────────────────────────────────
-
-/**
- * Apply a reducing function to each column (axis=0) or row (axis=1) of a DataFrame.
- *
- * The function receives a `Series<Scalar>` representing the column or row,
- * and must return a single `Scalar` value.  The result is a Series indexed by
- * column names (axis=0) or row labels (axis=1).
- *
- * Mirrors `pandas.DataFrame.apply(func, axis=0)`.
- *
- * @example
- * ```ts
- * import { DataFrame, applyDataFrame } from "tsb";
- * const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
- * // Sum of each column:
- * applyDataFrame(df, (col) => (col.values as number[]).reduce((a, b) => a + b, 0)).values;
- * // → [6, 15]  (index: ["a", "b"])
- * ```
- */
-export function applyDataFrame(
-  df: DataFrame,
-  fn: (slice: Series<Scalar>, label: Label) => Scalar,
-  options: ApplyDataFrameOptions = {},
-): Series<Scalar> {
-  const axis: Axis = options.axis ?? 0;
-  const isColAxis = axis === 0 || axis === "index";
-
-  if (isColAxis) {
-    return applyDataFrameCols(df, fn);
-  }
-  return applyDataFrameRows(df, fn);
-}
-
-/** Apply fn to each column, return a Series indexed by column names. */
-function applyDataFrameCols(
-  df: DataFrame,
-  fn: (slice: Series<Scalar>, label: Label) => Scalar,
-): Series<Scalar> {
-  const colNames = df.columns.values;
-  const data: Scalar[] = new Array<Scalar>(colNames.length);
-  const labels: Label[] = new Array<Label>(colNames.length);
-  for (let c = 0; c < colNames.length; c++) {
-    const colName = colNames[c];
-    if (colName === undefined) {
-      data[c] = null;
-      labels[c] = c;
-      continue;
-    }
-    data[c] = fn(df.col(colName), colName);
-    labels[c] = colName;
-  }
-  return new Series<Scalar>({ data, index: labels });
-}
-
-/** Apply fn to each row, return a Series indexed by row labels. */
-function applyDataFrameRows(
-  df: DataFrame,
-  fn: (slice: Series<Scalar>, label: Label) => Scalar,
-): Series<Scalar> {
-  const nRows = df.index.size;
-  const data: Scalar[] = new Array<Scalar>(nRows);
-  const labels: Label[] = new Array<Label>(nRows);
-  for (let r = 0; r < nRows; r++) {
-    const label = df.index.at(r);
-    data[r] = fn(rowSeries(df, r), label);
-    labels[r] = label;
-  }
-  return new Series<Scalar>({ data, index: labels });
-}
-
-// ─── applyExpandDataFrame ─────────────────────────────────────────────────────
-
-/**
- * Apply a function to each column (axis=0) or row (axis=1) of a DataFrame,
- * where the function returns a `Series<Scalar>`.  The results are assembled
- * into a new DataFrame.
- *
- * - **axis=0**: function is called for each column; returned Series become
- *   new column data (same row index expected).
- * - **axis=1**: function is called for each row; returned Series become
- *   new rows assembled as a DataFrame.
- *
- * Mirrors `pandas.DataFrame.apply(func, axis=0, result_type="expand")`.
- *
- * @example
- * ```ts
- * import { DataFrame, Series, applyExpandDataFrame } from "tsb";
- * const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
- * // Double each column:
- * applyExpandDataFrame(df, (col) =>
- *   new Series({ data: col.values.map((v) => (v as number) * 2), index: col.index })
- * ).col("a").values; // [2, 4]
- * ```
- */
-export function applyExpandDataFrame(
-  df: DataFrame,
-  fn: (slice: Series<Scalar>, label: Label) => Series<Scalar>,
-  options: ApplyExpandDataFrameOptions = {},
-): DataFrame {
-  const axis: Axis = options.axis ?? 0;
-  const isColAxis = axis === 0 || axis === "index";
-
-  if (isColAxis) {
-    return applyExpandCols(df, fn);
-  }
-  return applyExpandRows(df, fn);
-}
-
-/** Apply expand function to each column → reassemble as DataFrame. */
-function applyExpandCols(
-  df: DataFrame,
-  fn: (slice: Series<Scalar>, label: Label) => Series<Scalar>,
-): DataFrame {
-  const colNames = df.columns.values;
-  const colMap = new Map<string, Series<Scalar>>();
-  for (const colName of colNames) {
-    if (colName === undefined) {
-      continue;
-    }
-    colMap.set(colName, fn(df.col(colName), colName));
-  }
-  return new DataFrame(colMap, df.index);
-}
-
-/** Lookup a column key value from a row Series result. */
-function lookupRowValue(row: Series<Scalar>, colKey: string): Scalar {
-  for (let j = 0; j < row.index.size; j++) {
-    if (String(row.index.at(j)) === colKey) {
-      return row.iat(j);
-    }
-  }
-  return null;
-}
-
-/** Apply expand function to each row → reassemble results as DataFrame. */
-function applyExpandRows(
-  df: DataFrame,
-  fn: (slice: Series<Scalar>, label: Label) => Series<Scalar>,
-): DataFrame {
-  const nRows = df.index.size;
-  const rowResults: Series<Scalar>[] = [];
-  const rowLabels: Label[] = new Array<Label>(nRows);
-
-  for (let r = 0; r < nRows; r++) {
-    const label = df.index.at(r);
-    rowLabels[r] = label;
-    rowResults.push(fn(rowSeries(df, r), label));
-  }
-
-  const firstResult = rowResults[0];
-  if (firstResult === undefined || nRows === 0) {
-    return new DataFrame(new Map(), df.index);
-  }
-
-  const resultCols: Label[] = [];
-  for (let j = 0; j < firstResult.index.size; j++) {
-    resultCols.push(firstResult.index.at(j));
-  }
-
-  const colMap = new Map<string, Series<Scalar>>();
-  for (const colLabel of resultCols) {
-    const colKey = String(colLabel);
-    const data: Scalar[] = new Array<Scalar>(nRows);
-    for (let r = 0; r < nRows; r++) {
-      const row = rowResults[r];
-      data[r] = row !== undefined ? lookupRowValue(row, colKey) : null;
-    }
-    colMap.set(colKey, new Series<Scalar>({ data, index: rowLabels, name: colKey }));
-  }
-
-  return new DataFrame(colMap);
-}
-
-// ─── mapDataFrame ─────────────────────────────────────────────────────────────
+// ─── applymap ─────────────────────────────────────────────────────────────────
 
 /**
  * Apply a function element-wise to every cell of a DataFrame.
  *
- * The function receives `(value, rowLabel, columnName)` and returns a `Scalar`.
- * The result is a new DataFrame with the same shape, index, and columns.
+ * The function receives the cell value and the column name.  The returned
+ * DataFrame preserves the original shape, index, and column names.
  *
- * Mirrors `pandas.DataFrame.applymap(func)` (renamed to `map` in pandas ≥ 2.1).
+ * Mirrors `pandas.DataFrame.applymap(func)` (renamed `DataFrame.map` in pandas 2.1+).
  *
  * @example
  * ```ts
- * import { DataFrame, mapDataFrame } from "tsb";
- * const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
- * mapDataFrame(df, (v) => (v as number) ** 2).col("b").values; // [16, 25, 36]
+ * import { DataFrame, applymap } from "tsb";
+ * const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
+ * applymap(df, (v) => (v as number) ** 2).col("b").values; // [9, 16]
  * ```
  */
-export function mapDataFrame(
-  df: DataFrame,
-  fn: (value: Scalar, rowLabel: Label, colName: string) => Scalar,
-): DataFrame {
-  const colNames = df.columns.values;
+export function applymap(df: DataFrame, fn: (value: Scalar, colName: string) => Scalar): DataFrame {
   const colMap = new Map<string, Series<Scalar>>();
-
-  for (const colName of colNames) {
-    if (colName === undefined) {
-      continue;
+  for (const name of df.columns.values) {
+    const col = df.col(name);
+    const n = col.values.length;
+    const out: Scalar[] = new Array<Scalar>(n);
+    for (let i = 0; i < n; i++) {
+      out[i] = fn(col.values[i] as Scalar, name);
     }
-    const col = df.col(colName);
-    const out: Scalar[] = new Array<Scalar>(df.index.size);
-    for (let r = 0; r < df.index.size; r++) {
-      out[r] = fn(col.iat(r), df.index.at(r), colName);
-    }
-    colMap.set(colName, new Series<Scalar>({ data: out, index: df.index, name: colName }));
+    colMap.set(name, new Series<Scalar>({ data: out, index: df.index, name }));
   }
-
   return new DataFrame(colMap, df.index);
+}
+
+// ─── dataFrameApply ───────────────────────────────────────────────────────────
+
+/**
+ * Apply a function to each column or each row of a DataFrame.
+ *
+ * With `axis=0` (default): `fn` receives each **column** as a `Series`;
+ * the result is a `Series` indexed by column names (one value per column).
+ *
+ * With `axis=1`: `fn` receives each **row** as a `Series` (column names as index);
+ * the result is a `Series` indexed by row labels (one value per row).
+ *
+ * Mirrors `pandas.DataFrame.apply(func, axis=0|1)`.
+ *
+ * @example
+ * ```ts
+ * import { DataFrame, dataFrameApply } from "tsb";
+ * const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
+ * // column sum (axis=0):
+ * dataFrameApply(df, (col) => col.sum()).values; // [6, 15]
+ * // row sum (axis=1):
+ * dataFrameApply(df, (row) => row.sum(), { axis: 1 }).values; // [5, 7, 9]
+ * ```
+ */
+export function dataFrameApply(
+  df: DataFrame,
+  fn: (slice: Series<Scalar>) => Scalar,
+  options: DataFrameApplyOptions = {},
+): Series<Scalar> {
+  const axis = options.axis ?? 0;
+  if (axis === 1 || axis === "columns") {
+    return applyAxis1(df, fn);
+  }
+  return applyAxis0(df, fn);
 }

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — to_numeric</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; background: #fafafa; color: #222; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.1rem; margin-top: 2rem; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.9rem; }
+    .result { background: #e8f5e9; border-left: 4px solid #43a047; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    .error  { background: #ffebee; border-left: 4px solid #e53935; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    button { margin-top: 0.5rem; padding: 0.4rem 1rem; background: #0969da; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0550ae; }
+    textarea { width: 100%; box-sizing: border-box; font-family: monospace; font-size: 0.9rem; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; background: #fff; min-height: 140px; }
+    a { color: #0969da; }
+  </style>
+</head>
+<body>
+  <h1>📐 <code>to_numeric</code></h1>
+  <p>
+    Convert scalars, arrays, or Series to numeric types — mirroring
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.to_numeric.html" target="_blank">pandas.to_numeric()</a>.
+  </p>
+
+  <h2>1 · Scalar conversion</h2>
+  <pre>toNumericScalar("42")     // 42
+toNumericScalar("3.14")   // 3.14
+toNumericScalar(true)     // 1
+toNumericScalar(null)     // NaN
+toNumericScalar("bad", { errors: "coerce" })  // NaN
+toNumericScalar("bad", { errors: "ignore" })  // "bad"</pre>
+  <div id="r1" class="result">click Run to evaluate</div>
+  <button onclick="run1()">Run</button>
+
+  <h2>2 · Array conversion with error handling</h2>
+  <pre>toNumericArray(["1", "2.5", "abc", null], { errors: "coerce" })
+// [1, 2.5, NaN, NaN]</pre>
+  <div id="r2" class="result">click Run to evaluate</div>
+  <button onclick="run2()">Run</button>
+
+  <h2>3 · Series conversion</h2>
+  <pre>const prices = new Series(["10.5", "bad", "22"], {
+  name: "price",
+  index: ["a", "b", "c"]
+});
+toNumericSeries(prices, { errors: "coerce" })
+// Series [10.5, NaN, 22] name="price"</pre>
+  <div id="r3" class="result">click Run to evaluate</div>
+  <button onclick="run3()">Run</button>
+
+  <h2>4 · Downcast</h2>
+  <pre>// downcast to float32 precision
+toNumericScalar(3.14159265358979, { downcast: "float" })
+// ~3.1415927
+
+// downcast to integer (snap to smallest int type)
+toNumericScalar(42, { downcast: "integer" })  // 42</pre>
+  <div id="r4" class="result">click Run to evaluate</div>
+  <button onclick="run4()">Run</button>
+
+  <h2>5 · Live sandbox</h2>
+  <p>Edit and run arbitrary code using the tsb API.</p>
+  <textarea id="sandbox">// Try it yourself!
+const s = new Series(["100", "200.5", "NaN", null, "abc"]);
+const result = toNumericSeries(s, { errors: "coerce" });
+return JSON.stringify(result.values);</textarea>
+  <div id="r5" class="result">click Run to evaluate</div>
+  <button onclick="runSandbox()">Run</button>
+
+  <p style="margin-top:2rem"><a href="index.html">← back to index</a></p>
+
+  <script type="module">
+    // ── minimal runtime ──────────────────────────────────────────────────────
+    import { Series } from "../src/core/series.ts";
+    import { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "../src/stats/to_numeric.ts";
+
+    function show(id, value) {
+      const el = document.getElementById(id);
+      el.textContent = String(value);
+      el.className = "result";
+    }
+    function showErr(id, err) {
+      const el = document.getElementById(id);
+      el.textContent = String(err);
+      el.className = "error";
+    }
+
+    window.run1 = function () {
+      try {
+        const lines = [
+          `toNumericScalar("42")     → ${toNumericScalar("42")}`,
+          `toNumericScalar("3.14")   → ${toNumericScalar("3.14")}`,
+          `toNumericScalar(true)     → ${toNumericScalar(true)}`,
+          `toNumericScalar(null)     → ${toNumericScalar(null)}`,
+          `toNumericScalar("bad", { errors: "coerce" })  → ${toNumericScalar("bad", { errors: "coerce" })}`,
+          `toNumericScalar("bad", { errors: "ignore" })  → ${toNumericScalar("bad", { errors: "ignore" })}`,
+        ];
+        show("r1", lines.join("\n"));
+      } catch (e) { showErr("r1", e); }
+    };
+
+    window.run2 = function () {
+      try {
+        const arr = toNumericArray(["1", "2.5", "abc", null], { errors: "coerce" });
+        show("r2", `[${arr.join(", ")}]`);
+      } catch (e) { showErr("r2", e); }
+    };
+
+    window.run3 = function () {
+      try {
+        const prices = new Series(["10.5", "bad", "22"], { name: "price", index: ["a", "b", "c"] });
+        const result = toNumericSeries(prices, { errors: "coerce" });
+        show("r3", `Series [${result.values.join(", ")}]  name="${result.name}"  index=[${result.index.join(", ")}]`);
+      } catch (e) { showErr("r3", e); }
+    };
+
+    window.run4 = function () {
+      try {
+        const f32 = toNumericScalar(3.14159265358979, { downcast: "float" });
+        const int8 = toNumericScalar(42, { downcast: "integer" });
+        show("r4", `float32(3.14159265358979) → ${f32}\ndowncast integer 42       → ${int8}`);
+      } catch (e) { showErr("r4", e); }
+    };
+
+    window.runSandbox = function () {
+      try {
+        const code = document.getElementById("sandbox").value;
+        // biome-ignore lint/security/noNewFunction: playground sandbox
+        const fn = new Function("Series", "toNumeric", "toNumericArray", "toNumericScalar", "toNumericSeries", code);
+        const result = fn(Series, toNumeric, toNumericArray, toNumericScalar, toNumericSeries);
+        show("r5", result !== undefined ? String(result) : "(no return value)");
+      } catch (e) { showErr("r5", e); }
+    };
+  </script>
+</body>
+</html>

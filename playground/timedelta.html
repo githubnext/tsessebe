@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Timedelta &amp; TimedeltaIndex</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .875rem; }
+    th, td { border: 1px solid #ddd; padding: .5rem .75rem; text-align: left; }
+    th { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>Timedelta &amp; TimedeltaIndex</h1>
+<p class="subtitle">
+  Fixed-duration time spans and ordered index of durations —
+  mirrors <code>pandas.Timedelta</code> and <code>pandas.TimedeltaIndex</code>.
+</p>
+
+<section>
+  <h2>1 — Creating a Timedelta</h2>
+  <p>
+    A <code>Timedelta</code> stores a duration as a whole number of milliseconds.
+    Construct from component fields, a raw millisecond count, or a string.
+  </p>
+  <pre><code id="ex1-code">import { Timedelta } from "tsb";
+
+// From components
+const td1 = Timedelta.fromComponents({ days: 1, hours: 2, minutes: 30 });
+console.log(td1.toString());          // "1 days 02:30:00"
+console.log(td1.totalHours);          // 26.5
+
+// From milliseconds
+const td2 = Timedelta.fromMilliseconds(3_600_000);
+console.log(td2.totalHours);          // 1
+
+// Parse pandas-style string
+const td3 = Timedelta.parse("2 days 06:00:00");
+console.log(td3.totalDays);           // 2.25
+
+// Parse ISO 8601
+const td4 = Timedelta.parse("P1DT12H");
+console.log(td4.totalHours);          // 36
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — Component accessors</h2>
+  <p>
+    Access the individual components of a duration. For negative durations the
+    <code>days</code> component carries the sign; <code>hours</code>,
+    <code>minutes</code>, <code>seconds</code>, and <code>milliseconds</code>
+    are always non-negative remainders.
+  </p>
+  <pre><code id="ex2-code">import { Timedelta } from "tsb";
+
+const td = Timedelta.fromComponents({
+  days: 1, hours: 2, minutes: 3, seconds: 4, milliseconds: 567
+});
+
+console.log("days        :", td.days);         // 1
+console.log("hours       :", td.hours);        // 2
+console.log("minutes     :", td.minutes);      // 3
+console.log("seconds     :", td.seconds);      // 4
+console.log("milliseconds:", td.milliseconds); // 567
+
+// Negative duration
+const neg = Timedelta.fromComponents({ hours: -25 });
+console.log("days (neg)  :", neg.days);        // -1
+console.log("hours (neg) :", neg.hours);       //  1
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — Arithmetic</h2>
+  <p>
+    Timedeltas support addition, subtraction, scalar multiplication, negation,
+    absolute value, and ratio (dividing one duration by another).
+  </p>
+  <pre><code id="ex3-code">import { Timedelta } from "tsb";
+
+const h1 = Timedelta.fromComponents({ hours: 1 });
+const h2 = Timedelta.fromComponents({ hours: 2 });
+
+console.log(h1.add(h2).totalHours);   // 3
+console.log(h2.sub(h1).totalHours);   // 1
+console.log(h1.mul(3).totalHours);    // 3
+console.log(h1.negate().totalHours);  // -1
+
+const neg = Timedelta.fromComponents({ hours: -3 });
+console.log(neg.abs().totalHours);    // 3
+
+// Ratio between two durations
+const day = Timedelta.fromComponents({ days: 1 });
+console.log(day.divBy(h1));           // 24
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — String formats</h2>
+  <p>
+    <code>toString()</code> produces a pandas-compatible representation.
+    <code>toISOString()</code> produces an ISO 8601 duration.
+    <code>Timedelta.parse()</code> accepts both formats plus plain
+    <code>HH:MM:SS</code>.
+  </p>
+  <table>
+    <tr><th>Format</th><th>Example</th></tr>
+    <tr><td>pandas-style</td><td><code>1 days 02:30:00</code></td></tr>
+    <tr><td>pandas-style (ms)</td><td><code>0 days 00:00:01.500</code></td></tr>
+    <tr><td>ISO 8601</td><td><code>P1DT2H30M</code></td></tr>
+    <tr><td>HH:MM:SS</td><td><code>02:30:00</code></td></tr>
+    <tr><td>Negative</td><td><code>-1 days 01:00:00</code></td></tr>
+  </table>
+  <pre><code id="ex4-code">import { Timedelta } from "tsb";
+
+const td = Timedelta.fromComponents({ days: 1, hours: 2, minutes: 30 });
+console.log(td.toString());      // "1 days 02:30:00"
+console.log(td.toISOString());   // "P1DT2H30M"
+
+// Round-trip parse
+const parsed = Timedelta.parse(td.toString());
+console.log(parsed.equals(td));  // true
+
+// Negative
+const neg = Timedelta.fromComponents({ hours: -25 });
+console.log(neg.toString());     // "-1 days 01:00:00"
+console.log(neg.toISOString());  // "-P1DT1H"
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — TimedeltaIndex</h2>
+  <p>
+    <code>TimedeltaIndex</code> is an ordered array of <code>Timedelta</code>
+    values — useful as a row index for time-series data with irregular or
+    regular durations.
+  </p>
+  <pre><code id="ex5-code">import { Timedelta, TimedeltaIndex } from "tsb";
+
+// Build from a range (like pandas.timedelta_range)
+const idx = TimedeltaIndex.fromRange(
+  Timedelta.fromComponents({ hours: 0 }),
+  Timedelta.fromComponents({ hours: 4 }),
+  Timedelta.fromComponents({ hours: 1 }),
+  { name: "duration" },
+);
+
+console.log("size   :", idx.size);           // 5
+console.log("name   :", idx.name);           // "duration"
+console.log("at(0)  :", idx.at(0).toString()); // "0 days 00:00:00"
+console.log("at(4)  :", idx.at(4).toString()); // "0 days 04:00:00"
+console.log("min    :", idx.min().totalHours); // 0
+console.log("max    :", idx.max().totalHours); // 4
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — Index operations</h2>
+  <p>
+    <code>TimedeltaIndex</code> supports sorting, deduplication, shifting,
+    filtering, and renaming.
+  </p>
+  <pre><code id="ex6-code">import { Timedelta, TimedeltaIndex } from "tsb";
+
+const vals = [3, 1, 2, 1].map(h => Timedelta.fromComponents({ hours: h }));
+const idx = TimedeltaIndex.fromTimedeltas(vals);
+
+// Sort
+const sorted = idx.sort();
+console.log("sorted:", sorted.toStrings());
+// ["0 days 01:00:00", "0 days 01:00:00", "0 days 02:00:00", "0 days 03:00:00"]
+
+// Remove duplicates
+const uniq = idx.unique();
+console.log("unique size:", uniq.size); // 3
+
+// Shift by 10 hours
+const shifted = idx.shift(Timedelta.fromComponents({ hours: 10 }));
+console.log("shifted[0]:", shifted.at(0).totalHours); // 13
+
+// Filter
+const large = idx.filter(td => td.totalHours >= 2);
+console.log("large size:", large.size); // 2
+
+// Parse from strings
+const fromStr = TimedeltaIndex.fromStrings(["01:00:00", "02:00:00", "03:00:00"]);
+console.log("fromStr[1]:", fromStr.at(1).totalHours); // 2
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — Comparison</h2>
+  <pre><code id="ex7-code">import { Timedelta } from "tsb";
+
+const h1 = Timedelta.fromComponents({ hours: 1 });
+const h2 = Timedelta.fromComponents({ hours: 2 });
+
+console.log(h1.equals(h2));             // false
+console.log(h1.equals(Timedelta.fromComponents({ hours: 1 }))); // true
+console.log(h1.compareTo(h2));          // negative  → h1 < h2
+console.log(h2.compareTo(h1));          // positive  → h2 > h1
+console.log(h1.compareTo(Timedelta.fromComponents({ hours: 1 }))); // 0
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<script>
+window.__tsb_examples = [
+  { outputId: "ex1-output", codeId: "ex1-code" },
+  { outputId: "ex2-output", codeId: "ex2-code" },
+  { outputId: "ex3-output", codeId: "ex3-code" },
+  { outputId: "ex4-output", codeId: "ex4-code" },
+  { outputId: "ex5-output", codeId: "ex5-code" },
+  { outputId: "ex6-output", codeId: "ex6-code" },
+  { outputId: "ex7-output", codeId: "ex7-code" },
+];
+</script>
+</body>
+</html>

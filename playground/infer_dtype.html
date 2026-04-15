@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — inferDtype</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>inferDtype</h1>
+    <p>Infer the most specific dtype from a sequence of values — mirrors <code>pandas.api.types.infer_dtype</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <code>inferDtype(values, options?)</code> inspects an array (or Series) of values and
+        returns a string label identifying the dominant data type.  It mirrors the behaviour of
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.api.types.infer_dtype.html"
+           target="_blank"><code>pandas.api.types.infer_dtype</code></a>.
+      </p>
+      <h3>Return values</h3>
+      <table>
+        <thead><tr><th>Label</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><code>"empty"</code></td><td>Zero elements, or all null/undefined (when <code>skipna=true</code>)</td></tr>
+          <tr><td><code>"boolean"</code></td><td>All <code>boolean</code></td></tr>
+          <tr><td><code>"integer"</code></td><td>All integers (whole <code>number</code> or <code>bigint</code>)</td></tr>
+          <tr><td><code>"floating"</code></td><td>All floating-point numbers (including ±Infinity, NaN)</td></tr>
+          <tr><td><code>"mixed-integer-float"</code></td><td>Mix of integers and floats</td></tr>
+          <tr><td><code>"decimal"</code></td><td>Mix of plain integers and <code>bigint</code></td></tr>
+          <tr><td><code>"string"</code></td><td>All strings</td></tr>
+          <tr><td><code>"date"</code></td><td>All <code>Date</code> objects</td></tr>
+          <tr><td><code>"datetime"</code></td><td>All <code>Timestamp</code> objects</td></tr>
+          <tr><td><code>"timedelta"</code></td><td>All <code>Timedelta</code> objects</td></tr>
+          <tr><td><code>"period"</code></td><td>All <code>Period</code> objects</td></tr>
+          <tr><td><code>"interval"</code></td><td>All <code>Interval</code> objects</td></tr>
+          <tr><td><code>"mixed-integer"</code></td><td>Mix of integers and non-numeric types</td></tr>
+          <tr><td><code>"mixed"</code></td><td>Multiple heterogeneous non-numeric types</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="example">
+      <h2>Example 1 — basic scalar types</h2>
+      <pre><code>import { inferDtype } from "tsb";
+
+inferDtype([1, 2, 3]);           // "integer"
+inferDtype([1.1, 2.2, 3.3]);     // "floating"
+inferDtype([1, 2.5, 3]);         // "mixed-integer-float"
+inferDtype([true, false, true]);  // "boolean"
+inferDtype(["a", "b", "c"]);     // "string"
+inferDtype([]);                  // "empty"
+inferDtype([null, null]);        // "empty"  (skipna=true by default)
+inferDtype([null, null], { skipna: false }); // "mixed"
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 2 — working with Series</h2>
+      <pre><code>import { Series, inferDtype } from "tsb";
+
+const s1 = new Series({ data: [10, 20, 30] });
+inferDtype(s1);   // "integer"
+
+const s2 = new Series({ data: ["hello", "world"] });
+inferDtype(s2);   // "string"
+
+const s3 = new Series({ data: [1, null, 2, null, 3] });
+inferDtype(s3);   // "integer"  (nulls skipped by default)
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 3 — specialised tsb types</h2>
+      <pre><code>import { inferDtype, Timestamp, Timedelta, Period, Interval } from "tsb";
+
+inferDtype([Timestamp.fromtimestamp(0), Timestamp.fromtimestamp(1)]);
+// "datetime"
+
+inferDtype([Timedelta.fromComponents({ days: 1 }), Timedelta.fromComponents({ hours: 2 })]);
+// "timedelta"
+
+inferDtype([Period.fromDate(new Date("2024-01-01T00:00:00Z"), "M")]);
+// "period"
+
+inferDtype([new Interval(0, 1), new Interval(1, 2)]);
+// "interval"
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 4 — mixed types</h2>
+      <pre><code>import { inferDtype } from "tsb";
+
+inferDtype([1, "a", 2]);         // "mixed-integer" (int + non-numeric non-float)
+inferDtype(["a", true, null]);   // "mixed"         (string + bool)
+inferDtype([1n, 2n, 3n]);        // "integer"       (bigint only)
+inferDtype([1n, 2]);             // "decimal"       (bigint + integer)
+inferDtype([1n, 2.5]);           // "mixed-integer-float"
+</code></pre>
+    </section>
+
+    <section class="api">
+      <h2>API reference</h2>
+      <pre><code>function inferDtype(
+  values: readonly unknown[] | Series,
+  options?: InferDtypeOptions,
+): InferredDtype;
+
+interface InferDtypeOptions {
+  /**
+   * When true (default), null and undefined are ignored when
+   * determining the dtype. When false, they contribute to "mixed".
+   */
+  skipna?: boolean;
+}
+</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>tsb — TypeScript pandas &nbsp;|&nbsp; <a href="https://github.com/githubnext/tsessebe">GitHub</a></p>
+  </footer>
+</body>
+</html>

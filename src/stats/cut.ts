@@ -1,453 +1,419 @@
 /**
- * cut / qcut — bin continuous data into discrete intervals.
+ * cut and qcut — bin continuous values into discrete intervals.
  *
  * Mirrors `pandas.cut()` and `pandas.qcut()`:
- * - `cut(x, bins, options)` — uniform or user-defined bin edges
- * - `qcut(x, q, options)` — quantile-based (equal-frequency) bins
  *
- * Each function returns:
- * - a `Series<string | null>` of bin-label strings (or custom labels)
- * - optionally the bin edges used (via `retbins: true`)
+ * - `cut()` divides the range of `x` into equal-width bins (when `bins` is an
+ *   integer) or uses caller-supplied bin edges.
+ * - `qcut()` divides by sample quantiles so each bin holds approximately the
+ *   same number of observations.
+ *
+ * Both functions return a `Series<string | null>` where each value is an
+ * interval label like `"(0.0, 1.0]"`, `null` for out-of-range values, an
+ * integer code when `labels=false`, or a custom string when custom labels are
+ * provided.
+ *
+ * @example
+ * ```ts
+ * import { cut, qcut } from "tsb";
+ *
+ * const s = new Series({ data: [1, 2, 3, 4, 5] });
+ * cut(s, 2);
+ * // Series ["(0.995, 3.0]", "(0.995, 3.0]", "(0.995, 3.0]", "(3.0, 5.005]", "(3.0, 5.005]"]
+ *
+ * qcut(s, 2);
+ * // Series ["(0.999, 3.0]", "(0.999, 3.0]", "(0.999, 3.0]", "(3.0, 5.0]", "(3.0, 5.0]"]
+ * ```
  *
  * @module
  */
 
+import { IntervalIndex } from "../core/index.ts";
+import type { IntervalClosed } from "../core/index.ts";
 import { Series } from "../core/index.ts";
-import type { Scalar } from "../types.ts";
+import { Index } from "../core/index.ts";
+import type { Label, Scalar } from "../types.ts";
 
-// ─── public types ─────────────────────────────────────────────────────────────
+// ─── option types ──────────────────────────────────────────────────────────
 
 /** Options for {@link cut}. */
 export interface CutOptions {
   /**
-   * Whether the right edge of each interval is closed.
-   * Default `true` — `(lo, hi]` (half-open on left, closed on right).
-   * When `false` — `[lo, hi)`.
+   * Whether intervals are right-closed `(a, b]` (`true`) or left-closed
+   * `[a, b)` (`false`). Default `true`.
    */
   readonly right?: boolean;
   /**
-   * Custom labels for the resulting bins.
-   * - `readonly string[]` — one label per bin interval.
-   * - `false` — use integer codes (0, 1, 2, …) as labels.
-   * - `undefined` (default) — auto-generate `"(lo, hi]"` style labels.
+   * Labels to use for the bins.
+   *
+   * - `undefined` (default): interval strings like `"(0, 1]"`.
+   * - `false`: integer codes (0-indexed position).
+   * - `string[]`: custom label per bin (length must equal number of bins).
    */
   readonly labels?: readonly string[] | false;
   /**
-   * When `true`, return a `[series, binEdges]` tuple.
-   * When `false` (default), return only the Series.
-   */
-  readonly retbins?: boolean;
-  /**
-   * Number of decimal places for auto-generated interval labels.
-   * Default `3`.
-   */
-  readonly precision?: number;
-  /**
-   * When `bins` is a number, extend the left edge by a small factor
-   * so the minimum value is included. Default `true`.
+   * When `true`, the leftmost bin includes its left edge even when
+   * `right=true`. Mirrors pandas `include_lowest`. Default `false`.
    */
   readonly includeLowest?: boolean;
   /**
-   * When `true` (default), result categories are ordered by interval.
-   * Currently affects only label ordering in the returned series, not dtype.
-   */
-  readonly ordered?: boolean;
-}
-
-/** Options for {@link qcut}. */
-export interface QcutOptions {
-  /**
-   * Custom labels for the resulting bins.
-   * - `readonly string[]` — one label per quantile interval.
-   * - `false` — use integer codes (0, 1, 2, …).
-   * - `undefined` (default) — auto-generate percentile-range labels.
-   */
-  readonly labels?: readonly string[] | false;
-  /** When `true`, return a `[series, binEdges]` tuple. Default `false`. */
-  readonly retbins?: boolean;
-  /** Decimal places for auto-generated labels. Default `3`. */
-  readonly precision?: number;
-  /**
-   * Whether to allow duplicate bin edges (non-unique quantile boundaries).
-   * When `"raise"` (default), throws if duplicates are found.
-   * When `"drop"`, silently removes duplicates.
+   * What to do when computed bin edges contain duplicates (only relevant for
+   * user-supplied bin arrays). Default `"raise"`.
    */
   readonly duplicates?: "raise" | "drop";
 }
 
-// ─── helper types ─────────────────────────────────────────────────────────────
-
-/** Result when `retbins` is `false` (default). */
-export type CutResult = Series<string | null>;
-
-/** Result when `retbins` is `true`. */
-export type CutResultWithBins = [Series<string | null>, readonly number[]];
-
-// ─── helpers ──────────────────────────────────────────────────────────────────
-
-/** True when value is null/undefined/NaN. */
-function isMissing(v: Scalar): boolean {
-  return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+/** Options for {@link qcut}. */
+export interface QCutOptions {
+  /** Same as in {@link CutOptions}. */
+  readonly labels?: readonly string[] | false;
+  /**
+   * What to do when quantile-based bin edges contain duplicates (can happen
+   * with highly-repeated values). Default `"raise"`.
+   */
+  readonly duplicates?: "raise" | "drop";
 }
 
-/** Format a number to `precision` decimal places, stripping trailing zeros. */
-function fmt(n: number, precision: number): string {
-  return Number(n.toFixed(precision)).toString();
+// ─── internal helpers ──────────────────────────────────────────────────────
+
+/** Extract numeric values from a Series or plain array (NaN for non-numeric). */
+function extractNums(x: readonly Scalar[] | Series<Scalar>): readonly number[] {
+  const raw: readonly Scalar[] = x instanceof Series ? (x.values as readonly Scalar[]) : x;
+  return raw.map((v): number => {
+    if (typeof v === "number" && Number.isFinite(v)) {
+      return v;
+    }
+    return Number.NaN;
+  });
 }
 
-/** Build interval label string like `"(0.0, 1.5]"` or `"[0.0, 1.5)"`. */
-function intervalLabel(lo: number, hi: number, right: boolean, precision: number): string {
-  const l = fmt(lo, precision);
-  const r = fmt(hi, precision);
-  return right ? `(${l}, ${r}]` : `[${l}, ${r})`;
+/** Extract the Index from a CutInput (or build a RangeIndex). */
+function extractIndex(x: readonly Scalar[] | Series<Scalar>, len: number): Index<Label> {
+  if (x instanceof Series) {
+    return x.index as Index<Label>;
+  }
+  const labels: Label[] = Array.from({ length: len }, (_, i): Label => i);
+  return new Index<Label>(labels);
 }
+
+/** Extract the name from a CutInput (null when not a named Series). */
+function extractName(x: readonly Scalar[] | Series<Scalar>): string | null {
+  if (x instanceof Series) {
+    return x.name;
+  }
+  return null;
+}
+
+/** Compute min and max of finite values; throw if range is degenerate. */
+function finiteRange(nums: readonly number[]): { lo: number; hi: number } {
+  let lo = Number.POSITIVE_INFINITY;
+  let hi = Number.NEGATIVE_INFINITY;
+  for (const v of nums) {
+    if (Number.isFinite(v)) {
+      if (v < lo) {
+        lo = v;
+      }
+      if (v > hi) {
+        hi = v;
+      }
+    }
+  }
+  if (!Number.isFinite(lo)) {
+    throw new RangeError("cut: no finite values in input");
+  }
+  if (lo === hi) {
+    throw new RangeError(`cut: all values are equal (${lo}); cannot compute bin width`);
+  }
+  return { lo, hi };
+}
+
+/** Build `n` equal-width bin edges spanning the range of `nums`. */
+function equalWidthEdges(nums: readonly number[], n: number): readonly number[] {
+  if (n < 1) {
+    throw new RangeError(`cut: bins must be ≥ 1, got ${n}`);
+  }
+  const { lo, hi } = finiteRange(nums);
+  // Expand endpoints by 0.1% to include exact extremes (mirrors pandas).
+  const pad = (hi - lo) * 0.001;
+  const step = (hi - lo) / n;
+  const edges: number[] = [lo - pad];
+  for (let i = 1; i < n; i++) {
+    edges.push(lo + step * i);
+  }
+  edges.push(hi + pad);
+  return edges;
+}
+
+/** Remove duplicate edges; optionally raise on duplicates. */
+function deduplicateEdges(
+  edges: readonly number[],
+  duplicates: "raise" | "drop",
+): readonly number[] {
+  const seen = new Set<number>();
+  const result: number[] = [];
+  for (const e of edges) {
+    if (seen.has(e)) {
+      if (duplicates === "raise") {
+        throw new RangeError(`cut: duplicate bin edge ${e}. Pass duplicates="drop" to ignore.`);
+      }
+    } else {
+      seen.add(e);
+      result.push(e);
+    }
+  }
+  return result;
+}
+
+/** Build an IntervalIndex from bin edges and right/left-closed preference. */
+function buildIntervalIndex(edges: readonly number[], right: boolean): IntervalIndex {
+  const closed: IntervalClosed = right ? "right" : "left";
+  return IntervalIndex.fromBreaks(edges, closed);
+}
+
+/** Assign each numeric value to a bin index (-1 = out of range / NaN). */
+function assignBins(
+  nums: readonly number[],
+  idx: IntervalIndex,
+  includeLowest: boolean,
+  right: boolean,
+): readonly number[] {
+  return nums.map((v): number => {
+    if (!Number.isFinite(v)) {
+      return -1;
+    }
+    const loc = idx.get_loc(v);
+    if (loc !== -1) {
+      return loc;
+    }
+    // Handle boundary values not captured by default closure.
+    if (includeLowest && right && idx.size > 0 && v === (idx.left[0] as number)) {
+      return 0;
+    }
+    // right=false: include right edge of last bin
+    if (!right && idx.size > 0 && v === (idx.right[idx.size - 1] as number)) {
+      return idx.size - 1;
+    }
+    return -1;
+  });
+}
+
+/** Build label values for the result Series. */
+function resolveLabels(
+  assignments: readonly number[],
+  idx: IntervalIndex,
+  labels: readonly string[] | false | undefined,
+): readonly Scalar[] {
+  if (labels === false) {
+    return assignments.map((bin): Scalar => (bin === -1 ? null : bin));
+  }
+  if (labels !== undefined) {
+    if (labels.length !== idx.size) {
+      throw new RangeError(
+        `cut: labels length (${labels.length}) must equal number of bins (${idx.size})`,
+      );
+    }
+    return assignments.map((bin): Scalar => (bin === -1 ? null : (labels[bin] as string)));
+  }
+  // Default: interval string representation.
+  return assignments.map((bin): Scalar => (bin === -1 ? null : idx.at(bin).toString()));
+}
+
+/** Shared core: assign bins and build result Series. */
+function cutCore(
+  nums: readonly number[],
+  edges: readonly number[],
+  inputIndex: Index<Label>,
+  name: string | null,
+  right: boolean,
+  labels: readonly string[] | false | undefined,
+  includeLowest: boolean,
+): Series<Scalar> {
+  const idx = buildIntervalIndex(edges, right);
+  const assignments = assignBins(nums, idx, includeLowest, right);
+  const data = resolveLabels(assignments, idx, labels);
+  return new Series<Scalar>({ data, index: inputIndex, name });
+}
+
+// ─── public functions ──────────────────────────────────────────────────────
 
 /**
- * Compute linear-interpolation quantile (same algorithm as describe.ts).
+ * Bin values into discrete intervals.
  *
- * @param sorted ascending-sorted array of finite numbers
- * @param q      quantile in [0, 1]
+ * Mirrors `pandas.cut()`.
+ *
+ * @param x - Input values (Series or plain array).
+ * @param bins - Number of equal-width bins or explicit bin edges.
+ * @param options - Optional configuration.
+ * @returns A `Series<string | null>` (or integer codes when `labels=false`).
+ *
+ * @example
+ * ```ts
+ * cut(new Series({ data: [1, 2, 3, 4, 5] }), 2);
+ * // Series: ["(0.995, 3.0]", "(0.995, 3.0]", …]
+ *
+ * cut(new Series({ data: [1, 2, 3, 4, 5] }), [0, 2, 5], { labels: ["low", "high"] });
+ * // Series: ["low", "low", "high", "high", "high"]
+ *
+ * cut(new Series({ data: [1, 2, 3, 4, 5] }), 2, { labels: false });
+ * // Series: [0, 0, 0, 1, 1]
+ * ```
  */
-function linearQuantile(sorted: readonly number[], q: number): number {
-  const n = sorted.length;
-  if (n === 0) {
+export function cut(
+  x: readonly Scalar[] | Series<Scalar>,
+  bins: number | readonly number[],
+  options?: CutOptions,
+): Series<Scalar> {
+  const right = options?.right ?? true;
+  const labels = options?.labels;
+  const includeLowest = options?.includeLowest ?? false;
+  const duplicates = options?.duplicates ?? "raise";
+
+  const nums = extractNums(x);
+  const inputIndex = extractIndex(x, nums.length);
+  const name = extractName(x);
+
+  let edges: readonly number[];
+  if (typeof bins === "number") {
+    edges = equalWidthEdges(nums, bins);
+  } else {
+    if (bins.length < 2) {
+      throw new RangeError("cut: bins array must have at least 2 elements");
+    }
+    edges = deduplicateEdges([...bins], duplicates);
+  }
+
+  return cutCore(nums, edges, inputIndex, name, right, labels, includeLowest);
+}
+
+// ─── qcut internals ────────────────────────────────────────────────────────
+
+/** Compute a single quantile value at fraction `p` from a sorted array. */
+function quantileAt(sorted: readonly number[], p: number): number {
+  if (sorted.length === 0) {
     return Number.NaN;
   }
-  const pos = q * (n - 1);
+  const pos = p * (sorted.length - 1);
   const lo = Math.floor(pos);
   const hi = Math.ceil(pos);
   if (lo === hi) {
     return sorted[lo] as number;
   }
-  const frac = pos - lo;
-  return (sorted[lo] as number) * (1 - frac) + (sorted[hi] as number) * frac;
+  return (sorted[lo] as number) + ((sorted[hi] as number) - (sorted[lo] as number)) * (pos - lo);
 }
 
-/** Validate and normalise user-supplied bin edges (sorted, unique). */
-function normaliseBinEdges(edges: readonly number[]): readonly number[] {
-  if (edges.length < 2) {
-    throw new RangeError("At least 2 bin edges required.");
-  }
-  const sorted = [...edges].sort((a, b) => a - b);
-  for (let i = 1; i < sorted.length; i++) {
-    if ((sorted[i] as number) === (sorted[i - 1] as number)) {
-      throw new RangeError(
-        `Bin edge ${sorted[i]} appears more than once. Bin edges must be unique.`,
-      );
-    }
-  }
-  return sorted;
-}
-
-/** Binary search: find the bin index for value `v` given sorted `edges`. */
-function findBin(v: number, edges: readonly number[], right: boolean): number {
-  let lo = 0;
-  let hi = edges.length - 2; // last valid bin index
-
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    const edgeMid = edges[mid + 1] as number;
-    if (right ? v <= edgeMid : v < edgeMid) {
-      hi = mid;
-    } else {
-      lo = mid + 1;
-    }
-  }
-  return lo;
-}
-
-/** Build the label array for `numBins` intervals. */
-function buildLabels(
-  edges: readonly number[],
-  right: boolean,
-  labels: readonly string[] | false | undefined,
-  precision: number,
-  numBins: number,
-): readonly (string | null)[] {
-  if (labels === false) {
-    return Array.from({ length: numBins }, (_, i) => String(i));
-  }
-  if (labels !== undefined) {
-    if (labels.length !== numBins) {
-      throw new RangeError(
-        `labels length (${labels.length}) must equal number of bins (${numBins}).`,
-      );
-    }
-    return labels;
-  }
-  return Array.from({ length: numBins }, (_, i) => {
-    const lo = edges[i] as number;
-    const hi = edges[i + 1] as number;
-    return intervalLabel(lo, hi, right, precision);
-  });
-}
-
-/** Check whether `v` is within the valid bin range. */
-function isInRange(v: number, lo0: number, hiN: number, right: boolean): boolean {
-  if (right) {
-    return v > lo0 && v <= hiN;
-  }
-  return v >= lo0 && v < hiN;
-}
-
-/**
- * Assign each value in `data` to a bin interval, returning a label string
- * (or `null` for missing / out-of-range values).
- */
-function assignBins(
-  data: readonly Scalar[],
-  edges: readonly number[],
-  right: boolean,
-  labels: readonly string[] | false | undefined,
-  precision: number,
-  includeLowest: boolean,
-): readonly (string | null)[] {
-  const numBins = edges.length - 1;
-  const binLabels = buildLabels(edges, right, labels, precision, numBins);
-
-  const lo0 = edges[0] as number;
-  const hiN = edges[numBins] as number;
-  // Widen leftmost edge by a tiny epsilon so the minimum value falls inside.
-  const adjustedLo0 = includeLowest ? lo0 - 1e-10 * (Math.abs(lo0) + 1) : lo0;
-
-  return data.map((raw): string | null => {
-    if (isMissing(raw) || typeof raw !== "number") {
-      return null;
-    }
-    if (!isInRange(raw, adjustedLo0, hiN, right)) {
-      return null;
-    }
-    const bin = findBin(raw, edges, right);
-    return binLabels[bin] ?? null;
-  });
-}
-
-/** Compute equal-width edges from a numeric range. */
-function equalWidthEdges(minVal: number, maxVal: number, bins: number): readonly number[] {
-  if (minVal === maxVal) {
-    const lo = minVal - 0.5;
-    const hi = maxVal + 0.5;
-    return Array.from({ length: bins + 1 }, (_, i) => lo + (i * (hi - lo)) / bins);
-  }
-  const step = (maxVal - minVal) / bins;
-  return Array.from({ length: bins + 1 }, (_, i) => minVal + i * step);
-}
-
-/** Extract finite numbers from a scalar array. */
-function numericOnly(vals: readonly Scalar[]): number[] {
-  return vals.filter((v): v is number => typeof v === "number" && !Number.isNaN(v));
-}
-
-/** Build edges from a numeric integer bin count. */
-function edgesFromCount(nums: readonly number[], bins: number): readonly number[] {
-  if (!Number.isInteger(bins) || bins < 1) {
-    throw new RangeError("`bins` must be a positive integer when given as a number.");
-  }
-  if (nums.length === 0) {
-    throw new RangeError("Cannot determine bin edges: no finite numeric values in x.");
-  }
-  const minVal = Math.min(...nums);
-  const maxVal = Math.max(...nums);
-  return equalWidthEdges(minVal, maxVal, bins);
-}
-
-/** Return series (or [series, edges] tuple) based on retbins flag. */
-function wrapResult(
-  series: Series<string | null>,
-  edges: readonly number[],
-  retbins: boolean,
-): CutResult | CutResultWithBins {
-  if (retbins) {
-    return [series, edges];
-  }
-  return series;
-}
-
-// ─── public API ───────────────────────────────────────────────────────────────
-
-/**
- * Bin values in `x` into discrete intervals — mirrors `pandas.cut()`.
- *
- * @param x    Input Series of numeric values.
- * @param bins Either an integer number of equal-width bins, or an explicit
- *             sorted array of bin edges (length ≥ 2).
- * @param options  See {@link CutOptions}.
- * @returns    A `Series<string | null>` with bin-label for each element,
- *             or a `[Series, binEdges]` tuple when `retbins: true`.
- *
- * @example
- * ```ts
- * import { cut, Series } from "tsb";
- *
- * const s = new Series({ data: [1, 7, 5, 4, 2, 3], name: "x" });
- * const binned = cut(s, 3);
- * ```
- */
-export function cut(x: Series<Scalar>, bins: number, options?: CutOptions): CutResult;
-export function cut(x: Series<Scalar>, bins: readonly number[], options?: CutOptions): CutResult;
-export function cut(
-  x: Series<Scalar>,
-  bins: number | readonly number[],
-  options: CutOptions = {},
-): CutResult | CutResultWithBins {
-  const right = options.right ?? true;
-  const labels = options.labels;
-  const retbins = options.retbins ?? false;
-  const precision = options.precision ?? 3;
-  const includeLowest = options.includeLowest ?? true;
-
-  const vals = x.values;
-  const nums = numericOnly(vals);
-  const edges = typeof bins === "number" ? edgesFromCount(nums, bins) : normaliseBinEdges(bins);
-
-  const resultVals = assignBins(vals, edges, right, labels, precision, includeLowest);
-  const series = new Series<string | null>({
-    data: [...resultVals],
-    index: x.index,
-    name: x.name ?? null,
-  });
-  return wrapResult(series, edges, retbins);
-}
-
-/** Build quantile levels from an integer `q`. */
-function quantileLevelsFromInt(q: number): readonly number[] {
-  if (!Number.isInteger(q) || q < 2) {
-    throw new RangeError("`q` must be an integer ≥ 2 when given as a number.");
-  }
-  return Array.from({ length: q + 1 }, (_, i) => i / q);
-}
-
-/** Deduplicate sorted edges, or raise if duplicates are found. */
-function deduplicateEdges(rawEdges: number[], duplicates: "raise" | "drop"): readonly number[] {
-  for (let i = 1; i < rawEdges.length; i++) {
-    if ((rawEdges[i] as number) !== (rawEdges[i - 1] as number)) {
-      continue;
-    }
-    if (duplicates === "drop") {
-      const deduped = [...new Set(rawEdges)].sort((a, b) => a - b);
-      if (deduped.length < 2) {
-        throw new RangeError(
-          "After dropping duplicate bin edges, fewer than 2 unique edges remain.",
-        );
-      }
-      return deduped;
-    }
-    throw new RangeError(
-      `Duplicate bin edges found: ${rawEdges[i]}. Use duplicates="drop" to handle.`,
-    );
-  }
-  return rawEdges;
-}
-
-/**
- * Bin values in `x` into quantile-based (equal-frequency) intervals —
- * mirrors `pandas.qcut()`.
- *
- * @param x    Input Series of numeric values.
- * @param q    Either an integer number of quantiles, or an explicit array
- *             of quantile levels in [0, 1] (e.g. `[0, 0.25, 0.5, 0.75, 1]`).
- * @param options  See {@link QcutOptions}.
- * @returns    A `Series<string | null>` with quantile-bin label for each element,
- *             or a `[Series, binEdges]` tuple when `retbins: true`.
- *
- * @example
- * ```ts
- * import { qcut, Series } from "tsb";
- *
- * const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], name: "v" });
- * const binned = qcut(s, 4); // 4 equal-frequency quartile bins
- * ```
- */
-export function qcut(x: Series<Scalar>, q: number, options?: QcutOptions): CutResult;
-export function qcut(x: Series<Scalar>, q: readonly number[], options?: QcutOptions): CutResult;
-export function qcut(
-  x: Series<Scalar>,
+/** Build quantile edges from n equal quantiles or an array of fractions. */
+function buildQuantileEdges(
+  sorted: readonly number[],
   q: number | readonly number[],
-  options: QcutOptions = {},
-): CutResult | CutResultWithBins {
-  const labels = options.labels;
-  const retbins = options.retbins ?? false;
-  const precision = options.precision ?? 3;
-  const duplicates = options.duplicates ?? "raise";
-
-  const vals = x.values;
-  const nums = numericOnly(vals);
-
-  if (nums.length === 0) {
-    throw new RangeError("Cannot compute quantiles: no finite numeric values in x.");
-  }
-
-  const sorted = [...nums].sort((a, b) => a - b);
-
-  let qLevels: readonly number[];
+): readonly number[] {
   if (typeof q === "number") {
-    qLevels = quantileLevelsFromInt(q);
-  } else {
-    if (q.length < 2) {
-      throw new RangeError("`q` array must have at least 2 elements.");
+    if (q < 2) {
+      throw new RangeError(`qcut: q must be ≥ 2, got ${q}`);
     }
-    qLevels = [...q].sort((a, b) => a - b);
+    return Array.from({ length: q + 1 }, (_, i): number => quantileAt(sorted, i / q));
   }
+  if (q.length < 2) {
+    throw new RangeError("qcut: q array must have at least 2 elements");
+  }
+  return q.map((p): number => quantileAt(sorted, p));
+}
 
-  const rawEdges = qLevels.map((qLevel) => linearQuantile(sorted, qLevel));
+/**
+ * Quantile-based binning.
+ *
+ * Mirrors `pandas.qcut()`.
+ *
+ * @param x - Input values (Series or plain array).
+ * @param q - Number of quantiles or array of quantile fractions `[0, 1]`.
+ * @param options - Optional configuration.
+ * @returns A `Series<string | null>` (or integer codes when `labels=false`).
+ *
+ * @example
+ * ```ts
+ * qcut(new Series({ data: [1, 2, 3, 4, 5] }), 4);
+ * // Splits into approximate quartiles.
+ *
+ * qcut(new Series({ data: [1, 2, 3, 4, 5] }), [0, 0.25, 0.5, 0.75, 1.0]);
+ * // Explicit quantile fractions.
+ * ```
+ */
+export function qcut(
+  x: readonly Scalar[] | Series<Scalar>,
+  q: number | readonly number[],
+  options?: QCutOptions,
+): Series<Scalar> {
+  const labels = options?.labels;
+  const duplicates = options?.duplicates ?? "raise";
+
+  const nums = extractNums(x);
+  const inputIndex = extractIndex(x, nums.length);
+  const name = extractName(x);
+
+  const finiteNums = nums.filter((v): v is number => Number.isFinite(v));
+  if (finiteNums.length === 0) {
+    throw new RangeError("qcut: no finite values in input");
+  }
+  const sorted = [...finiteNums].sort((a, b): number => a - b);
+
+  const rawEdges = buildQuantileEdges(sorted, q);
   const edges = deduplicateEdges(rawEdges, duplicates);
 
-  const resultVals = assignBins(vals, edges, true, labels, precision, true);
-  const series = new Series<string | null>({
-    data: [...resultVals],
-    index: x.index,
-    name: x.name ?? null,
-  });
-  return wrapResult(series, edges, retbins);
+  // qcut always uses right-closed intervals; first bin uses include_lowest behaviour.
+  return cutCore(nums, edges, inputIndex, name, true, labels, true);
+}
+
+// ─── IntervalIndex helper ─────────────────────────────────────────────────
+
+/**
+ * Compute the `IntervalIndex` that corresponds to a `cut` operation.
+ *
+ * Useful when you need the bin definitions alongside the result.
+ *
+ * @example
+ * ```ts
+ * const idx = cutIntervalIndex([1,2,3,4,5], 2);
+ * // IntervalIndex: [(0.995, 3.0], (3.0, 5.005]]
+ * ```
+ */
+export function cutIntervalIndex(
+  x: readonly Scalar[] | Series<Scalar>,
+  bins: number | readonly number[],
+  options?: Pick<CutOptions, "right" | "duplicates">,
+): IntervalIndex {
+  const right = options?.right ?? true;
+  const duplicates = options?.duplicates ?? "raise";
+  const nums = extractNums(x);
+
+  let edges: readonly number[];
+  if (typeof bins === "number") {
+    edges = equalWidthEdges(nums, bins);
+  } else {
+    edges = deduplicateEdges([...bins], duplicates);
+  }
+  return buildIntervalIndex(edges, right);
 }
 
 /**
- * Return the integer bin code (0-based) for each element of `x`.
+ * Compute the `IntervalIndex` that corresponds to a `qcut` operation.
  *
- * Equivalent to `cut(x, bins, { labels: false })` but returns `number | null`.
- *
- * @param x    Input Series of numeric values.
- * @param bins Integer number of equal-width bins or explicit bin edges.
- * @returns    Series of integer bin codes (or `null` for missing/out-of-range).
+ * @example
+ * ```ts
+ * const idx = qcutIntervalIndex([1,2,3,4,5], 2);
+ * ```
  */
-export function cutCodes(
-  x: Series<Scalar>,
-  bins: number | readonly number[],
-  options?: Omit<CutOptions, "labels" | "retbins">,
-): Series<number | null> {
-  const strSeries = cut(x, bins as number, { ...options, labels: false }) as CutResult;
-  const data = strSeries.values.map((v): number | null =>
-    v === null ? null : Number.parseInt(v, 10),
-  );
-  return new Series<number | null>({
-    data: [...data],
-    index: x.index,
-    name: x.name ?? null,
-  });
-}
-
-/**
- * Return the unique bin labels in interval order.
- *
- * @param bins      integer or edge array (same as passed to `cut`/`qcut`)
- * @param minVal    minimum data value (used when `bins` is an integer)
- * @param maxVal    maximum data value (used when `bins` is an integer)
- * @param right     whether intervals are right-closed (default `true`)
- * @param precision decimal places (default `3`)
- */
-export function cutCategories(
-  bins: number | readonly number[],
-  minVal: number,
-  maxVal: number,
-  right = true,
-  precision = 3,
-): readonly string[] {
-  const edges =
-    typeof bins === "number" ? equalWidthEdges(minVal, maxVal, bins) : normaliseBinEdges(bins);
-  const numBins = edges.length - 1;
-  return Array.from({ length: numBins }, (_, i) => {
-    const lo = edges[i] as number;
-    const hi = edges[i + 1] as number;
-    return intervalLabel(lo, hi, right, precision);
-  });
+export function qcutIntervalIndex(
+  x: readonly Scalar[] | Series<Scalar>,
+  q: number | readonly number[],
+  options?: Pick<QCutOptions, "duplicates">,
+): IntervalIndex {
+  const duplicates = options?.duplicates ?? "raise";
+  const nums = extractNums(x);
+  const finiteNums = nums.filter((v): v is number => Number.isFinite(v));
+  if (finiteNums.length === 0) {
+    throw new RangeError("qcutIntervalIndex: no finite values in input");
+  }
+  const sorted = [...finiteNums].sort((a, b): number => a - b);
+  const rawEdges = buildQuantileEdges(sorted, q);
+  const edges = deduplicateEdges(rawEdges, duplicates);
+  return buildIntervalIndex(edges, true);
 }

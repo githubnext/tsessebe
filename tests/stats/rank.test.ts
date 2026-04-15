@@ -4,7 +4,7 @@
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
 import { DataFrame, Series, rankDataFrame, rankSeries } from "../../src/index.ts";
-import type { Label, Scalar } from "../../src/index.ts";
+import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 

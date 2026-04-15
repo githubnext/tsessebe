@@ -39,126 +39,251 @@ export {
   nsmallestDataFrame,
 } from "./nlargest.ts";
 export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
-export {
-  isna,
-  notna,
-  isnull,
-  notnull,
-  ffillSeries,
-  bfillSeries,
-  dataFrameFfill,
-  dataFrameBfill,
-} from "./na_ops.ts";
-export type { FillDirectionOptions, DataFrameFillOptions } from "./na_ops.ts";
-export { pctChangeSeries, pctChangeDataFrame } from "./pct_change.ts";
-export type {
-  PctChangeFillMethod,
-  PctChangeOptions,
-  DataFramePctChangeOptions,
-} from "./pct_change.ts";
-export { idxminSeries, idxmaxSeries, idxminDataFrame, idxmaxDataFrame } from "./idxmin_idxmax.ts";
-export type { IdxOptions, IdxDataFrameOptions } from "./idxmin_idxmax.ts";
-export { replaceSeries, replaceDataFrame } from "./replace.ts";
-export type {
-  ReplaceMapping,
-  ReplaceSpec,
-  ReplaceOptions,
-  DataFrameReplaceOptions,
-} from "./replace.ts";
 export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./where_mask.ts";
 export type {
+  WherePredicate,
   SeriesCond,
   DataFrameCond,
-  WhereOptions,
-  WhereDataFrameOptions,
+  WhereMaskOptions,
 } from "./where_mask.ts";
-export { diffSeries, diffDataFrame, shiftSeries, shiftDataFrame } from "./diff_shift.ts";
+export {
+  seriesEq,
+  seriesNe,
+  seriesLt,
+  seriesGt,
+  seriesLe,
+  seriesGe,
+  dataFrameEq,
+  dataFrameNe,
+  dataFrameLt,
+  dataFrameGt,
+  dataFrameLe,
+  dataFrameGe,
+} from "./compare.ts";
+export type { CompareOp, SeriesOther, DataFrameOther } from "./compare.ts";
+export { shiftSeries, diffSeries, dataFrameShift, dataFrameDiff } from "./shift_diff.ts";
+export type { ShiftDiffDataFrameOptions } from "./shift_diff.ts";
+export { interpolateSeries, dataFrameInterpolate } from "./interpolate.ts";
 export type {
-  DiffOptions,
-  DataFrameDiffOptions,
-  ShiftOptions,
-  DataFrameShiftOptions,
-} from "./diff_shift.ts";
+  InterpolateMethod,
+  LimitDirection,
+  InterpolateOptions,
+  DataFrameInterpolateOptions,
+} from "./interpolate.ts";
+export { fillnaSeries, fillnaDataFrame } from "./fillna.ts";
+export type {
+  FillnaMethod,
+  FillnaSeriesOptions,
+  ColumnFillMap,
+  FillnaDataFrameOptions,
+} from "./fillna.ts";
+export { cut, qcut, cutIntervalIndex, qcutIntervalIndex } from "./cut.ts";
+export type { CutOptions, QCutOptions } from "./cut.ts";
+export { sampleSeries, sampleDataFrame } from "./sample.ts";
+export type { SampleSeriesOptions, SampleDataFrameOptions } from "./sample.ts";
+export { applySeries, applymap, dataFrameApply } from "./apply.ts";
+export type { DataFrameApplyOptions } from "./apply.ts";
+
+export {
+  pipeSeries,
+  dataFramePipe,
+  pipeTo,
+  dataFramePipeTo,
+  pipeChain,
+  dataFramePipeChain,
+} from "./pipe.ts";
+export {
+  seriesFloor,
+  dataFrameFloor,
+  seriesCeil,
+  dataFrameCeil,
+  seriesTrunc,
+  dataFrameTrunc,
+  seriesSqrt,
+  dataFrameSqrt,
+  seriesExp,
+  dataFrameExp,
+  seriesLog,
+  dataFrameLog,
+  seriesLog2,
+  dataFrameLog2,
+  seriesLog10,
+  dataFrameLog10,
+  seriesSign,
+  dataFrameSign,
+} from "./numeric_ops.ts";
+
+export {
+  seriesPow,
+  dataFramePow,
+  seriesMod,
+  dataFrameMod,
+  seriesFloorDiv,
+  dataFrameFloorDiv,
+} from "./pow_mod.ts";
+
+export {
+  seriesAdd,
+  seriesRadd,
+  seriesSub,
+  seriesRsub,
+  seriesMul,
+  seriesRmul,
+  seriesDiv,
+  seriesRdiv,
+  dataFrameAdd,
+  dataFrameRadd,
+  dataFrameSub,
+  dataFrameRsub,
+  dataFrameMul,
+  dataFrameRmul,
+  dataFrameDiv,
+  dataFrameRdiv,
+} from "./add_sub_mul_div.ts";
+
+export { getDummies, dataFrameGetDummies } from "./get_dummies.ts";
+export type { GetDummiesOptions, DataFrameGetDummiesOptions } from "./get_dummies.ts";
+
+export { factorize, seriesFactorize } from "./factorize.ts";
+export type { FactorizeOptions, FactorizeResult } from "./factorize.ts";
+
+export { crosstab, seriesCrosstab } from "./crosstab.ts";
+export type { AggFunc, Normalize, CrosstabOptions } from "./crosstab.ts";
+
+export { toNumeric, toNumericArray, toNumericScalar, toNumericSeries } from "./to_numeric.ts";
+export type { ToNumericDowncast, ToNumericErrors, ToNumericOptions } from "./to_numeric.ts";
+
+export { seriesMemoryUsage, dataFrameMemoryUsage } from "./memory_usage.ts";
+export type { MemoryUsageOptions } from "./memory_usage.ts";
+
+export { selectDtypes } from "./select_dtypes.ts";
+export type { DtypeSelector, SelectDtypesOptions } from "./select_dtypes.ts";
+
+export { clipSeriesWithBounds, clipDataFrameWithBounds } from "./clip_with_bounds.ts";
+export type {
+  BoundArg,
+  SeriesClipBoundsOptions,
+  DataFrameClipBoundsOptions,
+} from "./clip_with_bounds.ts";
+
+export { inferDtype } from "./infer_dtype.ts";
+export type { InferredDtype, InferDtypeOptions } from "./infer_dtype.ts";
+
+export { isna, notna, isnull, notnull } from "./notna.ts";
+
+export { dropna, dropnaSeries, dropnaDataFrame } from "./dropna.ts";
+export type { DropnaHow, DropnaDataFrameOptions } from "./dropna.ts";
+
+export { combineFirstSeries, combineFirstDataFrame } from "./combine_first.ts";
+
+export { valueCountsBinned } from "./value_counts_full.ts";
+export type { ValueCountsBinnedOptions } from "./value_counts_full.ts";
+
 export {
   duplicatedSeries,
   duplicatedDataFrame,
   dropDuplicatesSeries,
   dropDuplicatesDataFrame,
 } from "./duplicated.ts";
-export type { KeepPolicy, DuplicatedOptions, DataFrameDuplicatedOptions } from "./duplicated.ts";
-export { clipAdvancedSeries, clipAdvancedDataFrame } from "./clip_advanced.ts";
 export type {
-  SeriesBound,
-  DataFrameBound,
-  ClipAdvancedSeriesOptions,
-  ClipAdvancedDataFrameOptions,
-} from "./clip_advanced.ts";
+  KeepPolicy,
+  DuplicatedDataFrameOptions,
+  DuplicatedSeriesOptions,
+} from "./duplicated.ts";
+
+export { explodeSeries, explodeDataFrame } from "./explode.ts";
+export type { ExplodeOptions, ExplodeDataFrameOptions } from "./explode.ts";
+
+export { isin, dataFrameIsin } from "./isin.ts";
+export type { IsinValues, IsinDict, DataFrameIsinValues } from "./isin.ts";
+
+export { rollingSem, rollingSkew, rollingKurt, rollingQuantile } from "./window_extended.ts";
+export type { WindowExtOptions, RollingQuantileOptions } from "./window_extended.ts";
+export { fillna, countna, countValid } from "./notna_isna.ts";
+export type { IsnaInput, FillnaOptions, DropnaOptions } from "./notna_isna.ts";
 export {
-  applySeries,
-  mapSeries,
-  applyDataFrame,
-  applyExpandDataFrame,
-  mapDataFrame,
-} from "./apply.ts";
-export type {
-  MapLookup,
-  ApplyDataFrameOptions,
-  ApplyExpandDataFrameOptions,
-} from "./apply.ts";
-export { cut, qcut, cutCodes, cutCategories } from "./cut.ts";
-export type {
-  CutOptions,
-  QcutOptions,
-  CutResult,
-  CutResultWithBins,
-} from "./cut.ts";
-export { Interval, IntervalIndex, intervalRange } from "./interval.ts";
-export type { ClosedType, IntervalOptions, IntervalRangeOptions } from "./interval.ts";
-export { getDummies, getDummiesSeries, getDummiesDataFrame, fromDummies } from "./get_dummies.ts";
-export type { GetDummiesOptions, FromDummiesOptions } from "./get_dummies.ts";
-export { crosstab, crosstabSeries } from "./crosstab.ts";
-export type { CrosstabOptions, CrosstabAggFunc, CrosstabNormalize } from "./crosstab.ts";
-export { factorize, factorizeSeries } from "./factorize.ts";
-export type { FactorizeOptions, FactorizeResult } from "./factorize.ts";
-export { interpolateSeries, interpolateDataFrame } from "./interpolate.ts";
-export type {
-  InterpolateMethod,
-  LimitDirection,
-  LimitArea,
-  InterpolateOptions,
-  InterpolateDataFrameOptions,
-} from "./interpolate.ts";
-export { selectDtypes } from "./select_dtypes.ts";
-export type { SelectDtypesOptions, DtypeSpecifier, DtypeAlias } from "./select_dtypes.ts";
-export { modeSeries, modeDataFrame } from "./mode.ts";
-export type { ModeSeriesOptions, ModeDataFrameOptions } from "./mode.ts";
-export { skewSeries, kurtSeries, skewDataFrame, kurtDataFrame } from "./skew_kurt.ts";
-export type {
-  SkewKurtSeriesOptions,
-  SkewKurtDataFrameOptions,
-} from "./skew_kurt.ts";
-export { varSeries, semSeries, varDataFrame, semDataFrame } from "./sem_var.ts";
-export type { VarSemSeriesOptions, VarSemDataFrameOptions } from "./sem_var.ts";
+  strNormalize,
+  strGetDummies,
+  strExtractAll,
+  strRemovePrefix,
+  strRemoveSuffix,
+  strTranslate,
+  strCharWidth,
+  strByteLength,
+} from "./string_ops.ts";
+export type { NormalizeForm, StrInput, ExtractAllOptions } from "./string_ops.ts";
 export {
-  nuniqueSeries,
-  nuniqueDataFrame,
-  anySeries,
-  allSeries,
-  anyDataFrame,
-  allDataFrame,
-} from "./nunique.ts";
+  strSplitExpand,
+  strExtractGroups,
+  strPartition,
+  strRPartition,
+  strMultiReplace,
+  strIndent,
+  strDedent,
+} from "./string_ops_extended.ts";
 export type {
-  NuniqueSeriesOptions,
-  NuniqueDataFrameOptions,
-  AnyAllSeriesOptions,
-  AnyAllDataFrameOptions,
-} from "./nunique.ts";
-export { quantileSeries, quantileDataFrame } from "./quantile.ts";
+  SplitExpandOptions,
+  ExtractGroupsOptions,
+  PartitionResult,
+  ReplacePair,
+  IndentOptions,
+} from "./string_ops_extended.ts";
+export {
+  digitize,
+  histogram,
+  linspace,
+  arange,
+  percentileOfScore,
+  zscore,
+  minMaxNormalize,
+  coefficientOfVariation,
+  seriesDigitize,
+} from "./numeric_extended.ts";
 export type {
-  QuantileInterpolation,
-  QuantileSeriesOptions,
-  QuantileDataFrameOptions,
-} from "./quantile.ts";
+  HistogramOptions,
+  HistogramResult,
+  ZscoreOptions,
+  MinMaxOptions,
+  CvOptions,
+} from "./numeric_extended.ts";
+export {
+  catFromCodes,
+  catUnionCategories,
+  catIntersectCategories,
+  catDiffCategories,
+  catEqualCategories,
+  catSortByFreq,
+  catToOrdinal,
+  catFreqTable,
+  catCrossTab,
+  catRecode,
+} from "./categorical_ops.ts";
+export type {
+  CatFromCodesOptions,
+  CatSortByFreqOptions,
+  CatCrossTabOptions,
+} from "./categorical_ops.ts";
+export {
+  formatFloat,
+  formatPercent,
+  formatScientific,
+  formatEngineering,
+  formatThousands,
+  formatCurrency,
+  formatCompact,
+  makeFloatFormatter,
+  makePercentFormatter,
+  makeCurrencyFormatter,
+  applySeriesFormatter,
+  applyDataFrameFormatter,
+  seriesToString,
+  dataFrameToString,
+} from "./format_ops.ts";
+export type {
+  Formatter,
+  SeriesToStringOptions,
+  DataFrameToStringOptions,
+} from "./format_ops.ts";
 export {
   nancount,
   nansum,
@@ -173,9 +298,8 @@ export {
 export type { NanInput, NanAggOptions } from "./nancumops.ts";
 export { toDatetime } from "./to_datetime.ts";
 export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./to_datetime.ts";
-export { toTimedelta, parseFrac, formatTimedelta, Timedelta } from "./to_timedelta.ts";
+export { toTimedelta, parseFrac, formatTimedelta } from "./to_timedelta.ts";
 export type { TimedeltaUnit, TimedeltaErrors, ToTimedeltaOptions } from "./to_timedelta.ts";
-
 export { dateRange, parseFreq, advanceDate, toDateInput } from "./date_range.ts";
 export type {
   DateRangeFreq,

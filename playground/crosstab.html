@@ -3,240 +3,215 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tsb — crosstab</title>
+    <title>tsb — crosstab: cross-tabulation</title>
     <style>
-      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
-      h1 { color: #1a1a2e; }
-      h2 { color: #16213e; margin-top: 2rem; }
-      pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
-      code { font-family: "Fira Code", monospace; font-size: 0.9rem; }
-      .demo { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; }
-      .label { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-      table { border-collapse: collapse; margin: 0.5rem 0; }
-      th, td { border: 1px solid #ccc; padding: 0.3rem 0.7rem; text-align: right; }
-      th { background: #f0f0f0; }
-      a { color: #0070f3; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 2rem; }
+      h1 { color: #58a6ff; font-size: 1.8rem; margin-bottom: .5rem; }
+      h2 { color: #79c0ff; font-size: 1.2rem; margin: 2rem 0 .75rem; }
+      p  { color: #8b949e; margin-bottom: 1rem; max-width: 800px; }
+      code { background: #161b22; padding: .1rem .4rem; border-radius: 4px; font-family: monospace; font-size: .9em; color: #a5d6ff; }
+      .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; max-width: 900px; }
+      textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: monospace; font-size: .85rem; padding: .75rem; resize: vertical; min-height: 160px; }
+      button { background: #238636; color: #fff; border: none; border-radius: 6px; padding: .5rem 1.25rem; cursor: pointer; font-size: .9rem; margin-top: .75rem; }
+      button:hover { background: #2ea043; }
+      pre { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .82rem; margin-top: .75rem; white-space: pre-wrap; word-break: break-all; min-height: 60px; }
+      .tag { display: inline-block; background: #388bfd26; color: #58a6ff; border: 1px solid #388bfd; border-radius: 12px; padding: .1rem .6rem; font-size: .75rem; margin-left: .5rem; vertical-align: middle; }
     </style>
   </head>
   <body>
-    <h1>tsb — <code>crosstab</code></h1>
+    <h1>crosstab <span class="tag">tsb</span></h1>
     <p>
-      <strong>Cross-tabulation</strong> computes a frequency table of two (or more) categorical
-      variables. It mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.crosstab.html"><code>pandas.crosstab</code></a>.
+      Cross-tabulation — the TypeScript port of
+      <code>pandas.crosstab()</code>.
+      Count (or aggregate) the co-occurrence of two categorical variables,
+      producing a two-dimensional frequency table.
     </p>
-    <p><a href="index.html">← back to index</a></p>
+    <p>
+      Supports <code>margins</code> (row/column totals), <code>normalize</code>
+      (proportions), custom <code>aggfunc</code>, and missing-value control
+      via <code>dropna</code>.
+    </p>
 
-    <!-- ── Demo 1: basic count ──────────────────────────────────────────── -->
-    <h2>1 · Basic frequency count</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>import { crosstab, Series } from "tsb";
+    <h2>1. Basic frequency table</h2>
+    <div class="card">
+      <p>Count how often each combination of row/column categories appears.</p>
+      <textarea id="basic-code">
+const species = ["cat", "dog", "cat", "bird", "dog", "cat"];
+const color   = ["black", "white", "white", "black", "black", "white"];
 
-const a = new Series({ data: ["foo","foo","bar","bar","foo"], name: "A" });
-const b = new Series({ data: ["one","two","one","two","one"], name: "B" });
-const ct = crosstab(a, b);
-// rows = unique A values, cols = unique B values, cells = counts</code></pre>
-      <div class="label">Result</div>
-      <div id="demo1"></div>
+const ct = tsb.crosstab(species, color);
+
+console.log("Row index:", ct.index.values);
+console.log("Columns:", ct.columns.values);
+
+for (const row of ct.index.values) {
+  const rowVals = ct.columns.values.map(c => ct.col(c).at(row));
+  console.log(row + ":", rowVals);
+}
+      </textarea>
+      <button onclick="run('basic')">▶ Run</button>
+      <pre id="basic-out">Click ▶ Run to execute</pre>
     </div>
 
-    <!-- ── Demo 2: margins ───────────────────────────────────────────────── -->
-    <h2>2 · Margins (row / column totals)</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>const ct = crosstab(a, b, { margins: true, margins_name: "All" });</code></pre>
-      <div class="label">Result</div>
-      <div id="demo2"></div>
+    <h2>2. With margins (row/column totals)</h2>
+    <div class="card">
+      <p>
+        Set <code>margins: true</code> to add an <code>"All"</code> row and
+        column showing totals.  Use <code>marginsName</code> to change the
+        label.
+      </p>
+      <textarea id="margins-code">
+const gender = ["M", "M", "F", "F", "M", "F"];
+const vote   = ["Yes", "No", "Yes", "Yes", "Yes", "No"];
+
+const ct = tsb.crosstab(gender, vote, { margins: true, marginsName: "Total" });
+
+console.log("Columns:", ct.columns.values);
+for (const row of ct.index.values) {
+  const line = ct.columns.values.map(c => `${c}=${ct.col(c).at(row)}`).join("  ");
+  console.log(row + ":  " + line);
+}
+      </textarea>
+      <button onclick="run('margins')">▶ Run</button>
+      <pre id="margins-out">Click ▶ Run to execute</pre>
     </div>
 
-    <!-- ── Demo 3: normalize all ─────────────────────────────────────────── -->
-    <h2>3 · Normalize — proportions over all cells</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>const ct = crosstab(a, b, { normalize: "all" });</code></pre>
-      <div class="label">Result</div>
-      <div id="demo3"></div>
+    <h2>3. Normalize to proportions</h2>
+    <div class="card">
+      <p>
+        Use <code>normalize: true</code> (or <code>"all"</code>,
+        <code>"index"</code>, <code>"columns"</code>) to convert raw counts
+        into proportions.
+      </p>
+      <textarea id="norm-code">
+const idx = ["a", "a", "b", "b", "b"];
+const col = ["x", "y", "x", "x", "y"];
+
+// Proportions of grand total
+const all = tsb.crosstab(idx, col, { normalize: "all" });
+console.log("normalize='all':");
+for (const r of all.index.values) {
+  const line = all.columns.values.map(c =>
+    `${c}=${(all.col(c).at(r) * 100).toFixed(1)}%`
+  ).join("  ");
+  console.log("  " + r + ":  " + line);
+}
+
+// Row proportions (each row sums to 1)
+const byRow = tsb.crosstab(idx, col, { normalize: "index" });
+console.log("\nnormalize='index' (row proportions):");
+for (const r of byRow.index.values) {
+  const line = byRow.columns.values.map(c =>
+    `${c}=${(byRow.col(c).at(r) * 100).toFixed(1)}%`
+  ).join("  ");
+  console.log("  " + r + ":  " + line);
+}
+      </textarea>
+      <button onclick="run('norm')">▶ Run</button>
+      <pre id="norm-out">Click ▶ Run to execute</pre>
     </div>
 
-    <!-- ── Demo 4: normalize index ───────────────────────────────────────── -->
-    <h2>4 · Normalize — row proportions (<code>normalize="index"</code>)</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>const ct = crosstab(a, b, { normalize: "index" });</code></pre>
-      <div class="label">Result</div>
-      <div id="demo4"></div>
+    <h2>4. Custom aggregation (values + aggfunc)</h2>
+    <div class="card">
+      <p>
+        Provide numeric <code>values</code> and an <code>aggfunc</code> to
+        aggregate values within each cell instead of just counting.
+      </p>
+      <textarea id="agg-code">
+const department = ["Eng", "Eng", "Mktg", "Eng", "Mktg"];
+const level      = ["Senior", "Junior", "Senior", "Senior", "Junior"];
+const salary     = [120, 80, 95, 130, 70];
+
+const mean = (vs) => vs.reduce((s, v) => s + v, 0) / vs.length;
+const ct = tsb.crosstab(department, level, { values: salary, aggfunc: mean });
+
+console.log("Mean salary by dept × level:");
+for (const r of ct.index.values) {
+  const line = ct.columns.values.map(c => `${c}=$${ct.col(c).at(r).toFixed(0)}k`).join("  ");
+  console.log("  " + r + ":  " + line);
+}
+      </textarea>
+      <button onclick="run('agg')">▶ Run</button>
+      <pre id="agg-out">Click ▶ Run to execute</pre>
     </div>
 
-    <!-- ── Demo 5: normalize columns ─────────────────────────────────────── -->
-    <h2>5 · Normalize — column proportions (<code>normalize="columns"</code>)</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>const ct = crosstab(a, b, { normalize: "columns" });</code></pre>
-      <div class="label">Result</div>
-      <div id="demo5"></div>
+    <h2>5. seriesCrosstab — Series input</h2>
+    <div class="card">
+      <p>
+        Use <code>seriesCrosstab</code> to cross-tabulate two
+        <code>Series</code> objects directly.  The Series <code>.name</code>
+        is used as the default axis name.
+      </p>
+      <textarea id="series-code">
+const handedness = new tsb.Series({ data: ["R", "R", "L", "R", "L"], name: "hand" });
+const eyedness    = new tsb.Series({ data: ["R", "L", "R", "R", "L"], name: "eye" });
+
+const ct = tsb.seriesCrosstab(handedness, eyedness);
+console.log("Row axis name:", ct.index.name);   // "hand"
+console.log("Columns:", ct.columns.values);
+
+for (const r of ct.index.values) {
+  const line = ct.columns.values.map(c => `${c}=${ct.col(c).at(r)}`).join("  ");
+  console.log("  " + r + ":  " + line);
+}
+      </textarea>
+      <button onclick="run('series')">▶ Run</button>
+      <pre id="series-out">Click ▶ Run to execute</pre>
     </div>
 
-    <!-- ── Demo 6: values + aggfunc ──────────────────────────────────────── -->
-    <h2>6 · Values + aggfunc (aggregated cross-tab)</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>const sales = new Series({ data: [10, 20, 5, 15, 30], name: "sales" });
-const ct = crosstab(a, b, { values: sales, aggfunc: "sum" });</code></pre>
-      <div class="label">Result</div>
-      <div id="demo6"></div>
-    </div>
+    <h2>6. Missing values (dropna)</h2>
+    <div class="card">
+      <p>
+        By default (<code>dropna: true</code>), any row where either factor is
+        missing is dropped.  Set <code>dropna: false</code> to include missing
+        values as their own <code>"NaN"</code> category.
+      </p>
+      <textarea id="na-code">
+const idx = ["a", null, "b", "a", null];
+const col = ["x", "y", "x", null,  "y"];
 
-    <!-- ── Demo 7: dropna ────────────────────────────────────────────────── -->
-    <h2>7 · dropna — exclude / include missing values</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>const x = ["a", null, "b", "a"];
-const y = ["x", "y",  "x", "y"];
-const withDropna  = crosstabSeries(x, y, { dropna: true  }); // default
-const withoutDrop = crosstabSeries(x, y, { dropna: false });</code></pre>
-      <div class="label">dropna=true</div>
-      <div id="demo7a"></div>
-      <div class="label" style="margin-top:0.5rem">dropna=false</div>
-      <div id="demo7b"></div>
-    </div>
+console.log("dropna=true (default):");
+const drop = tsb.crosstab(idx, col);
+console.log("  rows:", drop.index.values);
+// null rows/cols excluded
 
-    <!-- ── Demo 8: array inputs ───────────────────────────────────────────── -->
-    <h2>8 · Plain array inputs (<code>crosstabSeries</code>)</h2>
-    <div class="demo">
-      <div class="label">Code</div>
-      <pre><code>import { crosstabSeries } from "tsb";
-const ct = crosstabSeries(
-  ["cat","dog","cat","dog","fish"],
-  ["male","male","female","female","female"],
-);</code></pre>
-      <div class="label">Result</div>
-      <div id="demo8"></div>
+console.log("\ndropna=false:");
+const keep = tsb.crosstab(idx, col, { dropna: false });
+console.log("  rows:", keep.index.values);
+console.log("  cols:", keep.columns.values);
+for (const r of keep.index.values) {
+  const line = keep.columns.values.map(c => `${c}=${keep.col(c).at(r)}`).join("  ");
+  console.log("  " + r + ":  " + line);
+}
+      </textarea>
+      <button onclick="run('na')">▶ Run</button>
+      <pre id="na-out">Click ▶ Run to execute</pre>
     </div>
 
     <script type="module">
-      // ── minimal tsb stubs so the page works standalone ──────────────────
-      // (In a real deployment, import from the built tsb package.)
+      // Build tsb from source using an inline import map
+      import * as tsb from "../src/index.ts";
+      window.tsb = tsb;
 
-      function renderTable(df, targetId) {
-        const el = document.getElementById(targetId);
-        if (!el) return;
-        const cols = df.columns;
-        const rows = df.index;
-        let html = "<table><thead><tr><th></th>";
-        for (const c of cols) html += `<th>${c}</th>`;
-        html += "</tr></thead><tbody>";
-        rows.forEach((r, ri) => {
-          html += `<tr><th>${r}</th>`;
-          for (const c of cols) {
-            const v = df.data[c][ri];
-            html += `<td>${typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(3)) : v ?? "NaN"}</td>`;
-          }
-          html += "</tr>";
-        });
-        html += "</tbody></table>";
-        el.innerHTML = html;
-      }
-
-      // ── tiny in-page crosstab implementation for demo purposes ───────────
-      function crosstabDemo(rowArr, colArr, opts = {}) {
-        const dropna = opts.dropna !== false;
-        const margins = opts.margins === true;
-        const marginsName = opts.margins_name ?? "All";
-        const normalize = opts.normalize ?? false;
-        const aggfunc = opts.aggfunc ?? (opts.values ? "mean" : "count");
-        const valArr = opts.values ?? null;
-
-        const rowOrder = [], colOrder = [];
-        const seenR = new Set(), seenC = new Set();
-        const cellBuckets = {};
-
-        for (let i = 0; i < rowArr.length; i++) {
-          const rv = rowArr[i], cv = colArr[i];
-          if (dropna && (rv === null || rv === undefined)) continue;
-          const rk = String(rv), ck = String(cv);
-          if (!seenR.has(rk)) { seenR.add(rk); rowOrder.push(rk); }
-          if (!seenC.has(ck)) { seenC.add(ck); colOrder.push(ck); }
-          const key = `${rk}\0${ck}`;
-          if (!cellBuckets[key]) cellBuckets[key] = [];
-          cellBuckets[key].push(valArr ? valArr[i] : 1);
+      window.run = function(id) {
+        const code = document.getElementById(id + "-code").value;
+        const out  = document.getElementById(id + "-out");
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(a =>
+          typeof a === "object" && a !== null ? JSON.stringify(a) : String(a)
+        ).join(" "));
+        try {
+          // eslint-disable-next-line no-new-func
+          new Function("tsb", code)(tsb);
+          out.textContent = logs.join("\n") || "(no output)";
+        } catch (e) {
+          out.textContent = "Error: " + e.message;
+        } finally {
+          console.log = origLog;
         }
-
-        const agg = (nums) => {
-          if (aggfunc === "count") return nums.length;
-          if (!nums.length) return NaN;
-          if (aggfunc === "sum") return nums.reduce((s,v) => s+v, 0);
-          if (aggfunc === "mean") return nums.reduce((s,v) => s+v, 0) / nums.length;
-          if (aggfunc === "min") return Math.min(...nums);
-          return Math.max(...nums);
-        };
-
-        let matrix = rowOrder.map(rk =>
-          colOrder.map(ck => {
-            const b = cellBuckets[`${rk}\0${ck}`];
-            return b ? agg(b) : (aggfunc === "count" ? 0 : NaN);
-          })
-        );
-
-        if (margins) {
-          matrix = matrix.map(row => {
-            const s = row.reduce((a,v) => a + (isNaN(v)?0:v), 0);
-            return [...row, s];
-          });
-          const cs = colOrder.map((_, ci) =>
-            matrix.slice(0, matrix.length).reduce((a, row) => a + (isNaN(row[ci])?0:row[ci]), 0)
-          );
-          const gt = cs.reduce((a,v) => a+v, 0);
-          matrix.push([...cs, gt]);
-          rowOrder.push(marginsName);
-          colOrder.push(marginsName);
-        }
-
-        if (normalize) {
-          const mode = normalize === true ? "all" : normalize;
-          if (mode === "all") {
-            let total = 0;
-            for (const row of matrix) for (const v of row) total += isNaN(v)?0:v;
-            matrix = matrix.map(row => row.map(v => isNaN(v)?NaN:v/total));
-          } else if (mode === "index") {
-            matrix = matrix.map(row => {
-              const t = row.reduce((s,v) => s+(isNaN(v)?0:v), 0);
-              return row.map(v => isNaN(v)?NaN:v/t);
-            });
-          } else {
-            const nCols = colOrder.length;
-            const ct2 = new Array(nCols).fill(0);
-            for (const row of matrix) row.forEach((v,ci) => { if (!isNaN(v)) ct2[ci] += v; });
-            matrix = matrix.map(row => row.map((v,ci) => isNaN(v)?NaN:v/(ct2[ci]||1)));
-          }
-        }
-
-        const data = {};
-        colOrder.forEach((c, ci) => { data[c] = matrix.map(row => row[ci]); });
-        return { index: rowOrder, columns: colOrder, data };
-      }
-
-      // ── demos ────────────────────────────────────────────────────────────
-      const a = ["foo","foo","bar","bar","foo"];
-      const b = ["one","two","one","two","one"];
-
-      renderTable(crosstabDemo(a, b), "demo1");
-      renderTable(crosstabDemo(a, b, { margins: true }), "demo2");
-      renderTable(crosstabDemo(a, b, { normalize: "all" }), "demo3");
-      renderTable(crosstabDemo(a, b, { normalize: "index" }), "demo4");
-      renderTable(crosstabDemo(a, b, { normalize: "columns" }), "demo5");
-
-      const sales = [10, 20, 5, 15, 30];
-      renderTable(crosstabDemo(a, b, { values: sales, aggfunc: "sum" }), "demo6");
-
-      const x = ["a", null, "b", "a"];
-      const y = ["x", "y", "x", "y"];
-      renderTable(crosstabDemo(x, y, { dropna: true }), "demo7a");
-      renderTable(crosstabDemo(x, y, { dropna: false }), "demo7b");
-
-      renderTable(crosstabDemo(
-        ["cat","dog","cat","dog","fish"],
-        ["male","male","female","female","female"]
-      ), "demo8");
+      };
     </script>
   </body>
 </html>

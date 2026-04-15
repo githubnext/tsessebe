@@ -120,9 +120,6 @@ The CI pipeline (`pages.yml`) runs this automatically during deployment.
 
 ## Non-Goals (Current Scope)
 
-- **Syntax highlighting** in the editor: the current implementation uses a
-  plain `<textarea>`. A future enhancement could integrate CodeMirror or
-  Monaco for richer editing.
 - **Infinite loop protection**: long-running or infinite loops will hang the
   browser tab. A Web Worker–based sandbox could be added later.
 - **Type checking**: the playground transpiles but does not type-check.

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — add / sub / mul / div</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>add / sub / mul / div</h1>
+<p class="subtitle">
+  Element-wise arithmetic between a Series (or DataFrame) and a scalar or another
+  Series — mirrors <code>pandas.Series.add()</code>, <code>.sub()</code>,
+  <code>.mul()</code>, and <code>.div()</code>.
+</p>
+
+<section>
+  <h2>1 — add: Series + scalar</h2>
+  <p>
+    <code>seriesAdd(series, scalar)</code> adds a constant to every element.
+    Missing values (<code>null</code> / <code>NaN</code>) are propagated unchanged.
+    Mirrors <code>pandas.Series.add(other)</code>.
+  </p>
+  <pre><code id="ex1-code">import { Series, seriesAdd } from "tsb";
+
+const s = new Series({ data: [1, 2, null, 4] });
+const result = seriesAdd(s, 10);
+console.log([...result.values]); // [11, 12, null, 14]
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — add: Series + Series (positional)</h2>
+  <p>
+    When <code>other</code> is another Series, elements are paired positionally
+    (same as pandas default when shapes match).
+  </p>
+  <pre><code id="ex2-code">import { Series, seriesAdd } from "tsb";
+
+const a = new Series({ data: [1, 2, 3] });
+const b = new Series({ data: [4, 5, 6] });
+seriesAdd(a, b).values;  // [5, 7, 9]
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — sub / rsub</h2>
+  <p>
+    <code>seriesSub(s, other)</code> computes <code>s − other</code>.
+    <code>seriesRsub(s, other)</code> computes the reverse: <code>other − s</code>.
+  </p>
+  <pre><code id="ex3-code">import { Series, seriesSub, seriesRsub } from "tsb";
+
+const s = new Series({ data: [10, 20, 30] });
+seriesSub(s, 5).values;    // [5, 15, 25]
+seriesRsub(s, 100).values; // [90, 80, 70]
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — mul: multiply</h2>
+  <p>
+    <code>seriesMul(s, other)</code> multiplies every element.
+    <code>seriesRmul</code> is the reversed form (commutative, provided for API symmetry).
+  </p>
+  <pre><code id="ex4-code">import { Series, seriesMul } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, null] });
+seriesMul(s, 3).values;  // [3, 6, 9, null]
+
+const weights = new Series({ data: [0.5, 1, 2, 1] });
+seriesMul(s, weights).values;  // [0.5, 2, 6, null]
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — div / rdiv (true division)</h2>
+  <p>
+    <code>seriesDiv(s, other)</code> performs IEEE-754 true division.
+    Division by zero yields <code>±Infinity</code> or <code>NaN</code> (0÷0),
+    matching <code>pandas.Series.div</code>.
+    <code>seriesRdiv(s, other)</code> computes <code>other / s</code>.
+  </p>
+  <pre><code id="ex5-code">import { Series, seriesDiv, seriesRdiv } from "tsb";
+
+const s = new Series({ data: [4, 9, 0, null] });
+seriesDiv(s, 2).values;    // [2, 4.5, Infinity, null]
+seriesRdiv(s, 36).values;  // [9, 4, Infinity, null]
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — DataFrame arithmetic</h2>
+  <p>
+    All four operations work on DataFrames too.  A scalar is broadcast across
+    every cell; a DataFrame operand is paired column-by-column, row-by-row.
+  </p>
+  <pre><code id="ex6-code">import { DataFrame, dataFrameAdd, dataFrameMul, dataFrameDiv } from "tsb";
+
+const df = DataFrame.fromColumns({ price: [10, 20, 30], qty: [3, 5, 2] });
+
+// Add a discount
+dataFrameAdd(df, 5).col("price").values;   // [15, 25, 35]
+
+// Scale everything by 2
+dataFrameMul(df, 2).col("qty").values;     // [6, 10, 4]
+
+// Revenue per item / some constant
+dataFrameDiv(df, 10).col("price").values;  // [1, 2, 3]
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — Missing value propagation</h2>
+  <p>
+    Following pandas convention, any operation involving a missing value
+    (<code>null</code> or <code>NaN</code>) returns the missing value unchanged.
+  </p>
+  <pre><code id="ex7-code">import { Series, seriesAdd, seriesMul, seriesDiv } from "tsb";
+
+const s = new Series({ data: [1, null, NaN, 4] });
+seriesAdd(s, 10).values;  // [11, null, NaN, 14]
+seriesMul(s, 2).values;   // [2, null, NaN, 8]
+seriesDiv(s, 2).values;   // [0.5, null, NaN, 2]
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<script>
+// Simple synchronous demos (no module bundler needed for the playground)
+const demos = [
+  // 1
+  () => {
+    const values = [1, 2, null, 4];
+    const result = values.map(v => v === null ? null : v + 10);
+    return `[${result.map(v => v === null ? 'null' : v).join(', ')}]`;
+  },
+  // 2
+  () => {
+    const a = [1, 2, 3], b = [4, 5, 6];
+    const r = a.map((v, i) => v + b[i]);
+    return `[${r.join(', ')}]`;
+  },
+  // 3
+  () => {
+    const data = [10, 20, 30];
+    const sub = data.map(v => v - 5).join(', ');
+    const rsub = data.map(v => 100 - v).join(', ');
+    return `sub:  [${sub}]\nrsub: [${rsub}]`;
+  },
+  // 4
+  () => {
+    const data = [1, 2, 3, null];
+    const mul = data.map(v => v === null ? null : v * 3);
+    const weights = [0.5, 1, 2, 1];
+    const mulW = data.map((v, i) => v === null ? null : v * weights[i]);
+    return `scalar: [${mul.map(v => v ?? 'null').join(', ')}]\nvector: [${mulW.map(v => v ?? 'null').join(', ')}]`;
+  },
+  // 5
+  () => {
+    const data = [4, 9, 0, null];
+    const div = data.map(v => v === null ? null : v / 2);
+    const rdiv = data.map(v => v === null ? null : 36 / v);
+    return `div:  [${div.map(v => v ?? 'null').join(', ')}]\nrdiv: [${rdiv.map(v => v ?? 'null').join(', ')}]`;
+  },
+  // 6
+  () => {
+    const price = [10, 20, 30], qty = [3, 5, 2];
+    const addP = price.map(v => v + 5).join(', ');
+    const mulQ = qty.map(v => v * 2).join(', ');
+    const divP = price.map(v => v / 10).join(', ');
+    return `add price: [${addP}]\nmul qty:   [${mulQ}]\ndiv price: [${divP}]`;
+  },
+  // 7
+  () => {
+    const data = [1, null, NaN, 4];
+    const add = data.map(v => v === null || (typeof v === 'number' && Number.isNaN(v)) ? v : v + 10);
+    const mul = data.map(v => v === null || (typeof v === 'number' && Number.isNaN(v)) ? v : v * 2);
+    const div = data.map(v => v === null || (typeof v === 'number' && Number.isNaN(v)) ? v : v / 2);
+    const fmt = arr => arr.map(v => v === null ? 'null' : (typeof v === 'number' && Number.isNaN(v) ? 'NaN' : v)).join(', ');
+    return `add: [${fmt(add)}]\nmul: [${fmt(mul)}]\ndiv: [${fmt(div)}]`;
+  },
+];
+
+demos.forEach((fn, i) => {
+  const el = document.getElementById(`ex${i+1}-output`);
+  if (el) {
+    try { el.textContent = fn(); } catch(e) { el.textContent = `Error: ${e.message}`; }
+  }
+});
+</script>
+</body>
+</html>

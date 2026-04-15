@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — TZDatetimeIndex: tz_localize &amp; tz_convert</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 2rem; }
+      h1 { color: #58a6ff; font-size: 1.8rem; margin-bottom: .5rem; }
+      h2 { color: #79c0ff; font-size: 1.2rem; margin: 2rem 0 .75rem; }
+      p  { color: #8b949e; margin-bottom: 1rem; max-width: 800px; }
+      code { background: #161b22; padding: .1rem .4rem; border-radius: 4px; font-family: monospace; font-size: .9em; color: #a5d6ff; }
+      .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; max-width: 900px; }
+      textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: monospace; font-size: .85rem; padding: .75rem; resize: vertical; min-height: 180px; }
+      button { background: #238636; color: #fff; border: none; border-radius: 6px; padding: .5rem 1.25rem; cursor: pointer; font-size: .9rem; margin-top: .75rem; }
+      button:hover { background: #2ea043; }
+      pre { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .82rem; margin-top: .75rem; white-space: pre-wrap; word-break: break-all; min-height: 60px; }
+      .tag { display: inline-block; background: #388bfd26; color: #58a6ff; border: 1px solid #388bfd; border-radius: 12px; padding: .1rem .6rem; font-size: .75rem; margin-left: .5rem; vertical-align: middle; }
+    </style>
+  </head>
+  <body>
+    <h1>TZDatetimeIndex <span class="tag">tsb</span></h1>
+    <p>
+      Timezone-aware date sequences — the TypeScript port of
+      <code>pandas.DatetimeIndex.tz_localize</code> and
+      <code>pandas.DatetimeIndex.tz_convert</code>.
+    </p>
+    <p>
+      All timestamps are stored as <strong>UTC milliseconds</strong> internally.
+      <code>tz_localize</code> interprets wall-clock times in the given IANA timezone,
+      while <code>tz_convert</code> preserves UTC and only changes the display zone.
+    </p>
+
+    <h2>1. tz_localize — naive → tz-aware</h2>
+    <div class="card">
+      <p>Treat each timestamp's UTC components as wall-clock times in the given timezone.</p>
+      <textarea id="localize-code">
+// Interpret "2024-01-01 00:00" as New York wall clock time
+const naive = tsb.date_range({ start: "2024-01-01", periods: 4, freq: "D" });
+const ny    = tsb.tz_localize(naive, "America/New_York");
+
+console.log("Timezone:", ny.tz);
+console.log("Size:", ny.size);
+console.log("UTC of day 0:", ny.at(0).toISOString());   // 05:00Z (EST = UTC-5)
+console.log("Local strings:", ny.toLocalStrings().slice(0, 2));
+      </textarea>
+      <button onclick="run('localize')">▶ Run</button>
+      <pre id="localize-out">Click ▶ Run to execute</pre>
+    </div>
+
+    <h2>2. tz_convert — change display timezone</h2>
+    <div class="card">
+      <p>Keep the same UTC instants; re-display them in a different timezone.</p>
+      <textarea id="convert-code">
+const naive  = tsb.date_range({ start: "2024-06-15", periods: 3, freq: "D" });
+const ist    = tsb.tz_localize(naive, "Asia/Kolkata"); // UTC+5:30
+const london = ist.tz_convert("Europe/London");        // BST = UTC+1
+const utcIdx = ist.tz_convert("UTC");
+
+console.log("IST strings:", ist.toLocalStrings().slice(0, 2));
+console.log("London strings:", london.toLocalStrings().slice(0, 2));
+console.log("UTC strings:", utcIdx.toLocalStrings().slice(0, 2));
+
+// UTC ms are identical:
+console.log("Same UTC ms?", ist.at(0).getTime() === london.at(0).getTime());
+      </textarea>
+      <button onclick="run('convert')">▶ Run</button>
+      <pre id="convert-out">Click ▶ Run to execute</pre>
+    </div>
+
+    <h2>3. Round-trip &amp; tz_localize_none</h2>
+    <div class="card">
+      <p>Strip the timezone with <code>tz_localize_none()</code> to get a naive index back.</p>
+      <textarea id="strip-code">
+const naive   = tsb.date_range({ start: "2024-03-01", periods: 3, freq: "H" });
+const ny      = tsb.tz_localize(naive, "America/New_York");
+const stripped = ny.tz_localize_none();
+
+console.log("Original naive[0]:", naive.at(0).toISOString());
+console.log("After localize[0]:", ny.at(0).toISOString());       // shifted by tz offset
+console.log("After strip[0]:",   stripped.at(0).toISOString()); // same as after localize
+      </textarea>
+      <button onclick="run('strip')">▶ Run</button>
+      <pre id="strip-out">Click ▶ Run to execute</pre>
+    </div>
+
+    <h2>4. Transformations (sort / filter / unique)</h2>
+    <div class="card">
+      <textarea id="transform-code">
+const dates = [
+  new Date("2024-06-01T08:00:00Z"),
+  new Date("2024-06-01T08:00:00Z"), // duplicate
+  new Date("2024-06-03T08:00:00Z"),
+  new Date("2024-06-02T08:00:00Z"),
+];
+const naive = tsb.DatetimeIndex.fromDates(dates);
+const idx   = tsb.tz_localize(naive, "UTC");
+
+console.log("sorted asc:", idx.sort().toLocalStrings());
+console.log("unique:", idx.unique().size);  // 3 (one duplicate removed)
+console.log("filter days >= 2:", idx.filter(d => d.getUTCDate() >= 2).size);  // 2
+      </textarea>
+      <button onclick="run('transform')">▶ Run</button>
+      <pre id="transform-out">Click ▶ Run to execute</pre>
+    </div>
+
+    <h2>5. DST Spring-forward &amp; Fall-back (America/New_York 2024)</h2>
+    <div class="card">
+      <textarea id="dst-code">
+// Spring-forward: Mar 10 2024 at 2:00 AM EST → 3:00 AM EDT
+// Wall clock 03:00 → EDT (UTC-4) → 07:00 UTC
+const sf = tsb.tz_localize(
+  tsb.DatetimeIndex.fromDates([new Date(Date.UTC(2024, 2, 10, 3, 0, 0))]),
+  "America/New_York"
+);
+console.log("Spring-forward 03:00 NYC → UTC:", sf.at(0).toISOString()); // 07:00Z
+
+// Fall-back: Nov 3 2024 at 2:00 AM EDT → 1:00 AM EST (ambiguous 01:30)
+// Our algorithm returns the pre-transition (EDT, UTC-4) occurrence
+const fb = tsb.tz_localize(
+  tsb.DatetimeIndex.fromDates([new Date(Date.UTC(2024, 10, 3, 1, 30, 0))]),
+  "America/New_York"
+);
+console.log("Fall-back 01:30 NYC (ambiguous) → UTC:", fb.at(0).toISOString()); // 05:30Z
+      </textarea>
+      <button onclick="run('dst')">▶ Run</button>
+      <pre id="dst-out">Click ▶ Run to execute</pre>
+    </div>
+
+    <script type="module">
+      // ── load tsb from source via dynamic import ──────────────────────────────
+      // In the playground we load the built bundle.  During development the
+      // top-level index is used directly via a bundler-aware import map.
+      // For this standalone HTML demo we inline a tiny runtime that imports
+      // from the tsb source tree via Vite / esbuild in CI, or falls back to
+      // a <script type="module"> shim here.
+
+      // We use a shared console capture so each demo is isolated.
+      function makeCapture() {
+        const lines = [];
+        const proxy = {
+          log: (...args) => lines.push(args.map(a =>
+            typeof a === "object" ? JSON.stringify(a, null, 2) : String(a)
+          ).join(" ")),
+          error: (...args) => lines.push("ERROR: " + args.join(" ")),
+          getLines: () => lines.join("\n"),
+        };
+        return proxy;
+      }
+
+      // Dynamically import tsb — works with any bundler that resolves the src/
+      // entry point.  In production this would be the npm package.
+      let tsb;
+      try {
+        tsb = await import("../src/index.ts");
+      } catch {
+        try {
+          tsb = await import("/src/index.ts");
+        } catch (e2) {
+          document.querySelectorAll("pre").forEach(p => {
+            p.textContent = "⚠️  Could not load tsb: " + e2.message +
+              "\n\nOpen this page via 'bun run dev' or a bundler that resolves src/.";
+          });
+        }
+      }
+
+      window.tsb = tsb;
+      window.run = function run(id) {
+        const code = document.getElementById(id + "-code").value;
+        const out  = document.getElementById(id + "-out");
+        const cap  = makeCapture();
+        const origLog = console.log;
+        console.log = cap.log;
+        try {
+          // eslint-disable-next-line no-new-func
+          new Function("tsb", "console", code)(tsb, cap);
+          out.textContent = cap.getLines() || "(no output)";
+        } catch (e) {
+          out.textContent = "Error: " + e.message;
+        } finally {
+          console.log = origLog;
+        }
+      };
+    </script>
+  </body>
+</html>

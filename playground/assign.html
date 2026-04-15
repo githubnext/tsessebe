@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — DataFrame.assign()</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+    pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: 0.9em; }
+    code { font-family: 'Fira Code', 'Cascadia Code', monospace; }
+    .note { background: #fffbea; border-left: 4px solid #f5a623; padding: 0.7rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f0f4f8; }
+    a { color: #0066cc; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+
+  <h1><code>DataFrame.assign()</code></h1>
+  <p>
+    Mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.assign.html" target="_blank">
+    <code>pandas.DataFrame.assign()</code></a>.  Returns a <strong>new DataFrame</strong> with the given
+    columns added or replaced.  The source DataFrame is never mutated.
+  </p>
+
+  <h2>Specifier kinds</h2>
+  <table>
+    <thead><tr><th>Specifier</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Array</strong></td><td><code>readonly Scalar[]</code></td><td>Values aligned by position with the row index</td></tr>
+      <tr><td><strong>Series</strong></td><td><code>Series&lt;Scalar&gt;</code></td><td>A Series aligned by position</td></tr>
+      <tr><td><strong>Callable</strong></td><td><code>(df: DataFrame) =&gt; Scalar[] | Series</code></td><td>Receives the <em>in-progress</em> DataFrame (earlier columns in this call are already visible)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Example 1 — Array and Series</h2>
+  <pre><code>import { DataFrame, Series, dataFrameAssign } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [10, 20, 30] });
+
+const df2 = dataFrameAssign(df, {
+  c: [7, 8, 9],                          // array
+  d: new Series({ data: [4, 5, 6] }),    // Series
+});
+
+// df2.columns.values  →  ["a", "b", "c", "d"]
+// df2.col("c").values →  [7, 8, 9]
+// df2.col("d").values →  [4, 5, 6]
+</code></pre>
+
+  <h2>Example 2 — Callable (chained derivations)</h2>
+  <pre><code>const df3 = dataFrameAssign(df, {
+  // 1st: add "total" — callable receives df (no "total" column yet)
+  total: (d) => d.col("a").values.map((v, i) =>
+    (v as number) + (d.col("b").values[i] as number)
+  ),
+  // 2nd: add "tax" — callable now sees "total" because it was added above
+  tax: (d) => d.col("total").values.map((v) => (v as number) * 0.1),
+});
+
+// df3.col("total").values  →  [11, 22, 33]
+// df3.col("tax").values    →  [1.1, 2.2, 3.3]
+</code></pre>
+
+  <h2>Example 3 — Instance method</h2>
+  <pre><code>// DataFrame.assign() is also available as an instance method.
+const df4 = df.assign({
+  squared_a: (d: DataFrame) => d.col("a").values.map((v) => (v as number) ** 2),
+});
+// df4.col("squared_a").values  →  [1, 4, 9]
+</code></pre>
+
+  <h2>Example 4 — Replace an existing column</h2>
+  <pre><code>// If a key already exists as a column it is replaced in-place (order preserved).
+const df5 = dataFrameAssign(df, { b: [100, 200, 300] });
+
+// df5.columns.values   →  ["a", "b"]  (order unchanged)
+// df5.col("b").values  →  [100, 200, 300]
+</code></pre>
+
+  <div class="note">
+    <strong>Pandas parity note:</strong> callables are applied in insertion-order and each one
+    receives the DataFrame produced by all earlier assignments in the same call — matching
+    pandas' behaviour since Python 3.7+ where dict preserves insertion order.
+  </div>
+
+  <h2>API</h2>
+  <pre><code>// Standalone function
+function dataFrameAssign(df: DataFrame, spec: AssignSpec): DataFrame;
+
+// Instance method (same behaviour)
+df.assign(spec: AssignSpec): DataFrame;
+
+// Types
+type AssignColSpec =
+  | readonly Scalar[]
+  | Series&lt;Scalar&gt;
+  | ((df: DataFrame) => readonly Scalar[] | Series&lt;Scalar&gt;);
+
+type AssignSpec = Readonly&lt;Record&lt;string, AssignColSpec&gt;&gt;;
+</code></pre>
+</body>
+</html>

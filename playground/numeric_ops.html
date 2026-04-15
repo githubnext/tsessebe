@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — numeric math operations</title>
+  <script src="playground-runtime.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; font-size: .875rem; margin: .75rem 0; }
+    th, td { border: 1px solid #ddd; padding: .4rem .75rem; text-align: left; }
+    th { background: #f5f5f5; }
+  </style>
+</head>
+<body>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>numeric math operations</h1>
+<p class="subtitle">
+  Element-wise mathematical functions for Series and DataFrame —
+  mirrors NumPy ufuncs applied to a pandas Series/DataFrame:
+  <code>floor</code>, <code>ceil</code>, <code>trunc</code>,
+  <code>sqrt</code>, <code>exp</code>, <code>log</code>,
+  <code>log2</code>, <code>log10</code>, <code>sign</code>.
+</p>
+
+<div class="note">
+  All functions are <strong>pure</strong> — they return a new Series/DataFrame
+  without mutating the input. Missing values (<code>null</code> / <code>NaN</code>)
+  propagate through every operation unchanged.
+</div>
+
+<section>
+  <h2>1 — floor, ceil, trunc: rounding toward integers</h2>
+  <p>
+    <code>seriesFloor(s)</code> replaces each element with the largest integer ≤ the value.<br>
+    <code>seriesCeil(s)</code>  replaces each element with the smallest integer ≥ the value.<br>
+    <code>seriesTrunc(s)</code> removes the fractional part, rounding toward zero.<br>
+    For <em>negative</em> numbers: <code>floor(-1.7) = -2</code>,
+    <code>ceil(-1.7) = -1</code>, <code>trunc(-1.7) = -1</code>.
+  </p>
+  <pre><code id="ex1-code">import { Series, seriesFloor, seriesCeil, seriesTrunc } from "tsb";
+
+const s = new Series({ data: [-1.7, -0.2, 0, 1.2, 1.9] });
+
+console.log([...seriesFloor(s).values]);  // [-2, -1, 0, 1, 1]
+console.log([...seriesCeil(s).values]);   // [-1,  0, 0, 2, 2]
+console.log([...seriesTrunc(s).values]);  // [-1,  0, 0, 1, 1]
+</code></pre>
+  <div class="output" id="ex1-output">Loading…</div>
+</section>
+
+<section>
+  <h2>2 — floor / ceil / trunc on a DataFrame</h2>
+  <p>
+    DataFrame variants (<code>dataFrameFloor</code>, <code>dataFrameCeil</code>,
+    <code>dataFrameTrunc</code>) apply the operation to every numeric column.
+  </p>
+  <pre><code id="ex2-code">import { DataFrame, dataFrameFloor, dataFrameCeil } from "tsb";
+
+const df = DataFrame.fromColumns({
+  price:  [10.49, 20.01, 30.99],
+  change: [-0.55,  1.23,  2.78],
+});
+
+const floored = dataFrameFloor(df);
+console.log([...floored.col("price").values]);  // [10, 20, 30]
+console.log([...floored.col("change").values]); // [-1, 1, 2]
+
+const ceiled = dataFrameCeil(df);
+console.log([...ceiled.col("price").values]);   // [11, 21, 31]
+</code></pre>
+  <div class="output" id="ex2-output">Loading…</div>
+</section>
+
+<section>
+  <h2>3 — sqrt: square root</h2>
+  <p>
+    <code>seriesSqrt(s)</code> returns <code>√x</code> for each element.
+    Negative values produce <code>NaN</code> (real-valued, same as NumPy by default).
+    Mirrors <code>np.sqrt(series)</code>.
+  </p>
+  <pre><code id="ex3-code">import { Series, seriesSqrt } from "tsb";
+
+const s = new Series({ data: [0, 1, 4, 9, 16, 25] });
+console.log([...seriesSqrt(s).values]); // [0, 1, 2, 3, 4, 5]
+
+// Negative values → NaN
+const mixed = new Series({ data: [-4, 0, 9] });
+console.log([...seriesSqrt(mixed).values]); // [NaN, 0, 3]
+</code></pre>
+  <div class="output" id="ex3-output">Loading…</div>
+</section>
+
+<section>
+  <h2>4 — exp: exponential function</h2>
+  <p>
+    <code>seriesExp(s)</code> computes <em>e</em><sup>x</sup> for each element.
+    Mirrors <code>np.exp(series)</code>.
+  </p>
+  <pre><code id="ex4-code">import { Series, seriesExp } from "tsb";
+
+const s = new Series({ data: [0, 1, 2, -1] });
+const result = seriesExp(s);
+console.log(result.values[0].toFixed(4)); // 1.0000  (e^0 = 1)
+console.log(result.values[1].toFixed(4)); // 2.7183  (e^1 = e)
+console.log(result.values[2].toFixed(4)); // 7.3891  (e^2)
+console.log(result.values[3].toFixed(4)); // 0.3679  (e^-1 = 1/e)
+</code></pre>
+  <div class="output" id="ex4-output">Loading…</div>
+</section>
+
+<section>
+  <h2>5 — log, log2, log10: logarithms</h2>
+  <p>
+    Three logarithm functions, matching the NumPy counterparts:
+  </p>
+  <table>
+    <tr><th>Function</th><th>Base</th><th>Mirrors</th></tr>
+    <tr><td><code>seriesLog</code></td><td>e (natural)</td><td><code>np.log</code></td></tr>
+    <tr><td><code>seriesLog2</code></td><td>2</td><td><code>np.log2</code></td></tr>
+    <tr><td><code>seriesLog10</code></td><td>10</td><td><code>np.log10</code></td></tr>
+  </table>
+  <p>Values ≤ 0 produce <code>-Infinity</code> (for 0) or <code>NaN</code> (for negative).</p>
+  <pre><code id="ex5-code">import { Series, seriesLog, seriesLog2, seriesLog10 } from "tsb";
+
+const naturals = new Series({ data: [1, Math.E, Math.E ** 2] });
+console.log(seriesLog(naturals).values.map(v => +v.toFixed(4)));
+// [0, 1, 2]
+
+const powersOf2 = new Series({ data: [1, 2, 4, 8, 1024] });
+console.log([...seriesLog2(powersOf2).values]);
+// [0, 1, 2, 3, 10]
+
+const powersOf10 = new Series({ data: [1, 10, 100, 1000] });
+console.log([...seriesLog10(powersOf10).values]);
+// [0, 1, 2, 3]
+</code></pre>
+  <div class="output" id="ex5-output">Loading…</div>
+</section>
+
+<section>
+  <h2>6 — sign: element sign</h2>
+  <p>
+    <code>seriesSign(s)</code> returns <code>-1</code> for negative values,
+    <code>0</code> for zero, and <code>1</code> for positive values.
+    Mirrors <code>np.sign(series)</code>.
+  </p>
+  <pre><code id="ex6-code">import { Series, seriesSign } from "tsb";
+
+const s = new Series({ data: [-100, -0.001, 0, 0.001, 100] });
+console.log([...seriesSign(s).values]); // [-1, -1, 0, 1, 1]
+</code></pre>
+  <div class="output" id="ex6-output">Loading…</div>
+</section>
+
+<section>
+  <h2>7 — missing value propagation</h2>
+  <p>
+    All numeric ops propagate <code>null</code> and non-numeric values unchanged.
+    This matches the behaviour of pandas, where missing values are not coerced.
+  </p>
+  <pre><code id="ex7-code">import { Series, seriesFloor, seriesSqrt, seriesLog } from "tsb";
+
+const s = new Series({ data: [null, 4, null, 9] });
+
+console.log([...seriesFloor(s).values]); // [null, 4, null, 9]
+console.log([...seriesSqrt(s).values]);  // [null, 2, null, 3]
+console.log([...seriesLog(s).values]);   // [null, ~1.386, null, ~2.197]
+</code></pre>
+  <div class="output" id="ex7-output">Loading…</div>
+</section>
+
+<section>
+  <h2>8 — composing operations</h2>
+  <p>
+    Combine multiple operations. For example, compute the log-transformed
+    square root of a price column — a common technique in data normalisation.
+  </p>
+  <pre><code id="ex8-code">import { Series, seriesSqrt, seriesLog } from "tsb";
+
+// Log-sqrt transformation: log(√x) = log(x)/2
+const prices = new Series({ data: [1, 4, 9, 100, 10000], name: "price" });
+
+const logSqrt = seriesLog(seriesSqrt(prices));
+console.log(logSqrt.values.map(v => +v.toFixed(4)));
+// [0, 0.6931, 1.0986, 2.3026, 4.6052]
+
+// Verify: equals log(x) / 2
+const logHalf = seriesLog(prices).values.map(v => +(v / 2).toFixed(4));
+console.log(logHalf);
+// [0, 0.6931, 1.0986, 2.3026, 4.6052]
+</code></pre>
+  <div class="output" id="ex8-output">Loading…</div>
+</section>
+
+</body>
+</html>

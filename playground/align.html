@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — align</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>align</h1>
+    <p>Realign two Series or DataFrames to a common axis — mirrors <code>pandas.Series.align</code> / <code>pandas.DataFrame.align</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <strong>align</strong> takes two objects and aligns them to the same axis, returning
+        a pair <code>[alignedLeft, alignedRight]</code> that share the same index.
+        Labels present in one but not the other are filled with a <code>fillValue</code> (default <code>null</code>).
+      </p>
+      <ul>
+        <li><code>alignSeries(a, b, { join? })</code> — align two Series on their row index.</li>
+        <li><code>alignDataFrame(a, b, { join?, axis? })</code> — align two DataFrames on rows, columns, or both.</li>
+      </ul>
+
+      <h3>Join policies</h3>
+      <table>
+        <thead><tr><th>join</th><th>Result index</th></tr></thead>
+        <tbody>
+          <tr><td><code>"outer"</code> (default)</td><td>Union of both indices</td></tr>
+          <tr><td><code>"inner"</code></td><td>Intersection of both indices</td></tr>
+          <tr><td><code>"left"</code></td><td>Left object's index</td></tr>
+          <tr><td><code>"right"</code></td><td>Right object's index</td></tr>
+        </tbody>
+      </table>
+
+      <p>
+        See also:
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.align.html" target="_blank"><code>pandas.Series.align</code></a>
+        ·
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.align.html" target="_blank"><code>pandas.DataFrame.align</code></a>
+      </p>
+    </section>
+
+    <section>
+      <h2>1 · alignSeries — outer (default)</h2>
+      <pre><code>import { Series, Index, alignSeries } from "tsb";
+
+const a = new Series({ data: [1, 2, 3], index: new Index(["a", "b", "c"]) });
+const b = new Series({ data: [10, 20],  index: new Index(["b", "c"]) });
+
+// Default join="outer" → union of indices
+const [la, ra] = alignSeries(a, b);
+la.toArray();  // → [1, 2, 3]     (index: a, b, c)
+ra.toArray();  // → [null, 10, 20] (index: a, b, c)
+</code></pre>
+      <div id="out1" class="output"></div>
+    </section>
+
+    <section>
+      <h2>2 · alignSeries — inner join</h2>
+      <pre><code>const [li, ri] = alignSeries(a, b, { join: "inner" });
+li.toArray();  // → [2, 3]   (only shared labels: b, c)
+ri.toArray();  // → [10, 20]
+</code></pre>
+      <div id="out2" class="output"></div>
+    </section>
+
+    <section>
+      <h2>3 · alignSeries — left / right join + fillValue</h2>
+      <pre><code>const x = new Series({ data: [1, 2, 3], index: new Index(["a", "b", "c"]) });
+const y = new Series({ data: [10, 30],   index: new Index(["b", "d"]) });
+
+// join="left": result index = x's index
+const [ll, rl] = alignSeries(x, y, { join: "left", fillValue: 0 });
+ll.toArray();  // → [1, 2, 3]
+rl.toArray();  // → [0, 10, 0]  ("d" is outside x's index → dropped)
+
+// join="right": result index = y's index
+const [lr, rr] = alignSeries(x, y, { join: "right", fillValue: 0 });
+lr.toArray();  // → [2, 0]      ("b" matches, "d" is new)
+rr.toArray();  // → [10, 30]
+</code></pre>
+      <div id="out3" class="output"></div>
+    </section>
+
+    <section>
+      <h2>4 · alignDataFrame — outer, both axes</h2>
+      <pre><code>import { DataFrame, Index, alignDataFrame } from "tsb";
+
+const a = DataFrame.fromColumns(
+  { x: [1, 2], y: [3, 4] },
+  { index: new Index(["r0", "r1"]) },
+);
+const b = DataFrame.fromColumns(
+  { y: [10], z: [20] },
+  { index: new Index(["r1"]) },
+);
+
+// Default: align both rows and columns (outer union)
+const [la, ra] = alignDataFrame(a, b);
+
+// la  →  shape [2, 3]  columns: x, y, z
+//        row r0: x=1, y=3, z=null
+//        row r1: x=2, y=4, z=null
+la.col("z").toArray();  // → [null, null]
+
+// ra  →  shape [2, 3]  columns: x, y, z
+//        row r0: x=null, y=null, z=null
+//        row r1: x=null, y=10,   z=20
+ra.col("x").toArray();  // → [null, null]
+ra.col("y").toArray();  // → [null, 10]
+</code></pre>
+      <div id="out4" class="output"></div>
+    </section>
+
+    <section>
+      <h2>5 · alignDataFrame — axis=0 (rows only)</h2>
+      <pre><code>// axis=0 aligns rows but leaves columns untouched
+const [la5, ra5] = alignDataFrame(a, b, { axis: 0 });
+la5.columns.toArray();  // → ["x", "y"]   (unchanged)
+ra5.columns.toArray();  // → ["y", "z"]   (unchanged)
+la5.index.toArray();    // → ["r0", "r1"] (outer union)
+ra5.index.toArray();    // → ["r0", "r1"] (outer union)
+</code></pre>
+      <div id="out5" class="output"></div>
+    </section>
+
+    <section>
+      <h2>6 · alignDataFrame — axis=1 (columns only)</h2>
+      <pre><code>// axis=1 aligns columns but leaves rows untouched
+const [la6, ra6] = alignDataFrame(a, b, { axis: 1 });
+la6.index.toArray();    // → ["r0", "r1"]  (unchanged)
+ra6.index.toArray();    // → ["r1"]        (unchanged)
+la6.columns.toArray().sort();  // → ["x", "y", "z"]
+ra6.columns.toArray().sort();  // → ["x", "y", "z"]
+</code></pre>
+      <div id="out6" class="output"></div>
+    </section>
+
+    <section>
+      <h2>7 · Arithmetic after alignment</h2>
+      <pre><code>// A common use-case: element-wise arithmetic on misaligned Series
+const p = new Series({ data: [100, 200, 300], index: new Index(["a", "b", "c"]) });
+const q = new Series({ data: [1, 2],           index: new Index(["b", "c"]) });
+
+const [ap, aq] = alignSeries(p, q, { fillValue: 0 });
+// Now same shape — do element-wise addition
+const sum = ap.add(aq);
+sum.toArray();   // → [100, 201, 302]
+sum.index.toArray();  // → ["a", "b", "c"]
+</code></pre>
+      <div id="out7" class="output"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { Series, Index, DataFrame, alignSeries, alignDataFrame } from "./runtime.js";
+
+    function display(id, lines) {
+      document.getElementById(id).textContent = lines.join("\n");
+    }
+
+    // ── 1 ──────────────────────────────────────────────────────────────────────
+    try {
+      const a = new Series({ data: [1, 2, 3], index: new Index(["a", "b", "c"]) });
+      const b = new Series({ data: [10, 20],  index: new Index(["b", "c"]) });
+      const [la, ra] = alignSeries(a, b);
+      display("out1", [
+        `la (left):  [${la.toArray()}]   index: [${la.index.toArray()}]`,
+        `ra (right): [${ra.toArray()}]  index: [${ra.index.toArray()}]`,
+      ]);
+    } catch (e) { display("out1", [`Error: ${e}`]); }
+
+    // ── 2 ──────────────────────────────────────────────────────────────────────
+    try {
+      const a = new Series({ data: [1, 2, 3], index: new Index(["a", "b", "c"]) });
+      const b = new Series({ data: [10, 20],  index: new Index(["b", "c"]) });
+      const [li, ri] = alignSeries(a, b, { join: "inner" });
+      display("out2", [
+        `li: [${li.toArray()}]   index: [${li.index.toArray()}]`,
+        `ri: [${ri.toArray()}]  index: [${ri.index.toArray()}]`,
+      ]);
+    } catch (e) { display("out2", [`Error: ${e}`]); }
+
+    // ── 3 ──────────────────────────────────────────────────────────────────────
+    try {
+      const x = new Series({ data: [1, 2, 3], index: new Index(["a", "b", "c"]) });
+      const y = new Series({ data: [10, 30],   index: new Index(["b", "d"]) });
+      const [ll, rl] = alignSeries(x, y, { join: "left", fillValue: 0 });
+      const [lr, rr] = alignSeries(x, y, { join: "right", fillValue: 0 });
+      display("out3", [
+        `left  → ll: [${ll.toArray()}]  rl: [${rl.toArray()}]`,
+        `right → lr: [${lr.toArray()}]      rr: [${rr.toArray()}]`,
+      ]);
+    } catch (e) { display("out3", [`Error: ${e}`]); }
+
+    // ── 4 ──────────────────────────────────────────────────────────────────────
+    try {
+      const a = DataFrame.fromColumns(
+        { x: [1, 2], y: [3, 4] },
+        { index: new Index(["r0", "r1"]) },
+      );
+      const b = DataFrame.fromColumns(
+        { y: [10], z: [20] },
+        { index: new Index(["r1"]) },
+      );
+      const [la, ra] = alignDataFrame(a, b);
+      display("out4", [
+        `la columns: [${la.columns.toArray()}]  shape: ${JSON.stringify(la.shape)}`,
+        `la.col("z"): [${la.col("z").toArray()}]`,
+        `ra.col("x"): [${ra.col("x").toArray()}]`,
+        `ra.col("y"): [${ra.col("y").toArray()}]`,
+      ]);
+    } catch (e) { display("out4", [`Error: ${e}`]); }
+
+    // ── 5 ──────────────────────────────────────────────────────────────────────
+    try {
+      const a = DataFrame.fromColumns({ x: [1, 2], y: [3, 4] }, { index: new Index(["r0", "r1"]) });
+      const b = DataFrame.fromColumns({ y: [10], z: [20] }, { index: new Index(["r1"]) });
+      const [la5, ra5] = alignDataFrame(a, b, { axis: 0 });
+      display("out5", [
+        `la5 columns: [${la5.columns.toArray()}]  index: [${la5.index.toArray()}]`,
+        `ra5 columns: [${ra5.columns.toArray()}]  index: [${ra5.index.toArray()}]`,
+      ]);
+    } catch (e) { display("out5", [`Error: ${e}`]); }
+
+    // ── 6 ──────────────────────────────────────────────────────────────────────
+    try {
+      const a = DataFrame.fromColumns({ x: [1, 2], y: [3, 4] }, { index: new Index(["r0", "r1"]) });
+      const b = DataFrame.fromColumns({ y: [10], z: [20] }, { index: new Index(["r1"]) });
+      const [la6, ra6] = alignDataFrame(a, b, { axis: 1 });
+      display("out6", [
+        `la6 index: [${la6.index.toArray()}]  columns: [${[...la6.columns.toArray()].sort()}]`,
+        `ra6 index: [${ra6.index.toArray()}]  columns: [${[...ra6.columns.toArray()].sort()}]`,
+      ]);
+    } catch (e) { display("out6", [`Error: ${e}`]); }
+
+    // ── 7 ──────────────────────────────────────────────────────────────────────
+    try {
+      const p = new Series({ data: [100, 200, 300], index: new Index(["a", "b", "c"]) });
+      const q = new Series({ data: [1, 2],           index: new Index(["b", "c"]) });
+      const [ap, aq] = alignSeries(p, q, { fillValue: 0 });
+      const sum = ap.add(aq);
+      display("out7", [
+        `sum:   [${sum.toArray()}]`,
+        `index: [${sum.index.toArray()}]`,
+      ]);
+    } catch (e) { display("out7", [`Error: ${e}`]); }
+  </script>
+</body>
+</html>

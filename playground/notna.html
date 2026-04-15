@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — notna / isna</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>notna / isna</h1>
+    <p>Element-wise missing-value detection — mirrors <code>pandas.notna</code> / <code>pandas.isna</code>.</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <p>
+        <code>isna(value)</code> and <code>notna(value)</code> inspect scalars, arrays, Series, and DataFrames
+        and return a boolean (or boolean-valued object) indicating whether each element is missing.
+        They mirror
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.isna.html" target="_blank"><code>pandas.isna</code></a>
+        and
+        <a href="https://pandas.pydata.org/docs/reference/api/pandas.notna.html" target="_blank"><code>pandas.notna</code></a>.
+        The aliases <code>isnull</code> and <code>notnull</code> are also provided.
+      </p>
+      <h3>What counts as missing?</h3>
+      <table>
+        <thead><tr><th>Value</th><th>Missing?</th></tr></thead>
+        <tbody>
+          <tr><td><code>null</code></td><td>✅ yes</td></tr>
+          <tr><td><code>undefined</code></td><td>✅ yes</td></tr>
+          <tr><td><code>NaN</code></td><td>✅ yes</td></tr>
+          <tr><td><code>0</code>, <code>""</code>, <code>false</code></td><td>❌ no — falsy but present</td></tr>
+          <tr><td><code>Infinity</code>, <code>-Infinity</code></td><td>❌ no — defined numeric values</td></tr>
+          <tr><td>any <code>string</code></td><td>❌ no</td></tr>
+          <tr><td>any <code>Date</code></td><td>❌ no</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="example">
+      <h2>Example 1 — scalars</h2>
+      <pre><code>import { isna, notna } from "tsb";
+
+isna(null);       // true
+isna(undefined);  // true
+isna(NaN);        // true
+
+isna(0);          // false  — zero is not missing
+isna("");         // false  — empty string is not missing
+isna(false);      // false  — false is not missing
+isna(42);         // false
+isna("hello");    // false
+
+notna(null);      // false
+notna(42);        // true
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 2 — arrays</h2>
+      <pre><code>import { isna, notna } from "tsb";
+
+const arr = [1, null, NaN, "x", undefined, false];
+isna(arr);
+// [false, true, true, false, true, false]
+
+notna(arr);
+// [true, false, false, true, false, true]
+
+// Count missing values
+const missing = isna(arr).filter(Boolean).length;  // 3
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 3 — Series</h2>
+      <pre><code>import { Series, isna, notna } from "tsb";
+
+const s = new Series({ data: [10, null, NaN, 40], name: "sales" });
+
+isna(s).values;
+// [false, true, true, false]
+
+notna(s).values;
+// [true, false, false, true]
+
+// Filter to non-missing values
+const present = s.filter((_, i) => notna(s).values[i] === true);
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 4 — DataFrame</h2>
+      <pre><code>import { DataFrame, isna, notna } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:   ["Alice", null,    "Carol"],
+  score:  [95,      NaN,     88     ],
+  active: [true,    false,   null   ],
+});
+
+isna(df).toRecords();
+// [
+//   { name: false, score: false, active: false },
+//   { name: true,  score: true,  active: false },
+//   { name: false, score: false, active: true  },
+// ]
+
+// Count nulls per column
+const nullCounts: Record&lt;string, number&gt; = {};
+for (const col of df.columns) {
+  nullCounts[String(col)] = isna(df.col(String(col))).values
+    .filter(Boolean).length;
+}
+// { name: 1, score: 1, active: 1 }
+</code></pre>
+    </section>
+
+    <section class="example">
+      <h2>Example 5 — aliases</h2>
+      <pre><code>import { isnull, notnull } from "tsb";
+
+// isnull is an alias for isna
+// notnull is an alias for notna
+isnull(null);     // true
+notnull("hello"); // true
+</code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>tsb — a TypeScript port of pandas &nbsp;·&nbsp; <a href="index.html">playground index</a></p>
+  </footer>
+</body>
+</html>

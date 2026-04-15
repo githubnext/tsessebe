@@ -4,175 +4,277 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tsb — interpolate</title>
+  <script src="playground-runtime.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f9fafb; color: #1a1a2e; }
-    h1 { color: #4f46e5; }
-    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
-    .demo { background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 16px 0; }
-    pre { background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 14px; }
-    .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; font-family: monospace; white-space: pre; margin-top: 10px; }
-    .tag { display: inline-block; background: #e0e7ff; color: #4f46e5; border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: 600; margin-right: 4px; }
-    a { color: #4f46e5; }
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1   { font-size: 2rem; margin-bottom: .25rem; }
+    .subtitle { color: #555; margin-bottom: 2rem; }
+    section  { margin-bottom: 2.5rem; }
+    h2   { font-size: 1.25rem; border-bottom: 2px solid #e0e0e0; padding-bottom: .35rem; margin-bottom: 1rem; }
+    pre  { background: #f5f5f5; border-radius: 6px; padding: 1rem; overflow-x: auto; font-size: .875rem; }
+    code { font-family: "JetBrains Mono", "Fira Code", monospace; }
+    .output { background: #eaf7ea; border-left: 4px solid #4caf50; padding: .75rem 1rem; border-radius: 0 6px 6px 0; margin-top: .5rem; font-size: .875rem; white-space: pre; font-family: monospace; }
+    .note { background: #fff8e1; border-left: 4px solid #ffc107; padding: .6rem 1rem; border-radius: 0 6px 6px 0; font-size: .9rem; margin: .75rem 0; }
+    nav  { margin-bottom: 1.5rem; font-size: .9rem; color: #555; }
+    nav a { color: #0366d6; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    table { border-collapse: collapse; width: 100%; margin: .75rem 0; font-size: .9rem; }
+    th, td { text-align: left; padding: .4rem .8rem; border: 1px solid #ddd; }
+    th { background: #f0f0f0; }
   </style>
 </head>
 <body>
-  <p><a href="index.html">← tsb playground</a></p>
-  <h1>📈 interpolate</h1>
-  <p>
-    <strong><code>interpolateSeries</code></strong> /
-    <strong><code>interpolateDataFrame</code></strong> fill missing (<code>null</code> / <code>NaN</code>)
-    values using one of several interpolation methods, just like
-    <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.interpolate.html"><code>Series.interpolate()</code></a>.
-  </p>
-  <p>Equivalent Python: <code>series.interpolate(method="linear")</code></p>
+<nav><a href="index.html">← tsb playground</a></nav>
+<h1>interpolate</h1>
+<p class="subtitle">
+  Fill missing values by interpolation —
+  mirrors <code>pandas.Series.interpolate()</code> and <code>pandas.DataFrame.interpolate()</code>.
+</p>
 
-  <!-- Demo 1: Linear interpolation -->
+<!-- ─── 1. Linear interpolation ─────────────────────────────────────────── -->
+<section>
   <h2>1 · Linear interpolation (default)</h2>
-  <div class="demo">
-    <pre>const s = new Series({ data: [0, null, null, null, 4] });
-interpolateSeries(s).values;
-// → [0, 1, 2, 3, 4]</pre>
-    <div class="output" id="demo1"></div>
+  <p>
+    <code>interpolateSeries(series)</code> fills each run of missing values
+    (<code>null</code>, <code>undefined</code>, <code>NaN</code>) that lies
+    <em>between two known values</em> using straight-line interpolation.
+  </p>
+  <pre><code>import { Series, interpolateSeries } from "tsb";
+
+const s = new Series({ data: [1, null, null, 4] });
+//                           ^  ^    ^    ^
+//                           0  1    2    3
+
+const filled = interpolateSeries(s);
+filled.values;
+// → [1, 2, 3, 4]
+</code></pre>
+  <div class="output">
+filled.values → [1, 2, 3, 4]
+
+Position 1: 1 + (4 − 1) × (1/3) = 2
+Position 2: 1 + (4 − 1) × (2/3) = 3
   </div>
 
-  <!-- Demo 2: Edge values not filled -->
-  <h2>2 · Edge missing values are not extrapolated</h2>
-  <div class="demo">
-    <pre>const s = new Series({ data: [null, null, 2, null, 4, null] });
-interpolateSeries(s).values;
-// → [null, null, 2, 3, 4, null]  (leading/trailing unchanged)</pre>
-    <div class="output" id="demo2"></div>
+  <div class="note">
+    ⚠ <strong>Leading &amp; trailing gaps</strong> are <em>not</em> filled by
+    the linear method — there is no anchor on one side to interpolate from.
+    Use <code>method: "ffill"</code> or <code>method: "bfill"</code> to fill
+    those (see sections 2 and 3 below).
   </div>
 
-  <!-- Demo 3: Pad / ffill -->
-  <h2>3 · Pad / forward-fill</h2>
-  <div class="demo">
-    <pre>const s = new Series({ data: [1, null, null, 4, null] });
-interpolateSeries(s, { method: "pad" }).values;
-// → [1, 1, 1, 4, 4]</pre>
-    <div class="output" id="demo3"></div>
-  </div>
+  <pre><code>const t = new Series({ data: [null, 1, null, 3, null] });
 
-  <!-- Demo 4: Backfill -->
-  <h2>4 · Backfill / backward-fill</h2>
-  <div class="demo">
-    <pre>const s = new Series({ data: [null, null, 3, null, 5] });
+interpolateSeries(t).values;
+// → [null, 1, 2, 3, null]
+//    ^^^^              ^^^^
+//    leading          trailing
+//    (unchanged)      (unchanged)
+</code></pre>
+  <div class="output">[null, 1, 2, 3, null]</div>
+</section>
+
+<!-- ─── 2. Forward fill ──────────────────────────────────────────────────── -->
+<section>
+  <h2>2 · Forward fill (ffill / pad / zero)</h2>
+  <p>
+    <code>method: "ffill"</code> carries the last known value forward into each
+    following gap.  <code>"pad"</code> and <code>"zero"</code> are aliases.
+  </p>
+  <pre><code>import { Series, interpolateSeries } from "tsb";
+
+const s = new Series({ data: [1, null, null, 4, null] });
+
+interpolateSeries(s, { method: "ffill" }).values;
+// → [1, 1, 1, 4, 4]
+</code></pre>
+  <div class="output">[1, 1, 1, 4, 4]</div>
+
+  <div class="note">
+    🔔 Leading NaN (no value to carry forward from) remain missing.
+  </div>
+</section>
+
+<!-- ─── 3. Backward fill ─────────────────────────────────────────────────── -->
+<section>
+  <h2>3 · Backward fill (bfill / backfill)</h2>
+  <p>
+    <code>method: "bfill"</code> fills each gap from the <em>next</em> known
+    value looking backwards.
+  </p>
+  <pre><code>import { Series, interpolateSeries } from "tsb";
+
+const s = new Series({ data: [null, 2, null, null, 5] });
+
 interpolateSeries(s, { method: "bfill" }).values;
-// → [3, 3, 3, 5, 5]</pre>
-    <div class="output" id="demo4"></div>
-  </div>
+// → [2, 2, 5, 5, 5]
+</code></pre>
+  <div class="output">[2, 2, 5, 5, 5]</div>
+</section>
 
-  <!-- Demo 5: Nearest -->
-  <h2>5 · Nearest-neighbour</h2>
-  <div class="demo">
-    <pre>const s = new Series({ data: [1, null, null, null, 5] });
+<!-- ─── 4. Nearest ──────────────────────────────────────────────────────── -->
+<section>
+  <h2>4 · Nearest-neighbor</h2>
+  <p>
+    <code>method: "nearest"</code> fills each missing position with the value
+    of its closest non-missing neighbor.  When equidistant, the
+    <em>right</em> neighbor wins.
+  </p>
+  <pre><code>import { Series, interpolateSeries } from "tsb";
+
+// [1, ?, ?, 4]
+// pos 1: dist-left=1, dist-right=2  → left wins  → 1
+// pos 2: dist-left=2, dist-right=1  → right wins → 4
+const s = new Series({ data: [1, null, null, 4] });
+
 interpolateSeries(s, { method: "nearest" }).values;
-// → [1, 1, 1, 5, 5]  (pos 1,2 → left; pos 3 → right)</pre>
-    <div class="output" id="demo5"></div>
-  </div>
+// → [1, 1, 4, 4]
+</code></pre>
+  <div class="output">[1, 1, 4, 4]</div>
 
-  <!-- Demo 6: Limit -->
-  <h2>6 · Limit consecutive fills</h2>
-  <div class="demo">
-    <pre>const s = new Series({ data: [0, null, null, null, null, 5] });
+  <pre><code>// Tie at equidistance: right wins
+const t = new Series({ data: [10, null, 30] });
+interpolateSeries(t, { method: "nearest" }).values;
+// → [10, 30, 30]   (pos 1 equidistant; right value 30 chosen)
+</code></pre>
+  <div class="output">[10, 30, 30]</div>
+</section>
+
+<!-- ─── 5. Limit parameter ────────────────────────────────────────────────── -->
+<section>
+  <h2>5 · Limiting how many values are filled</h2>
+  <p>
+    The <code>limit</code> option caps the number of consecutive missing values
+    that can be filled within a single gap.  Pair it with
+    <code>limitDirection</code> to control which end of the gap is filled first.
+  </p>
+
+  <table>
+    <tr><th>limitDirection</th><th>Fills from</th></tr>
+    <tr><td><code>"forward"</code> (default)</td><td>Left boundary of each gap</td></tr>
+    <tr><td><code>"backward"</code></td><td>Right boundary of each gap</td></tr>
+    <tr><td><code>"both"</code></td><td>Left <em>and</em> right boundaries</td></tr>
+  </table>
+
+  <pre><code>import { Series, interpolateSeries } from "tsb";
+
+// Gap of size 3 between 0 and 4
+const s = new Series({ data: [0, null, null, null, 4] });
+
+// limit=1, forward: fill only the first NaN from the left
 interpolateSeries(s, { limit: 1 }).values;
-// → [0, 1, null, null, 4.8, 5]  (at most 1 fill from each neighbour)</pre>
-    <div class="output" id="demo6"></div>
-  </div>
+// → [0, 1, null, null, 4]
 
-  <!-- Demo 7: DataFrame column-wise -->
-  <h2>7 · DataFrame — interpolate each column (axis=0)</h2>
-  <div class="demo">
-    <pre>const df = DataFrame.fromColumns({
-  temperature: [15, null, null, 21],
-  humidity:    [60, 62, null, 66],
+// limit=1, backward: fill only the last NaN from the right
+interpolateSeries(s, { limit: 1, limitDirection: "backward" }).values;
+// → [0, null, null, 3, 4]
+
+// limit=1, both: fill one from each end
+interpolateSeries(s, { limit: 1, limitDirection: "both" }).values;
+// → [0, 1, null, 3, 4]
+</code></pre>
+  <div class="output">
+forward:  [0, 1, null, null, 4]
+backward: [0, null, null, 3, 4]
+both:     [0, 1, null, 3, 4]
+  </div>
+</section>
+
+<!-- ─── 6. DataFrame column-wise ─────────────────────────────────────────── -->
+<section>
+  <h2>6 · DataFrame — column-wise (axis=0, default)</h2>
+  <p>
+    <code>dataFrameInterpolate(df)</code> applies the chosen method
+    independently down each column.
+  </p>
+  <pre><code>import { DataFrame, dataFrameInterpolate } from "tsb";
+
+const df = DataFrame.fromColumns({
+  temperature: [20, null, null, 23],
+  humidity:    [60, null, 70,   null],
 });
-interpolateDataFrame(df).toString();</pre>
-    <div class="output" id="demo7"></div>
-  </div>
 
-  <!-- Demo 8: DataFrame row-wise -->
-  <h2>8 · DataFrame — interpolate across rows (axis=1)</h2>
-  <div class="demo">
-    <pre>const df = DataFrame.fromColumns({
-  mon: [10, 0], tue: [null, null], wed: [20, 8],
+const filled = dataFrameInterpolate(df);
+filled.col("temperature").values; // [20, 21, 22, 23]
+filled.col("humidity").values;    // [60, 65, 70, null]  ← trailing not filled
+</code></pre>
+  <div class="output">
+temperature: [20, 21, 22, 23]
+humidity:    [60, 65, 70, null]
+  </div>
+</section>
+
+<!-- ─── 7. DataFrame row-wise ────────────────────────────────────────────── -->
+<section>
+  <h2>7 · DataFrame — row-wise (axis=1)</h2>
+  <p>
+    Set <code>axis: 1</code> (or <code>axis: "columns"</code>) to interpolate
+    <em>across columns</em> for each row.
+  </p>
+  <pre><code>import { DataFrame, dataFrameInterpolate } from "tsb";
+
+const df = DataFrame.fromColumns({
+  t0: [0,  10],
+  t1: [null, null],   // missing
+  t2: [null, null],   // missing
+  t3: [6,  22],
 });
-interpolateDataFrame(df, { axis: 1 }).toString();</pre>
-    <div class="output" id="demo8"></div>
+
+// Row 0 interpolates 0 → 6  (linear, 4 steps)
+// Row 1 interpolates 10 → 22
+const filled = dataFrameInterpolate(df, { axis: 1 });
+filled.col("t1").values; // [2, 14]
+filled.col("t2").values; // [4, 18]
+</code></pre>
+  <div class="output">
+Row 0: [0, 2, 4, 6]
+Row 1: [10, 14, 18, 22]
   </div>
+</section>
 
-  <script type="module">
-    import {
-      Series, DataFrame,
-      interpolateSeries, interpolateDataFrame,
-    } from "./tsb.js";
+<!-- ─── 8. API summary ────────────────────────────────────────────────────── -->
+<section>
+  <h2>8 · API summary</h2>
+  <table>
+    <tr><th>Function</th><th>Description</th></tr>
+    <tr>
+      <td><code>interpolateSeries(series, options?)</code></td>
+      <td>Fill missing values in a Series</td>
+    </tr>
+    <tr>
+      <td><code>dataFrameInterpolate(df, options?)</code></td>
+      <td>Fill missing values in a DataFrame (column-wise or row-wise)</td>
+    </tr>
+  </table>
 
-    function show(id, val) {
-      document.getElementById(id).textContent =
-        val === null ? "null" : JSON.stringify(val, null, 2);
-    }
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr>
+      <td><code>method</code></td>
+      <td><code>InterpolateMethod</code></td>
+      <td><code>"linear"</code></td>
+      <td>Interpolation strategy</td>
+    </tr>
+    <tr>
+      <td><code>limit</code></td>
+      <td><code>number</code></td>
+      <td><code>Infinity</code></td>
+      <td>Max consecutive NaN values to fill</td>
+    </tr>
+    <tr>
+      <td><code>limitDirection</code></td>
+      <td><code>LimitDirection</code></td>
+      <td><code>"forward"</code></td>
+      <td>Which end of each gap the limit counts from</td>
+    </tr>
+    <tr>
+      <td><code>axis</code> (DataFrame only)</td>
+      <td><code>0 | 1 | "index" | "columns"</code></td>
+      <td><code>0</code></td>
+      <td>Column-wise (0) or row-wise (1)</td>
+    </tr>
+  </table>
+</section>
 
-    // Demo 1
-    {
-      const s = new Series({ data: [0, null, null, null, 4] });
-      show("demo1", [...interpolateSeries(s).values]);
-    }
-
-    // Demo 2
-    {
-      const s = new Series({ data: [null, null, 2, null, 4, null] });
-      show("demo2", [...interpolateSeries(s).values]);
-    }
-
-    // Demo 3
-    {
-      const s = new Series({ data: [1, null, null, 4, null] });
-      show("demo3", [...interpolateSeries(s, { method: "pad" }).values]);
-    }
-
-    // Demo 4
-    {
-      const s = new Series({ data: [null, null, 3, null, 5] });
-      show("demo4", [...interpolateSeries(s, { method: "bfill" }).values]);
-    }
-
-    // Demo 5
-    {
-      const s = new Series({ data: [1, null, null, null, 5] });
-      show("demo5", [...interpolateSeries(s, { method: "nearest" }).values]);
-    }
-
-    // Demo 6
-    {
-      const s = new Series({ data: [0, null, null, null, null, 5] });
-      show("demo6", [...interpolateSeries(s, { limit: 1 }).values]);
-    }
-
-    // Demo 7
-    {
-      const df = DataFrame.fromColumns({
-        temperature: [15, null, null, 21],
-        humidity:    [60, 62, null, 66],
-      });
-      const out = interpolateDataFrame(df);
-      show("demo7", {
-        temperature: [...out.col("temperature").values],
-        humidity:    [...out.col("humidity").values],
-      });
-    }
-
-    // Demo 8
-    {
-      const df = DataFrame.fromColumns({
-        mon: [10, 0], tue: [null, null], wed: [20, 8],
-      });
-      const out = interpolateDataFrame(df, { axis: 1 });
-      show("demo8", {
-        mon: [...out.col("mon").values],
-        tue: [...out.col("tue").values],
-        wed: [...out.col("wed").values],
-      });
-    }
-  </script>
 </body>
 </html>
