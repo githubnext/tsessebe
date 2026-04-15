@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-15T15:56:34Z |
-| Iteration Count | 101 |
-| Best Metric | 317 |
+| Last Run | 2026-04-15T16:26:59Z |
+| Iteration Count | 102 |
+| Best Metric | 326 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 3 |
-| Recent Statuses | error, error, error, accepted, error, accepted, error, error, accepted, error |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, error, error, accepted, error, accepted, error, error, accepted |
 | Paused | false |
 
 ---
@@ -98,7 +98,7 @@
 - MultiIndex setops (union/intersection/difference) — ✅ Done (iter 99).
 - MultiIndex reorderLevels, setNames — ✅ Done (iter 99 via bench_multi_index_droplevel).
 - groupby nunique — not in API; skip.
-- MultiIndex.swaplevel(), Series.fromObject(), Series.withValues(), DataFrame.col()/has()/get(), type checks (isScalar etc.), toDictOriented multi-orient, RangeIndex, index_monotonic, index_getloc, str_len — ✅ Done (iter 101).
+- MultiIndex.swaplevel(), Series.fromObject(), Series.withValues(), DataFrame.col()/has()/get(), type checks (isScalar etc.), toDictOriented multi-orient, RangeIndex, index_monotonic, str_len — ✅ Done (iter 102).
 - Advanced reshape: crosstab with margins, pivot_table with fill_value.
 - Series.nbits/itemsize-style benchmarks if API exists.
 - DataFrame.memory_usage benchmark if API exists.
@@ -108,6 +108,14 @@
 ## 📊 Iteration History
 
 All iterations in reverse chronological order (newest first).
+
+### Iteration 102 — 2026-04-15 16:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24465820163)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 9 pairs: multi_index_swaplevel, series_from_object, series_with_values, dataframe_col_has, type_checks, to_dict_oriented_all, range_index, index_monotonic, str_len.
+- **Metric**: 326 (previous best: 317, delta: +9)
+- **Commit**: bcf58b5
+- **Notes**: Successfully pushed all iter 101 planned benchmarks. RangeIndex.contains(), Index.isMonotonicIncreasing/isMonotonicDecreasing, Series.fromObject(), withValues(), DataFrame.col()/has()/get(), type check utilities, toDictOriented multi-orient, and str.len() all benchmarked.
 
 ### Iteration 101 — 2026-04-15 15:56 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24464467430)
 
