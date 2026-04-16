@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T04:33:11Z |
-| Iteration Count | 120 |
-| Best Metric | 62 |
+| Last Run | 2026-04-16T05:46:32Z |
+| Iteration Count | 121 |
+| Best Metric | 63 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 2 |
-| Recent Statuses | error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -71,14 +71,20 @@
 
 - MultiIndex: getLoc with slice, get_locs, get_indexer for multi-label lookup.
 - More groupby: nunique (check if API exists).
-- Advanced reshape: crosstab with margins, pivot_table with fill_value.
-- DataFrame shift/diff, series_pipe, DataFrame.copy(), Series.combine() if APIs exist.
-- IO: read_parquet/to_parquet if added to src/io.
-- src/core: period, timedelta, timestamp, interval, datetime_tz, date_range, align, reindex, categorical_index — check if exported and benchmarkable.
+- Advanced reshape: pivot_table with fill_value, melt, unstack.
+- reindex, align, date_range, DatetimeIndex, bdate_range — check if benchmarkable.
+- IO: read_parquet/to_parquet if added to src/io; toJson, toCsv.
+- src/core: period, timedelta, timestamp, interval, datetime_tz, categorical_index — check if exported.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 121 — 2026-04-16 05:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24494296445)
+- **Status**: ✅ Accepted
+- **Change**: Added 12 benchmark pairs: rank, nlargest_nsmallest, sample, get_dummies, duplicated, interpolate, diff, explode, isin, combine_first, select_dtypes, crosstab
+- **Metric**: 63 (previous best: 62, delta: +1) | **Commit**: cc64a24
+- **Notes**: Branch created fresh from main (51 pairs) + 12 new pairs = 63. Iters 119-120 had safeoutputs MCP errors; this iteration successfully pushed. crosstab, select_dtypes, explode, isin, combine_first added for first time in this branch cycle.
 
 ### Iteration 120 — 2026-04-16 04:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24492186697)
 - **Status**: ⚠️ Error (safeoutputs MCP unavailable — commit created but not pushed)
