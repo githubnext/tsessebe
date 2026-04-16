@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T22:18:00Z |
-| Iteration Count | 136 |
-| Best Metric | 396 |
+| Last Run | 2026-04-16T22:46:50Z |
+| Iteration Count | 137 |
+| Best Metric | 404 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, error, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -75,12 +75,20 @@
 - dataframe_explode / dataframe_nunique.
 - (iters 133-135: mode_df, quantile_df, shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, numeric_ops, memory_usage, named_agg, tz_localize)
 - (iter 136: series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, series_radd_rsub, dataframe_radd_rsub, series_exp_log)
+- (iter 137: infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg)
 - MultiIndex getLoc with slice / get_locs / get_indexer.
-- groupby: nunique, transform-apply.
+- groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
+- read_excel — Excel I/O benchmark (needs minimal XLSX fixture).
+- Series.autocorr(lag) if implemented.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 137 — 2026-04-16 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24537885791)
+- **Status**: ✅ Accepted | **Metric**: 404 (previous best: 396, delta: +8) | **Commit**: 36060c8
+- Added 8 pairs: infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg.
+- Re-added memory_usage and named_agg (lost in iter 133's missing branch). Added inferDtype, valueCountsBinned, CategoricalIndex ops, tz_localize/convert, Series/DataFrame alignment.
 
 ### Iteration 136 — 2026-04-16 22:18 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24536797293)
 - **Status**: ✅ Accepted | **Metric**: 396 (previous best: 388, delta: +8) | **Commit**: 6c70e80
