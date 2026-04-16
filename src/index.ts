@@ -465,28 +465,6 @@ export type {
   SeriesToStringOptions,
   DataFrameToStringOptions,
 } from "./stats/index.ts";
-export { quantileSeries, quantileDataFrame } from "./stats/index.ts";
-export type {
-  QuantileInterpolation,
-  QuantileSeriesOptions,
-  QuantileDataFrameOptions,
-} from "./stats/index.ts";
-export { replaceSeries, replaceDataFrame } from "./stats/index.ts";
-export type {
-  ReplaceMapping,
-  ReplaceSpec,
-  ReplaceOptions,
-  DataFrameReplaceOptions,
-} from "./stats/index.ts";
-export { varSeries, semSeries, varDataFrame, semDataFrame } from "./stats/index.ts";
-export type { VarSemSeriesOptions, VarSemDataFrameOptions } from "./stats/index.ts";
-export { skewSeries, kurtSeries, skewDataFrame, kurtDataFrame } from "./stats/index.ts";
-export type {
-  SkewKurtSeriesOptions,
-  SkewKurtDataFrameOptions,
-} from "./stats/index.ts";
-export { toDatetime } from "./stats/index.ts";
-export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./stats/index.ts";
 
 // PR #120 unique modules — re-exported from sub-barrels
 export { astypeSeries, astype, castScalar } from "./core/index.ts";
@@ -535,3 +513,25 @@ export type {
   PctChangeOptions,
   DataFramePctChangeOptions,
 } from "./stats/index.ts";
+export { quantileSeries, quantileDataFrame } from "./stats/index.ts";
+export type {
+  QuantileInterpolation,
+  QuantileSeriesOptions,
+  QuantileDataFrameOptions,
+} from "./stats/index.ts";
+export { replaceSeries, replaceDataFrame } from "./stats/index.ts";
+export type {
+  ReplaceMapping,
+  ReplaceSpec,
+  ReplaceOptions,
+  DataFrameReplaceOptions,
+} from "./stats/index.ts";
+export { varSeries, semSeries, varDataFrame, semDataFrame } from "./stats/index.ts";
+export type { VarSemSeriesOptions, VarSemDataFrameOptions } from "./stats/index.ts";
+export { skewSeries, kurtSeries, skewDataFrame, kurtDataFrame } from "./stats/index.ts";
+export type {
+  SkewKurtSeriesOptions,
+  SkewKurtDataFrameOptions,
+} from "./stats/index.ts";
+export { toDatetime } from "./stats/index.ts";
+export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./stats/index.ts";
