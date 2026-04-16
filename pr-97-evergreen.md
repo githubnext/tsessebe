@@ -5,17 +5,17 @@
 | Field | Value |
 |:---|:---|
 | head_sha | c3c63273e424daf7dccae90ce768818ddbab2b54 |
-| attempts | 2 |
-| last_run | 2026-04-16T00:30:11.495Z |
+| attempts | 3 |
+| last_run | 2026-04-16T01:03:37Z |
 | last_result | failure |
 
 ## Notes
 
-Merge conflicts were resolved locally at commit 9cf2d08.
-However, the commit could not be pushed because the `push_to_pull_request_branch`
-safeoutputs tool is unavailable — MCP registry returned 401 error, blocking non-default MCP servers.
+Merge conflicts resolved locally at commit 8d974988018183695e3ceb3e6c3234cd5f9f0014.
+Cannot push: `push_to_pull_request_branch` fails with "Branch does not exist locally".
+Root cause: safeoutputs MCP server blocked by policy (registry fetch returns 401).
 
-Conflicts resolved:
-- src/index.ts: kept PR's pct_change exports + main's new additions
-- src/stats/index.ts: kept PR's pct_change exports + main's new additions
-- playground/index.html: kept both pct_change card (from PR) and insert_pop card (from main)
+Conflicts resolved (all 3 files correct):
+- src/index.ts: kept pctChangeSeries/pctChangeDataFrame exports
+- src/stats/index.ts: kept pct_change.ts re-exports
+- playground/index.html: kept pct_change card + restored insert_pop h3
