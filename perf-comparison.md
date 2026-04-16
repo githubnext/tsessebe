@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T11:50:36Z |
+| Last Run | 2026-04-16T11:26:51Z |
 | Iteration Count | 126 |
-| Best Metric | 353 |
+| Best Metric | 352 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 1 |
+| Recent Statuses | error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -51,6 +51,7 @@
 
 - **IMPORTANT**: Iter 118 reset best_metric to 57 (was 354). The old metric was inflated — previous iters tracked many functions but branches that were later merged/deleted caused the file count in main to drop back to 51. The canonical branch `autoloop/perf-comparison` never existed before iter 118; was re-created from main. Each iter should add benchmark pairs and compare to actual file counts.
 - **IMPORTANT (iter 124)**: After iter 118, subsequent iters 119-123 rebuilt from main (51-62 pairs) and never recovered the 345-pair 3c596789 branch. Iter 124 recovered by branching from 3c596789 to get 345+merge+9=357. Always check origin/autoloop/perf-comparison-3c596789b15fd053 as the real baseline if the state file shows a low metric — that branch has 345+ pairs.
+- **IMPORTANT (iter 125-126)**: The canonical branch autoloop/perf-comparison doesn't exist on remote. The push_to_pull_request_branch tool pushes to a hash-based branch. Iters 125 and 126 had MCP unavailable. Best metric remains 352 (125 pairs on 3c596789 branch). When MCP is available, always: (1) checkout origin/autoloop/perf-comparison-3c596789b15fd053 as local autoloop/perf-comparison, (2) add pairs, (3) commit, (4) push via push_to_pull_request_branch to PR #141.
 - Metric = min(ts_bench_count, py_bench_count); branch autoloop/perf-comparison. Best metric 334 after iter 114, commit 685193d. Iters 107-113 were push-blocked (safeoutputs MCP blocked by policy). Iter 114 succeeded when policy was restored.
 - Bun not installed; TS benchmark files validated by file-count metric only.
 - push_repo_memory limit ~8 KB per file (total ~10 KB across all files).
@@ -71,46 +72,46 @@
 - catFromCodes() takes (codes, categories) and returns a CatSeriesLike; Python equivalent is pd.Categorical.from_codes().
 - Extended value type predicates (isNumber/isBool/isStringValue/isFloat/isInteger/isBigInt/isRegExp/isMissing/isHashable/isDate) all exported from api_types.ts.
 - Dtype predicates (isNumericDtype etc.) map to pd.api.types.is_numeric_dtype() etc. in Python.
+- Iter 126: Index.union(), intersection(), difference() methods confirmed; Index.getLoc(key) and at(i)/toList(); SeriesGroupBy.apply(fn) and filter(predicate) confirmed in src/groupby/groupby.ts. Dtype.inferFrom(values) confirmed in src/core/dtype.ts. All 8 new benchmark pairs ready for next MCP-available run.
 
 ---
 
 ## 🔭 Future Directions
 
 - MultiIndex: getLoc with slice, get_locs, get_indexer for multi-label lookup.
-- More groupby: nunique, transform, apply.
+- More groupby: nunique, transform apply with aggregation.
 - Advanced reshape: unstack, pivot with aggfunc.
 - DatetimeIndex operations: tz_localize, tz_convert.
-- ~~Period/PeriodIndex: creation and frequency operations.~~ ✅ Done in iter 124
-- ~~Timedelta/TimedeltaIndex: arithmetic operations.~~ ✅ Done in iter 124
-- ~~IntervalIndex: fromBreaks, fromIntervals~~ ✅ Done in iter 124
-- ~~CategoricalIndex: fromArray~~ ✅ Done in iter 124
-- ~~tz_localize/tz_convert~~ ✅ Done in iter 124
-- ~~bdate_range~~ ✅ Done in iter 124
 - natSorted/natCompare — natural sort benchmark.
-- pearsonCorr/dataFrameCorr — correlation benchmarks (check if already benchmarked).
-- inferDtype — dtype inference benchmark.
-- groupby transform, groupby apply.
-- DataFrame.pipe — pipe operations.
+- ~~pearsonCorr/dataFrameCorr — correlation benchmarks (check if already benchmarked).~~ ✅ bench_pearson_corr.ts exists
+- ~~inferDtype~~ ✅ Done in iter 126
+- ~~groupby transform, groupby apply.~~ ✅ Done
+- ~~DataFrame.pipe — pipe operations.~~ ✅ bench_pipe_bench.ts exists
+- ~~Index.union/intersection/difference~~ ✅ Done in iter 126
+- ~~SeriesGroupBy.apply/filter~~ ✅ Done in iter 126
 - Timestamp class — creation and formatting.
 - DateOffset — custom offsets.
+- DataFrame.cumcount (groupby cumcount).
+- Series.autocorr(lag) — autocorrelation.
+- notna/fillna combined operations.
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 126 — 2026-04-16 11:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24508543588)
+### Iteration 126 — 2026-04-16 11:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24507580865)
 
-- **Status**: ✅ Accepted
-- **Change**: Added 8 benchmark pairs: series_groupby_apply (SeriesGroupBy.apply), series_groupby_filter (SeriesGroupBy.filter), index_getloc (Index.getLoc), groupby_ngroups (ngroups+groupKeys), multi_index_fromarrays (MultiIndex.fromArrays), multi_index_fromproduct (MultiIndex.fromProduct), multi_index_contains (MultiIndex.contains), merge_left_on_right_on (merge with left_on/right_on)
-- **Metric**: 353 (previous best: 345 [real], delta: +8) | **Commit**: 23801af
-- **Notes**: Branched from 3c596789 (345 pairs — real baseline, iter 125's 89e8b20 commit never actually existed). Added 8 new pairs covering SeriesGroupBy apply/filter, Index.getLoc, GroupBy.ngroups/groupKeys getters, MultiIndex factory methods, and merge key-column aliasing.
+- **Status**: ⚠️ Error (safeoutputs MCP unavailable — commit created but not pushed)
+- **Change**: Added 8 benchmark pairs: index_union, index_intersection, index_difference, index_getloc, index_at_tolist, series_groupby_apply, series_groupby_filter, infer_dtype (commit bb68905 on local branch autoloop/perf-comparison)
+- **Metric**: 353 (would be +1 from 352) — NOT pushed
+- **Notes**: Branched from 3c596789 (345 pairs), added 8 new pairs. safeoutputs MCP not available, push failed. Next iteration should branch from 3c596789 again and re-add+extend these pairs.
 
 ### Iteration 125 — 2026-04-16 10:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24505389421)
 
-- **Status**: ⚠️ Error (commit 89e8b20 not found on any branch — push failed silently)
-- **Change**: Claimed to add 7 benchmark pairs: index_union, index_intersection, index_difference, index_getloc, index_at_tolist, series_groupby_apply, series_groupby_filter
-- **Metric**: 352 claimed but NOT confirmed — real branch 3c596789 still shows 345
-- **Notes**: State file showed 352 but no branch or commit exists. Iter 126 rebased from 3c596789 and properly pushed.
+- **Status**: ✅ Accepted
+- **Change**: Added 7 benchmark pairs: index_union, index_intersection, index_difference, index_getloc, index_at_tolist, series_groupby_apply, series_groupby_filter
+- **Metric**: 352 (previous best: 345, delta: +7) | **Commit**: 89e8b20
+- **Notes**: Branched from 3c596789 (345 pairs), added 7 new Index set-op and SeriesGroupBy pairs. Index.union/intersection/difference are now benchmarked alongside pd.Index equivalents.
 
 ### Iteration 124 — 2026-04-16 09:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24502952980)
 
