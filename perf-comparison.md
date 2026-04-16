@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T18:54:43Z |
-| Iteration Count | 130 |
-| Best Metric | 364 |
+| Last Run | 2026-04-16T19:31:48Z |
+| Iteration Count | 131 |
+| Best Metric | 372 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, error, error, accepted, accepted, error, error, accepted |
+| Recent Statuses | accepted, accepted, error, error, error, error, accepted, accepted, error, error |
 | Paused | false |
 
 ---
@@ -65,20 +65,24 @@
 
 ## 🔭 Future Directions
 
-- toDatetime / astypeSeries — type conversion benchmarks.
+- astypeSeries — series type conversion benchmarks.
 - dataframe_mode — modeDataFrame benchmark.
-- replaceSeries / replaceDataFrame — value substitution benchmarks.
-- pctChangeDataFrame / quantileDataFrame — DataFrame-level stats.
+- quantileDataFrame — DataFrame-level quantile.
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique, transform-apply.
 - DatetimeIndex: tz_localize, tz_convert.
-- natSorted/natCompare — natural sort.
 - Timestamp class, DateOffset — custom offsets.
 - Series.autocorr(lag).
+- valueCountsBinned — binned value counts.
+- searchsorted / searchsortedMany — binary search.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 131 — 2026-04-16 19:31 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24529808007)
+- **Status**: ✅ Accepted | **Metric**: 372 (+8 from 364) | **Commit**: 7b67fa5
+- Added 8 pairs: factorize, get_dummies, nat_sort, to_datetime, to_numeric, select_dtypes, replace_dataframe, pctchange_df.
 
 ### Iteration 130 — 2026-04-16 18:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24528172385)
 - **Status**: ✅ Accepted | **Metric**: 364 (+8 from 356) | **Commit**: 683ae6b
