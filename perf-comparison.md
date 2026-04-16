@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T07:35:55Z |
-| Iteration Count | 122 |
-| Best Metric | 71 |
+| Last Run | 2026-04-16T08:37:04Z |
+| Iteration Count | 123 |
+| Best Metric | 78 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -91,6 +91,13 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 123 — 2026-04-16 08:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24500487304)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 16 benchmark pairs: reindex, align, date_range, to_csv, value_counts_binned, groupby_std, sample, get_dummies, duplicated, interpolate, diff, explode, isin, combine_first, select_dtypes, crosstab
+- **Metric**: 78 (previous best: 71, delta: +7) | **Commit**: 968ae70
+- **Notes**: Started from origin/autoloop/perf-comparison-8e96c503 (62 pairs) + merged main + 16 new pairs = 78. Covers stats ops, categorical, groupby, IO (to_csv), and datetime (date_range).
 
 ### Iteration 122 — 2026-04-16 07:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24498008954)
 
