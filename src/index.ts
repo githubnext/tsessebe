@@ -123,12 +123,6 @@ export {
 export type { ClipOptions, RoundOptions, DataFrameElemOptions } from "./stats/index.ts";
 export { valueCounts, dataFrameValueCounts } from "./stats/index.ts";
 export type { ValueCountsOptions, DataFrameValueCountsOptions } from "./stats/index.ts";
-export { pctChangeSeries, pctChangeDataFrame } from "./stats/index.ts";
-export type {
-  PctChangeFillMethod,
-  PctChangeOptions,
-  DataFramePctChangeOptions,
-} from "./stats/index.ts";
 export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./stats/index.ts";
 export type {
   WherePredicate,
@@ -470,4 +464,10 @@ export type {
   Formatter,
   SeriesToStringOptions,
   DataFrameToStringOptions,
+} from "./stats/index.ts";
+export { pctChangeSeries, pctChangeDataFrame } from "./stats/index.ts";
+export type {
+  PctChangeFillMethod,
+  PctChangeOptions,
+  DataFramePctChangeOptions,
 } from "./stats/index.ts";

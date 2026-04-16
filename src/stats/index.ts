@@ -39,12 +39,6 @@ export {
   nsmallestDataFrame,
 } from "./nlargest.ts";
 export type { NKeep, NTopOptions, NTopDataFrameOptions } from "./nlargest.ts";
-export { pctChangeSeries, pctChangeDataFrame } from "./pct_change.ts";
-export type {
-  PctChangeFillMethod,
-  PctChangeOptions,
-  DataFramePctChangeOptions,
-} from "./pct_change.ts";
 export { whereSeries, maskSeries, whereDataFrame, maskDataFrame } from "./where_mask.ts";
 export type {
   WherePredicate,
@@ -290,3 +284,9 @@ export type {
   SeriesToStringOptions,
   DataFrameToStringOptions,
 } from "./format_ops.ts";
+export { pctChangeSeries, pctChangeDataFrame } from "./pct_change.ts";
+export type {
+  PctChangeFillMethod,
+  PctChangeOptions,
+  DataFramePctChangeOptions,
+} from "./pct_change.ts";
