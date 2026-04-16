@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T16:35:37Z |
-| Iteration Count | 127 |
+| Last Run | 2026-04-16T17:32:21Z |
+| Iteration Count | 128 |
 | Best Metric | 352 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 2 |
-| Recent Statuses | error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 3 |
+| Recent Statuses | error, error, error, accepted, accepted, error, error, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -79,27 +79,27 @@
 
 ## 🔭 Future Directions
 
-- ~~SeriesGroupBy min/max/first/last/count/size/sum/mean/std/agg~~ ✅ Done in iter 127
+- **PRIORITY (iter 128)**: 8 benchmark pairs ready in commit 2eaf896 (NOT pushed): skew_kurt, sem_var, mode, nunique_any_all, compare_ops, pow_mod_floordiv, nancumops, minmax_normalize_digitize. Next iter: branch from 3c596789, re-add these 8 + new ones.
 - MultiIndex: getLoc with slice, get_locs, get_indexer for multi-label lookup.
 - More groupby: nunique, transform apply with aggregation.
 - Advanced reshape: unstack, pivot with aggfunc.
 - DatetimeIndex operations: tz_localize, tz_convert.
 - natSorted/natCompare — natural sort benchmark.
-- ~~pearsonCorr/dataFrameCorr — correlation benchmarks (check if already benchmarked).~~ ✅ bench_pearson_corr.ts exists
-- ~~inferDtype~~ ✅ Done in iter 126
-- ~~groupby transform, groupby apply.~~ ✅ Done
-- ~~DataFrame.pipe — pipe operations.~~ ✅ bench_pipe_bench.ts exists
-- ~~Index.union/intersection/difference~~ ✅ Done in iter 126
-- ~~SeriesGroupBy.apply/filter~~ ✅ Done in iter 126
 - Timestamp class — creation and formatting.
 - DateOffset — custom offsets.
 - DataFrame.cumcount (groupby cumcount).
 - Series.autocorr(lag) — autocorrelation.
-- notna/fillna combined operations.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 128 — 2026-04-16 17:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24524542936)
+
+- **Status**: ⚠️ Error (safeoutputs MCP unavailable — commit created but not pushed)
+- **Change**: Added 8 benchmark pairs: skew_kurt, sem_var, mode, nunique_any_all, compare_ops, pow_mod_floordiv, nancumops, minmax_normalize_digitize (commit 2eaf896 on local branch autoloop/perf-comparison)
+- **Metric**: 364 (would be +12 from 352) — NOT pushed
+- **Notes**: Branched from 3c596789 (356 pairs). Evaluation metric=364, safeoutputs MCP unavailable. Next iteration: branch from 3c596789 again, add these 8 pairs PLUS new ones.
 
 ### Iteration 127 — 2026-04-16 16:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24522032270)
 
