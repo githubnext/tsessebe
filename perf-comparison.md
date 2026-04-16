@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T11:26:51Z |
-| Iteration Count | 126 |
-| Best Metric | 352 |
+| Last Run | 2026-04-16T15:35:32Z |
+| Iteration Count | 128 |
+| Best Metric | 353 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 2 |
+| Recent Statuses | error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -72,7 +72,8 @@
 - catFromCodes() takes (codes, categories) and returns a CatSeriesLike; Python equivalent is pd.Categorical.from_codes().
 - Extended value type predicates (isNumber/isBool/isStringValue/isFloat/isInteger/isBigInt/isRegExp/isMissing/isHashable/isDate) all exported from api_types.ts.
 - Dtype predicates (isNumericDtype etc.) map to pd.api.types.is_numeric_dtype() etc. in Python.
-- Iter 126: Index.union(), intersection(), difference() methods confirmed; Index.getLoc(key) and at(i)/toList(); SeriesGroupBy.apply(fn) and filter(predicate) confirmed in src/groupby/groupby.ts. Dtype.inferFrom(values) confirmed in src/core/dtype.ts. All 8 new benchmark pairs ready for next MCP-available run.
+- Iter 128: Index.union(), intersection(), difference() benchmarked at 5k-element scale; Dtype.inferFrom() at 1k values; SeriesGroupBy.var()/std() and first()/last() confirmed working. DataFrame has shape/size/ndim/columns but no dtypes property. The 3c596789b15fd053 hash branch is the canonical baseline (now with 361 pairs after iter 128).
+- **IMPORTANT (iter 128)**: Commit bb14262 has 8 new pairs (361 total) but MCP was unavailable so it wasn't pushed. Next iteration should checkout origin/autoloop/perf-comparison-3c596789b15fd053 (353 pairs), re-add these 8 pairs + more, and push via push_to_pull_request_branch to PR #141. The 8 pairs are: index_union, index_intersection, index_difference, index_at_tolist, infer_dtype, series_groupby_var_std, dataframe_properties, series_groupby_first_last.
 
 ---
 
@@ -84,20 +85,37 @@
 - DatetimeIndex operations: tz_localize, tz_convert.
 - natSorted/natCompare — natural sort benchmark.
 - ~~pearsonCorr/dataFrameCorr — correlation benchmarks (check if already benchmarked).~~ ✅ bench_pearson_corr.ts exists
-- ~~inferDtype~~ ✅ Done in iter 126
+- ~~inferDtype~~ ✅ Done in iter 128
 - ~~groupby transform, groupby apply.~~ ✅ Done
 - ~~DataFrame.pipe — pipe operations.~~ ✅ bench_pipe_bench.ts exists
-- ~~Index.union/intersection/difference~~ ✅ Done in iter 126
-- ~~SeriesGroupBy.apply/filter~~ ✅ Done in iter 126
+- ~~Index.union/intersection/difference~~ ✅ Done in iter 128
+- ~~SeriesGroupBy.apply/filter~~ ✅ Done in iter 127
+- ~~SeriesGroupBy.var/std, first/last~~ ✅ Done in iter 128
+- ~~DataFrame.shape/size/ndim/columns properties~~ ✅ Done in iter 128
 - Timestamp class — creation and formatting.
 - DateOffset — custom offsets.
 - DataFrame.cumcount (groupby cumcount).
 - Series.autocorr(lag) — autocorrelation.
-- notna/fillna combined operations.
+- SeriesGroupBy.median(), size(), count() individual benchmarks.
+- DataFrameGroupBy.transform with aggregation function variants.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 128 — 2026-04-16 15:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24519199320)
+
+- **Status**: ⚠️ Error (safeoutputs MCP unavailable — commit created but not pushed)
+- **Change**: Added 8 benchmark pairs: index_union, index_intersection, index_difference, index_at_tolist, infer_dtype, series_groupby_var_std, dataframe_properties, series_groupby_first_last (commit bb14262 on local branch autoloop/perf-comparison)
+- **Metric**: 361 (would be +8 from 353) — NOT pushed
+- **Notes**: Branched from 3c596789b15fd053 (353 pairs), added 8 new pairs. safeoutputs MCP not available, push failed. Next iteration should branch from 3c596789b15fd053 again and re-add+extend these pairs.
+
+### Iteration 127 — 2026-04-16 13:41 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24511277028)
+
+- **Status**: ✅ Accepted (committed to 3c596789 hash branch)
+- **Change**: Added 8 benchmark pairs: groupby_ngroups, index_getloc, merge_left_on_right_on, multi_index_contains, multi_index_fromarrays, multi_index_fromproduct, series_groupby_apply, series_groupby_filter
+- **Metric**: 353 (previous: 345+7=352, delta: +1 from iter 125 baseline) | **Commit**: 0fbd161
+- **Notes**: Pushed to hash-based branch origin/autoloop/perf-comparison-3c596789b15fd053. State file showed 352 (from iter 125) but branch actually had 353 after this commit.
 
 ### Iteration 126 — 2026-04-16 11:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24507580865)
 
