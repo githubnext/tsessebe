@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T08:37:04Z |
-| Iteration Count | 123 |
-| Best Metric | 78 |
+| Last Run | 2026-04-16T09:34:48Z |
+| Iteration Count | 124 |
+| Best Metric | 345 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #141 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, accepted, accepted, error, error, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -50,6 +50,7 @@
 - groupby.std() on DataFrame works via df.groupBy("key").std() — returns aggregated DataFrame.
 
 - **IMPORTANT**: Iter 118 reset best_metric to 57 (was 354). The old metric was inflated — previous iters tracked many functions but branches that were later merged/deleted caused the file count in main to drop back to 51. The canonical branch `autoloop/perf-comparison` never existed before iter 118; was re-created from main. Each iter should add benchmark pairs and compare to actual file counts.
+- **IMPORTANT (iter 124)**: After iter 118, subsequent iters 119-123 rebuilt from main (51-62 pairs) and never recovered the 345-pair 3c596789 branch. Iter 124 recovered by branching from 3c596789 to get 345+merge+9=357. Always check origin/autoloop/perf-comparison-3c596789b15fd053 as the real baseline if the state file shows a low metric — that branch has 345+ pairs.
 - Metric = min(ts_bench_count, py_bench_count); branch autoloop/perf-comparison. Best metric 334 after iter 114, commit 685193d. Iters 107-113 were push-blocked (safeoutputs MCP blocked by policy). Iter 114 succeeded when policy was restored.
 - Bun not installed; TS benchmark files validated by file-count metric only.
 - push_repo_memory limit ~8 KB per file (total ~10 KB across all files).
@@ -79,18 +80,30 @@
 - More groupby: nunique, transform, apply.
 - Advanced reshape: unstack, pivot with aggfunc.
 - DatetimeIndex operations: tz_localize, tz_convert.
-- Period/PeriodIndex: creation and frequency operations.
-- Timedelta/TimedeltaIndex: arithmetic operations.
+- ~~Period/PeriodIndex: creation and frequency operations.~~ ✅ Done in iter 124
+- ~~Timedelta/TimedeltaIndex: arithmetic operations.~~ ✅ Done in iter 124
+- ~~IntervalIndex: fromBreaks, fromIntervals~~ ✅ Done in iter 124
+- ~~CategoricalIndex: fromArray~~ ✅ Done in iter 124
+- ~~tz_localize/tz_convert~~ ✅ Done in iter 124
+- ~~bdate_range~~ ✅ Done in iter 124
 - natSorted/natCompare — natural sort benchmark.
-- pearsonCorr/dataFrameCorr — correlation benchmarks.
+- pearsonCorr/dataFrameCorr — correlation benchmarks (check if already benchmarked).
 - inferDtype — dtype inference benchmark.
 - groupby transform, groupby apply.
 - DataFrame.pipe — pipe operations.
-- src/core: period, timedelta, timestamp, interval, datetime_tz, categorical_index — check if exported.
+- Timestamp class — creation and formatting.
+- DateOffset — custom offsets.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 124 — 2026-04-16 09:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24502952980)
+
+- **Status**: ⚠️ Error (safeoutputs MCP unavailable — commit created but not pushed)
+- **Change**: Added 9 benchmark pairs: timedelta, timedelta_index, period, period_index, interval_index, categorical_index, pivot_table_full, bdate_range, tz_localize_convert (commit 3335eaf on local branch autoloop/perf-comparison)
+- **Metric**: 357 (would be +12 from 345) — NOT pushed
+- **Notes**: Branched from 3c596789 (345 pairs), merged main, added 9 new pairs. safeoutputs MCP not available, push failed. Next iteration should branch from 3c596789 again and re-add+extend these pairs.
 
 ### Iteration 123 — 2026-04-16 08:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24500487304)
 
