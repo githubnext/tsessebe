@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T22:46:50Z |
-| Iteration Count | 137 |
-| Best Metric | 404 |
+| Last Run | 2026-04-16T23:17:26Z |
+| Iteration Count | 138 |
+| Best Metric | 412 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -68,7 +68,6 @@
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique, transform-apply.
 - Series.autocorr(lag).
-- read_excel — Excel I/O benchmark.
 - series_radd_rsub / dataframe_radd_rsub — reverse arithmetic.
 - series_any_all / dataframe_any_all — boolean reductions.
 - series_crosstab — seriesCrosstab.
@@ -76,14 +75,19 @@
 - (iters 133-135: mode_df, quantile_df, shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, numeric_ops, memory_usage, named_agg, tz_localize)
 - (iter 136: series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, series_radd_rsub, dataframe_radd_rsub, series_exp_log)
 - (iter 137: infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg)
+- (iter 138: series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full, read_excel, pipe_chain_ops, nan_extended_agg, series_pipe_apply)
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
-- read_excel — Excel I/O benchmark (needs minimal XLSX fixture).
 - Series.autocorr(lag) if implemented.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 138 — 2026-04-16 23:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24538933188)
+- **Status**: ✅ Accepted | **Metric**: 412 (previous best: 404, delta: +8) | **Commit**: 9602f60
+- Added 8 pairs: series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full (with margins), read_excel (readExcel/xlsxSheetNames with inline XLSX builder), pipe_chain_ops, nan_extended_agg, series_pipe_apply.
+- Covered math rounding unary ops, DataFrame exp/log ops, pivotTableFull with margins, XLSX I/O, pipe chain utilities, nancount/nanmedian/nanprod, pipeSeries/dataFramePipe.
 
 ### Iteration 137 — 2026-04-16 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24537885791)
 - **Status**: ✅ Accepted | **Metric**: 404 (previous best: 396, delta: +8) | **Commit**: 36060c8
