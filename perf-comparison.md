@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T18:49:00Z |
-| Iteration Count | 161 |
+| Last Run | 2026-04-17T19:27:19Z |
+| Iteration Count | 162 |
 | Best Metric | 513 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -65,6 +65,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 162 — 2026-04-17 19:27 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24582874318)
+- **Status**: ✅ Accepted | **Metric**: 513 (previous best on branch: 508, delta: +5) | **Commit**: af74fed
+- Added 5 pairs: series_log2_log10, clip_series_with_bounds, clip_dataframe_with_bounds, merge_sort (sort=true), qcut_interval_index. State file was ahead of branch (iters 159-161 never committed), now reconciled.
 
 ### Iteration 161 — 2026-04-17 18:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24581386899)
 - **Status**: ✅ Accepted | **Metric**: 513 (previous best: 508, delta: +5) | **Commit**: 46afa02
