@@ -326,7 +326,7 @@ describe("dateRange — QS", () => {
     const r = dateRange({ start: "2024-01-01", periods: 4, freq: "QS" });
     expect(r).toHaveLength(4);
     const months = r.map((d) => d.getUTCMonth() + 1);
-    expect(months).toStrictEqual([4, 7, 10, 1]); // Apr Jul Oct Jan
+    expect(months).toStrictEqual([1, 4, 7, 10]); // Jan Apr Jul Oct
   });
 
   it("QE: generates 4 quarter-ends", () => {
@@ -345,7 +345,7 @@ describe("dateRange — YS/YE", () => {
     const r = dateRange({ start: "2024-01-01", periods: 3, freq: "YS" });
     expect(r).toHaveLength(3);
     const years = r.map((d) => d.getUTCFullYear());
-    expect(years).toStrictEqual([2025, 2026, 2027]);
+    expect(years).toStrictEqual([2024, 2025, 2026]);
   });
 
   it("YE generates Dec 31 for each year", () => {

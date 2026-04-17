@@ -30,7 +30,7 @@ const RE_ISO =
 
 /** Human unit tokens for scanAll: "1h", "30 minutes", "2.5s" etc. */
 const RE_HUMAN_UNIT =
-  /(\d+(?:\.\d+)?)\s*(weeks?|w|days?|d|hours?|h|minutes?|mins?|m|seconds?|secs?|s|milliseconds?|millis?|ms|microseconds?|micros?|us|nanoseconds?|nanos?|ns)/gi;
+  /(\d+(?:\.\d+)?)\s*(weeks?|w|days?|d|hours?|h|milliseconds?|millis?|ms|minutes?|mins?|m|seconds?|secs?|s|microseconds?|micros?|us|nanoseconds?|nanos?|ns)/gi;
 
 /** Pure integer string (no decimal). */
 const RE_INT = /^-?\d+$/;

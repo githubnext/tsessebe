@@ -31,7 +31,7 @@ describe("sampleSeries", () => {
   test("replace=false: no repeated items (small pool)", () => {
     const s = new Series({ data: [10, 20, 30] });
     const r = sampleSeries(s, { n: 3, replace: false, randomState: 42 });
-    const vals = r.values as number[];
+    const vals = [...r.values] as number[];
     expect(new Set(vals).size).toBe(3);
     expect(vals.sort((a, b) => a - b)).toEqual([10, 20, 30]);
   });

@@ -102,8 +102,18 @@ class Rng {
   private _state: number;
 
   constructor(seed: number) {
-    // Ensure non-zero starting state.
-    this._state = seed >>> 0 || 0xdeadbeef;
+    // Mix the seed so that small sequential seeds (0, 1, 2, …) produce
+    // well-distributed starting states.  Without mixing, XOR-shift produces
+    // near-zero outputs for seeds like 1, 2, 3 because the internal state
+    // stays small for the first few steps.
+    let s = seed >>> 0 || 0xdeadbeef;
+    // Wang hash to spread bits before the first step.
+    s = ((s ^ 61) ^ (s >>> 16)) >>> 0;
+    s = (s + (s << 3)) >>> 0;
+    s = (s ^ (s >>> 4)) >>> 0;
+    s = (Math.imul(s, 0x27d4eb2d)) >>> 0;
+    s = (s ^ (s >>> 15)) >>> 0;
+    this._state = s || 0xdeadbeef;
   }
 
   /** Returns a float in [0, 1). */

@@ -119,10 +119,18 @@ const UNIT_NORM: Readonly<Record<string, string>> = {
 /**
  * Map a raw unit token (from the regex match) to its canonical form.
  * Returns the uppercased input unchanged if no mapping exists.
+ *
+ * NOTE: "ms" (lowercase) means milliseconds; "MS" (uppercase) means month-start.
+ * Check case-sensitive lowercase tokens BEFORE uppercasing.
  */
 function normaliseUnit(raw: string): string {
+  // Case-sensitive lowercase tokens — millisecond aliases must come first
+  // so they are not confused with "MS" (month-start) after uppercasing.
+  if (raw === "ms" || raw === "L") return "ms";
+  if (raw === "us") return "us";
+  if (raw === "ns") return "ns";
   const u = raw.toUpperCase();
-  // "MS" as a unit token means month-start, not milliseconds
+  // Tokens that are passed through unchanged (already canonical)
   if (u === "MS" || u === "QS" || u === "D" || u === "B") {
     return u;
   }
@@ -427,10 +435,58 @@ function snapToAnchor(d: Date, pf: ParsedFreq): Date {
   return d;
 }
 
+/**
+ * For calendar boundary frequencies (ME, QE, YE), if the start date does not
+ * fall exactly on a boundary, snap forward to the first boundary on or after `d`.
+ *
+ * For boundary-start frequencies (MS, QS, YS), a start that already lies on a
+ * boundary is included as-is; if it is not on a boundary we snap to the next one.
+ */
+function snapToCalendarBoundary(d: Date, unit: string): Date {
+  const y = d.getUTCFullYear();
+  const m = d.getUTCMonth();
+  const day = d.getUTCDate();
+  switch (unit) {
+    case "MS":
+      // If not already month-start, advance to first day of next month.
+      if (day === 1) return d;
+      return new Date(Date.UTC(y, m + 1, 1));
+    case "ME": {
+      // If not already month-end, snap to end of the current month.
+      const lastDay = daysInMonth(y, m);
+      if (day === lastDay) return d;
+      return new Date(Date.UTC(y, m, lastDay));
+    }
+    case "QS": {
+      // Quarter-starts are Jan/Apr/Jul/Oct 1.
+      const isQS = (m === 0 || m === 3 || m === 6 || m === 9) && day === 1;
+      if (isQS) return d;
+      return nextQStart(d);
+    }
+    case "QE": {
+      // Quarter-ends are Mar 31, Jun 30, Sep 30, Dec 31.
+      const isQE = (m === 2 || m === 5 || m === 8 || m === 11) && day === daysInMonth(y, m);
+      if (isQE) return d;
+      return nextQEnd(d);
+    }
+    case "YS":
+      // Year-start is Jan 1.
+      if (m === 0 && day === 1) return d;
+      return new Date(Date.UTC(y + 1, 0, 1));
+    case "YE":
+      // Year-end is Dec 31.
+      if (m === 11 && day === 31) return d;
+      return new Date(Date.UTC(y, 11, 31));
+    default:
+      return d;
+  }
+}
+
 /** Generate `count` dates starting from `start`, advancing by `pf` each step. */
 function genFromStart(start: Date, count: number, pf: ParsedFreq): Date[] {
   const out: Date[] = [];
   let cur = snapToAnchor(start, pf);
+  cur = snapToCalendarBoundary(cur, pf.unit);
   for (let i = 0; i < count; i++) {
     out.push(cur);
     cur = advanceDate(cur, pf);

@@ -142,9 +142,8 @@ describe("Interval", () => {
     test("touching endpoints — one open side", () => {
       const a = new Interval(0, 2, "right");
       const b = new Interval(2, 4, "left");
-      expect(a.overlaps(b)).toBe(false); // a's right is closed, b's left is closed — but they touch at 2
-      // Actually both touch: a closes at right (2], b opens at left [2 — same point
-      // corrected: both include 2 → they do overlap
+      // a = (0, 2] closes on 2; b = [2, 4) opens on 2 — both include 2, so they overlap.
+      expect(a.overlaps(b)).toBe(true);
     });
 
     test("completely disjoint", () => {
@@ -421,14 +420,18 @@ describe("intervalRange", () => {
 describe("Interval properties (fast-check)", () => {
   test("contains is symmetric within interior", () => {
     fc.assert(
-      fc.property(fc.float({ min: -100, max: 100 }), fc.float({ min: -100, max: 100 }), (a, b) => {
-        if (a > b) {
-          return true; // skip invalid
-        }
-        const iv = new Interval(a, b, "both");
-        const mid = (a + b) / 2;
-        return iv.contains(mid);
-      }),
+      fc.property(
+        fc.float({ min: -100, max: 100, noNaN: true }),
+        fc.float({ min: -100, max: 100, noNaN: true }),
+        (a, b) => {
+          if (a > b) {
+            return true; // skip invalid
+          }
+          const iv = new Interval(a, b, "both");
+          const mid = (a + b) / 2;
+          return iv.contains(mid);
+        },
+      ),
     );
   });
 
