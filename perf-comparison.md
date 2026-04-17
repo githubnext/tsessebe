@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T12:50:15Z |
-| Iteration Count | 154 |
-| Best Metric | 488 |
+| Last Run | 2026-04-17T13:34:21Z |
+| Iteration Count | 155 |
+| Best Metric | 493 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -65,6 +65,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 155 — 2026-04-17 13:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24567781388)
+- **Status**: ✅ Accepted | **Metric**: 493 (previous best: 488, delta: +5) | **Commit**: 1267bc5
+- Added 5 pairs: dataframe_expanding_std_var (DataFrameExpanding.std/var), dataframe_expanding_sum_count (DataFrameExpanding.sum/count), dataframe_expanding_median_apply (DataFrameExpanding.median/apply), tz_datetime_index_extra (TZDatetimeIndex.slice/concat/at/toArray/toTimestamps/min/max/tz_convert method/tz_localize_none), timedelta_index_tostrings (TimedeltaIndex.toStrings/toArray/at/rename).
 
 ### Iteration 154 — 2026-04-17 12:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24565880287)
 - **Status**: ✅ Accepted | **Metric**: 488 (previous best: 483, delta: +5) | **Commit**: d17b31c
