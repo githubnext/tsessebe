@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T10:51:52Z |
-| Iteration Count | 150 |
-| Best Metric | 473 |
+| Last Run | 2026-04-17T11:22:00Z |
+| Iteration Count | 151 |
+| Best Metric | 478 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -65,6 +65,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 151 — 2026-04-17 11:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24562479978)
+- **Status**: ✅ Accepted | **Metric**: 478 (previous best: 473, delta: +5) | **Commit**: 96a7915
+- Added 5 pairs: df_any_all_axis1 (axis=1 row-wise any/all), df_nunique_axis1 (row-wise nuniqueDataFrame), cat_codes_accessor (cat.codes/nCategories/ordered), ewm_adjust (EWM adjust=false IIR vs adjust=true), interpolate_bfill_limit (bfill method + limit option).
 
 ### Iteration 150 — 2026-04-17 10:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24561344321)
 - **Status**: ✅ Accepted | **Metric**: 473 (previous best: 468 on branch, delta: +5) | **Commit**: 114fbab
