@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T07:40:00Z |
-| Iteration Count | 146 |
-| Best Metric | 460 |
+| Last Run | 2026-04-17T08:40:00Z |
+| Iteration Count | 147 |
+| Best Metric | 462 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -66,9 +66,13 @@
 
 ## 📊 Iteration History
 
+### Iteration 147 — 2026-04-17 08:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24555921452)
+- **Status**: ✅ Accepted | **Metric**: 462 (previous best: 460, delta: +2) | **Commit**: 4438925
+- Added 8 pairs: timestamp_arith (Timestamp.add/sub/eq/lt/gt/le/ge/ne), timestamp_str_format (strftime/isoformat/day_name/month_name), timestamp_round_normalize (ceil/floor/round/normalize), value_counts_opts (normalize/ascending/dropna options), series_sortvalues_opts (ascending=false/naPosition='first'), dataframe_sortvalues_mixed (mixed ascending array), series_groupby_size (SeriesGroupBy.size/getGroup), series_log_natural (seriesLog natural log).
+
 ### Iteration 146 — 2026-04-17 07:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24553601624)
-- **Status**: ✅ Accepted | **Metric**: 460 (previous best: 454, delta: +6) | **Commit**: 6b88cf3
-- Added 6 pairs: timestamp_arith (Timestamp.add/sub/compare), timestamp_str_format (strftime/isoformat/day_name/month_name), timestamp_round_normalize (ceil/floor/round/normalize), value_counts_opts (normalize/ascending/dropna options), series_sortvalues_opts (ascending=false/naPosition), dataframe_sortvalues_mixed (mixed ascending array).
+- **Status**: ⚠️ Error (state mismatch) | **Metric**: 454 (branch had 454 files; state file incorrectly recorded 460) | **Commit**: 8568c4a
+- State file claimed 6 pairs were added (metric 454→460) but branch still showed 454 after that run. Discarded — iteration 147 re-covers those 6 pairs plus 2 more.
 
 ### Iteration 145 — 2026-04-17 06:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24551622461)
 - **Status**: ✅ Accepted | **Metric**: 454 (previous best: 445, delta: +9) | **Commit**: cf58dc1
