@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-16T23:17:26Z |
-| Iteration Count | 138 |
-| Best Metric | 412 |
+| Last Run | 2026-04-16T23:46:52Z |
+| Iteration Count | 139 |
+| Best Metric | 420 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -76,56 +76,38 @@
 - (iter 136: series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, series_radd_rsub, dataframe_radd_rsub, series_exp_log)
 - (iter 137: infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg)
 - (iter 138: series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full, read_excel, pipe_chain_ops, nan_extended_agg, series_pipe_apply)
+- (iter 139: cut_interval_index, dataframe_sign, argsort_scalars, interval_index_ops, period_index_range, datetime_index_from, timedelta_index, resolve_freq)
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Series.autocorr(lag) if implemented.
+- Timestamp.fromDate / Timestamp.fromComponents — if not yet benchmarked.
+- DataFrameGroupBy multi-key groupby (multi-column keys).
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 139 — 2026-04-16 23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24539911725)
+- **Status**: ✅ Accepted | **Metric**: 420 (previous best: 412, delta: +8) | **Commit**: 18753f6
+- Added 8 pairs: cut_interval_index (cutIntervalIndex/qcutIntervalIndex), dataframe_sign (dataFrameSign), argsort_scalars (argsortScalars/searchsortedMany), interval_index_ops (IntervalIndex.contains/get_loc), period_index_range (PeriodIndex.periodRange/fromPeriods), datetime_index_from (DatetimeIndex.fromDates/fromTimestamps), timedelta_index (TimedeltaIndex construction), resolve_freq (resolveFreq).
+- Covered interval-returning cut/qcut, DataFrame sign op, argsort/searchsorted utilities, IntervalIndex lookup ops, PeriodIndex construction, DatetimeIndex fromDates/fromTimestamps, TimedeltaIndex construction, frequency resolution.
 
 ### Iteration 138 — 2026-04-16 23:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24538933188)
 - **Status**: ✅ Accepted | **Metric**: 412 (previous best: 404, delta: +8) | **Commit**: 9602f60
 - Added 8 pairs: series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full (with margins), read_excel (readExcel/xlsxSheetNames with inline XLSX builder), pipe_chain_ops, nan_extended_agg, series_pipe_apply.
 - Covered math rounding unary ops, DataFrame exp/log ops, pivotTableFull with margins, XLSX I/O, pipe chain utilities, nancount/nanmedian/nanprod, pipeSeries/dataFramePipe.
 
-### Iteration 137 — 2026-04-16 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24537885791)
-- **Status**: ✅ Accepted | **Metric**: 404 (previous best: 396, delta: +8) | **Commit**: 36060c8
+### Iteration 137 — 2026-04-16 22:46 UTC — ✅ | metric=404 | commit=36060c8
 - Added 8 pairs: infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg.
-- Re-added memory_usage and named_agg (lost in iter 133's missing branch). Added inferDtype, valueCountsBinned, CategoricalIndex ops, tz_localize/convert, Series/DataFrame alignment.
 
-### Iteration 136 — 2026-04-16 22:18 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24536797293)
-- **Status**: ✅ Accepted | **Metric**: 396 (previous best: 388, delta: +8) | **Commit**: 6c70e80
+### Iteration 136 — 2026-04-16 22:18 UTC — ✅ | metric=396 | commit=6c70e80
 - Added 8 pairs: series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, series_radd_rsub, dataframe_radd_rsub, series_exp_log.
-- Covered boolean reductions (any/all), reverse arithmetic, DataFrame nunique, seriesCrosstab, bdate_range, extended math.
 
-### Iteration 135 — 2026-04-16 21:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24535650224)
-- **Status**: ✅ Accepted | **Metric**: 388 (+8 from 380 actual baseline) | **Commit**: 2df0cea
-- Added 8 pairs: dataframe_shift_diff, dataframe_pow_mod, clip_series_bounds, reindex, dataframe_compare, series_add_sub_mul_div, numeric_ops_math, dataframe_add_sub_mul_div.
-
-### Iteration 134 — 2026-04-16 21:21 UTC — ✅ | metric=388 | commit=364b7f2
-- Added 8 pairs: dataframe_shift_diff, dataframe_pow_mod, clip_series_bounds, reindex, dataframe_compare, series_add_sub_mul_div, numeric_ops_math, dataframe_add_sub_mul_div.
-
-### Iteration 133 — 2026-04-16 20:48 UTC — ✅ | metric=388 | commit=0232f33 (missing from branch)
-- Added 8 pairs: mode_dataframe, quantile_dataframe, value_counts_binned, memory_usage, named_agg, tz_localize_convert, numeric_ops, series_arith_fns.
-
-### Iteration 132 — 2026-04-16 20:18 UTC — ✅ | metric=380 | commit=5c60e02
-- Added 8 pairs: searchsorted, astype_series, timestamp, date_offset, timedelta, json_normalize, period, interval.
-
-### Iteration 131 — 2026-04-16 19:31 UTC — ✅ | metric=372 | commit=7b67fa5
-- Added 8 pairs: factorize, get_dummies, nat_sort, to_datetime, to_numeric, select_dtypes, replace_dataframe, pctchange_df.
-
-### Iteration 130 — 2026-04-16 18:54 UTC — ✅ | metric=364 | commit=683ae6b
-- Added 8 pairs: skew_kurt, sem_var, mode_series, idxmin_idxmax, df_skew_kurt, df_sem_var, nancumops, clip_advanced.
+### Iters 130–135 — all ✅ | metrics 364→388. Covered shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, skew_kurt, sem_var, mode, idxmin_idxmax, nancumops, clip_advanced.
 
 ### Iters 126–129 — ⚠️ Error (MCP blocked, not pushed). metrics 352→364 attempted.
 
-### Iteration 125 — 2026-04-16 10:32 UTC — ✅ | metric=352 | commit=89e8b20
-- 7 pairs: index_union, intersection, difference, getloc, at_tolist, series_groupby_apply, series_groupby_filter.
-
-### Iteration 124 — 2026-04-16 09:34 UTC — ⚠️ Error (MCP blocked)
-
-### Iteration 123 — 2026-04-16 08:37 UTC — ✅ | metric=78 | commit=968ae70
+### Iters 123–125 — ✅/⚠️ mix — metrics 78→352. Rebuilt branch; added index_union, intersection, difference, groupby ops.
 
 ### Iters 118–122 — ✅/⚠️ mix — metrics 57→71. Rebuilt branch after loss.
 
