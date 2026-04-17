@@ -369,17 +369,14 @@ function parseIso(m: RegExpExecArray): Timedelta | null {
 
 /** Parse human-readable form: "1h 30m 20s 500ms". Returns null if nothing matched. */
 function parseHuman(value: string): Timedelta | null {
-  RE_HUMAN_UNIT.lastIndex = 0; // reset global regex
   let totalMs = 0;
   let matched = false;
 
-  let match = RE_HUMAN_UNIT.exec(value);
-  while (match !== null) {
+  for (const match of value.matchAll(RE_HUMAN_UNIT)) {
     matched = true;
     const qty = Number(match[1]);
     const unit = (match[2] ?? "").toLowerCase();
     totalMs += humanUnitToMs(qty, unit);
-    match = RE_HUMAN_UNIT.exec(value);
   }
 
   return matched ? new Timedelta(totalMs) : null;
