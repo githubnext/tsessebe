@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T10:28:00Z |
-| Iteration Count | 149 |
+| Last Run | 2026-04-17T10:51:52Z |
+| Iteration Count | 150 |
 | Best Metric | 473 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 
 ## 📊 Iteration History
 
+### Iteration 150 — 2026-04-17 10:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24561344321)
+- **Status**: ✅ Accepted | **Metric**: 473 (previous best: 468 on branch, delta: +5) | **Commit**: 114fbab
+- Added 5 pairs: replace_series (replaceSeries functional API), isnull_notnull (isnull/notnull aliases), to_numeric_scalar (toNumericScalar coercion), dataframe_assign_fn (dataFrameAssign functional), dataframe_isin_fn (dataFrameIsin global+per-column).
+
 ### Iteration 149 — 2026-04-17 10:28 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24560446149)
 - **Status**: ✅ Accepted | **Metric**: 473 (previous best: 468, delta: +5) | **Commit**: e83434d
 - Added 5 pairs: dataframe_isin (dataFrameIsin global+per-column), series_reset_index (Series.resetIndex), dataframe_reset_index (DataFrame.resetIndex), series_to_object (Series.toObject), interval_index_construction (IntervalIndex.fromArrays/fromIntervals/mid/filter).
@@ -78,30 +82,8 @@
 - **Status**: ✅ Accepted | **Metric**: 462 (previous best: 460, delta: +2) | **Commit**: 4438925
 - Added 8 pairs: timestamp_arith (Timestamp.add/sub/eq/lt/gt/le/ge/ne), timestamp_str_format (strftime/isoformat/day_name/month_name), timestamp_round_normalize (ceil/floor/round/normalize), value_counts_opts (normalize/ascending/dropna options), series_sortvalues_opts (ascending=false/naPosition='first'), dataframe_sortvalues_mixed (mixed ascending array), series_groupby_size (SeriesGroupBy.size/getGroup), series_log_natural (seriesLog natural log).
 
-### Iteration 146 — 2026-04-17 07:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24553601624)
-- **Status**: ⚠️ Error (state mismatch) | **Metric**: 454 (branch had 454 files; state file incorrectly recorded 460) | **Commit**: 8568c4a
-- State file claimed 6 pairs were added (metric 454→460) but branch still showed 454 after that run. Discarded — iteration 147 re-covers those 6 pairs plus 2 more.
+### Iters 143–149 — ✅/⚠️ mix | metrics 437→473. period_arithmetic, period_index_methods, dt_total_seconds, timedelta_index_ops, interval_overlaps, describe_opts, merge_index_join, to_json_orient, mode_dataframe_fn, where_mask_fns, idxmin_max_df, diff_applymap_fn, quantile_fn, pct_change_fn, merge_suffixes, expanding_min_periods, dt_isocalendar, period_asfreq, sample_fn, nunique_fn, timestamp_arith, timestamp_str_format, timestamp_round_normalize, value_counts_opts, series_sortvalues_opts, dataframe_sortvalues_mixed, series_groupby_size, series_log_natural, series_standalone_compare, dataframe_compare_lege, series_floordiv_standalone, drop_duplicates_fn, nsmallest_series_fn, duplicated_fn.
 
-### Iteration 145 — 2026-04-17 06:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24551622461)
-- **Status**: ✅ Accepted | **Metric**: 454 (previous best: 445, delta: +9) | **Commit**: cf58dc1
-- Added 9 pairs: mode_dataframe_fn, where_mask_series_fn, where_mask_df_fn, idxmin_max_df, interpolate_fn, explode_fn, fillna_fn, dropna_fn, diff_applymap_fn. All target standalone functional forms not yet benchmarked.
+### Iters 126–142 — ✅/⚠️ mix | metrics 352→437. Shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, skew_kurt, sem_var, mode, idxmin_idxmax, nancumops, clip_advanced, infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg, series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, radd_rsub ops, series_exp_log, series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full, read_excel, pipe_chain_ops, nan_extended_agg, series_pipe_apply, cut_interval_index, argsort, interval_index_ops, period_index_range, datetime_index_from, timedelta_index, resolve_freq, mode_dataframe, combine_first_ext, dropna_fn, fillna_fn, explode_fn, isin_fn, interpolate_fn, sample_fn, groupby_multi_key, timestamp_static, tz_datetime_index_ops, rolling_center_min_periods, cast_scalar, concat_options, ewm_com_halflife, nat_sort_key, dataframe_iter.
 
-### Iteration 144 — 2026-04-17 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24549838166)
-- **Status**: ✅ Accepted | **Metric**: 445 (previous best: 437, delta: +8) | **Commit**: b0bd82e
-- Added 8 pairs: period_arithmetic (Period.add/diff/compareTo/contains), period_index_methods (PeriodIndex.shift/sort/unique/toDatetimeStart/toDatetimeEnd), dt_total_seconds (DatetimeAccessor.total_seconds), timedelta_index_ops (TimedeltaIndex.sort/unique/shift/filter/min/max), interval_overlaps (Interval.overlaps/IntervalIndex.overlaps), describe_opts (describe with percentiles/include options), merge_index_join (merge with left_index/right_index), to_json_orient (toJson with records/split/columns/values orient).
-
-### Iteration 143 — 2026-04-17 04:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24547746540)
-- **Status**: ✅ Accepted | **Metric**: 437 (previous best: 429, delta: +8) | **Commit**: d968511
-- Added 8 pairs: quantile_fn, pct_change_fn, merge_suffixes, expanding_min_periods, dt_isocalendar, period_asfreq, sample_fn, nunique_fn.
-
-### Iters 139–145 — ✅ accepted | metrics 420→454. Cut_interval_index, argsort, interval_index_ops, period_index_range, datetime_index_from, timedelta_index, resolve_freq, mode_dataframe, combine_first_ext, dataframe_interpolate_fn, where_mask_df_fn, fillna_fn, dropna_fn, isin_fn, explode_fn, interpolate_fn, sample_fn, where_mask_fn, groupby_multi_key, timestamp_static, tz_datetime_index_ops, rolling_center_min_periods, cast_scalar, concat_options, ewm_com_halflife, nat_sort_key, dataframe_iter, quantile_fn, pct_change_fn, merge_suffixes, expanding_min_periods, dt_isocalendar, period_asfreq, sample_fn, nunique_fn, period_arithmetic, period_index_methods, dt_total_seconds, timedelta_index_ops, interval_overlaps, describe_opts, merge_index_join, to_json_orient, mode_dataframe_fn, where_mask_fns, idxmin_max_df, diff_applymap_fn.
-
-### Iters 126–138 — ✅/⚠️ | metrics 352→420. Shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, skew_kurt, sem_var, mode, idxmin_idxmax, nancumops, clip_advanced, infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg, series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, radd_rsub ops, series_exp_log, series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full, read_excel, pipe_chain_ops, nan_extended_agg, series_pipe_apply.
-
-### Iters 123–125 — ✅/⚠️ mix — metrics 78→352. Rebuilt branch; added index_union, intersection, difference, groupby ops.
-
-### Iters 118–122 — ✅/⚠️ mix — metrics 57→71. Rebuilt branch after loss.
-
-### Iters 107–117 — ✅/⚠️ mix — metrics 305→354. Branch 3c596789 fully built out.
-
-### Iters 1–106 — all ✅ accepted — metrics 0→332. Full baseline established.
+### Iters 1–125 — all ✅/⚠️ | metrics 0→352. Full baseline, rebuilds after branch loss, index_union/intersection/difference, groupby ops, all major functions benchmarked.
