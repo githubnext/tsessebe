@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T16:44:22Z |
-| Iteration Count | 159 |
-| Best Metric | 513 |
+| Last Run | 2026-04-17T16:05:00Z |
+| Iteration Count | 158 |
+| Best Metric | 508 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -65,10 +65,6 @@
 ---
 
 ## 📊 Iteration History
-
-### Iteration 159 — 2026-04-17 16:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24575365003)
-- **Status**: ✅ Accepted | **Metric**: 513 (previous best: 508, delta: +5) | **Commit**: 4752fe4
-- Added 5 pairs: shift_series_fn (shiftSeries/diffSeries standalone), apply_series_label (applySeries with (value,label) callback), dataframe_apply_fn (dataFrameApply axis=0 sum aggregation), combine_first_fn (combineFirstSeries standalone), isin_fn (isin/dataFrameIsin standalone).
 
 ### Iteration 158 — 2026-04-17 16:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24573945763)
 - **Status**: ✅ Accepted | **Metric**: 508 (previous best: 503, delta: +5) | **Commit**: 2c82582
