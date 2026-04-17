@@ -413,10 +413,24 @@ function retreatDate(d: Date, pf: ParsedFreq): Date {
 
 // ─── generation helpers ────────────────────────────────────────────────────────
 
+/**
+ * For anchor-based frequencies (e.g. "W"), snap `d` forward to the first
+ * occurrence of the anchor day on or after `d`.  For all other frequencies
+ * the date is returned unchanged.
+ */
+function snapToAnchor(d: Date, pf: ParsedFreq): Date {
+  if (pf.unit === "W") {
+    const dow = d.getUTCDay();
+    const daysUntil = (pf.anchor - dow + 7) % 7;
+    return daysUntil === 0 ? d : new Date(d.getTime() + daysUntil * MS_DAY);
+  }
+  return d;
+}
+
 /** Generate `count` dates starting from `start`, advancing by `pf` each step. */
 function genFromStart(start: Date, count: number, pf: ParsedFreq): Date[] {
   const out: Date[] = [];
-  let cur = start;
+  let cur = snapToAnchor(start, pf);
   for (let i = 0; i < count; i++) {
     out.push(cur);
     cur = advanceDate(cur, pf);
@@ -430,7 +444,7 @@ function genFromStart(start: Date, count: number, pf: ParsedFreq): Date[] {
  */
 function genBetween(start: Date, end: Date, pf: ParsedFreq): Date[] {
   const out: Date[] = [];
-  let cur = start;
+  let cur = snapToAnchor(start, pf);
   while (cur.getTime() <= end.getTime()) {
     out.push(cur);
     const next = advanceDate(cur, pf);
