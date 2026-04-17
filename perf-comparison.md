@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T05:55:00Z |
-| Iteration Count | 144 |
-| Best Metric | 445 |
+| Last Run | 2026-04-17T06:55:00Z |
+| Iteration Count | 145 |
+| Best Metric | 454 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -74,6 +74,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 145 — 2026-04-17 06:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24551622461)
+- **Status**: ✅ Accepted | **Metric**: 454 (previous best: 445, delta: +9) | **Commit**: cf58dc1
+- Added 9 pairs: mode_dataframe_fn, where_mask_series_fn, where_mask_df_fn, idxmin_max_df, interpolate_fn, explode_fn, fillna_fn, dropna_fn, diff_applymap_fn. All target standalone functional forms not yet benchmarked.
 
 ### Iteration 144 — 2026-04-17 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24549838166)
 - **Status**: ✅ Accepted | **Metric**: 445 (previous best: 437, delta: +8) | **Commit**: b0bd82e
