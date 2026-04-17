@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T08:40:00Z |
-| Iteration Count | 147 |
-| Best Metric | 462 |
+| Last Run | 2026-04-17T09:34:00Z |
+| Iteration Count | 148 |
+| Best Metric | 468 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 
 ## 📊 Iteration History
 
+### Iteration 148 — 2026-04-17 09:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24558253472)
+- **Status**: ✅ Accepted | **Metric**: 468 (previous best: 462, delta: +6) | **Commit**: b19b611
+- Added 6 pairs: series_standalone_compare (seriesEq/Ne/Lt/Gt/Le/Ge), dataframe_compare_lege (dataFrameLe/Ge), series_floordiv_standalone (seriesFloorDiv/Mod/Pow), drop_duplicates_fn (dropDuplicatesSeries/DataFrame), nsmallest_series_fn (nsmallestSeries), duplicated_fn (duplicatedSeries/DataFrame).
+
 ### Iteration 147 — 2026-04-17 08:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24555921452)
 - **Status**: ✅ Accepted | **Metric**: 462 (previous best: 460, delta: +2) | **Commit**: 4438925
 - Added 8 pairs: timestamp_arith (Timestamp.add/sub/eq/lt/gt/le/ge/ne), timestamp_str_format (strftime/isoformat/day_name/month_name), timestamp_round_normalize (ceil/floor/round/normalize), value_counts_opts (normalize/ascending/dropna options), series_sortvalues_opts (ascending=false/naPosition='first'), dataframe_sortvalues_mixed (mixed ascending array), series_groupby_size (SeriesGroupBy.size/getGroup), series_log_natural (seriesLog natural log).
@@ -86,23 +90,9 @@
 - **Status**: ✅ Accepted | **Metric**: 437 (previous best: 429, delta: +8) | **Commit**: d968511
 - Added 8 pairs: quantile_fn, pct_change_fn, merge_suffixes, expanding_min_periods, dt_isocalendar, period_asfreq, sample_fn, nunique_fn.
 
-### Iteration 142 — 2026-04-17 03:07 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24545567127)
-- **Status**: ✅ Accepted | **Metric**: 429 (previous best: 420, delta: +9) | **Commit**: 0f3f448
-- Added 9 pairs: groupby_multi_key, timestamp_static, tz_datetime_index_ops, rolling_center_min_periods, cast_scalar, concat_options, ewm_com_halflife, nat_sort_key, dataframe_iter.
+### Iters 139–145 — ✅ accepted | metrics 420→454. Cut_interval_index, argsort, interval_index_ops, period_index_range, datetime_index_from, timedelta_index, resolve_freq, mode_dataframe, combine_first_ext, dataframe_interpolate_fn, where_mask_df_fn, fillna_fn, dropna_fn, isin_fn, explode_fn, interpolate_fn, sample_fn, where_mask_fn, groupby_multi_key, timestamp_static, tz_datetime_index_ops, rolling_center_min_periods, cast_scalar, concat_options, ewm_com_halflife, nat_sort_key, dataframe_iter, quantile_fn, pct_change_fn, merge_suffixes, expanding_min_periods, dt_isocalendar, period_asfreq, sample_fn, nunique_fn, period_arithmetic, period_index_methods, dt_total_seconds, timedelta_index_ops, interval_overlaps, describe_opts, merge_index_join, to_json_orient, mode_dataframe_fn, where_mask_fns, idxmin_max_df, diff_applymap_fn.
 
-### Iteration 141 — 2026-04-17 01:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24543161266)
-- **Status**: ✅ Accepted | **Metric**: 428 (previous best: 428 on branch=420, delta: +8) | **Commit**: e4ed391
-- Added 8 pairs: interpolate_fn, sample_fn, fillna_fn, where_mask_fn, mode_dataframe, combine_first_fn, dropna_fn, explode_fn.
-
-### Iteration 140 — 2026-04-17 00:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24541324267)
-- **Status**: ✅ Accepted | **Metric**: 428 (previous best: 420, delta: +8) | **Commit**: 0a2efa8
-- Added 8 pairs: mode_dataframe, combine_first_ext, dataframe_interpolate_fn, where_mask_df_fn, fillna_fn, dropna_fn, isin_fn, explode_fn.
-
-### Iteration 139 — 2026-04-16 23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24539911725)
-- **Status**: ✅ Accepted | **Metric**: 420 (previous best: 412, delta: +8) | **Commit**: 18753f6
-- Added 8 pairs: cut_interval_index, dataframe_sign, argsort_scalars, interval_index_ops, period_index_range, datetime_index_from, timedelta_index, resolve_freq.
-
-### Iters 126–145 — all ✅ (except 126–129 ⚠️ Error MCP) | metrics 352→454. Covered period_arithmetic, period_index_methods, dt_total_seconds, timedelta_index_ops, interval_overlaps, describe_opts, merge_index_join, to_json_orient, mode_dataframe_fn, where_mask_fns, idxmin_max_df, interpolate_fn, explode_fn, fillna_fn, dropna_fn, diff_applymap_fn, quantile_fn, pct_change_fn, merge_suffixes, expanding_min_periods, dt_isocalendar, period_asfreq, sample_fn, nunique_fn, groupby_multi_key, timestamp_static, tz_datetime_index_ops, rolling_center_min_periods, cast_scalar, concat_options, ewm_com_halflife, nat_sort_key, dataframe_iter, shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, skew_kurt, sem_var, mode, idxmin_idxmax, nancumops, clip_advanced, infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg, series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, radd_rsub ops, series_exp_log, series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full, read_excel, pipe_chain_ops, nan_extended_agg, series_pipe_apply.
+### Iters 126–138 — ✅/⚠️ | metrics 352→420. Shift_diff, pow_mod, clip_bounds, reindex, compare, arith_fns, skew_kurt, sem_var, mode, idxmin_idxmax, nancumops, clip_advanced, infer_dtype, value_counts_binned, categorical_index, tz_localize_convert, align_series, align_dataframe, memory_usage, named_agg, series_any_all, dataframe_any_all, dataframe_nunique, series_crosstab, bdate_range, radd_rsub ops, series_exp_log, series_ceil_floor_trunc_sqrt, dataframe_ceil_floor_trunc, dataframe_exp_log, pivot_table_full, read_excel, pipe_chain_ops, nan_extended_agg, series_pipe_apply.
 
 ### Iters 123–125 — ✅/⚠️ mix — metrics 78→352. Rebuilt branch; added index_union, intersection, difference, groupby ops.
 
