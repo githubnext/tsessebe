@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T20:16:47Z |
-| Iteration Count | 164 |
-| Best Metric | 514 |
+| Last Run | 2026-04-17T20:47:47Z |
+| Iteration Count | 165 |
+| Best Metric | 513 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #148 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -65,6 +65,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 165 — 2026-04-17 20:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24585962377)
+- **Status**: ✅ Accepted | **Metric**: 513 (previous best on branch: 508, delta: +5) | **Commit**: 682db54
+- Added 5 pairs: series_set_reset_index (Series.setIndex/resetIndex), melt_id_vars (melt with id_vars options), concat_series_axis0 (concat of Series), stack_options (stack with dropna), sample_frac (sampleSeries/sampleDataFrame with frac). Note: state claimed 514 but branch was at 508 after PR merge; now at 513.
 
 ### Iteration 164 — 2026-04-17 20:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24584779516)
 - **Status**: ✅ Accepted | **Metric**: 514 (previous best on branch: 508, delta: +6) | **Commit**: 8a03d84
