@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T11:22:00Z |
-| Iteration Count | 151 |
-| Best Metric | 478 |
+| Last Run | 2026-04-17T11:48:26Z |
+| Iteration Count | 152 |
+| Best Metric | 483 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #147 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -65,6 +65,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 152 — 2026-04-17 11:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24563461398)
+- **Status**: ✅ Accepted | **Metric**: 483 (previous best: 478, delta: +5) | **Commit**: 151b49a
+- Added 5 pairs: dataframe_median (DataFrame.median()), datetime_index_ops (DatetimeIndex sort/unique/toStrings/concat/slice/contains), datetime_index_snap (DatetimeIndex.snap(freq)), period_index_query (PeriodIndex.getLoc/contains), series_groupby_agg_all (SeriesGroupBy.sum/mean/std/min/max/count/first/last).
 
 ### Iteration 151 — 2026-04-17 11:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24562479978)
 - **Status**: ✅ Accepted | **Metric**: 478 (previous best: 473, delta: +5) | **Commit**: 96a7915
