@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T10:17:05Z |
-| Iteration Count | 184 |
-| Best Metric | 540 |
+| Last Run | 2026-04-18T10:46:56Z |
+| Iteration Count | 185 |
+| Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -44,7 +44,7 @@
 ## 📚 Lessons Learned
 
 - **Standalone vs method-form**: Many TS bench files (bench_dataframe_abs.ts, bench_dataframe_round.ts, bench_dataframe_rolling_apply.ts, bench_named_agg.ts) use method-form (df.abs(), df.round()) but don't import the standalone function export. Adding `_fn` suffix benchmarks covers the standalone exports. Python files are always 1:1 with TS files (same names).
-- **CRITICAL BRANCHING**: Use `autoloop/perf-comparison` (PR #150 active branch). Always merge origin/main first; state file best_metric may diverge from branch reality.
+- **CRITICAL BRANCHING**: Use `autoloop/perf-comparison` (PR #150 active branch). Always merge origin/main first; state file best_metric may diverge from branch reality. Verify with `git log --oneline origin/autoloop/perf-comparison` before trusting state file counts. If branch has fewer files than expected, state was recording non-canonical results.
 - **MCP HTTP workaround**: Use curl to `http://host.docker.internal:80/mcp/safeoutputs` with Authorization from `~/.copilot/mcp-config.json`. Get `Mcp-Session-Id` from initialize, send `notifications/initialized`, then `tools/call`.
 - push_repo_memory limit is ~10KB file / ~12KB total. Keep history trimmed.
 - Metric = min(ts_bench_count, py_bench_count). Bun not installed; file-count only.
@@ -59,19 +59,24 @@
 
 ## 🔭 Future Directions
 
-- **Standalone vs method**: Many src/index.ts exports (combineFirstSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply) were only benchmarked via their method-call equivalents. Check `grep -r "FnName" benchmarks/tsb/*.ts` to find gaps.
+- **Standalone vs method**: combineFirstSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply, NamedAgg class + isNamedAggSpec now covered in iter 185.
 - Series.autocorr(lag) if implemented.
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
+- STACK_DEFAULT_SEP constant (not really benchmarkable).
 
 ---
 
 ## 📊 Iteration History
 
+### Iteration 185 — 2026-04-18 10:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24602996473)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: dbb98ff
+- Merged origin/main (canonical 534). Added 5 standalone-fn benchmarks: combineFirstSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply, NamedAgg+isNamedAggSpec. Iters 183-184 added these to non-canonical branches only; this iteration re-adds them to the true canonical branch.
+
 ### Iteration 184 — 2026-04-18 10:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24602516981)
-- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 new pairs) | **Commit**: f5c5c77
-- Merged origin/main (canonical 534). Added 6 pairs: combine_first_series, dataframe_abs_fn (standalone), dataframe_round_fn (standalone), dataframe_rolling_apply_fn (standalone), named_agg_spec (NamedAgg/namedAgg/isNamedAggSpec), digitize_fn. All target standalone exports not yet covered.
+- **Status**: ✅ Accepted (non-canonical) | **Metric**: 540 (non-canonical branch, not pushed to canonical) | **Commit**: f5c5c77
+- Files were created but not on canonical branch autoloop/perf-comparison. Real canonical remained at 534.
 
 ### Iteration 183 — 2026-04-18 09:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24602049807)
 - **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: 338d756
