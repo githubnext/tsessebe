@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T18:15:00Z |
-| Iteration Count | 197 |
+| Last Run | 2026-04-18T18:48:00Z |
+| Iteration Count | 198 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -73,6 +73,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 198 — 2026-04-18 18:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24611426030)
+- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 new pairs) | **Commit**: f7dce11
+- Merged origin/main (534 canonical pairs). Added 6 standalone-fn benchmark pairs: shift_series_fn (shiftSeries+dataFrameShift), combine_first_series_fn (combineFirstSeries), dataframe_abs_round_fn (dataFrameAbs+dataFrameRound), isin_fn (isin standalone with int/str/small/large sets), astype_fn (astype for DataFrame), dataframe_rolling_apply_fn (dataFrameRollingApply standalone). Prior benchmarks for these ops used method forms or manually implemented functions.
 
 ### Iteration 197 — 2026-04-18 18:15 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24610826609)
 - **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 new pairs) | **Commit**: ab638ed
