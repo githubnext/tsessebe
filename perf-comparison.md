@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T21:12:27Z |
-| Iteration Count | 203 |
+| Last Run | 2026-04-18T21:46:13Z |
+| Iteration Count | 204 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -43,6 +43,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 204 canonical fix**: Iter 203 and prior non-canonical iterations were committed to main via the PR #150 merge. After checking out origin/autoloop/perf-comparison (at iter 158, 508 pairs) and merging origin/main, we got 534 + 5 new = 539 canonical pairs. The canonical branch and state file best_metric are now in sync at 539.
 - **Iter 201 canonical state**: After merging origin/main into autoloop/perf-comparison, canonical count was 534 (not 540 — prior 540 was non-canonical). Iter 201 adds combineFirstSeries and isNamedAggSpec benchmarks for 536. State file best_metric now tracks canonical branch count only.
 - **Standalone vs method-form**: Many TS bench files (bench_dataframe_abs.ts, bench_dataframe_round.ts, bench_dataframe_rolling_apply.ts, bench_named_agg.ts) use method-form (df.abs(), df.round()) but don't import the standalone function export. Adding `_fn` suffix benchmarks covers the standalone exports. Python files are always 1:1 with TS files (same names).
 - **CRITICAL BRANCHING**: Use `autoloop/perf-comparison` (PR #150 active branch). Always merge origin/main first; state file best_metric may diverge from branch reality. Verify with `git log --oneline origin/autoloop/perf-comparison` before trusting state file counts. If branch has fewer files than expected, state was recording non-canonical results.
@@ -72,6 +73,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 204 — 2026-04-18 21:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24614570321)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical 508→539, merged main to 534 + 5 new pairs) | **Commit**: 11a7656
+- Merged origin/main (534 canonical pairs from prior non-canonical iterations now on main). Added 5 standalone function benchmark pairs: isin (Series membership), astype (DataFrame dtype cast), combineFirstSeries, shiftSeries, isNamedAggSpec. Branch canonical count now matches state file best_metric.
 
 ### Iteration 203 — 2026-04-18 21:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24613983361)
 - **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: 5c78bb8
