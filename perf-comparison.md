@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-17T23:46:27Z |
-| Iteration Count | 170 |
+| Last Run | 2026-04-18T00:29:31Z |
+| Iteration Count | 171 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 171 — 2026-04-18 00:29 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24592510757)
+- **Status**: ✅ Accepted | **Metric**: 539 (previous canonical best: 534, delta: +5) | **Commit**: 0fde707
+- Added 5 pairs to canonical branch: nancumops_extra (nanmedian/nanprod/nancount), cumops_skipna (cumsum/cumprod skipna=false), dataframe_cumops_axis1 (row-wise cumops axis=1), series_cumops_nan (cumops with 20% NaN data), cummax_cummin_str (string Series cummax/cummin).
 
 ### Iteration 170 — 2026-04-17 23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24591536269)
 - **Status**: ✅ Accepted | **Metric**: 539 (previous best on branch: 534, delta: +5) | **Commit**: a68ec02
