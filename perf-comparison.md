@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T08:16:42Z |
-| Iteration Count | 180 |
+| Last Run | 2026-04-18T08:47:55Z |
+| Iteration Count | 181 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 181 — 2026-04-18 08:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24601083406)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical branch 534→539, +5 new pairs) | **Commit**: ffc962f
+- Added 5 pairs: dataframe_quantile (quantileDataFrame q/axis/interpolation), crosstab_normalize (normalize=all/index/columns + margins), series_rmul_rdiv (seriesRmul/seriesRdiv scalar+series), dataframe_rmul_rdiv (dataFrameRmul/dataFrameRdiv scalar+df), series_shift_diff (shiftSeries/diffSeries multi-period).
 
 ### Iteration 180 — 2026-04-18 08:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24600586107)
 - **Status**: ✅ Accepted | **Metric**: 539 (baseline 534 after merging main, +5 new pairs) | **Commit**: b5c1f86
