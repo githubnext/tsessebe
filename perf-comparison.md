@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T03:57:33Z |
-| Iteration Count | 174 |
-| Best Metric | 560 |
+| Last Run | 2026-04-18T04:49:14Z |
+| Iteration Count | 175 |
+| Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 175 — 2026-04-18 04:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24597203672)
+- **Status**: ✅ Accepted | **Metric**: 539 (previous canonical best: 534, delta: +5) | **Commit**: 21f8457
+- Added 5 pairs to canonical branch: str_contains (regex+literal), fillna_col_map (per-column fill dict), groupby_agg_no_index (asIndex=false), crosstab_normalize (all/index/columns), pct_change_periods (periods=1,7 series + periods=5 df). State file best_metric reset to 539 (canonical branch reality after main merge).
 
 ### Iteration 174 — 2026-04-18 03:57 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24595987064)
 - **Status**: ✅ Accepted | **Metric**: 560 (previous best: 559, delta: +1) | **Commit**: b352572
