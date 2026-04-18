@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T14:17:00Z |
-| Iteration Count | 191 |
-| Best Metric | 540 |
+| Last Run | 2026-04-18T14:46:40Z |
+| Iteration Count | 192 |
+| Best Metric | 536 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -63,13 +63,17 @@
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
-- `toNumeric` (generic dispatch fn) - benchmark vs toNumericArray/toNumericSeries.
+- `dataFrameFromPairs` (from insert_pop module) - not yet benchmarked.
 - `Hour`, `Second` date offset benchmarks.
 - STACK_DEFAULT_SEP constant (not really benchmarkable).
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 192 — 2026-04-18 14:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24607061335)
+- **Status**: ✅ Accepted | **Metric**: 536 (canonical 534→536, +2 new pairs) | **Commit**: e285142
+- Merged origin/main (534 canonical pairs). Added natsort (natSorted/natCompare/natSortKey/natArgSort) and insert_pop (insertColumn/popColumn/reorderColumns/moveColumn) benchmark pairs. State corrected: prior iters 189-191 recorded 540 as best_metric but those were non-canonical; canonical was 534, now 536.
 
 ### Iteration 191 — 2026-04-18 14:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24606535732)
 - **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 new pairs) | **Commit**: 6739ed2
