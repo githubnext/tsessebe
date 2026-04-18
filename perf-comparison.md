@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T00:29:31Z |
-| Iteration Count | 171 |
+| Last Run | 2026-04-18T01:02:49Z |
+| Iteration Count | 172 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 172 — 2026-04-18 01:02 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24593208089)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical best confirmed: 534→539, delta: +5) | **Commit**: aad57ec
+- Added 5 pairs to canonical branch: read_json_orients (split/index/columns formats), pivot_table_fill_value (sum/count with fill_value=0), pct_change_fill_method (pad/bfill methods), reindex_fill_methods (ffill/bfill on series+df), interpolate_methods (zero/nearest/ffill/bfill).
 
 ### Iteration 171 — 2026-04-18 00:29 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24592510757)
 - **Status**: ✅ Accepted | **Metric**: 539 (previous canonical best: 534, delta: +5) | **Commit**: 0fde707
