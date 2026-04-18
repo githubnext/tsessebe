@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T20:46:10Z |
-| Iteration Count | 202 |
-| Best Metric | 536 |
+| Last Run | 2026-04-18T21:12:27Z |
+| Iteration Count | 203 |
+| Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -72,6 +72,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 203 — 2026-04-18 21:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24613983361)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: 5c78bb8
+- Merged origin/main (534 canonical pairs). Added 5 standalone function benchmarks: combineFirstSeries, isNamedAggSpec, toNumeric (main overload), seriesAbs/dataFrameAbs, shiftSeries. These functions existed in src/ but prior benchmarks used method-form or local definitions instead of the exported standalone functions.
 
 ### Iteration 202 — 2026-04-18 20:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24613529908)
 - **Status**: ✅ Accepted | **Metric**: 536 (canonical 534→536, +2 new pairs) | **Commit**: acd2020
