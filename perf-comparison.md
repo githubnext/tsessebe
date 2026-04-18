@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T15:16:01Z |
-| Iteration Count | 193 |
-| Best Metric | 539 |
+| Last Run | 2026-04-18T16:13:39Z |
+| Iteration Count | 194 |
+| Best Metric | 535 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -45,7 +45,7 @@
 
 - **Standalone vs method-form**: Many TS bench files (bench_dataframe_abs.ts, bench_dataframe_round.ts, bench_dataframe_rolling_apply.ts, bench_named_agg.ts) use method-form (df.abs(), df.round()) but don't import the standalone function export. Adding `_fn` suffix benchmarks covers the standalone exports. Python files are always 1:1 with TS files (same names).
 - **CRITICAL BRANCHING**: Use `autoloop/perf-comparison` (PR #150 active branch). Always merge origin/main first; state file best_metric may diverge from branch reality. Verify with `git log --oneline origin/autoloop/perf-comparison` before trusting state file counts. If branch has fewer files than expected, state was recording non-canonical results.
-- **Iters 189-192 non-canonical**: Multiple iterations claimed to add combineFirstSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply etc, but were on wrong branches. Iter 193 finally adds them correctly (canonical 534→539).
+- **Iters 189-193 non-canonical**: Multiple iterations claimed to push to origin/autoloop/perf-comparison but were on wrong branches. PR #150 used push_to_pull_request_branch but origin/autoloop/perf-comparison was never updated (still at iter 158, 508 pairs). Canonical count from origin/main (post-PR-merge) = 534. Iter 194 adds compare on top of main=534, giving 535.
 - **MCP HTTP workaround**: Use curl to `http://host.docker.internal:80/mcp/safeoutputs` with Authorization from `~/.copilot/mcp-config.json`. Get `Mcp-Session-Id` from initialize, send `notifications/initialized`, then `tools/call`.
 - push_repo_memory limit is ~10KB file / ~12KB total. Keep history trimmed.
 - Metric = min(ts_bench_count, py_bench_count). Bun not installed; file-count only.
@@ -70,6 +70,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 194 — 2026-04-18 16:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24608639893)
+- **Status**: ✅ Accepted | **Metric**: 535 (canonical 534→535, +1 new pair) | **Commit**: 7164f1e
+- Added `compare` benchmark pair: seriesEq/Ne/Lt/Gt/dataFrameEq/Lt on 100k-row Series and DataFrame vs pandas Series.eq/ne/lt/gt/DataFrame.eq/lt. Note: canonical origin/autoloop/perf-comparison was at 508 (iter 158); origin/main brought it to 534; prior iters 189-193 claiming 539+ were all non-canonical non-merged branches.
 
 ### Iteration 193 — 2026-04-18 15:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24607585934)
 - **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: e6d2806
