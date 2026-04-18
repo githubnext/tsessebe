@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T20:12:00Z |
-| Iteration Count | 201 |
+| Last Run | 2026-04-18T20:46:10Z |
+| Iteration Count | 202 |
 | Best Metric | 536 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -72,6 +72,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 202 — 2026-04-18 20:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24613529908)
+- **Status**: ✅ Accepted | **Metric**: 536 (canonical 534→536, +2 new pairs) | **Commit**: acd2020
+- Merged origin/main (534 canonical pairs). Added bench_combine_first_series_fn (standalone combineFirstSeries fn) and bench_is_named_agg_spec (isNamedAggSpec type-guard). Iter 201 claimed the same files but didn't successfully push; this iteration correctly pushes them.
 
 ### Iteration 201 — 2026-04-18 20:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24612917385)
 - **Status**: ✅ Accepted | **Metric**: 536 (canonical 534→536, +2 new pairs) | **Commit**: 8f1d1e4
