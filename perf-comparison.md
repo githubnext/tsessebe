@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T01:02:49Z |
-| Iteration Count | 172 |
-| Best Metric | 539 |
+| Last Run | 2026-04-18T02:18:33Z |
+| Iteration Count | 173 |
+| Best Metric | 559 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 173 — 2026-04-18 02:18 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24594692249)
+- **Status**: ✅ Accepted | **Metric**: 559 (previous best: 539, delta: +20) | **Commit**: 3b6e367
+- Merged 20 pairs from non-canonical branches (iters 167-170): cummax_cummin_str, cumops_skipna, dataframe_cov_options, dataframe_cumops_axis1, dataframe_rolling_apply_fn, dropna_thresh_subset, histogram_bin_edges, interpolate_zero_nearest, json_normalize_meta, nan_sum_mean_std, nan_var_min_max, nancumops_extra, pct_change_fill_method, pivot_table_aggfunc_variants, pivot_table_fill_value, read_json_all_orients, reindex_fill_methods, sample_weights, series_cumops_nan, wide_to_long_sep_suffix. Added 5 new: interpolate_methods, explode_dataframe, nlargest_dataframe, select_dtypes_options, get_dummies_drop_first.
 
 ### Iteration 172 — 2026-04-18 01:02 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24593208089)
 - **Status**: ✅ Accepted | **Metric**: 539 (canonical best confirmed: 534→539, delta: +5) | **Commit**: aad57ec
