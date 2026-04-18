@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T14:46:40Z |
-| Iteration Count | 192 |
-| Best Metric | 536 |
+| Last Run | 2026-04-18T15:16:01Z |
+| Iteration Count | 193 |
+| Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -45,6 +45,7 @@
 
 - **Standalone vs method-form**: Many TS bench files (bench_dataframe_abs.ts, bench_dataframe_round.ts, bench_dataframe_rolling_apply.ts, bench_named_agg.ts) use method-form (df.abs(), df.round()) but don't import the standalone function export. Adding `_fn` suffix benchmarks covers the standalone exports. Python files are always 1:1 with TS files (same names).
 - **CRITICAL BRANCHING**: Use `autoloop/perf-comparison` (PR #150 active branch). Always merge origin/main first; state file best_metric may diverge from branch reality. Verify with `git log --oneline origin/autoloop/perf-comparison` before trusting state file counts. If branch has fewer files than expected, state was recording non-canonical results.
+- **Iters 189-192 non-canonical**: Multiple iterations claimed to add combineFirstSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply etc, but were on wrong branches. Iter 193 finally adds them correctly (canonical 534→539).
 - **MCP HTTP workaround**: Use curl to `http://host.docker.internal:80/mcp/safeoutputs` with Authorization from `~/.copilot/mcp-config.json`. Get `Mcp-Session-Id` from initialize, send `notifications/initialized`, then `tools/call`.
 - push_repo_memory limit is ~10KB file / ~12KB total. Keep history trimmed.
 - Metric = min(ts_bench_count, py_bench_count). Bun not installed; file-count only.
@@ -63,13 +64,16 @@
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
-- `dataFrameFromPairs` (from insert_pop module) - not yet benchmarked.
-- `Hour`, `Second` date offset benchmarks.
+- `NamedAgg` class and `isNamedAggSpec` standalone fn benchmarks (both covered under namedAgg fn but class not directly imported).
 - STACK_DEFAULT_SEP constant (not really benchmarkable).
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 193 — 2026-04-18 15:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24607585934)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: e6d2806
+- Merged origin/main (534 canonical pairs). Added 5 standalone-fn benchmark pairs: combineFirstSeries (fn), dataFrameAbs (fn), dataFrameRound (fn), dataFrameRollingApply (fn), Hour+Second date offsets. Note: iters 189-192 claimed to add these but were all non-canonical; this iter correctly adds them to origin/autoloop/perf-comparison.
 
 ### Iteration 192 — 2026-04-18 14:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24607061335)
 - **Status**: ✅ Accepted | **Metric**: 536 (canonical 534→536, +2 new pairs) | **Commit**: e285142
