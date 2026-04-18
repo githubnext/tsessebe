@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T22:46:00Z |
-| Iteration Count | 206 |
+| Last Run | 2026-04-18T23:13:14Z |
+| Iteration Count | 207 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -43,6 +43,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 207 canonical correction**: Iters 204-206 each claimed adding combineFirstSeries/dataFrameAbs/etc. but from different non-canonical bases; only iter 207 (checked out canonical origin/autoloop/perf-comparison, merged main=534, added 5 _fn suffix pairs) is the definitive canonical 539. State best_metric=539 now confirmed canonical.
 - **Iter 204 canonical fix**: Iter 203 and prior non-canonical iterations were committed to main via the PR #150 merge. After checking out origin/autoloop/perf-comparison (at iter 158, 508 pairs) and merging origin/main, we got 534 + 5 new = 539 canonical pairs. The canonical branch and state file best_metric are now in sync at 539.
 - **Iter 201 canonical state**: After merging origin/main into autoloop/perf-comparison, canonical count was 534 (not 540 — prior 540 was non-canonical). Iter 201 adds combineFirstSeries and isNamedAggSpec benchmarks for 536. State file best_metric now tracks canonical branch count only.
 - **Standalone vs method-form**: Many TS bench files (bench_dataframe_abs.ts, bench_dataframe_round.ts, bench_dataframe_rolling_apply.ts, bench_named_agg.ts) use method-form (df.abs(), df.round()) but don't import the standalone function export. Adding `_fn` suffix benchmarks covers the standalone exports. Python files are always 1:1 with TS files (same names).
@@ -73,6 +74,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 207 — 2026-04-18 23:13 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24616025227)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 standalone fn pairs) | **Commit**: d33cde3
+- Merged origin/main (534 canonical pairs). Added 5 standalone-function benchmark pairs: combineFirstSeries, shiftSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply. These were previously only benchmarked via method-form (s.combineFirst, s.shift, df.abs, df.round, df.rolling().apply).
 
 ### Iteration 206 — 2026-04-18 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24615590800)
 - **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 standalone fn pairs) | **Commit**: 376403d
