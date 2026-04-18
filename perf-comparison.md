@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T02:18:33Z |
-| Iteration Count | 173 |
-| Best Metric | 559 |
+| Last Run | 2026-04-18T03:57:33Z |
+| Iteration Count | 174 |
+| Best Metric | 560 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 174 — 2026-04-18 03:57 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24595987064)
+- **Status**: ✅ Accepted | **Metric**: 560 (previous best: 559, delta: +1) | **Commit**: b352572
+- Added 26 new pairs: explode_dataframe, nlargest_dataframe, get_dummies_drop_first, select_dtypes_options, interpolate_methods, str_contains, str_rfind, fillna_colmap, groupby_agg_no_index, pivot_table_aggfuncs, crosstab_normalize, read_csv_na_values, wide_to_long_sep_suffix, dataframe_insert_pop, pct_change_periods, series_std_var_ddof, sample_weights_axis, rolling_center_options, sort_na_position, isna_notna_ops, corr_min_periods, series_replace_map, copy_deep, head_tail, series_iloc_loc, dataframe_iloc_loc. Canonical branch at 534; merged main (534) then added 26 → 560.
 
 ### Iteration 173 — 2026-04-18 02:18 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24594692249)
 - **Status**: ✅ Accepted | **Metric**: 559 (previous best: 539, delta: +20) | **Commit**: 3b6e367
