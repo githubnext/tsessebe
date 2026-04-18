@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T18:48:00Z |
-| Iteration Count | 198 |
+| Last Run | 2026-04-18T19:25:00Z |
+| Iteration Count | 199 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -65,7 +65,7 @@
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
-- `NamedAgg` class and `isNamedAggSpec` standalone fn benchmarks — pending (non-canonical iters 195-196 claimed to add these but were wrong branches).
+- `NamedAgg` class and `isNamedAggSpec` standalone fn benchmarks — ✅ Added in iter 199.
 - STACK_DEFAULT_SEP constant (not really benchmarkable).
 - More series/df methods that use method-form in bench files — check via grep for standalone import.
 - seriesAbs standalone (bench_series_abs.ts uses method form only), digitize pure-array fn.
@@ -73,6 +73,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 199 — 2026-04-18 19:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24611960898)
+- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 new pairs) | **Commit**: 4d38b1d
+- Merged origin/main (534 canonical pairs). Added 6 canonical standalone-fn pairs: dataframe_abs_round_fn (dataFrameAbs+dataFrameRound), combine_first_series_fn (combineFirstSeries), dataframe_rolling_apply_fn (dataFrameRollingApply), named_agg_fn (NamedAgg+isNamedAggSpec), isin_fn (isin standalone), shift_series_fn (shiftSeries+dataFrameShift). Prior bench files used method forms.
 
 ### Iteration 198 — 2026-04-18 18:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24611426030)
 - **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 new pairs) | **Commit**: f7dce11
