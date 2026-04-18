@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T06:28:27Z |
-| Iteration Count | 177 |
+| Last Run | 2026-04-18T06:53:53Z |
+| Iteration Count | 178 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -66,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 178 — 2026-04-18 06:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24599244443)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical branch confirmed: merged main 508→534, added +5 real pairs, total=539) | **Commit**: a468560
+- Added 5 new benchmark pairs on canonical branch: crosstab_normalize (normalize='all'/'index'/'columns'), reindex_fill_method (ffill/bfill), pivot_fill_value (fill_value=0 with sparse data), quantile_multi (array quantiles), interpolate_zero_nearest ('zero'/'nearest' methods). State was claiming 539 but canonical only had 508; this iteration brings canonical to real 539.
 
 ### Iteration 177 — 2026-04-18 06:28 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24598829133)
 - **Status**: ✅ Accepted | **Metric**: 539 (baseline after main merge: 534, delta: +5) | **Commit**: 1b090e1
