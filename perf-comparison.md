@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T17:14:42Z |
-| Iteration Count | 195 |
+| Last Run | 2026-04-18T17:45:47Z |
+| Iteration Count | 196 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -65,13 +65,17 @@
 - MultiIndex getLoc with slice / get_locs / get_indexer.
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
-- `NamedAgg` class and `isNamedAggSpec` standalone fn benchmarks — check if standalone import is covered.
+- `NamedAgg` class and `isNamedAggSpec` standalone fn benchmarks — ✅ added in iter 196 (bench_named_agg_fn).
 - STACK_DEFAULT_SEP constant (not really benchmarkable).
 - More series/df methods that use method-form in bench files — check via grep for standalone import.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 196 — 2026-04-18 17:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24610295973)
+- **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: a661aed
+- Added 5 standalone-function benchmark pairs: isin_fn (isin(series, values)), shift_series_fn (shiftSeries), combine_first_series_fn (combineFirstSeries), astype_fn (standalone astype for DataFrame), named_agg_fn (namedAgg+isNamedAggSpec). Prior benchmarks for these ops used method forms or manual implementations.
 
 ### Iteration 195 — 2026-04-18 17:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24609736830)
 - **Status**: ✅ Accepted | **Metric**: 539 (canonical 534→539, +5 new pairs) | **Commit**: 420f9cd
