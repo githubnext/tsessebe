@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-18T23:46:20Z |
-| Iteration Count | 208 |
+| Last Run | 2026-04-19T00:32:00Z |
+| Iteration Count | 209 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -68,12 +68,17 @@
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
 - STACK_DEFAULT_SEP constant (not really benchmarkable).
+- Iter 209 canonically confirms 540 pairs: after merging main (534) on canonical branch + 6 standalone-fn pairs = 540. These 6 pairs were previously committed only to non-canonical branches.
 - Iter 208 confirmed that combineFirstSeries, shiftSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply, and isin standalone benchmarks now added as _fn suffix pairs.
 - Almost all exported functions are now benchmarked; future iterations may explore new modules added to src/ or method-form vs standalone benchmarks.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 209 — 2026-04-19 00:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24617265245)
+- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: 76cd991
+- Merged origin/main (534 canonical pairs). Added 6 standalone-function benchmark pairs on canonical branch: combineFirstSeries, shiftSeries, dataFrameAbs, dataFrameRound, isin, dataFrameRollingApply.
 
 ### Iteration 208 — 2026-04-18 23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24616553329)
 - **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: b0c404b
