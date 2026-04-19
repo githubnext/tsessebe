@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T10:16:49Z |
-| Iteration Count | 219 |
+| Last Run | 2026-04-19T10:46:36Z |
+| Iteration Count | 220 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -61,6 +61,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 220 — 2026-04-19 10:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24627246740)
+
+- **Status**: ✅ Accepted | **Metric**: 540 (534→540, +6) | **Commit**: eb88039
+- Checked out origin/autoloop/perf-comparison (534 canonical), added 6 new benchmark pairs: shift_series_fn, reindex_fill_method, dataframe_reindex_method, cumops_skipna, dataframe_cumops_axis1, pipe_series_dataframe.
 
 ### Iteration 219 — 2026-04-19 10:16 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24626722550)
 
