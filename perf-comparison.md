@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T04:33:00Z |
-| Iteration Count | 212 |
-| Best Metric | 543 |
+| Last Run | 2026-04-19T05:44:51Z |
+| Iteration Count | 213 |
+| Best Metric | 544 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -43,6 +43,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 213 canonical**: Checked out origin/autoloop/perf-comparison, merged origin/main (534 pairs — iter 212 state claiming 543 was non-canonical, branch only had 534). Added 10 new standalone-fn benchmark pairs = 544: combineFirstSeries (first true standalone bench for this fn), isNamedAggSpec, shiftSeries_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn, isin_series_fn, toNumeric_fn, pivot_fn, dataFrameApply_fn. Canonical best_metric now 544.
 - **Iter 212 canonical**: Checked out origin/autoloop/perf-comparison (508), merged origin/main (534), added 9 new standalone-fn benchmark pairs = 543. All 5 previously uncovered exported functions now covered (combineFirstSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply, isNamedAggSpec) plus 4 additional standalone-fn pairs (shiftSeries, isin/series, toNumeric, pivot). Canonical branch confirmed at 543.
 - **Iter 211 canonical fix**: Iters 208-210 all claimed to add 6 standalone-fn pairs (540) but their commits were not on origin/autoloop/perf-comparison (branch was at 508). Iter 211 merged origin/main (534) and claimed 7 pairs = 541 but commit 6e369af was never pushed to the canonical branch; iter 212 is the first truly canonical 543.
 - **Iter 207 canonical correction**: Iters 204-206 each claimed adding combineFirstSeries/dataFrameAbs/etc. but from different non-canonical bases; only iter 207 (checked out canonical origin/autoloop/perf-comparison, merged main=534, added 5 _fn suffix pairs) is the definitive canonical 539. State best_metric=539 now confirmed canonical.
@@ -76,6 +77,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 213 — 2026-04-19 05:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24622102261)
+
+- **Status**: ✅ Accepted | **Metric**: 544 (canonical 534→544, +10 standalone fn pairs) | **Commit**: d6da4e8
+- Merged origin/main (real canonical baseline=534, not 543 as claimed non-canonically). Added 10 standalone-function benchmark pairs: combineFirstSeries, isNamedAggSpec, shiftSeries_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn, isin_series_fn, toNumeric_fn, pivot_fn, dataFrameApply_fn.
 
 ### Iteration 212 — 2026-04-19 04:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24620996048)
 - **Status**: ✅ Accepted | **Metric**: 543 (canonical 534→543, +9 standalone fn pairs) | **Commit**: cb664e4
