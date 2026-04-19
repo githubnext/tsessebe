@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T12:14:08Z |
-| Iteration Count | 223 |
+| Last Run | 2026-04-19T12:48:35Z |
+| Iteration Count | 224 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -21,7 +21,6 @@
 | Completed Reason | — |
 | Consecutive Errors | 0 |
 | Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
-| Paused | false |
 
 ---
 
@@ -61,6 +60,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 224 — 2026-04-19 12:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24629443936)
+
+- **Status**: ✅ Accepted | **Metric**: 540 (534→540, +6) | **Commit**: 861a30b
+- Merged origin/main (534 canonical). Added 6 new benchmark pairs: index_set_operations, multi_index_drop_duplicates, series_to_object, dataframe_reset_index, timestamp_isoformat, series_median_corr_quantile.
 
 ### Iteration 223 — 2026-04-19 12:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24628803811)
 
