@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T08:23:08Z |
-| Iteration Count | 216 |
+| Last Run | 2026-04-19T08:48:56Z |
+| Iteration Count | 217 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -43,14 +43,16 @@
 
 ## 📚 Lessons Learned
 
-- **Canonical branching** (iters 201–216): Always check out `origin/autoloop/perf-comparison`, merge `origin/main`, verify commit SHAs exist before trusting state file counts. Many prior iterations (201–214) had non-canonical commits that never got pushed. Iter 215 claimed canonical 540 but commit 25efd22 didn't exist. True canonical baseline = 534. Iter 216 is first confirmed canonical 540.
-- **Standalone vs method-form**: Many TS bench files use method-form (df.abs(), df.round()) without importing standalone exports. Adding `_fn` suffix benchmarks covers standalone exports. All 6 standalone fn pairs now in repo: combineFirstSeries_fn, combineFirstDataFrame_fn, isNamedAggSpec_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn.
+- **Canonical branching** (iters 201–217): Always check out `origin/autoloop/perf-comparison`, merge `origin/main`. Iters 215–216 had non-canonical commits. True canonical baseline was 534 (from main). Iter 217 is first confirmed canonical 540.
+- **cumops options**: cumsum/cummax support skipna=false. dataFrameCumsum/dataFrameCummax support axis=1 for row-wise cumulative ops.
+- **Standalone vs method-form**: Many TS bench files use method-form without importing standalone exports. `_fn` suffix benchmarks cover standalone exports.
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count). Bun not installed; file-count only.
 - **MCP**: Use curl to `http://host.docker.internal:80/mcp/safeoutputs` with Authorization from `~/.copilot/mcp-config.json`. push_repo_memory limit ~10KB/file, ~12KB total.
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - CategoricalAccessor: s.cat.<method>(). IO benchmarks: 10k rows. date_range: 10k periods "D" freq.
 - Period.startTime gives start Date. Timedelta.totalDays is getter. describe() accepts {percentiles, include}.
-- cumops: supports skipna=false; dataFrameCumops supports axis=1.
+- reindexSeries/reindexDataFrame support method: "ffill"|"bfill"|"nearest" with optional limit.
+- shiftSeries/diffSeries are standalone exports; old bench_series_shift.ts implemented its own shift.
 
 ---
 
@@ -63,10 +65,13 @@
 
 ## 📊 Iteration History
 
-### Iteration 216 — 2026-04-19 08:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24624709460)
+### Iteration 217 — 2026-04-19 08:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24625152676)
 
-- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: d6315d4
-- Verified iter 215 commit 25efd22 does NOT exist (non-canonical). True baseline was 534. Merged origin/main (534) into canonical branch. Added 6 new _fn benchmark pairs: combineFirstSeries_fn, combineFirstDataFrame_fn, isNamedAggSpec_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn.
+- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6) | **Commit**: d3fb209
+- Merged origin/main (534) into canonical branch. Added 6 new benchmark pairs: dataframe_cumops_axis1, diff_series_fn, reindex_fill_method, shift_series_fn, dataframe_reindex_method, cumops_skipna. This is the first confirmed canonical 540 (iter 216 commit d6315d4 did not exist).
+
+### Iteration 216 — 2026-04-19 08:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24624709460)
+- **Status**: ⚠️ Non-canonical | Claimed 540 (commit d6315d4 not in canonical branch).
 
 ### Iteration 215 — 2026-04-19 07:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24623859667)
 - **Status**: ⚠️ Non-canonical | Claimed 540 (commit 25efd22 not in repo).
