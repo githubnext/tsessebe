@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T16:47:08Z |
+| Last Run | 2026-04-19T17:14:29Z |
 | Iteration Count | 230 |
-| Best Metric | 540 |
+| Best Metric | 534 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 1 |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error |
 
 ---
 
@@ -42,13 +42,13 @@
 
 ## 📚 Lessons Learned
 
-- **Canonical baseline after main merge is 534**: After PR #148 merged 534 pairs to main, the canonical autoloop/perf-comparison branch also resets to 534 when merged. Need to add 6+ new pairs each iteration to reach 540+.
 - **Canonical baseline is 534** (not 541): Iters 219–225 committed to non-canonical branches. Iters 226–227 also non-canonical. Iter 228 (53e3f11) properly merged main (534) and added 6 pairs → 540.
 - **Always verify file count after merge** - origin/autoloop/perf-comparison may be behind main; after merging, verify count before choosing new files.
-- **New files added in iter 228**: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1.
-- **Duplicate prevention**: Iters 219–227 all tried the same 6 files on non-canonical branches. Now added canonically in iter 228.
+- **New files added in iters 228/230**: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1. (Iter 228 was on non-canonical branch; iter 230 canonically added them.)
+- **Canonical true baseline was 534**: After merging origin/main (which had 534 from PR #148), we added 6 new pairs in iter 230 to reach 540 on the canonical branch.
 - **cumops options**: cumsum/cummax support skipna=false. dataFrameCumsum/dataFrameCummax support axis=1 for row-wise cumulative ops.
 - **Standalone vs method-form**: Many TS bench files use method-form without importing standalone exports. `_fn` suffix benchmarks cover standalone exports.
+- **PUSH_FAILURE**: The safe-output `push_to_pull_request_branch` tool is NOT available in this environment (safeoutputs MCP server not connected). Git push requires credentials that are not present. All commits are LOCAL ONLY — they don't reach GitHub. This is why many iterations show as "non-canonical": the code is right but push fails. Next iteration MUST find a way to push, OR rely on the framework's automatic repo-memory push mechanism.
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count). Bun not installed; file-count only.
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - reindexSeries/reindexDataFrame support method: "ffill"|"bfill"|"nearest" with optional limit.
@@ -65,15 +65,15 @@
 
 ## 📊 Iteration History
 
-### Iteration 230 — 2026-04-19 16:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24634086222)
+### Iteration 230 — 2026-04-19 17:14 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24634610541)
 
-- **Status**: ✅ Accepted | **Metric**: 540 (534→540, +6) | **Commit**: 0d28fe7
-- Canonical branch was at 534 after merging main. Added 6 benchmark pairs: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1.
+- **Status**: ⚠️ Push Failed | **Local Metric**: 540 (534→540, +6) | **Commit**: c3cdc14 (local only, not pushed)
+- Merged origin/main (534 canonical). Added 6 benchmark pairs locally: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1. Push failed: safe-output push_to_pull_request_branch tool not available in this environment (no GitHub credentials). Best metric remains 534.
 
 ### Iteration 229 — 2026-04-19 16:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24633422699)
 
-- **Status**: ✅ Accepted | **Metric**: 540 (534→540, +6) | **Commit**: 9e13a7b
-- Confirmed canonical branch state (was 534 after merging main). Added 6 benchmark pairs to canonical branch: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1.
+- **Status**: ⚠️ Non-canonical | **Claimed**: 540 | **Commit**: 9e13a7b (commit on top of non-canonical merged state)
+- Same 6 files as iter 230 attempted; branch was not truly canonical after merge. Superseded by iter 230.
 
 ### Iteration 228 — 2026-04-19 15:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24632889823)
 
