@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T15:46:10Z |
-| Iteration Count | 228 |
+| Last Run | 2026-04-19T16:35:32Z |
+| Iteration Count | 229 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -63,6 +63,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 229 — 2026-04-19 16:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24633422699)
+
+- **Status**: ✅ Accepted | **Metric**: 540 (534→540, +6) | **Commit**: 9e13a7b
+- Confirmed canonical branch state (was 534 after merging main). Added 6 benchmark pairs to canonical branch: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1.
 
 ### Iteration 228 — 2026-04-19 15:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24632889823)
 
