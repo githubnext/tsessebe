@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T16:35:32Z |
-| Iteration Count | 229 |
+| Last Run | 2026-04-19T16:47:08Z |
+| Iteration Count | 230 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **Canonical baseline after main merge is 534**: After PR #148 merged 534 pairs to main, the canonical autoloop/perf-comparison branch also resets to 534 when merged. Need to add 6+ new pairs each iteration to reach 540+.
 - **Canonical baseline is 534** (not 541): Iters 219–225 committed to non-canonical branches. Iters 226–227 also non-canonical. Iter 228 (53e3f11) properly merged main (534) and added 6 pairs → 540.
 - **Always verify file count after merge** - origin/autoloop/perf-comparison may be behind main; after merging, verify count before choosing new files.
 - **New files added in iter 228**: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1.
@@ -63,6 +64,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 230 — 2026-04-19 16:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24634086222)
+
+- **Status**: ✅ Accepted | **Metric**: 540 (534→540, +6) | **Commit**: 0d28fe7
+- Canonical branch was at 534 after merging main. Added 6 benchmark pairs: shift_series_fn, dataframe_round_fn, combine_first_series_fn, reindex_nearest, cumops_skipna_false, dataframe_shift_axis1.
 
 ### Iteration 229 — 2026-04-19 16:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24633422699)
 
