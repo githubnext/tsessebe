@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T00:32:00Z |
-| Iteration Count | 209 |
+| Last Run | 2026-04-19T01:37:00Z |
+| Iteration Count | 210 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -68,13 +68,16 @@
 - groupby: nunique (if DataFrameGroupBy.nunique() added), transform-apply.
 - Resample operations beyond mean (sum/std/count) if more ops exposed.
 - STACK_DEFAULT_SEP constant (not really benchmarkable).
-- Iter 209 canonically confirms 540 pairs: after merging main (534) on canonical branch + 6 standalone-fn pairs = 540. These 6 pairs were previously committed only to non-canonical branches.
-- Iter 208 confirmed that combineFirstSeries, shiftSeries, dataFrameAbs, dataFrameRound, dataFrameRollingApply, and isin standalone benchmarks now added as _fn suffix pairs.
+- Iter 210 canonically adds 6 standalone-fn pairs on canonical branch (534→540): isin_fn, shift_series_fn, combine_first_series_fn, dataframe_abs_fn, dataframe_round_fn, dataframe_rolling_apply_fn. Canonical branch confirmed at 540.
 - Almost all exported functions are now benchmarked; future iterations may explore new modules added to src/ or method-form vs standalone benchmarks.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 210 — 2026-04-19 01:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24618257249)
+- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: 202323d
+- Added 6 standalone-function benchmark pairs on canonical branch (merged main first): isin_fn, shift_series_fn, combine_first_series_fn, dataframe_abs_fn, dataframe_round_fn, dataframe_rolling_apply_fn.
 
 ### Iteration 209 — 2026-04-19 00:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24617265245)
 - **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: 76cd991
