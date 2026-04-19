@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T07:33:19Z |
-| Iteration Count | 215 |
+| Last Run | 2026-04-19T08:23:08Z |
+| Iteration Count | 216 |
 | Best Metric | 540 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 | Paused | false |
 
 ---
@@ -43,8 +43,8 @@
 
 ## 📚 Lessons Learned
 
-- **Canonical branching** (iters 201–215): Always check out `origin/autoloop/perf-comparison`, merge `origin/main`, verify commit SHAs exist before trusting state file counts. Many prior iterations (201–214) had non-canonical commits that never got pushed. True canonical baseline = 534 (after PR #148 merged). Iter 215 is first confirmed canonical 540.
-- **Standalone vs method-form**: Many TS bench files use method-form (df.abs(), df.round()) without importing standalone exports. Adding `_fn` suffix benchmarks covers standalone exports. All 6 previously missing standalone fns now covered: combineFirstSeries_fn, isNamedAggSpec_fn, toNumeric_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn.
+- **Canonical branching** (iters 201–216): Always check out `origin/autoloop/perf-comparison`, merge `origin/main`, verify commit SHAs exist before trusting state file counts. Many prior iterations (201–214) had non-canonical commits that never got pushed. Iter 215 claimed canonical 540 but commit 25efd22 didn't exist. True canonical baseline = 534. Iter 216 is first confirmed canonical 540.
+- **Standalone vs method-form**: Many TS bench files use method-form (df.abs(), df.round()) without importing standalone exports. Adding `_fn` suffix benchmarks covers standalone exports. All 6 standalone fn pairs now in repo: combineFirstSeries_fn, combineFirstDataFrame_fn, isNamedAggSpec_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn.
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count). Bun not installed; file-count only.
 - **MCP**: Use curl to `http://host.docker.internal:80/mcp/safeoutputs` with Authorization from `~/.copilot/mcp-config.json`. push_repo_memory limit ~10KB/file, ~12KB total.
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
@@ -56,17 +56,20 @@
 
 ## 🔭 Future Directions
 
-- All 6 previously uncovered exported standalone functions are now benchmarked. Future iterations: method-variant benchmarks, edge-case benchmarks, or new src/ functions.
+- All 6 standalone fn benchmark pairs are now canonically in the repo. Future iterations: method-variant benchmarks, edge-case benchmarks for existing functions, or new src/ functions.
 - Series.autocorr(lag) if implemented. MultiIndex getLoc with slice. groupby: nunique if added.
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 215 — 2026-04-19 07:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24623859667)
+### Iteration 216 — 2026-04-19 08:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24624709460)
 
-- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: 25efd22
-- Verified iter 214 commit aa58758 does NOT exist (non-canonical). True baseline was 534. Merged origin/main (534). Added 6 new _fn benchmark pairs covering all remaining uncovered exported standalone functions: combineFirstSeries_fn, isNamedAggSpec_fn, toNumeric_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn.
+- **Status**: ✅ Accepted | **Metric**: 540 (canonical 534→540, +6 standalone fn pairs) | **Commit**: d6315d4
+- Verified iter 215 commit 25efd22 does NOT exist (non-canonical). True baseline was 534. Merged origin/main (534) into canonical branch. Added 6 new _fn benchmark pairs: combineFirstSeries_fn, combineFirstDataFrame_fn, isNamedAggSpec_fn, dataFrameAbs_fn, dataFrameRound_fn, dataFrameRollingApply_fn.
+
+### Iteration 215 — 2026-04-19 07:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24623859667)
+- **Status**: ⚠️ Non-canonical | Claimed 540 (commit 25efd22 not in repo).
 
 ### Iteration 214 — 2026-04-19 06:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24622947822)
 - **Status**: ⚠️ Non-canonical | Claimed 544 (commit aa58758 not in repo).
