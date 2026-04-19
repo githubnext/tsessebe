@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T21:46:06Z |
-| Iteration Count | 239 |
+| Last Run | 2026-04-19T22:11:00Z |
+| Iteration Count | 240 |
 | Best Metric | 534 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | local-only, local-only, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | local-only, local-only, local-only, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,9 +42,9 @@
 
 ## 📚 Lessons Learned
 
-- **Canonical baseline after merge is 534** (PR #148 → main). Iter 239 pushed 539 to PR #150.
-- **push_to_pull_request_branch is only available in certain run contexts.** Most recent runs (iter 238-239) also failed. When available (iter 231, 234), push works successfully.
-- **Standalone vs method-form**: Many TS bench files use method-form. `_fn` suffix benchmarks cover standalone exports. combineFirstSeries, dataFrameRound, dataFrameAbs, dataFrameRollingApply, seriesAbs now have standalone fn benchmarks.
+- **Canonical baseline after merge is 534** (PR #148 → main). Iter 240 tried to push 539 to PR #150 but safeoutputs tools were unavailable again.
+- **push_to_pull_request_branch is NOT available in most run contexts.** Iters 238-240 all failed. When available (iter 231, 234), push works successfully.
+- **Standalone vs method-form**: Many TS bench files use method-form. `_fn` suffix benchmarks cover standalone exports. combineFirstSeries, dataFrameRound, dataFrameAbs, dataFrameRollingApply, seriesAbs have standalone fn benchmarks (committed locally in iter 240, commit ed00b89).
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count).
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - reindexSeries/reindexDataFrame support method: "ffill"|"bfill"|"nearest" with optional limit.
@@ -54,11 +54,16 @@
 
 ## 🔭 Future Directions
 
-- All pairs from canonical branch: metric 539 in PR #150. Next: continue adding standalone fn benchmarks and new function benchmarks from src/.
+- All pairs from canonical branch: metric 539 in PR #150. Next: continue adding standalone fn benchmarks and new function benchmarks from src/. Many standalone function forms (dataFrameFloorDiv, dataFrameMod, seriesFloorDiv, etc.) may still be missing _fn variants.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 240 — 2026-04-19 22:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24640330783)
+
+- **Status**: ⚠️ Local Only | **Metric**: 539 (previous best: 534, delta: +5) | **Commit**: ed00b89 (local only)
+- Added 5 standalone fn benchmark pairs: series_abs_fn (seriesAbs), dataframe_abs_fn (dataFrameAbs), dataframe_round_fn (dataFrameRound with decimals), combine_first_series_fn (combineFirstSeries), dataframe_rolling_apply_fn (dataFrameRollingApply). Merged origin/main (534) first. Push failed: safeoutputs push_to_pull_request_branch not available in this run context.
 
 ### Iteration 239 — 2026-04-19 21:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24639861090)
 
