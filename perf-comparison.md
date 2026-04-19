@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T22:11:00Z |
-| Iteration Count | 240 |
+| Last Run | 2026-04-19T22:46:00Z |
+| Iteration Count | 241 |
 | Best Metric | 534 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | local-only, local-only, local-only, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | local-only, local-only, local-only, local-only, local-only, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,9 +42,9 @@
 
 ## 📚 Lessons Learned
 
-- **Canonical baseline after merge is 534** (PR #148 → main). Iter 240 tried to push 539 to PR #150 but safeoutputs tools were unavailable again.
-- **push_to_pull_request_branch is NOT available in most run contexts.** Iters 238-240 all failed. When available (iter 231, 234), push works successfully.
-- **Standalone vs method-form**: Many TS bench files use method-form. `_fn` suffix benchmarks cover standalone exports. combineFirstSeries, dataFrameRound, dataFrameAbs, dataFrameRollingApply, seriesAbs have standalone fn benchmarks (committed locally in iter 240, commit ed00b89).
+- **Canonical baseline after merge is 534** (PR #148 → main). Iters 238-241 tried but push failed due to safeoutputs unavailability. When tools ARE available, cherry-pick all 10 commits from `origin/autoloop/perf-comparison-8724e9f9` plus 3 new standalone fn pairs = 587 total.
+- **push_to_pull_request_branch is NOT available in most run contexts.** Iters 238-241 all failed. When available (iter 231, 234), push works successfully. State remains at 534 canonical.
+- **Ready-to-push commits**: Local branch `autoloop/perf-comparison` at commit 2e27cdb has 587 pairs (11 new commits ahead of origin). Next run with tools available should push.
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count).
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - reindexSeries/reindexDataFrame support method: "ffill"|"bfill"|"nearest" with optional limit.
@@ -54,11 +54,17 @@
 
 ## 🔭 Future Directions
 
-- All pairs from canonical branch: metric 539 in PR #150. Next: continue adding standalone fn benchmarks and new function benchmarks from src/. Many standalone function forms (dataFrameFloorDiv, dataFrameMod, seriesFloorDiv, etc.) may still be missing _fn variants.
+- **URGENT for next run**: Local branch `autoloop/perf-comparison` at commit 2e27cdb has 587 benchmark pairs (11 commits ahead of origin, which is at 508). If safeoutputs tools are available next run, simply push. If not, re-create by checking out from origin/main (534) and cherry-picking these commits in order: 6609544 f700047 7178c40 1cab883 5dd1667 76543d2 3fb6645 2ae0f9c 2d66429 cfe7b1d 2e27cdb (all from origin/autoloop/perf-comparison-8724e9f9 except last 3 new files).
+- Local branch has 587 pairs ready to push. Next run with safeoutputs tools available should push these directly without re-creating: checkout autoloop/perf-comparison locally and push.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 241 — 2026-04-19 22:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24640973979)
+
+- **Status**: ⚠️ Local Only | **Metric**: 587 (previous best: 534, delta: +53) | **Commit**: 2e27cdb (local only)
+- Merged main into branch. Cherry-picked all 10 commits from `origin/autoloop/perf-comparison-8724e9f9` adding 50 previously-stranded pairs. Added 3 new: series_abs_fn, dataframe_abs_fn, dataframe_round_fn. Metric 534→587. Push failed: safeoutputs push_to_pull_request_branch not available in this run context.
 
 ### Iteration 240 — 2026-04-19 22:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24640330783)
 
