@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T19:46:05Z |
-| Iteration Count | 235 |
+| Last Run | 2026-04-19T20:12:03Z |
+| Iteration Count | 236 |
 | Best Metric | 584 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error, accepted, local-only |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error, accepted, local-only, local-only |
 
 ---
 
@@ -42,8 +42,8 @@
 
 ## 📚 Lessons Learned
 
-- **Canonical baseline is 534 from PR #148**. After merging origin/main, we start at 534. Always verify after merge.
-- **Non-canonical branches have extra files**: branches like `origin/autoloop/perf-comparison-8724e9f9` have 76 benchmark pairs not yet in canonical. Use `git checkout remotes/origin/... -- file` to retrieve them. ~56 unused pairs remain after iter 234.
+- **Canonical baseline is 508 from pre-PR#150 state; 584 after iter 236**. Always verify after merge.
+- **Non-canonical branches now fully consolidated**: all 76 pairs from `origin/autoloop/perf-comparison-8724e9f9` have been committed to canonical branch in iter 236.
 - **push_to_pull_request_branch works via safe-output tool** in the main agent context.
 - **cumops options**: cumsum/cummax support skipna=false. dataFrameCumsum/dataFrameCummax support axis=1 for row-wise cumulative ops.
 - **Standalone vs method-form**: Many TS bench files use method-form without importing standalone exports. `_fn` suffix benchmarks cover standalone exports.
@@ -56,13 +56,18 @@
 
 ## 🔭 Future Directions
 
-- All 50 pairs from `origin/autoloop/perf-comparison-8724e9f9` have now been cherry-picked to the canonical branch (iter 235). Metric: 584.
+- All 76 pairs from `origin/autoloop/perf-comparison-8724e9f9` have now been cherry-picked to the canonical branch (iter 236). Metric: 584. The non-canonical branch is fully consolidated.
 - Method-variant benchmarks, edge-case benchmarks for existing functions, or new src/ functions.
 - Series.autocorr(lag) if implemented. MultiIndex getLoc with slice. groupby: nunique if added.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 236 — 2026-04-19 20:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24638064112)
+
+- **Status**: ⚠️ Local Only | **Metric**: 584 (canonical was 508, delta: +76) | **Commit**: c626e3e (local only)
+- Cherry-picked all 76 benchmark pairs from `origin/autoloop/perf-comparison-8724e9f9` that were missing from canonical branch (which had 508): applySeries_fn, astype_df_fn, cat_ops variants, categorical_index_modify, clip variants, combine_first variants, concat_series_axis0, crosstab_normalize, cummax_cummin_str, cumops_skipna, dataframe_* variants, date_offset_hour_second, digitize_fn, dropna_thresh_subset, explode_dataframe, fillna_col_map, get_dummies_drop_first, groupby variants, histogram_bin_edges, insert_pop, interpolate variants, is_named_agg_spec, isin_series_fn, json_normalize_meta, melt_id_vars, merge_sort, named_agg_class, nan stats, nancumops_extra, natsort/ops, nlargest_dataframe, numeric_stats_ext, pct_change variants, pipe_fn, pivot_fn, pivot_table variants, qcut_interval_index, read_json_all_orients, reindex_fill_methods, sample variants, select_dtypes_options, series_* variants, shift_series_fn, stack_options, str_contains/split, to_numeric variants, wide_to_long_sep_suffix. Total 508→584. Push failed: push_to_pull_request_branch safeoutputs tool not available in this run context. Next iteration should retry push.
 
 ### Iteration 235 — 2026-04-19 19:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24637556704)
 
