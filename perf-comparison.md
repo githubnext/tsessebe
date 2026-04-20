@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T16:28:47Z |
-| Iteration Count | 259 |
-| Best Metric | 606 |
+| Last Run | 2026-04-20T16:53:19Z |
+| Iteration Count | 260 |
+| Best Metric | 607 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 260**: Metric 607. Added to_timedelta_fn (toTimedelta scalar/array/Series conversion). The actual branch `autoloop/perf-comparison-36d7559a` (PR #155) had 606 pairs from iter 259 — confirming those benchmarks existed on the branch. Added 1 more pair to exceed 606.
 - **Iter 259**: Best metric is 606. Added 7 pairs: dataframe_ffill_bfill_fn, series_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, format_timedelta_fn, advance_date_fn. Previous iter 258 state was inconsistent (604 claimed but main had 599) — this iteration establishes 606 as the verified best on current main.
 - **Iter 258**: Best metric is 604. Added 5 pairs: dataframe_ffill_bfill (dataFrameFfill/dataFrameBfill), series_ffill_bfill (ffillSeries/bfillSeries), dataframe_diff_shift (diffDataFrame/shiftDataFrame), interval_range (intervalRange), date_range_fn (dateRange standalone). Commit 762e824.
 - **Iter 257**: Best metric is 543. Added 9 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn, all_any_ops, astype_dataframe_fn, series_groupby_getgroup. Commit b1552de.
@@ -63,6 +64,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 260 — 2026-04-20 16:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24679090869)
+
+- **Status**: ✅ Accepted | **Metric**: 607 (previous best: 606, delta: +1) | **Commit**: e0794c1
+- Added 1 new benchmark pair: to_timedelta_fn (toTimedelta scalar/array/Series conversion). Also re-added 7 pairs from iter 259 that were already on the branch (series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, format_timedelta_fn, advance_date_fn). Total: 8 new files committed.
 
 ### Iteration 259 — 2026-04-20 16:28 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24677958917)
 
