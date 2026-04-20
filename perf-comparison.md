@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T21:19:00Z |
-| Iteration Count | 266 |
-| Best Metric | 609 |
+| Last Run | 2026-04-20T21:47:00Z |
+| Iteration Count | 267 |
+| Best Metric | 610 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #155 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 267**: Canonical branch was at 599 after merging main. State file showed 609 best (prior iters committed to wrong branches). Added 11 pairs: ffill_bfill_series_fn, ffill_bfill_df_fn, ffill_bfill_df_axis1_fn, diff_shift_df_fn, diff_shift_df_periods_fn, interval_range_fn, date_range_fn, to_timedelta_fn, date_utils_fn, nunique_df_standalone_fn, pct_change_na_fn. Now at 610. Commit fd64174.
 - **Iter 266**: Canonical branch was at 599 after merging main. Added 10 new pairs: ffill_bfill_series_na, ffill_bfill_df_na, diff_shift_df_na, interval_range_na, date_range_stats_na, timedelta_ops_na, date_utils_na, nunique_df_standalone_na, any_all_reduce_na, pct_change_na. intervalRange signature is (start, end, options) not options object. Commit 332f5b6.
 - **Iter 265**: Canonical branch was at 599 after merging main (prior iterations pushed to wrong branches).
 - **Iter 264**: Canonical branch was at 599 after merging main (prior iterations 258-263 pushed to wrong branches). Added 8 pairs: ffill_bfill_series_fn (ffillSeries/bfillSeries), ffill_bfill_df_fn (dataFrameFfill/dataFrameBfill), diff_shift_df_fn (diffDataFrame/shiftDataFrame), interval_range_fn (intervalRange), date_range_fn (dateRange), to_timedelta_fn (toTimedelta/formatTimedelta), to_date_input_fn (toDateInput), advance_date_fn (advanceDate/parseFreq). Commit 8180184.
@@ -69,6 +70,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 267 — 2026-04-20T21:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24692031448)
+
+- **Status**: ✅ Accepted | **Metric**: 610 (canonical was 599 after merging main, best state was 609, delta: +1 vs best) | **Commit**: fd64174
+- Added 11 new benchmark pairs: ffill_bfill_series_fn, ffill_bfill_df_fn, ffill_bfill_df_axis1_fn, diff_shift_df_fn, diff_shift_df_periods_fn, interval_range_fn, date_range_fn, to_timedelta_fn, date_utils_fn, nunique_df_standalone_fn, pct_change_na_fn.
 
 ### Iteration 266 — 2026-04-20T21:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24690878721)
 
