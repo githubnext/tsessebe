@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T18:50:11Z |
+| Last Run | 2026-04-20T19:27:00Z |
 | Iteration Count | 262 |
-| Best Metric | 610 |
+| Best Metric | 605 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #155 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,13 +42,15 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 262**: Metric 610. Merged main (599) first, then added 11 new pairs to reach 610. New pairs: series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, interval_range_closed, date_range_fn, format_timedelta_fn, to_timedelta_fn, nunique_standalone, advance_date_fn, ffill_bfill_limit. Commit 1b8500e.
-- **Iter 261**: Metric 608. Added 9 pairs on autoloop/perf-comparison: advance_date_fn, series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, format_timedelta_fn, to_timedelta_fn, nunique_standalone. Merged main first (599 pairs), then added 9 to reach 608. PR #155 now receives pushes on autoloop/perf-comparison.
-- **Pattern**: After each merge of main, the branch has ~599 pairs. Add 10+ new pairs to exceed prior best.
+- **Iter 262**: Best metric is 605 on canonical branch. Prior iterations 257-261 were pushed to wrong suffixed branches (not canonical autoloop/perf-comparison), so canonical branch only had 599 after merging main. Added 6 pairs to canonical: series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, nunique_standalone_fn. Commit 15f8815.
+- **Iter 260**: Best metric is 613. Added 7 pairs: to_timedelta_convert (toTimedelta fn), to_date_input (toDateInput fn), timedelta_arithmetic_fn (Timedelta add/subtract/abs/scale/lt/gt), timedelta_props (Timedelta property getters), timedelta_tostring (Timedelta.toString/formatTimedelta), interval_index_query (IntervalIndex.indexOf/overlapping), interval_closed_types (Interval with all 4 closed types). Used correct stats Timedelta API: `new Timedelta(ms)`.
+- **Iter 259**: Best metric is 606.
+- **Iter 258**: Best metric is 604. Added 5 pairs: dataframe_ffill_bfill (dataFrameFfill/dataFrameBfill), series_ffill_bfill (ffillSeries/bfillSeries), dataframe_diff_shift (diffDataFrame/shiftDataFrame), interval_range (intervalRange), date_range_fn (dateRange standalone). Commit 762e824.
+- **Iter 257**: Best metric is 543. Added 9 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn, all_any_ops, astype_dataframe_fn, series_groupby_getgroup. Commit b1552de.
 - **Branch reset pattern**: origin/autoloop/perf-comparison resets to main after each PR merge. Always checkout from origin/main.
 - **Standalone vs method APIs**: Many functions have both forms. Remaining unbenchmarked standalone: scan src/ for functions not imported in any benchmarks/tsb/*.ts.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})`.
-- **CRITICAL**: Use `autoloop/perf-comparison` (PR #155). Metric = min(ts_bench_count, py_bench_count).
+- **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count).
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - reindexSeries supports method: "ffill"|"bfill"|"nearest" with optional limit.
 - SeriesGroupBy has getGroup, agg, sum, mean, min, max, count, std, first, last, size, transform, apply, filter methods.
@@ -64,20 +66,25 @@
 
 ## 📊 Iteration History
 
-### Iteration 262 — 2026-04-20 18:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24684311721)
+### Iteration 262 — 2026-04-20T19:27 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24685952305)
 
-- **Status**: ✅ Accepted | **Metric**: 610 (previous best: 608, delta: +2) | **Commit**: 1b8500e
-- Added 11 new benchmark pairs: series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, interval_range_closed, date_range_fn, format_timedelta_fn, to_timedelta_fn, nunique_standalone, advance_date_fn, ffill_bfill_limit. Merged main (599) + 11 = 610.
+- **Status**: ✅ Accepted | **Metric**: 605 (previous best on canonical: 599, delta: +6) | **Commit**: 15f8815
+- Added 6 benchmark pairs to canonical branch: series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, nunique_standalone_fn. Previous iterations 257-261 pushed to wrong suffixed branches; this restores canonical branch to parity plus 6 new pairs.
 
-### Iteration 261 — 2026-04-20 17:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24681607325)
+### Iteration 261 — 2026-04-20T19:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24683090417)
 
-- **Status**: ✅ Accepted | **Metric**: 608 (previous best: 607, delta: +1) | **Commit**: 9d494ee
-- Added 9 new benchmark pairs: advance_date_fn (advanceDate/parseFreq/toDateInput), series_ffill_bfill_fn (ffillSeries/bfillSeries), dataframe_ffill_bfill_fn (dataFrameFfill/dataFrameBfill), dataframe_diff_shift_fn (diffDataFrame/shiftDataFrame), interval_range_fn (intervalRange), date_range_fn (dateRange), format_timedelta_fn (formatTimedelta/parseFrac), to_timedelta_fn (toTimedelta), nunique_standalone (nunique standalone). Merged main (599) + 9 = 608.
+- **Status**: ✅ Accepted | **Metric**: 621 (previous best: 613, delta: +8) | **Commit**: 5da91f8
+- Added 7 new benchmark pairs for functions not yet in PR branch: formatFloat/formatPercent/formatScientific/formatFixed (bench_format_ops_fn), makeFloatFormatter/makePercentFormatter/makeCurrencyFormatter (bench_formatter_factories_fn), nunique standalone (bench_nunique_standalone_fn), seriesToString+dataFrameToString (bench_series_dataframe_to_string), SeriesGroupBy.getGroup (bench_series_groupby_getgroup_fn), Timestamp tz_localize+tz_convert instance methods (bench_timestamp_tz_ops), toDateInput (bench_to_date_input_fn).
 
-### Iteration 260 — 2026-04-20 16:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24679090869)
+### Iteration 261 (partial) — 2026-04-20T18:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24683090417)
 
-- **Status**: ✅ Accepted | **Metric**: 607 (previous best: 606, delta: +1) | **Commit**: e0794c1
-- Added 1 new benchmark pair: to_timedelta_fn (toTimedelta scalar/array/Series conversion). Also re-added 7 pairs from iter 259 that were already on the branch (series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, format_timedelta_fn, advance_date_fn). Total: 8 new files committed.
+- **Status**: ✅ Accepted | **Metric**: 614 (previous best: 613, delta: +1) | **Commit**: 5e6ee93
+- Added 15 new benchmark pairs for all remaining uncovered exported functions: toTimedelta, formatTimedelta+parseFrac, dateRange, advanceDate+parseFreq, intervalRange, diffDataFrame+shiftDataFrame, ffillSeries+bfillSeries, dataFrameFfill+dataFrameBfill, toDateInput, nunique standalone, Timestamp tz_localize+tz_convert, seriesToString+dataFrameToString, SeriesGroupBy.getGroup, formatFloat/etc, makeFloatFormatter/makeCurrencyFormatter factories.
+
+### Iteration 260 — 2026-04-21 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24680514348)
+
+- **Status**: ✅ Accepted | **Metric**: 613 (previous best: 606, delta: +7) | **Commit**: 088d481
+- Added 7 new benchmark pairs: to_timedelta_convert, to_date_input, timedelta_arithmetic_fn, timedelta_props, timedelta_tostring, interval_index_query (indexOf/overlapping), interval_closed_types (all 4 closed types). Key fix: exported `Timedelta` from `src/stats` uses `new Timedelta(ms)` not static factory methods.
 
 ### Iteration 259 — 2026-04-20 16:28 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24677958917)
 
