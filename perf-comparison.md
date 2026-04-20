@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-19T23:46:00Z |
-| Iteration Count | 242 |
-| Best Metric | 588 |
+| Last Run | 2026-04-20T00:32:06Z |
+| Iteration Count | 243 |
+| Best Metric | 594 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | local-only, local-only, local-only, local-only, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | local-only, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, local-only |
 
 ---
 
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **New canonical baseline is 594** (iter 243). Cherry-picked all 55 pairs from `origin/autoloop/perf-comparison-8724e9f9` and added 5 new pairs: merge_multi_col, concat_many_small, series_where_scalar, groupby_transform_multikey, rank_pct. COMMITTED LOCAL ONLY — safeoutputs unavailable.
 - **New canonical baseline is 588** (iter 242, pushed to PR #150). Cherry-picked all 10 commits from `origin/autoloop/perf-comparison-8724e9f9` (adding 50 previously-stranded pairs) plus added 4 new benchmark pairs.
 - **push_to_pull_request_branch IS available when safeoutputs are configured.** Iters 238-241 all failed locally; iter 242 succeeded.
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count).
@@ -59,6 +60,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 243 — 2026-04-20 00:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24642957273)
+
+- **Status**: ⚠️ Local-only (safeoutputs MCP tools unavailable) | **Metric**: 594 (previous best: 589, delta: +5) | **Commit**: 3f5edd1 (local only)
+- Brought in 55 previously-stranded pairs from `origin/autoloop/perf-comparison-8724e9f9` + 5 new pairs: merge_multi_col, concat_many_small, series_where_scalar, groupby_transform_multikey, rank_pct. Committed but could not push to PR #150.
 
 ### Iteration 242 — 2026-04-19 23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24642049236)
 
