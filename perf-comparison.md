@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T03:40:00Z |
-| Iteration Count | 245 |
-| Best Metric | 539 |
+| Last Run | 2026-04-20T04:45:00Z |
+| Iteration Count | 246 |
+| Best Metric | 534 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | rejected, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,7 +42,8 @@
 
 ## 📚 Lessons Learned
 
-- **CRITICAL issue (iter 245)**: safeoutputs MCP server is filtered by Copilot CLI registry. When this happens, push_to_pull_request_branch and add_comment are unavailable. Local commits can't be pushed. The framework logs: `MCP server "safeoutputs" filtered: Could not verify server against any configured registry`. This will keep happening if Autoloop keeps running in Copilot CLI context instead of gh-aw context.
+- **CRITICAL: Recurring push failure** (iters 243, 245, 246): This agent runs in Copilot CLI context where `COPILOT_TOKEN=placeholder-token-for-credential-isolation` and safeoutputs MCP server is unavailable. The one-shot-token.so intercepts GITHUB_TOKEN making it inaccessible. Commits exist locally but can NOT be pushed. When gh-aw runs the NEXT iteration in its own context (not Copilot CLI), it will have safeoutputs available.
+- **RETRY TARGETS for next run**: bench_nlargest_df, bench_series_shift_fn, bench_digitize_fn, bench_reindex_fill, bench_sample_weighted — all 5 are new unique benchmark pairs that do NOT already exist in the repo. Can go from 534 to 539.
 - **Standalone vs method APIs**: Many functions have both a standalone form (`dataFrameAbs(df)`) and a method form (`df.abs()`). Existing benchmarks often used method forms; standalone versions of `dataFrameAbs`, `dataFrameRound`, `dataFrameRollingApply`, `combineFirstSeries/DataFrame`, and raw `digitize` were unbenchmarked. These are good targets for the next iteration.
 - **New canonical baseline is 539** (iter 244). Added 5 new benchmark pairs: str_swapcase_capitalize, dt_strftime, series_reflected_arith, dataframe_reflected_arith, any_all. Note: best_metric reset from inflated 594 (local-only) to actual pushed count of 534→539.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})` — the constructor takes a `ReadonlyMap` not a plain object.
@@ -64,6 +65,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 246 — 2026-04-20 04:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24648571554)
+
+- **Status**: ⚠️ Local-only (Copilot CLI credential isolation prevents git push and safeoutputs MCP unavailable) | **Metric**: 539 (branch baseline 534, +5) | **Commit**: 8890210 (local only)
+- Added 5 benchmark pairs: nlargest_df, series_shift_fn, digitize_fn, reindex_fill (ffill/bfill), sample_weighted. Commit 8890210 on autoloop/perf-comparison locally but NOT pushed. Next run should re-add the same 5 benchmark files (they will be missing from the fresh checkout).
 
 ### Iteration 245 — 2026-04-20 03:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24646490274)
 
