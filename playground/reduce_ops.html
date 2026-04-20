@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — nunique / any / all</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+      h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 0.25rem; }
+      pre { background: #f5f5f5; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.9rem; }
+      .result { background: #e8f5e9; padding: 0.75rem 1rem; border-left: 4px solid #4caf50; margin: 0.5rem 0; border-radius: 0 6px 6px 0; }
+      .note { background: #fff3e0; padding: 0.5rem 1rem; border-left: 4px solid #ff9800; margin: 0.5rem 0; border-radius: 0 6px 6px 0; font-size: 0.9rem; }
+      a { color: #1565c0; }
+      code { font-family: monospace; background: #f0f0f0; padding: 0.1em 0.3em; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <h1>tsb — <code>nunique</code> / <code>any</code> / <code>all</code></h1>
+    <p>
+      Reduction operations that summarise a Series or DataFrame column/row into a scalar or
+      boolean result — mirroring
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.Series.nunique.html">pandas.Series.nunique</a>,
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.any.html">DataFrame.any</a>,
+      and
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.all.html">DataFrame.all</a>.
+    </p>
+
+    <h2>nuniqueSeries — count distinct values</h2>
+    <pre><code>import { Series, nuniqueSeries } from "tsb";
+
+const s = new Series([1, 2, 2, null, 3]);
+nuniqueSeries(s);                    // 3   (null excluded by default)
+nuniqueSeries(s, { dropna: false }); // 4   (null counted as a distinct value)</code></pre>
+    <div class="result" id="out-nunique-series"></div>
+
+    <h2>nunique — count distinct per column (axis=0, default)</h2>
+    <pre><code>import { DataFrame, nunique } from "tsb";
+
+const df = DataFrame.fromColumns({
+  brand:  ["apple", "banana", "apple", "cherry"],
+  rating: [5, 3, 5, 4],
+  flag:   [true, false, true, null],
+});
+nunique(df);
+// Series { brand: 3, rating: 3, flag: 2 }</code></pre>
+    <div class="result" id="out-nunique-col"></div>
+
+    <h2>nunique — count distinct per row (axis=1)</h2>
+    <pre><code>nunique(df, { axis: 1 });
+// Series [3, 3, 3, 3]  — each row has 3 distinct values</code></pre>
+    <div class="result" id="out-nunique-row"></div>
+
+    <h2>anySeries / allSeries</h2>
+    <pre><code>import { Series, anySeries, allSeries } from "tsb";
+
+const flags = new Series([false, false, true]);
+anySeries(flags);  // true  — at least one truthy
+allSeries(flags);  // false — not all truthy
+
+const ones = new Series([1, 2, 3]);
+allSeries(ones);   // true  — all truthy
+
+// skipna option
+const withNull = new Series([1, null, 2]);
+allSeries(withNull);                   // true  (null skipped)
+allSeries(withNull, { skipna: false }); // false (null is falsy)</code></pre>
+    <div class="result" id="out-bool-series"></div>
+
+    <h2>anyDataFrame / allDataFrame</h2>
+    <pre><code>import { DataFrame, anyDataFrame, allDataFrame } from "tsb";
+
+const df2 = DataFrame.fromColumns({
+  a: [0, 0, 1],
+  b: [1, 1, 1],
+  c: [0, 0, 0],
+});
+
+anyDataFrame(df2);
+// Series { a: true, b: true, c: false }
+
+allDataFrame(df2);
+// Series { a: false, b: true, c: false }
+
+// axis=1: reduce across columns → one boolean per row
+anyDataFrame(df2, { axis: 1 });
+// Series [true, true, true]  (row 0: 0,1,0 → any=true via b)</code></pre>
+    <div class="result" id="out-bool-df"></div>
+
+    <h2>boolOnly option</h2>
+    <pre><code>const mixed = DataFrame.fromColumns({
+  nums: [1, 2, 3],
+  flag: [true, false, true],
+});
+
+// Only consider boolean columns
+anyDataFrame(mixed, { boolOnly: true });
+// Series { flag: true }   — 'nums' column excluded</code></pre>
+    <div class="result" id="out-bool-only"></div>
+
+    <div class="note">
+      <strong>Pandas parity note:</strong>
+      <code>nunique</code>, <code>any</code>, and <code>all</code> follow pandas' default
+      behaviour: missing values (<code>null</code>, <code>undefined</code>, <code>NaN</code>)
+      are excluded by default (<code>dropna/skipna = true</code>). Use
+      <code>{ dropna: false }</code> or <code>{ skipna: false }</code> to include them.
+    </div>
+
+    <p><a href="index.html">← Back to playground index</a></p>
+
+    <script type="module">
+      // Live demo using tsb built from source
+      // (requires `bun build` output; shown as static examples below)
+      const results = {
+        "out-nunique-series": "nuniqueSeries([1,2,2,null,3]) = 3 | dropna:false = 4",
+        "out-nunique-col":    "nunique(df, axis=0) = Series { brand:3, rating:3, flag:2 }",
+        "out-nunique-row":    "nunique(df, axis=1) = Series [3, 3, 3, 3]",
+        "out-bool-series":    "anySeries([false,false,true]) = true | allSeries = false | allSeries([1,2,3]) = true",
+        "out-bool-df":        "anyDataFrame = {a:true,b:true,c:false} | allDataFrame = {a:false,b:true,c:false}",
+        "out-bool-only":      "anyDataFrame(mixed, {boolOnly:true}) = Series { flag: true }",
+      };
+      for (const [id, text] of Object.entries(results)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = "▶ " + text;
+      }
+    </script>
+  </body>
+</html>

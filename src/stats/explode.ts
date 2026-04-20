@@ -175,7 +175,7 @@ export function explodeDataFrame(
   // Validate column names
   for (const c of colNames) {
     if (!df.has(c)) {
-      throw new Error(`Column "${c}" not found in DataFrame`);
+      throw new Error(`Column '${c}' not found`);
     }
   }
 
@@ -219,6 +219,12 @@ export function explodeDataFrame(
   const explodedCols = new Map<string, Scalar[]>();
   explodedCols.set(firstCol, firstOut);
 
+  // Compute per-row output count from the primary column explosion.
+  const rowCounts: number[] = new Array<number>(nRows).fill(0);
+  for (const p of firstPos) {
+    rowCounts[p] = (rowCounts[p] ?? 0) + 1;
+  }
+
   for (let ci = 1; ci < colNames.length; ci++) {
     const cname = colNames[ci] as string;
     const wideColVals: readonly unknown[] = df.col(cname).values;
@@ -226,16 +232,17 @@ export function explodeDataFrame(
 
     for (let row = 0; row < nRows; row++) {
       const v = wideColVals[row];
+      const expectedCount = rowCounts[row] ?? 1;
       if (isListLike(v)) {
-        if (v.length === 0) {
-          out.push(null);
-        } else {
-          for (const item of v) {
-            out.push(item as Scalar);
-          }
+        // Push items, padding with null if the list is shorter than expected.
+        for (let k = 0; k < expectedCount; k++) {
+          out.push(k < v.length ? (v[k] as Scalar) : null);
         }
       } else {
-        out.push(v as Scalar);
+        // Scalar: repeat (or pad) to fill the expected slot count.
+        for (let k = 0; k < expectedCount; k++) {
+          out.push(v as Scalar);
+        }
       }
     }
     explodedCols.set(cname, out);

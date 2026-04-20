@@ -7,7 +7,12 @@
  */
 
 /** Scalar value types — the atomic units of data in tsb. */
-export type Scalar = number | string | boolean | bigint | null | undefined | Date;
+export type Scalar = number | string | boolean | bigint | null | undefined | Date | TimedeltaLike;
+
+/** Timedelta-like object: any value representing a temporal duration (has totalMs). */
+export interface TimedeltaLike {
+  readonly totalMs: number;
+}
 
 /** A label used to identify rows or columns (similar to pandas Index). */
 export type Label = number | string | boolean | null;

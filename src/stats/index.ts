@@ -61,7 +61,7 @@ export {
   dataFrameGe,
 } from "./compare.ts";
 export type { CompareOp, SeriesOther, DataFrameOther } from "./compare.ts";
-export { shiftSeries, diffSeries, dataFrameShift, dataFrameDiff } from "./shift_diff.ts";
+export { dataFrameShift, dataFrameDiff } from "./shift_diff.ts";
 export type { ShiftDiffDataFrameOptions } from "./shift_diff.ts";
 export { interpolateSeries, dataFrameInterpolate } from "./interpolate.ts";
 export type {
@@ -360,3 +360,24 @@ export type {
 
 export { toDatetime } from "./to_datetime.ts";
 export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./to_datetime.ts";
+
+export { toTimedelta, parseFrac, formatTimedelta, Timedelta } from "./to_timedelta.ts";
+export type { TimedeltaUnit, TimedeltaErrors, ToTimedeltaOptions } from "./to_timedelta.ts";
+export { dateRange, parseFreq, advanceDate, toDateInput } from "./date_range.ts";
+export type {
+  DateRangeInclusive,
+  DateRangeOptions,
+  ParsedFreq,
+} from "./date_range.ts";
+export { diffDataFrame, shiftDataFrame, diffSeries, shiftSeries } from "./diff_shift.ts";
+export type {
+  DiffOptions,
+  DataFrameDiffOptions,
+  ShiftOptions,
+  DataFrameShiftOptions,
+} from "./diff_shift.ts";
+export { ffillSeries, bfillSeries, dataFrameFfill, dataFrameBfill } from "./na_ops.ts";
+export type { FillDirectionOptions, DataFrameFillOptions } from "./na_ops.ts";
+export { intervalRange } from "./interval.ts";
+export type { ClosedType } from "./interval.ts";
+export { nunique } from "./reduce_ops.ts";

@@ -48,55 +48,55 @@ describe("shiftSeries", () => {
   });
 
   it("periods=-1 shifts values up by one", () => {
-    const result = shiftSeries(s([1, 2, 3, 4]), -1);
+    const result = shiftSeries(s([1, 2, 3, 4]), { periods: -1 });
     expect(arrEq(result.values, [2, 3, 4, null])).toBe(true);
   });
 
   it("periods=0 returns identical values", () => {
     const data = [1, 2, 3, 4] as Scalar[];
-    const result = shiftSeries(s(data), 0);
+    const result = shiftSeries(s(data), { periods: 0 });
     expect(arrEq(result.values, data)).toBe(true);
   });
 
   it("periods larger than length → all null", () => {
-    const result = shiftSeries(s([1, 2, 3]), 5);
+    const result = shiftSeries(s([1, 2, 3]), { periods: 5 });
     expect(arrEq(result.values, [null, null, null])).toBe(true);
   });
 
   it("negative periods larger than length → all null", () => {
-    const result = shiftSeries(s([1, 2, 3]), -5);
+    const result = shiftSeries(s([1, 2, 3]), { periods: -5 });
     expect(arrEq(result.values, [null, null, null])).toBe(true);
   });
 
   it("preserves null/NaN values in the shifted region", () => {
-    const result = shiftSeries(s([1, null, 3]), 1);
+    const result = shiftSeries(s([1, null, 3]), { periods: 1 });
     expect(arrEq(result.values, [null, 1, null])).toBe(true);
   });
 
   it("works on string values", () => {
-    const result = shiftSeries(s(["a", "b", "c"]), 1);
+    const result = shiftSeries(s(["a", "b", "c"]), { periods: 1 });
     expect(arrEq(result.values, [null, "a", "b"])).toBe(true);
   });
 
   it("preserves index and name", () => {
     const orig = s([10, 20, 30]);
-    const result = shiftSeries(orig, 1);
+    const result = shiftSeries(orig, { periods: 1 });
     expect(result.index.size).toBe(orig.index.size);
     expect(result.length).toBe(orig.length);
   });
 
   it("empty series returns empty series", () => {
-    const result = shiftSeries(s([]), 2);
+    const result = shiftSeries(s([]), { periods: 2 });
     expect(result.length).toBe(0);
   });
 
   it("periods=2 shifts down by two positions", () => {
-    const result = shiftSeries(s([10, 20, 30, 40]), 2);
+    const result = shiftSeries(s([10, 20, 30, 40]), { periods: 2 });
     expect(arrEq(result.values, [null, null, 10, 20])).toBe(true);
   });
 
   it("periods=-2 shifts up by two positions", () => {
-    const result = shiftSeries(s([10, 20, 30, 40]), -2);
+    const result = shiftSeries(s([10, 20, 30, 40]), { periods: -2 });
     expect(arrEq(result.values, [30, 40, null, null])).toBe(true);
   });
 });
@@ -106,37 +106,34 @@ describe("shiftSeries", () => {
 describe("diffSeries", () => {
   it("periods=1 computes first differences", () => {
     const result = diffSeries(s([1, 3, 6, 10]));
-    expect(arrEq(result.values, [Number.NaN, 2, 3, 4])).toBe(true);
+    expect(arrEq(result.values, [null, 2, 3, 4])).toBe(true);
   });
 
   it("periods=2 computes lag-2 differences", () => {
-    const result = diffSeries(s([1, 3, 6, 10]), 2);
-    expect(arrEq(result.values, [Number.NaN, Number.NaN, 5, 7])).toBe(true);
+    const result = diffSeries(s([1, 3, 6, 10]), { periods: 2 });
+    expect(arrEq(result.values, [null, null, 5, 7])).toBe(true);
   });
 
   it("periods=-1 computes forward differences", () => {
-    const result = diffSeries(s([1, 3, 6, 10]), -1);
-    expect(arrEq(result.values, [-2, -3, -4, Number.NaN])).toBe(true);
+    const result = diffSeries(s([1, 3, 6, 10]), { periods: -1 });
+    expect(arrEq(result.values, [-2, -3, -4, null])).toBe(true);
   });
 
-  it("periods=0 yields all NaN (value minus itself is not useful)", () => {
-    // diff with 0 lag: no valid pair since periods=0 means x[i] - x[i-0] = 0
-    // pandas returns all zeros for periods=0; our impl does the same for numeric
-    const result = diffSeries(s([1, 2, 3]), 0);
-    // x[i] - x[i] = 0 for all i (all positions have a "previous" value with lag 0)
+  it("periods=0 yields all zeros (value minus itself)", () => {
+    // diff with 0 lag: x[i] - x[i] = 0 for all i
+    const result = diffSeries(s([1, 2, 3]), { periods: 0 });
     expect(arrEq(result.values, [0, 0, 0])).toBe(true);
   });
 
-  it("null inputs produce NaN at missing positions", () => {
+  it("null inputs produce null at missing positions", () => {
     const result = diffSeries(s([1, null, 3, 4]));
-    // position 0: NaN (no prev); position 1: NaN (prev=1 but cur=null not finite)
-    // position 2: NaN (prev=null not finite); position 3: 1 (4-3)
-    expect(arrEq(result.values, [Number.NaN, Number.NaN, Number.NaN, 1])).toBe(true);
+    // position 0: null (no prev); position 1: null (cur=null); position 2: null (prev=null); position 3: 1 (4-3)
+    expect(arrEq(result.values, [null, null, null, 1])).toBe(true);
   });
 
-  it("NaN inputs produce NaN at those positions", () => {
+  it("NaN inputs produce null at those positions", () => {
     const result = diffSeries(s([1, Number.NaN, 3]));
-    expect(arrEq(result.values, [Number.NaN, Number.NaN, Number.NaN])).toBe(true);
+    expect(arrEq(result.values, [null, null, null])).toBe(true);
   });
 
   it("preserves index", () => {
@@ -146,12 +143,12 @@ describe("diffSeries", () => {
   });
 
   it("empty series returns empty", () => {
-    expect(diffSeries(s([]), 1).length).toBe(0);
+    expect(diffSeries(s([]), { periods: 1 }).length).toBe(0);
   });
 
-  it("single element returns [NaN]", () => {
+  it("single element returns [null]", () => {
     const result = diffSeries(s([42]));
-    expect(Number.isNaN(result.values[0] as number)).toBe(true);
+    expect(result.values[0]).toBe(null);
   });
 });
 
@@ -164,7 +161,7 @@ describe("shiftSeries — property tests", () => {
         fc.array(fc.float({ noNaN: true }), { minLength: 0, maxLength: 20 }),
         fc.integer({ min: -10, max: 10 }),
         (data, periods) => {
-          const result = shiftSeries(new Series({ data }), periods);
+          const result = shiftSeries(new Series({ data }), { periods });
           return result.length === data.length;
         },
       ),
@@ -181,8 +178,8 @@ describe("shiftSeries — property tests", () => {
           if (n >= data.length) {
             return true;
           }
-          const shifted = shiftSeries(new Series<Scalar>({ data }), n);
-          const back = shiftSeries(shifted, -n);
+          const shifted = shiftSeries(new Series<Scalar>({ data }), { periods: n });
+          const back = shiftSeries(shifted, { periods: -n });
           // positions [0, length - n) should match the original
           for (let i = 0; i < data.length - n; i++) {
             if (back.values[i] !== data[i]) {
@@ -201,7 +198,7 @@ describe("shiftSeries — property tests", () => {
         fc.array(fc.integer(), { minLength: 1, maxLength: 20 }),
         fc.integer({ min: 1, max: 10 }),
         (data: number[], n: number): boolean => {
-          const result = shiftSeries(new Series<Scalar>({ data }), n);
+          const result = shiftSeries(new Series<Scalar>({ data }), { periods: n });
           const cap = Math.min(n, data.length);
           for (let i = 0; i < cap; i++) {
             if (result.values[i] !== null) {
@@ -222,7 +219,7 @@ describe("diffSeries — property tests", () => {
         fc.array(fc.float({ noNaN: true }), { minLength: 0, maxLength: 20 }),
         fc.integer({ min: 1, max: 5 }),
         (data, periods) => {
-          const result = diffSeries(new Series({ data }), periods);
+          const result = diffSeries(new Series({ data }), { periods });
           return result.length === data.length;
         },
       ),
@@ -235,8 +232,8 @@ describe("diffSeries — property tests", () => {
         fc.array(fc.integer({ min: -1000, max: 1000 }), { minLength: 2, maxLength: 20 }),
         (data: number[]): boolean => {
           const result = diffSeries(new Series<Scalar>({ data }));
-          // position 0 must be NaN
-          if (!Number.isNaN(result.values[0] as number)) {
+          // position 0 must be null
+          if (result.values[0] !== null) {
             return false;
           }
           // remaining positions: result[i] = data[i] - data[i-1]

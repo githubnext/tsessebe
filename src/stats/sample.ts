@@ -89,10 +89,10 @@ export interface SampleDataFrameOptions {
   readonly ignoreIndex?: boolean;
   /**
    * Axis to sample along.
-   * - `0` (default): sample rows.
-   * - `1`: sample columns.
+   * - `0` or `"index"` (default): sample rows.
+   * - `1` or `"columns"`: sample columns.
    */
-  readonly axis?: 0 | 1;
+  readonly axis?: 0 | 1 | "index" | "columns";
 }
 
 // ─── pseudo-random number generator ──────────────────────────────────────────
@@ -102,8 +102,18 @@ class Rng {
   private _state: number;
 
   constructor(seed: number) {
-    // Ensure non-zero starting state.
-    this._state = seed >>> 0 || 0xdeadbeef;
+    // Mix the seed so that small sequential seeds (0, 1, 2, …) produce
+    // well-distributed starting states.  Without mixing, XOR-shift produces
+    // near-zero outputs for seeds like 1, 2, 3 because the internal state
+    // stays small for the first few steps.
+    let s = seed >>> 0 || 0xdeadbeef;
+    // Wang hash to spread bits before the first step.
+    s = (s ^ 61 ^ (s >>> 16)) >>> 0;
+    s = (s + (s << 3)) >>> 0;
+    s = (s ^ (s >>> 4)) >>> 0;
+    s = Math.imul(s, 0x27d4eb2d) >>> 0;
+    s = (s ^ (s >>> 15)) >>> 0;
+    this._state = s || 0xdeadbeef;
   }
 
   /** Returns a float in [0, 1). */
@@ -384,7 +394,7 @@ export function sampleSeries(
 export function sampleDataFrame(df: DataFrame, options: SampleDataFrameOptions = {}): DataFrame {
   const { n, frac, replace = false, weights, randomState, ignoreIndex = false, axis = 0 } = options;
 
-  if (axis === 1) {
+  if (axis === 1 || axis === "columns") {
     return sampleColumns(df, n, frac, replace, weights, randomState);
   }
   return sampleRows(df, n, frac, replace, weights, randomState, ignoreIndex);

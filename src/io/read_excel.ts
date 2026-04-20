@@ -517,7 +517,7 @@ function buildDataFrame(rows: readonly RawRow[], options: ReadExcelOptions): Dat
     colMap.set(colName, new Series({ data: colData, dtype: Dtype.from(dtypeName), name: colName }));
   }
   const toLabel = (v: Scalar): Label =>
-    v === undefined || typeof v === "bigint" || v instanceof Date ? null : v;
+    v === undefined || typeof v === "bigint" || (typeof v === "object" && v !== null) ? null : v;
   const rowIndex =
     indexColIdx >= 0
       ? new Index<Label>((data[indexColIdx] ?? []).map(toLabel))

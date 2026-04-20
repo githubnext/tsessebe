@@ -211,7 +211,7 @@ describe("explodeDataFrame", () => {
 
   test("throws on unknown column", () => {
     const df = DataFrame.fromColumns({ a: [[1, 2]] as unknown as Scalar[] });
-    expect(() => explodeDataFrame(df, "z")).toThrow(/Column "z" not found/);
+    expect(() => explodeDataFrame(df, "z")).toThrow(/Column 'z' not found/);
   });
 
   test("empty DataFrame returns empty DataFrame", () => {

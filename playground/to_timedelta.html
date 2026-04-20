@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — toTimedelta</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; line-height: 1.6; color: #222; }
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+      pre { background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 16px; overflow: auto; font-size: 0.85rem; }
+      code { font-family: "SFMono-Regular", Consolas, monospace; }
+      .tag { display: inline-block; background: #dbeafe; color: #1e40af; border-radius: 4px; padding: 1px 8px; font-size: 0.75rem; font-weight: bold; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+      th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+      th { background: #f6f8fa; }
+      textarea { width: 100%; font-family: monospace; font-size: 0.85rem; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+      .output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 12px; margin-top: 8px; min-height: 40px; white-space: pre; font-family: monospace; font-size: 0.85rem; }
+      button { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
+      button:hover { background: #1d4ed8; }
+      a { color: #2563eb; }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">← tsb playground</a></p>
+    <h1>toTimedelta <span class="tag">stats</span></h1>
+    <p>
+      Convert scalars, arrays, or <code>Series</code> values to
+      <code>Timedelta</code> objects — mirroring
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.to_timedelta.html"
+        ><code>pandas.to_timedelta()</code></a
+      >.
+    </p>
+
+    <h2>Supported input formats</h2>
+    <table>
+      <tr><th>Format</th><th>Example</th><th>Result (ms)</th></tr>
+      <tr><td>Pandas-style</td><td><code>"1 days 02:03:04"</code></td><td>93 784 000 ms</td></tr>
+      <tr><td>Clock (HH:MM:SS)</td><td><code>"01:30:00"</code></td><td>5 400 000 ms</td></tr>
+      <tr><td>ISO 8601</td><td><code>"P1DT2H"</code></td><td>93 600 000 ms</td></tr>
+      <tr><td>Human-readable</td><td><code>"1h 30m 20s"</code></td><td>5 420 000 ms</td></tr>
+      <tr><td>number (unit="ns")</td><td><code>1_000_000_000</code></td><td>1 000 ms</td></tr>
+      <tr><td>number (unit="ms")</td><td><code>5000</code></td><td>5 000 ms</td></tr>
+      <tr><td>Timedelta</td><td><code>new Timedelta(1000)</code></td><td>unchanged</td></tr>
+      <tr><td>null / undefined / NaN</td><td><code>null</code></td><td><code>null</code></td></tr>
+    </table>
+
+    <h2>Timedelta class</h2>
+    <table>
+      <tr><th>Property / Method</th><th>Description</th></tr>
+      <tr><td><code>.totalMs</code></td><td>Total duration in milliseconds (signed)</td></tr>
+      <tr><td><code>.days</code></td><td>Whole days</td></tr>
+      <tr><td><code>.hours</code></td><td>Hours within the current day (0–23)</td></tr>
+      <tr><td><code>.minutes</code></td><td>Minutes within the current hour (0–59)</td></tr>
+      <tr><td><code>.seconds</code></td><td>Seconds within the current minute (0–59)</td></tr>
+      <tr><td><code>.ms</code></td><td>Milliseconds within the current second (0–999)</td></tr>
+      <tr><td><code>.abs()</code></td><td>Absolute value</td></tr>
+      <tr><td><code>.add(other)</code></td><td>Add two Timedeltas</td></tr>
+      <tr><td><code>.subtract(other)</code></td><td>Subtract a Timedelta</td></tr>
+      <tr><td><code>.scale(n)</code></td><td>Multiply by a scalar</td></tr>
+      <tr><td><code>.lt(other)</code></td><td>Less-than comparison</td></tr>
+      <tr><td><code>.gt(other)</code></td><td>Greater-than comparison</td></tr>
+      <tr><td><code>.eq(other)</code></td><td>Equality comparison</td></tr>
+      <tr><td><code>.toString()</code></td><td>Pandas-style string representation</td></tr>
+    </table>
+
+    <h2>Error handling</h2>
+    <table>
+      <tr><th>errors=</th><th>Behaviour</th></tr>
+      <tr><td><code>"raise"</code> (default)</td><td>Throws <code>TypeError</code> on unparseable input</td></tr>
+      <tr><td><code>"coerce"</code></td><td>Returns <code>null</code> on unparseable input</td></tr>
+      <tr><td><code>"ignore"</code></td><td>Returns the original value unchanged</td></tr>
+    </table>
+
+    <h2>Quick examples</h2>
+    <pre><code>import { toTimedelta, Timedelta, formatTimedelta, Series } from "tsb";
+
+// Scalar — various string formats
+toTimedelta("1 days 02:03:04");       // Timedelta(93_784_000 ms)
+toTimedelta("01:30:00");              // Timedelta(5_400_000 ms)
+toTimedelta("P1DT2H3M4S");            // ISO 8601
+toTimedelta("1h 30m 20s 500ms");      // human-readable
+
+// Scalar — numeric
+toTimedelta(1_000_000_000);           // default unit "ns" → 1000 ms
+toTimedelta(5000, { unit: "ms" });    // 5000 ms
+toTimedelta(2, { unit: "D" });        // 2 days
+
+// Missing values
+toTimedelta(null);                    // null
+toTimedelta("nope", { errors: "coerce" }); // null
+toTimedelta("nope", { errors: "ignore" }); // "nope" (unchanged)
+
+// Timedelta arithmetic
+const a = toTimedelta("1h") as Timedelta;
+const b = toTimedelta("30m") as Timedelta;
+a.add(b).toString();          // "0 days 01:30:00"
+a.subtract(b).totalMs;        // 1_800_000
+
+// Array
+toTimedelta(["1h", "30m", null]);
+// => [Timedelta(3_600_000), Timedelta(1_800_000), null]
+
+// Series
+const s = new Series({ data: ["1h", "30m", null] });
+toTimedelta(s);
+// => Series&lt;Timedelta | null&gt; with dtype=timedelta
+
+// formatTimedelta
+formatTimedelta(new Timedelta(86_400_000 + 3_661_000));
+// => "1 day 01:01:01"</code></pre>
+
+    <h2>Python / pandas equivalent</h2>
+    <textarea rows="14" readonly>
+import pandas as pd
+
+# Scalar
+pd.to_timedelta("1 days 02:03:04")
+pd.to_timedelta("01:30:00")
+pd.to_timedelta("P1DT2H3M4S")
+pd.to_timedelta(5000, unit="ms")
+
+# Array / Series
+pd.to_timedelta(["1h", "30m", None])
+s = pd.Series(["1h", "30m", None])
+pd.to_timedelta(s)
+
+# Timedelta arithmetic
+pd.Timedelta("1h") + pd.Timedelta("30m")
+    </textarea>
+  </body>
+</html>
