@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T10:36:32Z |
-| Iteration Count | 252 |
-| Best Metric | 539 |
+| Last Run | 2026-04-20T11:32:40Z |
+| Iteration Count | 253 |
+| Best Metric | 534 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 253**: Merged origin/main (534 pairs). Added same 5 benchmark pairs (local-only, safeoutputs MCP unavailable): shift_series_fn (shiftSeries/diffSeries standalone), reindex_fill (reindexSeries ffill/bfill), sample_weighted (sampleSeries with weights), combine_first_series (combineFirstSeries standalone), astype_dataframe (astype DataFrame standalone). Commit d796154 local only. Pattern continues: origin/autoloop/perf-comparison resets to main after each PR merge.
 - **Iter 252**: Merged origin/main (534 pairs). Added 5 new benchmark pairs: shift_series_fn (shiftSeries/diffSeries standalone), reindex_fill (reindexSeries ffill/bfill), sample_weighted (sampleSeries with weights), combine_first_series (combineFirstSeries standalone), astype_dataframe (astype DataFrame standalone). Metric 534→539. Commit eefffc3.
 - **Iter 251**: Successfully merged origin/main (534 pairs) into autoloop/perf-comparison. Added 5 new benchmark pairs: shift_series_fn (shiftSeries/diffSeries standalone), reindex_fill (reindexSeries ffill/bfill), sample_weighted (sampleSeries with weights), combine_first_series (combineFirstSeries standalone), astype_dataframe (astype DataFrame standalone). Metric 534→539. Commit f9758b2 pushed via safeoutputs.
 - **Iter 250**: Merged origin/main (534 pairs). Added 5 new benchmark pairs using standalone functions: dataFrameAbs+dataFrameRound, dataFrameRollingApply, shiftSeries+diffSeries (proper library fn), reindexSeries with ffill/bfill, astype standalone for DataFrame. Metric 534→539. Commit b832ae1.
@@ -69,6 +70,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 253 — 2026-04-20 11:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24664103485)
+
+- **Status**: ⚠️ Local-only (safeoutputs MCP unavailable — cannot push) | **Metric**: 539 (branch baseline 534, +5) | **Commit**: d796154 (local only)
+- Merged origin/main (534 pairs). Added same 5 benchmark pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, astype_dataframe. Commit d796154 on autoloop/perf-comparison locally but NOT pushed. Next run should re-add the same 5 files.
 
 ### Iteration 252 — 2026-04-20 10:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24661816591)
 
