@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T13:36:22Z |
-| Iteration Count | 256 |
-| Best Metric | 541 |
+| Last Run | 2026-04-20T14:37:25Z |
+| Iteration Count | 257 |
+| Best Metric | 543 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,15 +42,14 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 256**: Best metric is 541. Added 7 pairs: all_any_ops, shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. Commit b22a253.
-- **Iter 255**: Best metric is 540. Added 6 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. Commit a4a9ffa.
-- **Branch reset pattern**: origin/autoloop/perf-comparison resets to main after each PR merge. Always merge origin/main at the start.
+- **Iter 257**: Best metric is 543. Added 9 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn, all_any_ops, astype_dataframe_fn, series_groupby_getgroup. Commit b1552de.
+- **Branch reset pattern**: origin/autoloop/perf-comparison resets to main after each PR merge. Always checkout from origin/main.
 - **Standalone vs method APIs**: Many functions have both forms. Remaining unbenchmarked standalone: scan src/ for functions not imported in any benchmarks/tsb/*.ts.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})`.
-- **push_to_pull_request_branch**: Call via MCP HTTP directly when not available as a function call. Initialize session first, get Mcp-Session-Id header, then call tools/call.
 - **CRITICAL**: Use `autoloop/perf-comparison` (PR #150). Metric = min(ts_bench_count, py_bench_count).
 - groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - reindexSeries supports method: "ffill"|"bfill"|"nearest" with optional limit.
+- SeriesGroupBy has getGroup, agg, sum, mean, min, max, count, std, first, last, size, transform, apply, filter methods.
 
 ---
 
@@ -63,23 +62,13 @@
 
 ## 📊 Iteration History
 
-### Iteration 256 — 2026-04-20 13:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24669537656)
+### Iteration 257 — 2026-04-20 14:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24672518880)
 
-- **Status**: ✅ Accepted | **Metric**: 541 (previous best: 540, delta: +1) | **Commit**: b22a253
-- Added 7 new benchmark pairs: all_any_ops, shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. Covers allSeries/anyDataFrame, shiftSeries, reindexSeries (fill), sampleDataFrame (weighted), combineFirstSeries, dataFrameAbs/Round, dataFrameRollingApply.
+- **Status**: ✅ Accepted | **Metric**: 543 (previous best: 541, delta: +2) | **Commit**: b1552de
+- Added 9 new benchmark pairs: shift_series_fn (shiftSeries standalone), reindex_fill (reindexSeries w/ ffill/bfill), sample_weighted (sampleDataFrame w/ weights), combine_first_series (combineFirstSeries standalone), dataframe_abs_round_fn (dataFrameAbs/Round standalone), dataframe_rolling_apply_fn (dataFrameRollingApply standalone), all_any_ops (anyDataFrame/allDataFrame axis=0), astype_dataframe_fn (astype(df, singleDtype)), series_groupby_getgroup (SeriesGroupBy.getGroup).
 
-### Iteration 255 — 2026-04-20 12:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24667626819)
+### Iters 252–256 — ✅/⚠️ mix | metrics 534→541. Previous branch work (not in main, re-done here).
 
-- **Status**: ✅ Accepted | **Metric**: 540 (previous best: 539, delta: +1) | **Commit**: a4a9ffa
-- Added 6 new benchmark pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. All cover previously unbenchmarked standalone function APIs.
-
-### Iteration 254 — 2026-04-20 12:27 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24666389671)
-
-- **Status**: ✅ Accepted | **Metric**: 539 (previous best: 534, delta: +5) | **Commit**: 926a926
-- Added 5 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, astype_dataframe.
-
-### Iters 242–253 — ✅/⚠️ mix | metrics 534→539. Most pairs retried due to branch resets. Iter 242 (commit 8f477b6) added 54 pairs via cherry-pick.
-
-### Iters 163–241 — ✅/⚠️ mix | metrics 508→534. PR #148 merged 534 pairs to main.
+### Iters 163–251 — ✅/⚠️ mix | metrics 508→534. PR #148 merged 534 pairs to main.
 
 ### Iters 1–162 — all ✅/⚠️ | metrics 0→508. Full baseline benchmarks established.
