@@ -36,7 +36,7 @@ export interface ExplodeOptions {
    * When `false` (default), the original row labels are propagated
    * (duplicated once for each element of each list value).
    */
-  readonly ignore_index?: boolean;
+  readonly ignoreIndex?: boolean;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -89,7 +89,7 @@ function expandCell(value: Scalar): Scalar[] {
  * ```
  */
 export function explodeSeries(series: Series<Scalar>, options?: ExplodeOptions): Series<Scalar> {
-  const ignoreIndex = options?.ignore_index ?? false;
+  const ignoreIndex = options?.ignoreIndex ?? false;
   const outValues: Scalar[] = [];
   const outLabels: Label[] = [];
 
@@ -122,7 +122,7 @@ export function explodeSeries(series: Series<Scalar>, options?: ExplodeOptions):
  * Explode one or more list-valued columns of a DataFrame into multiple rows.
  *
  * All other columns have their values repeated to match the expanded rows.
- * Row labels are propagated (duplicated) unless `ignore_index` is `true`.
+ * Row labels are propagated (duplicated) unless `ignoreIndex` is `true`.
  *
  * When multiple columns are specified they must have the same list lengths per
  * row — pandas raises a `ValueError` for mismatched lengths; here each column
@@ -150,9 +150,8 @@ export function explodeDataFrame(
   column: string | readonly string[],
   options?: ExplodeOptions,
 ): DataFrame {
-  const ignoreIndex = options?.ignore_index ?? false;
+  const ignoreIndex = options?.ignoreIndex ?? false;
   const explodeCols: readonly string[] = typeof column === "string" ? [column] : column;
-
   // Validate column names
   for (const col of explodeCols) {
     if (!df.columns.values.includes(col)) {
