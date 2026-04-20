@@ -1,36 +1,32 @@
 /**
- * Benchmark: intervalRange — create an IntervalIndex from start/end with periods.
- * Mirrors pandas pd.interval_range().
+ * Benchmark: intervalRange — generate a sequence of equal-length intervals.
+ * Mirrors pandas.interval_range().
  * Outputs JSON: {"function": "interval_range_fn", "mean_ms": ..., "iterations": ..., "total_ms": ...}
  */
 import { intervalRange } from "../../src/index.ts";
 
 const WARMUP = 5;
-const ITERATIONS = 50;
+const ITERATIONS = 100;
 
 for (let i = 0; i < WARMUP; i++) {
-  intervalRange(0, 1000, { periods: 10_000 });
-  intervalRange(0, 100, { freq: 0.01 });
+  intervalRange(0, 100, { periods: 1000 });
+  intervalRange(0, 1, { freq: 0.001 });
+  intervalRange(0, 50, { periods: 500, closed: "left" });
 }
 
-const times: number[] = [];
+const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  const t0 = performance.now();
-  intervalRange(0, 1000, { periods: 10_000 });
-  intervalRange(0, 100, { freq: 0.01 });
-  times.push(performance.now() - t0);
+  intervalRange(0, 100, { periods: 1000 });
+  intervalRange(0, 1, { freq: 0.001 });
+  intervalRange(0, 50, { periods: 500, closed: "left" });
 }
+const total = performance.now() - start;
 
-const total = times.reduce((a, b) => a + b, 0);
 console.log(
   JSON.stringify({
     function: "interval_range_fn",
-    mean_ms: round3(total / ITERATIONS),
+    mean_ms: Math.round((total / ITERATIONS) * 1000) / 1000,
     iterations: ITERATIONS,
-    total_ms: round3(total),
+    total_ms: Math.round(total * 1000) / 1000,
   }),
 );
-
-function round3(v: number): number {
-  return Math.round(v * 1000) / 1000;
-}

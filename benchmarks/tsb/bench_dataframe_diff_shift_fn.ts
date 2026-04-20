@@ -1,5 +1,5 @@
 /**
- * Benchmark: diffDataFrame / shiftDataFrame — standalone diff and shift for DataFrames.
+ * Benchmark: diffDataFrame / shiftDataFrame — standalone DataFrame diff and shift functions.
  * Mirrors pandas DataFrame.diff() / DataFrame.shift().
  * Outputs JSON: {"function": "dataframe_diff_shift_fn", "mean_ms": ..., "iterations": ..., "total_ms": ...}
  */
@@ -7,37 +7,35 @@ import { DataFrame, diffDataFrame, shiftDataFrame } from "../../src/index.ts";
 
 const SIZE = 100_000;
 const WARMUP = 5;
-const ITERATIONS = 30;
+const ITERATIONS = 20;
 
 const df = DataFrame.fromColumns({
   a: Array.from({ length: SIZE }, (_, i) => i * 1.0),
-  b: Array.from({ length: SIZE }, (_, i) => i * 0.5 + 100),
-  c: Array.from({ length: SIZE }, (_, i) => Math.sin(i * 0.01) * 1000),
+  b: Array.from({ length: SIZE }, (_, i) => Math.sin(i * 0.01) * 100),
+  c: Array.from({ length: SIZE }, (_, i) => i * 2.5),
 });
 
 for (let i = 0; i < WARMUP; i++) {
-  diffDataFrame(df, { periods: 1 });
-  shiftDataFrame(df, { periods: 3 });
+  diffDataFrame(df);
+  diffDataFrame(df, { periods: 3 });
+  shiftDataFrame(df, { periods: 1 });
+  shiftDataFrame(df, { periods: -2 });
 }
 
-const times: number[] = [];
+const start = performance.now();
 for (let i = 0; i < ITERATIONS; i++) {
-  const t0 = performance.now();
-  diffDataFrame(df, { periods: 1 });
-  shiftDataFrame(df, { periods: 3 });
-  times.push(performance.now() - t0);
+  diffDataFrame(df);
+  diffDataFrame(df, { periods: 3 });
+  shiftDataFrame(df, { periods: 1 });
+  shiftDataFrame(df, { periods: -2 });
 }
+const total = performance.now() - start;
 
-const total = times.reduce((a, b) => a + b, 0);
 console.log(
   JSON.stringify({
     function: "dataframe_diff_shift_fn",
-    mean_ms: round3(total / ITERATIONS),
+    mean_ms: Math.round((total / ITERATIONS) * 1000) / 1000,
     iterations: ITERATIONS,
-    total_ms: round3(total),
+    total_ms: Math.round(total * 1000) / 1000,
   }),
 );
-
-function round3(v: number): number {
-  return Math.round(v * 1000) / 1000;
-}

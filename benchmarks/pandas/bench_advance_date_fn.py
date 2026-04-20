@@ -1,35 +1,46 @@
 """
-Benchmark: pandas DateOffset arithmetic — advance a date by a frequency.
-Mirrors tsb bench_advance_date_fn.ts (advanceDate/parseFreq).
+Benchmark: pandas DateOffset arithmetic — date frequency parsing and advancement.
+Mirrors tsb advanceDate / parseFreq.
 Outputs JSON: {"function": "advance_date_fn", "mean_ms": ..., "iterations": ..., "total_ms": ...}
 """
 import json
 import time
 import pandas as pd
-from pandas.tseries.offsets import Day, BusinessDay, Hour, MonthBegin, MonthEnd, Week
 
 WARMUP = 5
-ITERATIONS = 50
+ITERATIONS = 1000
 
-d = pd.Timestamp("2020-01-15")
-offsets = [Day(1), Day(2), Hour(1), Hour(3), MonthBegin(1), MonthEnd(1), Week(1), BusinessDay(1)]
+d = pd.Timestamp("2023-06-15")
+offsets = [
+    pd.DateOffset(days=1),
+    pd.DateOffset(days=3),
+    pd.offsets.BDay(1),
+    pd.offsets.Week(1),
+    pd.offsets.MonthBegin(1),
+    pd.offsets.MonthEnd(1),
+    pd.DateOffset(hours=1),
+    pd.DateOffset(hours=2),
+    pd.DateOffset(minutes=1),
+    pd.offsets.YearBegin(1),
+]
 
 for _ in range(WARMUP):
     for off in offsets:
         d + off
+    pd.Timestamp("2023-01-01")
+    pd.Timestamp(1672531200000, unit="ms")
 
-times = []
+t0 = time.perf_counter()
 for _ in range(ITERATIONS):
-    t0 = time.perf_counter()
-    for _ in range(1000):
-        for off in offsets:
-            d + off
-    times.append((time.perf_counter() - t0) * 1000)
+    for off in offsets:
+        d + off
+    pd.Timestamp("2023-01-01")
+    pd.Timestamp(1672531200000, unit="ms")
+total = (time.perf_counter() - t0) * 1000
 
-total_ms = sum(times)
 print(json.dumps({
     "function": "advance_date_fn",
-    "mean_ms": round(total_ms / ITERATIONS, 3),
+    "mean_ms": round(total / ITERATIONS, 3),
     "iterations": ITERATIONS,
-    "total_ms": round(total_ms, 3),
+    "total_ms": round(total, 3),
 }))

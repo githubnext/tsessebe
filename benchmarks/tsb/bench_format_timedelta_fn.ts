@@ -1,48 +1,47 @@
 /**
- * Benchmark: formatTimedelta / parseFrac — Timedelta string formatting and fraction parsing.
- * Mirrors pandas Timedelta.__str__() and parsing helpers.
+ * Benchmark: formatTimedelta / parseFrac — Timedelta formatting utilities.
+ * Mirrors pandas Timedelta string formatting.
  * Outputs JSON: {"function": "format_timedelta_fn", "mean_ms": ..., "iterations": ..., "total_ms": ...}
  */
-import { Timedelta, formatTimedelta, parseFrac } from "../../src/index.ts";
+import { Timedelta, formatTimedelta, parseFrac, toTimedelta } from "../../src/index.ts";
 
 const WARMUP = 5;
-const ITERATIONS = 50;
+const ITERATIONS = 500;
 
+// Create timedelta instances
 const tds = [
-  new Timedelta(1, "days"),
-  new Timedelta(3661, "seconds"),
-  new Timedelta(90061001, "milliseconds"),
-  new Timedelta(0, "seconds"),
-  new Timedelta(-86400, "seconds"),
+  new Timedelta(0),
+  new Timedelta(1_000),
+  new Timedelta(86_400_000),
+  new Timedelta(3_661_001),
+  new Timedelta(-7_200_500),
 ];
 
-const fracs = ["1/2", "3/4", "0.333", "100", "1.5"];
-
 for (let i = 0; i < WARMUP; i++) {
-  for (const td of tds) formatTimedelta(td);
-  for (const f of fracs) parseFrac(f);
-}
-
-const times: number[] = [];
-for (let i = 0; i < ITERATIONS; i++) {
-  const t0 = performance.now();
-  for (let j = 0; j < 1000; j++) {
-    for (const td of tds) formatTimedelta(td);
-    for (const f of fracs) parseFrac(f);
+  for (const td of tds) {
+    formatTimedelta(td);
   }
-  times.push(performance.now() - t0);
+  parseFrac("123456789");
+  parseFrac("000000001");
+  toTimedelta(3600, { unit: "s" });
 }
 
-const total = times.reduce((a, b) => a + b, 0);
+const t0 = performance.now();
+for (let i = 0; i < ITERATIONS; i++) {
+  for (const td of tds) {
+    formatTimedelta(td);
+  }
+  parseFrac("123456789");
+  parseFrac("000000001");
+  toTimedelta(3600, { unit: "s" });
+}
+const total = performance.now() - t0;
+
 console.log(
   JSON.stringify({
     function: "format_timedelta_fn",
-    mean_ms: round3(total / ITERATIONS),
+    mean_ms: Math.round((total / ITERATIONS) * 1000) / 1000,
     iterations: ITERATIONS,
-    total_ms: round3(total),
+    total_ms: Math.round(total * 1000) / 1000,
   }),
 );
-
-function round3(v: number): number {
-  return Math.round(v * 1000) / 1000;
-}

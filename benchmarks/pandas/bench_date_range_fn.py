@@ -1,6 +1,5 @@
 """
-Benchmark: pandas pd.date_range() — generate date sequences.
-Mirrors tsb bench_date_range_fn.ts (dateRange standalone function).
+Benchmark: pandas.date_range() — generate a fixed-frequency date sequence.
 Outputs JSON: {"function": "date_range_fn", "mean_ms": ..., "iterations": ..., "total_ms": ...}
 """
 import json
@@ -8,26 +7,26 @@ import time
 import pandas as pd
 
 WARMUP = 5
-ITERATIONS = 50
+ITERATIONS = 100
 
 start = "2020-01-01"
-end = "2020-12-31"
+end = "2022-12-31"
 
 for _ in range(WARMUP):
     pd.date_range(start=start, end=end, freq="D")
-    pd.date_range(start=start, periods=1000, freq="h")
+    pd.date_range(start=start, periods=365, freq="D")
+    pd.date_range(start=start, periods=24, freq="h")
 
-times = []
+t0 = time.perf_counter()
 for _ in range(ITERATIONS):
-    t0 = time.perf_counter()
     pd.date_range(start=start, end=end, freq="D")
-    pd.date_range(start=start, periods=1000, freq="h")
-    times.append((time.perf_counter() - t0) * 1000)
+    pd.date_range(start=start, periods=365, freq="D")
+    pd.date_range(start=start, periods=24, freq="h")
+total = (time.perf_counter() - t0) * 1000
 
-total_ms = sum(times)
 print(json.dumps({
     "function": "date_range_fn",
-    "mean_ms": round(total_ms / ITERATIONS, 3),
+    "mean_ms": round(total / ITERATIONS, 3),
     "iterations": ITERATIONS,
-    "total_ms": round(total_ms, 3),
+    "total_ms": round(total, 3),
 }))
