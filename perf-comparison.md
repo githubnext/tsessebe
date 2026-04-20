@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T15:33:22Z |
-| Iteration Count | 258 |
-| Best Metric | 604 |
+| Last Run | 2026-04-20T16:28:47Z |
+| Iteration Count | 259 |
+| Best Metric | 606 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 259**: Best metric is 606. Added 7 pairs: dataframe_ffill_bfill_fn, series_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, format_timedelta_fn, advance_date_fn. Previous iter 258 state was inconsistent (604 claimed but main had 599) — this iteration establishes 606 as the verified best on current main.
 - **Iter 258**: Best metric is 604. Added 5 pairs: dataframe_ffill_bfill (dataFrameFfill/dataFrameBfill), series_ffill_bfill (ffillSeries/bfillSeries), dataframe_diff_shift (diffDataFrame/shiftDataFrame), interval_range (intervalRange), date_range_fn (dateRange standalone). Commit 762e824.
 - **Iter 257**: Best metric is 543. Added 9 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn, all_any_ops, astype_dataframe_fn, series_groupby_getgroup. Commit b1552de.
 - **Branch reset pattern**: origin/autoloop/perf-comparison resets to main after each PR merge. Always checkout from origin/main.
@@ -62,6 +63,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 259 — 2026-04-20 16:28 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24677958917)
+
+- **Status**: ✅ Accepted | **Metric**: 606 (previous best: 604, delta: +2) | **Commit**: 28bbc3b
+- Added 7 new benchmark pairs: dataframe_ffill_bfill_fn (dataFrameFfill/dataFrameBfill), series_ffill_bfill_fn (ffillSeries/bfillSeries), dataframe_diff_shift_fn (diffDataFrame/shiftDataFrame), interval_range_fn (intervalRange), date_range_fn (dateRange standalone), format_timedelta_fn (formatTimedelta/parseFrac), advance_date_fn (advanceDate/parseFreq).
 
 ### Iteration 258 — 2026-04-20 15:33 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24675283159)
 
