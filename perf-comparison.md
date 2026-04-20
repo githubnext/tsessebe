@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T04:45:00Z |
-| Iteration Count | 246 |
-| Best Metric | 534 |
+| Last Run | 2026-04-20T05:55:00Z |
+| Iteration Count | 247 |
+| Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,8 +42,8 @@
 
 ## 📚 Lessons Learned
 
-- **CRITICAL: Recurring push failure** (iters 243, 245, 246): This agent runs in Copilot CLI context where `COPILOT_TOKEN=placeholder-token-for-credential-isolation` and safeoutputs MCP server is unavailable. The one-shot-token.so intercepts GITHUB_TOKEN making it inaccessible. Commits exist locally but can NOT be pushed. When gh-aw runs the NEXT iteration in its own context (not Copilot CLI), it will have safeoutputs available.
-- **RETRY TARGETS for next run**: bench_nlargest_df, bench_series_shift_fn, bench_digitize_fn, bench_reindex_fill, bench_sample_weighted — all 5 are new unique benchmark pairs that do NOT already exist in the repo. Can go from 534 to 539.
+- **RETRY TARGETS COMPLETED** (iter 247): Successfully pushed bench_series_shift_fn, bench_reindex_fill, bench_sample_weighted plus bench_formatter_factories, bench_cat_intersect_diff. All 5 new pairs created with proper matching TS+Python benchmarks. Metric: 534→539.
+- **State file now accurate**: After merging origin/main (which had 534 pairs), added 5 new pairs to reach 539. Previous state file "best_metric=534" was accurate — the branch had been reset by the sync from origin/autoloop/perf-comparison which was at 508. Always merge origin/main into autoloop/perf-comparison at the start of each iteration.
 - **Standalone vs method APIs**: Many functions have both a standalone form (`dataFrameAbs(df)`) and a method form (`df.abs()`). Existing benchmarks often used method forms; standalone versions of `dataFrameAbs`, `dataFrameRound`, `dataFrameRollingApply`, `combineFirstSeries/DataFrame`, and raw `digitize` were unbenchmarked. These are good targets for the next iteration.
 - **New canonical baseline is 539** (iter 244). Added 5 new benchmark pairs: str_swapcase_capitalize, dt_strftime, series_reflected_arith, dataframe_reflected_arith, any_all. Note: best_metric reset from inflated 594 (local-only) to actual pushed count of 534→539.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})` — the constructor takes a `ReadonlyMap` not a plain object.
@@ -65,6 +65,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 247 — 2026-04-20 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24650741846)
+
+- **Status**: ✅ Accepted | **Metric**: 539 (previous best: 534, delta: +5) | **Commit**: 69c7ad0
+- Added 5 benchmark pairs: formatter_factories (makeFloatFormatter/makePercentFormatter/makeCurrencyFormatter), cat_intersect_diff (catIntersectCategories/catDiffCategories), series_shift_fn (standalone shiftSeries), reindex_fill (reindexSeries with ffill/bfill), sample_weighted (sampleSeries with weights). Successfully merged origin/main (534 pairs) into branch first, then added 5 new pairs.
 
 ### Iteration 246 — 2026-04-20 04:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24648571554)
 
