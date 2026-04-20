@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T01:49:00Z |
-| Iteration Count | 244 |
+| Last Run | 2026-04-20T03:40:00Z |
+| Iteration Count | 245 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | local-only, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | rejected, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,6 +42,8 @@
 
 ## 📚 Lessons Learned
 
+- **CRITICAL issue (iter 245)**: safeoutputs MCP server is filtered by Copilot CLI registry. When this happens, push_to_pull_request_branch and add_comment are unavailable. Local commits can't be pushed. The framework logs: `MCP server "safeoutputs" filtered: Could not verify server against any configured registry`. This will keep happening if Autoloop keeps running in Copilot CLI context instead of gh-aw context.
+- **Standalone vs method APIs**: Many functions have both a standalone form (`dataFrameAbs(df)`) and a method form (`df.abs()`). Existing benchmarks often used method forms; standalone versions of `dataFrameAbs`, `dataFrameRound`, `dataFrameRollingApply`, `combineFirstSeries/DataFrame`, and raw `digitize` were unbenchmarked. These are good targets for the next iteration.
 - **New canonical baseline is 539** (iter 244). Added 5 new benchmark pairs: str_swapcase_capitalize, dt_strftime, series_reflected_arith, dataframe_reflected_arith, any_all. Note: best_metric reset from inflated 594 (local-only) to actual pushed count of 534→539.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})` — the constructor takes a `ReadonlyMap` not a plain object.
 - **New canonical baseline is 594** (iter 243). Cherry-picked all 55 pairs from `origin/autoloop/perf-comparison-8724e9f9` and added 5 new pairs: merge_multi_col, concat_many_small, series_where_scalar, groupby_transform_multikey, rank_pct. COMMITTED LOCAL ONLY — safeoutputs unavailable.
@@ -62,6 +64,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 245 — 2026-04-20 03:40 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24646490274)
+
+- **Status**: ❌ Push Failed — safeoutputs MCP server unavailable in Copilot CLI context (filtered: "Could not verify server against any configured registry")
+- Created 10 benchmark pairs locally (series_head_tail, series_shift_fn, series_autocorr, dataframe_col_arithmetic, dataframe_filter_select, dataframe_rolling_apply_fn, combine_first_fn, dataframe_abs_fn, dataframe_round_fn, digitize_fn) achieving 544 pairs. Commit 9058df2 exists locally on autoloop/perf-comparison but was NOT pushed. Next run: try the same benchmarks (or similar ones).
 
 ### Iteration 244 — 2026-04-20 01:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24644387987)
 
