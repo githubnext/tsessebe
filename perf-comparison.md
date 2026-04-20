@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T05:55:00Z |
-| Iteration Count | 247 |
+| Last Run | 2026-04-20T06:58:00Z |
+| Iteration Count | 248 |
 | Best Metric | 539 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -42,7 +42,8 @@
 
 ## 📚 Lessons Learned
 
-- **RETRY TARGETS COMPLETED** (iter 247): Successfully pushed bench_series_shift_fn, bench_reindex_fill, bench_sample_weighted plus bench_formatter_factories, bench_cat_intersect_diff. All 5 new pairs created with proper matching TS+Python benchmarks. Metric: 534→539.
+- **Iter 247 push failed**: commit 69c7ad0 was not found in origin/autoloop/perf-comparison. The actual pushed baseline after merging origin/main was 534 (not 539). Iter 248 re-added the same targets plus combine_first_series and astype_dataframe to reach 539 with a real push.
+- **RETRY TARGETS COMPLETED** (iter 248): 5 new benchmark pairs pushed: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, astype_dataframe. Metric: 534→539.
 - **State file now accurate**: After merging origin/main (which had 534 pairs), added 5 new pairs to reach 539. Previous state file "best_metric=534" was accurate — the branch had been reset by the sync from origin/autoloop/perf-comparison which was at 508. Always merge origin/main into autoloop/perf-comparison at the start of each iteration.
 - **Standalone vs method APIs**: Many functions have both a standalone form (`dataFrameAbs(df)`) and a method form (`df.abs()`). Existing benchmarks often used method forms; standalone versions of `dataFrameAbs`, `dataFrameRound`, `dataFrameRollingApply`, `combineFirstSeries/DataFrame`, and raw `digitize` were unbenchmarked. These are good targets for the next iteration.
 - **New canonical baseline is 539** (iter 244). Added 5 new benchmark pairs: str_swapcase_capitalize, dt_strftime, series_reflected_arith, dataframe_reflected_arith, any_all. Note: best_metric reset from inflated 594 (local-only) to actual pushed count of 534→539.
@@ -66,10 +67,15 @@
 
 ## 📊 Iteration History
 
+### Iteration 248 — 2026-04-20 06:58 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24652467203)
+
+- **Status**: ✅ Accepted | **Metric**: 539 (actual pushed baseline 534, delta: +5) | **Commit**: 42c00c5
+- Added 5 benchmark pairs: shift_series_fn (standalone shiftSeries), reindex_fill (reindexSeries ffill/bfill), sample_weighted (sampleSeries with weights), combine_first_series (combineFirstSeries standalone), astype_dataframe (astype DataFrame). Iter 247 commit not in origin; actual baseline was 534.
+
 ### Iteration 247 — 2026-04-20 05:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24650741846)
 
-- **Status**: ✅ Accepted | **Metric**: 539 (previous best: 534, delta: +5) | **Commit**: 69c7ad0
-- Added 5 benchmark pairs: formatter_factories (makeFloatFormatter/makePercentFormatter/makeCurrencyFormatter), cat_intersect_diff (catIntersectCategories/catDiffCategories), series_shift_fn (standalone shiftSeries), reindex_fill (reindexSeries with ffill/bfill), sample_weighted (sampleSeries with weights). Successfully merged origin/main (534 pairs) into branch first, then added 5 new pairs.
+- **Status**: ⚠️ Push Failed (commit 69c7ad0 not found in origin) | **Metric**: 539 claimed, push did not reach origin
+- Added 5 pairs locally: formatter_factories, cat_intersect_diff, series_shift_fn, reindex_fill, sample_weighted. State file updated but git push failed.
 
 ### Iteration 246 — 2026-04-20 04:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24648571554)
 
