@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T12:55:29Z |
-| Iteration Count | 255 |
-| Best Metric | 540 |
+| Last Run | 2026-04-20T13:36:22Z |
+| Iteration Count | 256 |
+| Best Metric | 541 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #150 |
@@ -42,6 +42,7 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 256**: Best metric is 541. Added 7 pairs: all_any_ops, shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. Commit b22a253.
 - **Iter 255**: Best metric is 540. Added 6 pairs: shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. Commit a4a9ffa.
 - **Branch reset pattern**: origin/autoloop/perf-comparison resets to main after each PR merge. Always merge origin/main at the start.
 - **Standalone vs method APIs**: Many functions have both forms. Remaining unbenchmarked standalone: scan src/ for functions not imported in any benchmarks/tsb/*.ts.
@@ -61,6 +62,11 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 256 — 2026-04-20 13:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24669537656)
+
+- **Status**: ✅ Accepted | **Metric**: 541 (previous best: 540, delta: +1) | **Commit**: b22a253
+- Added 7 new benchmark pairs: all_any_ops, shift_series_fn, reindex_fill, sample_weighted, combine_first_series, dataframe_abs_round_fn, dataframe_rolling_apply_fn. Covers allSeries/anyDataFrame, shiftSeries, reindexSeries (fill), sampleDataFrame (weighted), combineFirstSeries, dataFrameAbs/Round, dataFrameRollingApply.
 
 ### Iteration 255 — 2026-04-20 12:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24667626819)
 
