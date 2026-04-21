@@ -8,12 +8,12 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-21T05:45:39Z |
-| Iteration Count | 273 |
-| Best Metric | 368 |
+| Last Run | 2026-04-21T07:35:00Z |
+| Iteration Count | 274 |
+| Best Metric | 369 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | — |
+| PR | #166 |
 | Steering Issue | #131 |
 | Experiment Log | #130 |
 | Paused | false |
@@ -21,7 +21,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, error, error, error, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, accepted, error, error, error, accepted, accepted, accepted |
 
 ---
 
@@ -43,6 +43,8 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 274 (run_benchmarks.sh bug fix)**: Key fix: added `|| true` after xargs call in main script — `set -euo pipefail` was causing early exit when any pair runner exited nonzero, preventing the Python merge from running. Also fixed by writing pair runner as a separate script (not an exported function) to avoid subshell env issues. Result: 369/632 successful pairs. Pattern confirmed: use separate `$PAIR_RUNNER` helper script + `|| true` after xargs.
+- **Iter 274 (coverage note)**: All known src functions already have benchmark pairs. Future metric gains must come from: (1) fixing currently-failing pairs, (2) increasing BENCHMARK_TIMEOUT, (3) increasing BENCHMARK_WORKERS, or (4) adding new tsb functions.
 - **Iter 273 (MCP tools working)**: safeoutputs MCP tools working in this runner environment. tsx fallback via `/tmp/gh-aw/agent/node_modules/.bin/tsx` confirmed working. Parallel eval (8 workers, 30s timeout): 368/632 successful pairs. temp-file JSON passing in run_benchmarks.sh works cleanly. This is the canonical pattern to use going forward.
 - **Iter 271 (tsx fallback)**: When bun CDN is blocked (403 on github.com/oven-sh), `tsx` (via `npx tsx` or installed via `npm install tsx --prefix`) works as a drop-in replacement. tsx startup ≈ 0.85s/invocation vs bun's near-instant startup. With 8 parallel workers, 632 pairs complete in ~15 min with tsx vs ~2-3 min with bun. Result: 366-371/632 successful pairs (261 failed — likely timeouts on slower benchmarks).
 - **Iter 271 (run_benchmarks.sh)**: Key fixes: (1) tsx fallback detection, (2) temp-file JSON passing to avoid shell quoting issues, (3) 8 parallel workers with xargs -P, (4) python3 heredoc for merge script. Previous sequential script would have failed entirely without bun.
@@ -60,15 +62,21 @@
 
 ## 🔭 Future Directions
 
-- **Fix FAIL benchmarks**: 261/632 pairs failed. Investigate common failure modes — likely some benchmarks import bun-specific APIs not available in node/tsx, or have very slow operations that exceed 30s timeout.
+- **Fix FAIL benchmarks**: 263/632 pairs failed. Investigate common failure modes — likely some benchmarks import bun-specific APIs not available in node/tsx, or have very slow operations that exceed 30s timeout. Try increasing BENCHMARK_TIMEOUT to 60s or BENCHMARK_WORKERS to 12.
 - **Improve tsx performance**: tsx startup ≈ 0.85s/invocation. With bun (if available), even more pairs would succeed. When bun CDN is available, metric could reach 550+.
-- **Add window_extended benchmarks**: `rollingSem`, `rollingSkew`, `rollingKurt`, `rollingQuantile` pairs not yet added.
-- **Add numeric_extended benchmarks**: `src/stats/numeric_extended.ts` not yet benchmarked.
-- **Increase worker count**: Try BENCHMARK_WORKERS=12 or 16 for even higher throughput.
+- **Investigate failing pairs**: Run a small subset with verbose output to identify which benchmarks fail and why.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 274 — 2026-04-21T07:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24707985437)
+
+- **Status**: ✅ Accepted
+- **Change**: Fixed `set -e` early-exit bug in run_benchmarks.sh (added `|| true` after xargs); rewrote with separate pair-runner script for robustness; added bench_nancumops_extended pair (nanprod/nanmedian/nancount); merged upstream main (631→632 pairs)
+- **Metric**: 369 (previous best: 368, delta: +1)
+- **Commit**: ea1b072
+- **Notes**: The `set -euo pipefail` + xargs interaction was the root cause of empty results.json. Fix confirmed working: 369/632 pairs succeed.
 
 ### Iteration 273 — 2026-04-21T05:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24706192262)
 
