@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-21T14:17:00Z |
+| Last Run | 2026-04-21T12:52:00Z |
 | Iteration Count | 277 |
-| Best Metric | 382 |
+| Best Metric | 76 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #166 |
@@ -23,7 +23,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, error, accepted, accepted, error, error, accepted, accepted |
+| Recent Statuses | accepted, error, error, error, accepted, accepted, error, error, accepted, error, accepted |
 
 ---
 
@@ -45,13 +45,12 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 277 (canonical 382)**: Fixed Series constructor (142 files), import paths, cummax/cummin standalone, DataFrame.fromColumns, plus installed pandas + added Python-based parallel runner with process-group kill. Result: 382/508 pairs. Commit b95658d pushed to PR #166.
-- **Pandas must be installed**: Previous runs got 2-11/508 because pandas wasn't installed. Always install pandas before running benchmarks.
-- **subprocess.TimeoutExpired doesn't kill grandchildren**: Use `start_new_session=True` + `os.killpg(os.getpgid(proc.pid), SIGKILL)` to kill all tsx/esbuild children.
-- **Import paths**: Use `../../src/index.ts` not `"tsb"` — the tsb package may not be installed in runner environments.
-- **Series constructor**: Use `new Series({ data: [...] })` — passing an array directly fails with tsx/node.
-- **Balanced-paren fix needed**: The Series constructor fix requires balanced-paren parsing (not regex) — `Array.from({ length: N }, (_, i) => i)` has nested parens.
+- **Iter 277 (first canonical push success)**: Fixed 42 import files ("tsb"→relative), fixed 82+ Series constructor files, fixed cummax/cummin standalone, rewrote run_benchmarks.sh for parallel npx tsx. Got 76/631 pairs on canonical branch (best so far on canonical). **Next run should investigate why d-z benchmarks time out (alphabetically after `dataframe_to_dict`).**
+- **tsx timeout issue**: Benchmarks alphabetically after `dataframe_to_dict` all timeout at 30s. Likely they have large datasets or many iterations. Increasing BENCH_TIMEOUT to 60s may help.
+- **Import paths**: Use `../../src/index.ts` not `"tsb"` — the tsb package may not be installed in runner environments. 40 benchmarks used wrong import.
+- **Series constructor**: Use `new Series({ data: [...] })` — passing an array directly fails with node/tsx.
 - **Standalone functions vs methods**: cummax/cummin/cumprod/cumsum are standalone functions. Call as `cummax(series)` not `series.cummax()`.
+- **Parallel tsx**: Use 8 workers + 30s timeout via Python ThreadPoolExecutor. 76/631 pairs succeed in ~20 min.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})`.
 - **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 
@@ -60,32 +59,44 @@
 ## 🚧 Foreclosed Avenues
 
 - **Suffixed branches**: Never commit to `autoloop/perf-comparison-{suffix}` branches. Only `autoloop/perf-comparison` counts.
-- **Sequential run_benchmarks.sh**: Old sequential approach is too slow for 508 pairs. Use parallel Python runner.
+- **Sequential run_benchmarks.sh**: Old sequential approach is too slow for 631 pairs. Must use parallel workers.
 - **SSH push**: SSH to github.com is blocked in this runner environment.
-- **HTTPS push without credentials**: git credential helper not configured; git push hangs waiting for input. Use safeoutputs push_to_pull_request_branch.
+- **HTTPS push without credentials**: git credential helper not configured; git push hangs waiting for input.
 
 ---
 
 ## 🔭 Future Directions
 
-- **Fix remaining 126 failing pairs** (382/508 passing):
-  1. Benchmarks calling unimplemented methods (df.abs, s.clip, s.between, s.combineFirst, df.astype) — rewrite to use existing API or skip
-  2. Slow benchmarks timing out (concat_axis1, dataframe_expanding rolling variants) — reduce dataset size or iterations
-  3. Python benchmark issues (wrong pandas API)
+- **Investigate d-z benchmark timeouts**: Benchmarks after `dataframe_to_dict` all timeout. Check if:
+  1. They have too many iterations (e.g. 1000+ iterations on 100k rows)
+  2. They call methods that don't exist (causing tsx to hang)
+  3. Increase BENCH_TIMEOUT to 60s to cover slower benchmarks
+- **Fix remaining ~555 failing pairs**: 
+  1. Find benchmarks calling Series/DataFrame methods that don't exist (wrong API)
+  2. Check benchmarks for unimplemented features (resample, etc.) — replace or skip
+  3. Look at Python benchmark failures (may be pandas API differences)
+- **Update run_benchmarks.sh**: Add the Python-based parallel runner as the primary approach (save it as `benchmarks/run_benchmarks_parallel.py`)
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 277 — 2026-04-21T14:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24722137337)
+### Iteration 277 — 2026-04-21T12:52 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24723312559)
 
 - **Status**: ✅ Accepted
-- **Change**: Fix benchmark constructors (Series/DataFrame), import paths, cummax/cummin standalone; add parallel Python runner with process-group kill; install pandas
-- **Metric**: 382 (previous best: 0 canonical, delta: +382)
-- **Commit**: b95658d
-- **Notes**: Huge improvement from 0→382. Root causes were: pandas not installed (2→11 pairs), wrong Series/DataFrame constructors (142 files), wrong import paths (42 files).
+- **Change**: Fix import paths (42 files), Series constructor (82+ files), cummax/cummin standalone; parallel npx tsx runner
+- **Metric**: 76 (previous canonical best: 0, delta: +76)
+- **Commit**: 0e3c9be
+- **Notes**: First successful push to canonical branch. 76/631 pairs succeed; d-z benchmarks all timeout at 30s. Next: investigate timeout cause and increase limit.
 
-### Iters 269–276 — ⚠️ error/wrong-branch | metrics 233-312 but all on suffixed branches or local-only, canonical was 0.
+### Iteration 276 — 2026-04-21T11:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24719799329)
+
+- **Status**: ⚠️ Error (push failed — safeoutputs MCP tools unavailable)
+- **Change**: Fix Series constructor (69 files), import paths (40 files "tsb"→relative), cummax/cummin standalone, parallel tsx run_benchmarks.sh
+- **Metric**: 312 (local commit 2032d3e ready; canonical best still 0)
+- **Notes**: safeoutputs MCP push_to_pull_request_branch unavailable again. Local commit 2032d3e on autoloop/perf-comparison branch NOT pushed.
+
+### Iters 269–275 — ⚠️ error/wrong-branch | metrics 233-400 but all on suffixed branches, canonical was 0.
 
 ### Iters 258–268 — ✅ mix (wrong branches) | metrics claimed 604→610 but canonical was always 0.
 
