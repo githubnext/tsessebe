@@ -382,3 +382,4 @@ export { intervalRange } from "./interval.ts";
 export type { ClosedType } from "./interval.ts";
 export { nunique } from "./reduce_ops.ts";
 export { queryDataFrame, evalDataFrame } from "./eval_query.ts";
+export { strFindall, strFindallCount, strFindFirst, strFindallExpand } from "./str_findall.ts";
