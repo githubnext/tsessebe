@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-21T09:35:27Z |
-| Iteration Count | 275 |
-| Best Metric | 372 |
+| Last Run | 2026-04-21T11:47:00Z |
+| Iteration Count | 276 |
+| Best Metric | 312 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | #166 |
@@ -22,8 +22,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | accepted, accepted, accepted, accepted, error, error, error, accepted, accepted, error |
+| Consecutive Errors | 2 |
+| Recent Statuses | accepted, error, error, error, accepted, accepted, error, error, accepted, error |
 
 ---
 
@@ -45,16 +45,14 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 275 (Series constructor fix)**: Fixed 73 benchmarks using wrong `new Series(array)` pattern → `new Series({ data: array })`. Evaluation showed 400/631 pairs pass (up from 372). Local commit 09a1cd3 ready but push failed (safeoutputs MCP tools unavailable). **Next run MUST re-apply these 73 fixes + bench_cummax/bench_cummin fixes + run_benchmarks.sh update.**
-- **Iter 274 (canonical run_benchmarks.sh)**: Successfully committed the parallel tsx run_benchmarks.sh. Pattern is stable: tsx from `/tmp/gh-aw/agent/node_modules/.bin/tsx`, 8 workers, 30s timeout, temp-file JSON. 372/633 pairs succeed.
-- **Series constructor**: Use `new Series({ data: [...] })` — passing an array directly causes "data is not iterable" error with node/tsx. 73 existing benchmarks used wrong pattern; fix yields ~28 more passing pairs (372→400).
-- **Iter 273 (MCP tools working)**: safeoutputs MCP tools working in this runner environment. tsx fallback via `/tmp/gh-aw/agent/node_modules/.bin/tsx` confirmed working. Parallel eval (8 workers, 30s timeout): 368/632 successful pairs.
-- **Standalone functions vs methods**: cummax/cummin/cumprod/cumsum are standalone functions, not Series methods. Always import and call as `cummax(series)` not `series.cummax()`. bench_cummax and bench_cummin used wrong pattern.
-- **Iter 271 (tsx fallback)**: tsx startup ≈ 0.85s/invocation. With 8 parallel workers, 632 pairs complete in ~15 min. Result: 366-371/632 successful pairs.
-- **Iter 269 (CRITICAL)**: Canonical branch `results.json` was always empty until iter 269. True canonical best was 0 before that run.
-- **safeoutputs MCP availability**: Tools are intermittently available. When unavailable, git push also fails (SSH blocked, HTTPS requires credentials). Runs become errors when push_to_pull_request_branch is unavailable. Next run should re-apply all pending changes.
+- **Iter 276 (CANONICAL reset + push failed again)**: Applied all fixes to canonical branch (Series constructor 69 files, import paths 40 files, cummax/cummin standalone, parallel tsx run_benchmarks.sh). Eval: 312/508 pairs. Local commit 2032d3e ready but push_to_pull_request_branch unavailable AGAIN. **Next run must re-apply same changes.**
+- **Import paths**: Use `../../src/index.ts` not `"tsb"` — the tsb package may not be installed in runner environments. 40 benchmarks used wrong import.
+- **Series constructor**: Use `new Series({ data: [...] })` — passing an array directly fails with node/tsx.
+- **Standalone functions vs methods**: cummax/cummin/cumprod/cumsum are standalone functions. Call as `cummax(series)` not `series.cummax()`.
+- **Parallel tsx**: Install tsx in `/tmp/gh-aw/agent/node_modules/` via npm, then use 8 workers + 30s timeout. 312/508 pairs succeed in ~15 min.
 - **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})`.
-- groupby AggName: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
+- **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
+- **safeoutputs MCP availability**: intermittently available; when unavailable git push also fails.
 
 ---
 
@@ -69,53 +67,25 @@
 
 ## 🔭 Future Directions
 
-- **PRIORITY: Re-apply iter 275 fixes** (next run): Fix 73 benchmarks with wrong `new Series(array)` → `new Series({ data: array })`. Also fix bench_cummax/bench_cummin to use standalone functions. Update run_benchmarks.sh with tsx fallback. Expected metric: 400+ (up from 372).
-- **Fix remaining ~231 failing pairs**: After re-applying iter 275:
-  1. Find benchmarks calling Series/DataFrame methods that are actually standalone functions
-  2. Fix benchmarks using wrong import paths ("tsb" vs "../../src/index.js")  
-  3. Fix benchmarks for unimplemented features (resample etc.) — either remove or replace
-  4. Check for pandas benchmarks failing due to API differences
+- **Fix remaining ~196 failing pairs** (312/508 passing): 
+  1. Find benchmarks calling Series/DataFrame methods that don't exist (wrong API)
+  2. Check benchmarks for unimplemented features (resample, etc.) — replace or skip
+  3. Look at Python benchmark failures (may be pandas API differences)
+  4. Fix benchmarks using `DataFrame.fromColumns` incorrectly
 - **Improve tsx performance**: With bun (if available), more pairs would succeed within 30s timeout.
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 275 — 2026-04-21T09:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24715071490)
+### Iteration 276 — 2026-04-21T11:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24719799329)
 
-- **Status**: ⚠️ Error | **Metric**: 400 (evaluated locally, push failed; local commit 09a1cd3 NOT pushed to GitHub)
-- Fixed wrong `new Series(array)` → `new Series({ data: array })` in 73 benchmark files; fixed bench_cummax/bench_cummin to use standalone cummax/cummin functions; rewrote run_benchmarks.sh with tsx fallback + 8 parallel workers. Evaluation: 400/631 pairs succeed (up from 372). Local commit 09a1cd3 ready. safeoutputs MCP tools unavailable (push_to_pull_request_branch/noop all report "tool does not exist"). SSH also blocked. **Next run must re-apply all these changes.**
+- **Status**: ⚠️ Error (push failed — safeoutputs MCP tools unavailable)
+- **Change**: Fix Series constructor (69 files), import paths (40 files "tsb"→relative), cummax/cummin standalone, parallel tsx run_benchmarks.sh
+- **Metric**: 312 (local commit 2032d3e ready; canonical best still 0)
+- **Notes**: safeoutputs MCP push_to_pull_request_branch unavailable again. Local commit 2032d3e on autoloop/perf-comparison branch NOT pushed. **Next run MUST re-apply all these changes** — they're the same as iter 275 fixes plus import path fixes and the parallel tsx approach.
 
-### Iteration 274 — 2026-04-21T07:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24710058006)
-
-- **Status**: ✅ Accepted
-- **Change**: Rewrote run_benchmarks.sh with parallel tsx runner (8 workers, 30s timeout, temp-file JSON merge); added bench_numeric_extended_fn and bench_window_extended_fn pairs
-- **Metric**: 372 (previous best: 368, delta: +4)
-- **Commit**: ebc7df3
-- **Notes**: Canonical run_benchmarks.sh now stable with tsx fallback. Key lesson: Series constructor requires `{ data: array }` — many existing failing benchmarks use wrong `new Series(array)` pattern.
-
-### Iteration 273 — 2026-04-21T05:45 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24706192262)
-
-- **Status**: ✅ Accepted
-- **Change**: Rewrote run_benchmarks.sh with tsx fallback, 8 parallel workers, 30s timeout, temp-file JSON; added bench_string_ops_extended pair
-- **Metric**: 368 (previous best: 366, delta: +2)
-- **Commit**: df4b927
-
-### Iteration 272 — 2026-04-21T04:32 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24704103235)
-
-- **Status**: ⚠️ Error | **Metric**: 371 (evaluated locally, push failed)
-
-### Iteration 271 — 2026-04-21T03:52 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24701850957)
-
-- **Status**: ⚠️ Error | **Metric**: 366 locally (push failed)
-
-### Iteration 270 — 2026-04-21T01:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24699442900)
-
-- **Status**: ⚠️ Error | **Metric**: N/A (push failed)
-
-### Iteration 269 — 2026-04-20T23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24695261511)
-
-- **Status**: ✅ Accepted | **Metric**: 233 (delta: +233) | **Commit**: ab8b0ec
+### Iters 269–275 — ⚠️ error/wrong-branch | metrics 233-400 but all on suffixed branches, canonical was 0.
 
 ### Iters 258–268 — ✅ mix (wrong branches) | metrics claimed 604→610 but canonical was always 0.
 
