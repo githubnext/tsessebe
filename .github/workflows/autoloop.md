@@ -99,8 +99,11 @@ steps:
       if [ -d /tmp/gh-aw/repo-memory/autoloop/.git ]; then
         echo "repo-memory/autoloop already cloned; skipping"
       else
-        git clone --depth=1 --branch memory/autoloop \
-          "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+        # Pass the token via an http.extraHeader rather than embedding it in the
+        # URL — keeps it out of process listings and any logged remote URLs.
+        AUTH_HEADER="Authorization: Basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
+        git -c "http.extraHeader=${AUTH_HEADER}" clone --depth=1 --branch memory/autoloop \
+          "https://github.com/${GITHUB_REPOSITORY}.git" \
           /tmp/gh-aw/repo-memory/autoloop \
           || {
             echo "memory/autoloop branch not found (first run); creating empty dir"
@@ -451,8 +454,9 @@ steps:
           # Tiebreaker rationale: programs that have never run (no last_run) take
           # priority over ever-run programs; among never-run programs, prefer the
           # shortest schedule (so "every 30m" beats "every 6h"), then alphabetical
-          # by name. This avoids permanent starvation when state is missing — see
-          # issue: "Autoloop pre-step can't read state files".
+          # by name. Programs with no parseable schedule sort last among never-run
+          # programs (float('inf')). This avoids permanent starvation when state
+          # is missing — see issue: "Autoloop pre-step can't read state files".
           def _due_sort_key(p):
               if p["last_run"]:
                   return (1, p["last_run"], p["name"])
