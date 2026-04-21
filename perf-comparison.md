@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-20T23:46:00Z |
-| Iteration Count | 269 |
+| Last Run | 2026-04-21T01:36:44Z |
+| Iteration Count | 270 |
 | Best Metric | 233 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -19,8 +19,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 1 |
+| Recent Statuses | accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, error |
 
 ---
 
@@ -42,8 +42,10 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 270 (CRITICAL push failure)**: `push_to_pull_request_branch` MCP tool is blocked by runner policy — safeoutputs MCP server runs in Docker at `host.docker.internal:80` and does NOT have access to the runner's local filesystem (`/home/runner/work/tsessebe/tsessebe`). The tool returns "Branch does not exist locally" because it can't see branches committed within the chroot. `add_comment` works (GitHub API only). Solution: The framework's native tool calling must be used, but it's blocked by policy. This means code changes cannot be pushed in any run where the policy blocks safeoutputs.
+- **Iter 270 (run_benchmarks.sh fix)**: Rewrote `run_benchmarks.sh` to use 8 parallel workers (vs 20 in iter 269), 30s timeout, bun path detection (`$HOME/.bun/bin/bun`), and temp-file result collection. This fix was NOT pushed due to above. Next run should apply same changes: parallelism=8, timeout=30s, bun detection, add datetime_tz pair.
 - **Iter 269 (CRITICAL)**: Canonical branch `results.json` was ALWAYS empty (metric=0) — prior accepted iters 262-268 that claimed metrics 605-607 all committed to WRONG suffixed branches (not `autoloop/perf-comparison`). State's recorded best_metric of 607 was a phantom. True canonical best was 0. This run = FIRST real evaluation of canonical branch. Parallel eval (20 workers, 60s timeout) gave 233/607 successful pairs; 374 failures were CPU-contention timeouts. Sequential eval would be higher.
-- **Iter 269 (bun)**: `bun` NOT in system PATH. Available at `node_modules/.bin/bun` (installed as npm devDependency). Use `export PATH="$(pwd)/node_modules/.bin:$PATH"` before running.
+- **Iter 269 (bun)**: `bun` NOT in system PATH. Eval script installs to `$HOME/.bun/bin/bun` via curl (bun.sh/install). GitHub releases CDN at github.com/oven-sh may be blocked (403) in some envs; succeeded in iter 269's Actions runner.
 - **Iter 268**: Canonical was at 599 after merging main. Added 8 pairs. Commit cda8853 (on wrong branch, not canonical).
 - **Iter 262**: Added 6 pairs to canonical (was only iter to correctly push to canonical): series_ffill_bfill_fn, dataframe_ffill_bfill_fn, dataframe_diff_shift_fn, interval_range_fn, date_range_fn, nunique_standalone_fn. Commit 15f8815.
 - **Branch reset pattern**: origin/autoloop/perf-comparison resets to main after each PR merge. Always checkout from origin/autoloop/perf-comparison.
@@ -56,13 +58,17 @@
 
 ## 🔭 Future Directions
 
-- **Fix canonical evaluation**: The canonical branch has 607 benchmark file pairs but only 233 ran successfully in parallel eval. Next iterations should try sequential eval or reduce parallelism (5-10 workers) with higher timeout (120s).
-- **Improve parallel eval performance**: Use `node_modules/.bin/bun` correctly. Run fewer workers (10 instead of 20) to reduce CPU contention.
-- Continue adding benchmark pairs for remaining unbenchmarked functions (many still available).
+- **IMMEDIATE PRIORITY**: The `run_benchmarks.sh` fix (parallelism + bun detection) must be pushed. If this run also fails to push, check if `push_to_pull_request_branch` is accessible. If still blocked, add the fix to the program directly.
+- **run_benchmarks.sh fix to apply**: Replace the sequential script with 8-worker parallel execution (30s per-benchmark timeout), temp-file result collection, and bun path detection at `$HOME/.bun/bin/bun`. See iteration 270 notes for details.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 270 — 2026-04-21T01:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24699442900)
+
+- **Status**: ⚠️ Error | **Metric**: N/A (push failed; local commit fb86b13 NOT pushed to GitHub)
+- Rewrote `run_benchmarks.sh` to use 8 parallel workers with 30s per-benchmark timeout and temp-file result collection. Added bun fallback path detection. Added 1 new benchmark pair: `bench_datetime_tz`. Changes committed locally (fb86b13) but could NOT be pushed — `push_to_pull_request_branch` blocked by runner policy (safeoutputs server runs in Docker without runner filesystem access). **Next run must re-apply these changes.**
 
 ### Iteration 269 — 2026-04-20T23:46 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24695261511)
 
