@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-21T19:30:25Z |
-| Iteration Count | 232 |
-| Best Metric | 108 |
+| Last Run | 2026-04-21T20:22:02Z |
+| Iteration Count | 233 |
+| Best Metric | 109 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, error, accepted, error, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, error, accepted, error, error, error, accepted, accepted |
 
 ---
 
@@ -35,9 +35,9 @@
 
 ## 🎯 Current Priorities
 
+- `io/to_json_normalize.ts` — inverse of jsonNormalize (mentioned in Future Directions)
 - `core/str_accessor` improvements (findall, extractall)
-- `io/to_json_normalize.ts` — inverse of jsonNormalize
-- More groupby operations (transform, filter, apply)
+- `groupby/resample.ts` — time-based resampling
 
 ---
 
@@ -48,6 +48,7 @@
 - **Tests**: Import from `../../src/index.ts`. `Series<Scalar>` type. `Series({dtype: Dtype, name: null|string})`.
 - **MCP safeoutputs**: session flow: init → notifications/initialized → tools/call with Mcp-Session-Id. Accept: application/json, text/event-stream. `push_to_pull_request_branch` (not create) when PR exists.
 - **Regex**: Global regex requires `lastIndex=0` reset before reuse in loops.
+- **Iter 233**: queryDataFrame/evalDataFrame: recursive-descent expression parser. `charAt()` not bracket notation for string char access (avoids noUncheckedIndexedAccess issues). `for...of` over `df.columns.values` gives `string` directly (no cast needed). `Math.pow` is directly passable as `(a: number, b: number) => number`. Short-circuit `and`/`or` by passing AstNode (not Scalar) to evalBinOp. Metric: 109.
 - **Iter 232**: Consolidated two Timedelta classes into one (core). RE_PANDAS now accepts 'N days' without time. Added backward-compat aliases (totalMs, scale, subtract, lt, gt, eq, sign, ms). Always use `Timedelta.fromMilliseconds(ms)` not `new Timedelta(ms)` (constructor is private). Metric: 108.
 - **Iter 230**: date_range: D/B/h/min/s/ms/W/W-DOW/MS/ME/QS/QE/YS/YE, inclusive, normalize, UNIT_NORM table. Complexity ≤15 via helpers. Metric: 61.
 
@@ -61,13 +62,22 @@
 
 ## 🔭 Future Directions
 
-- `stats/timedelta_range.ts` — pd.timedelta_range()
+- `io/to_json_normalize.ts` — nested records from flat DataFrame (inverse of jsonNormalize)
 - `core/str_accessor` — findall, extractall, normalize
-- `io/to_json_normalize.ts` — nested records from flat DataFrame
+- `groupby/resample.ts` — pd.DataFrame.resample() time-based resampling
+- `stats/eval_query.ts` ✅ DONE — queryDataFrame / evalDataFrame
 
 ---
 
 ## 📊 Iteration History
+
+### Iter 233 — 2026-04-21 20:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24744428523)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `queryDataFrame` and `evalDataFrame` (DataFrame.query / eval) with recursive-descent expression parser supporting arithmetic, comparisons, logical ops, membership tests, backtick-quoted columns, and built-in functions.
+- **Metric**: 109 (previous best: 108, delta: +1)
+- **Commit**: 902d5b8
+- **Notes**: Expression parser uses `charAt()` for string access (avoids noUncheckedIndexedAccess). `for...of` on `df.columns.values` gives `string` directly.
 
 ### Iter 232 — 2026-04-21 19:30 UTC — ✅ Consolidate Timedelta, fix timedelta_range parsing. Metric: 108. Commit: 7ae0fce. [Run](https://github.com/githubnext/tsessebe/actions/runs/24742152636)
 ### Iter 231 — 2026-04-21 — ✅ +timedelta_range. Metric: 108. Commit: 532569e.
