@@ -342,3 +342,21 @@ A pre-flight step has already identified a PR that needs attention. Read the sel
 - **Give up gracefully**: if you cannot fix the issue after investigating, update the attempt counter and leave a comment explaining what went wrong. Do not force-push or make destructive changes.
 - **One PR per run**: only fix the selected PR. Do not touch other PRs.
 - **Respect the 5-attempt limit**: the pre-flight step will stop selecting this PR once attempts reach 5 on the same HEAD SHA. If the SHA changes (someone else pushes), the counter resets.
+
+## Autoloop PRs
+
+Evergreen treats Autoloop draft PRs (branch name `autoloop/*`, label `autoloop`) the same as human-authored PRs for CI-failure and merge-conflict fixing. These PRs are produced by the Autoloop agent (`.github/workflows/autoloop.md`), which has its own in-iteration fix-retry loop (up to 5 attempts per iteration). If Autoloop exhausts its budget or hits its per-iteration wall-clock cap, it sets `paused: true` in its state file (`{program-name}.md` on the `memory/autoloop` branch) with a `pause_reason` like `"ci-fix-exhausted: <signature>"` or `"stuck in CI fix loop: <signature>"`. The PR is left in a failing state — deliberately, so Evergreen (or a human) can continue from there.
+
+When Evergreen is selected for an Autoloop PR:
+
+1. Identify it by the branch prefix `autoloop/` and/or the `autoloop` label.
+2. Attempt the fix as usual — read failing check logs, make the minimum change, run local checks, push via `push-to-pull-request-branch`.
+3. If the push succeeds **and** you believe the fix is correct, also **un-pause the Autoloop program**:
+   - Clone or checkout the `memory/autoloop` branch.
+   - Find the state file `{program-name}.md` where `{program-name}` is the part of the branch name after `autoloop/`.
+   - In the **⚙️ Machine State** table, set `Paused` to `false` and `Pause Reason` to `—`.
+   - Commit and push the state-file change to `memory/autoloop`.
+   - Leave a comment on the Autoloop program issue (`[Autoloop: {program-name}]`, labeled `autoloop-program`) noting that Evergreen pushed a CI fix and un-paused the program, with links to the commit and the newly-green check run.
+4. If you cannot fix it, the standard attempt-tracker (5 attempts per HEAD SHA) applies — do **not** un-pause. Autoloop remains paused for human review.
+
+> The same 5-attempts-per-SHA rule applies to Autoloop PRs: Evergreen eventually gives up rather than burning cycles on a hopelessly broken change.
