@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T05:12:00Z |
-| Iteration Count | 239 |
-| Best Metric | 117 |
+| Last Run | 2026-04-22T05:50:18Z |
+| Iteration Count | 240 |
+| Best Metric | 118 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, error, error, error, accepted, accepted, accepted, pending-ci, pending-ci |
+| Recent Statuses | accepted, error, accepted, error, error, error, accepted, accepted, accepted, pending-ci |
 
 ---
 
@@ -37,10 +37,13 @@
 
 - `stats/swaplevel.ts` ✅ iter 239: swapLevelDataFrame/swapLevelSeries/reorderLevelsDataFrame/reorderLevelsSeries
 - `stats/truncate.ts` ✅ iter 239: truncateDataFrame/truncateSeries
-- CI fix ✅ iter 239: xs.ts .length→.size, xs.test Series<Scalar>, to_json_normalize test, cut_bins test, str_findall test
-- `core/str_accessor` — add `.str.extractall()` method (blocked by circular dep; standalone `strExtractAll` already in string_ops.ts)
-- Next: `stats/melt_extended.ts` — wide_to_long helper / melt with value_vars patterns
+- `stats/between.ts` ✅ iter 240: seriesBetween (pandas Series.between)
+- `stats/update.ts` ✅ iter 240: seriesUpdate/dataFrameUpdate (pandas DataFrame.update)
+- `stats/filter_labels.ts` ✅ iter 240: filterDataFrame/filterSeries (pandas DataFrame.filter)
+- `core/str_accessor` — add `.str.extractall()` method (blocked by circular dep)
+- Next: `stats/combine.ts` — Series.combine / DataFrame.combine
 - Next: `stats/notna_boolean.ts` — boolean indexing helpers (keepTrue/keepFalse/filterBy)
+- Next: `stats/assign.ts` — DataFrame.assign (add/modify columns fluently)
 
 ---
 
@@ -68,14 +71,18 @@
 
 - `core/str_accessor` — wire `.str.extractall()` via late-binding (inject DataFrame factory)
 - `str.normalize()` — Unicode normalization (NFC/NFD/NFKC/NFKD) on StringAccessor
+- `stats/combine.ts` — Series.combine / DataFrame.combine
+- `stats/notna_boolean.ts` — boolean indexing helpers (keepTrue/keepFalse/filterBy)
+- `stats/assign.ts` — DataFrame.assign: add/modify columns fluently
+- `stats/clip_series_df.ts` — more clip variants (lower/upper per-element)
 - `stats/melt_extended.ts` — wide_to_long, melt with value_vars patterns
-- `stats/notna_boolean.ts` — boolean indexing helpers
 
 ---
 
 ## 📊 Iteration History
 
-### Iter 239 — 2026-04-22 05:12 UTC — ⏳ CI pending — Fix 5 TS type errors from iter 237 + +swapLevelSeries/DataFrame/reorderLevels + truncateSeries/DataFrame. Metric: 117 (+2). Commit: 39f912d. [Run](https://github.com/githubnext/tsessebe/actions/runs/24761017221)
+### Iter 240 — 2026-04-22 05:50 UTC — ✅ Accepted (CI pending) — +seriesBetween + seriesUpdate/dataFrameUpdate + filterDataFrame/filterSeries. Metric: 118 (+3). Commit: 633480e. [Run](https://github.com/githubnext/tsessebe/actions/runs/24762480645)
+### Iter 239 — 2026-04-22 05:12 UTC — ✅ Accepted — Fix 5 TS type errors from iter 237 + +swapLevelSeries/DataFrame/reorderLevels + truncateSeries/DataFrame. Metric: 115→118? (reported 117 +2). Commit: 9bfae87. [Run](https://github.com/githubnext/tsessebe/actions/runs/24761017221)
 ### Iter 238 — 2026-04-22 03:41 UTC — ❌ never pushed (state premature) — +swapLevelDataFrame/swapLevelSeries/reorderLevels + truncateDataFrame/truncateSeries. [Run](https://github.com/githubnext/tsessebe/actions/runs/24758931868)
 ### Iter 237 — 2026-04-22 00:42 UTC — ✅ +cutBinsToFrame/cutBinCounts/binEdges + xsDataFrame/xsSeries. Metric: 113 (+2). Commit: b542fde. [Run](https://github.com/githubnext/tsessebe/actions/runs/24753646544)
 ### Iter 236 — 2026-04-21 23:16 UTC — (state discrepancy: commit 7dc2dc8 not found in branch; iter 237 re-implements same metric) [Run](https://github.com/githubnext/tsessebe/actions/runs/24751361866)
