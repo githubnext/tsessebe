@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T12:51:32Z |
-| Iteration Count | 246 |
+| Last Run | 2026-04-22T13:35:57Z |
+| Iteration Count | 247 |
 | Best Metric | 130 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, error, accepted, accepted, accepted, pending-ci, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, accepted, accepted, pending-ci, accepted, accepted, accepted, accepted, pending-ci |
 
 ---
 
@@ -35,15 +35,16 @@
 
 ## 🎯 Current Priorities
 
-Completed iters 239–246:
+Completed iters 239–247:
 - ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
 - ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
-- ✅ merge_asof (iter 246), merge_ordered (iter 246)
+- ✅ merge_asof (iter 246, not landed on canonical branch — retry next)
+- ✅ join/joinAll/crossJoin (iter 247), infer_objects/convertDtypes (iter 247)
 
 Next:
 - `stats/period_range.ts` — standalone `period_range()` wrapper
-- `merge/join.ts` — DataFrame.join (label-based join on index)
-- `stats/infer_objects.ts` — infer_objects / convert_dtypes helpers
+- `stats/map_values.ts` — Series.map (fn/dict/Map/Series mapper, na_action)
+- `merge/merge_asof.ts` — asof/nearest-key merge (iter 246 lost, needs reimplementation)
 
 ---
 
@@ -78,10 +79,11 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iter 246 — 2026-04-22 12:51 UTC — ✅ Accepted — +merge_asof (asof/nearest-key merge, backward/forward/nearest, tolerance, by-groups) +merge_ordered (sorted outer merge, fill_method=ffill). Metric: 130 (+2). Commit: 268081c. [Run](https://github.com/githubnext/tsessebe/actions/runs/24779203996)
+### Iter 247 — 2026-04-22 13:35 UTC — ⏳ pending-ci — +join/joinAll/crossJoin (label-based index join, multi-join chain, Cartesian product) +inferObjects/convertDtypes (dtype inference and string→numeric conversion). Metric: 130 (same, branch was at 128; +2 new files). Commit: 191e790. [Run](https://github.com/githubnext/tsessebe/actions/runs/24781267123)
 
-### Iter 245 — 2026-04-22 11:55 UTC — ✅ Accepted — +seriesMap (pandas Series.map: fn/dict/Map/Series mapper, na_action) +dataFrameAt/dataFrameIat (fast scalar access). Metric: 128 (+2). Commit: db85e5c. [Run](https://github.com/githubnext/tsessebe/actions/runs/24776626741)
+### Iter 246 — 2026-04-22 12:51 UTC — ⚠️ Lost — +merge_asof +merge_ordered committed on canonical branch but commit not found; state file showed 130 but branch was at 128. [Run](https://github.com/githubnext/tsessebe/actions/runs/24779203996)
+
+### Iter 245 — 2026-04-22 11:55 UTC — ✅ Accepted — +seriesMap +dataFrameAt/dataFrameIat. Metric: 128 (+2). Commit: db85e5c. [Run](https://github.com/githubnext/tsessebe/actions/runs/24776626741)
 ### Iters 239–244 — ✅ (metrics 117→126): +swapLevel/truncate, +between/Update/filter, +combine/keepTrue/keepFalse, +squeeze/item/bool/firstValidIndex/autoCorr/corrWith, +rename_ops/math_ops, +dot_matmul/transform_agg.
-### Iter 243 — 2026-04-22 09:52 UTC — ✅ Accepted — +rename_ops (renameSeriesIndex/DataFrame, addPrefix/Suffix, setAxis, seriesToFrame) +math_ops (absSeries/absDataFrame/roundSeries/roundDataFrame). Metric: 124 (+2). Commit: ce632a1. [Run](https://github.com/githubnext/tsessebe/actions/runs/24771121921)
 ### Iters 218–238 — ✅/⚠️ (metrics 51→115): +jsonNormalize, +readExcel, +nancumops, +to_timedelta, +date_range, +timedelta_range, +queryDataFrame/evalDataFrame, +strFindall+toJson, +cutBinsToFrame+xs, fix-type-errors.
 ### Iters 53–217 — ✅/⚠️ (metrics 8→50): selectDtypes, interpolate, factorize, pivotTable, crosstab, getDummies, Interval, cut/qcut, clip, sample, duplicated, diff_shift, where_mask, replace, astype, idxmin/idxmax, na_ops, 22+ core features.
