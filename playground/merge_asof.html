@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — merge_asof (ordered nearest-key join)</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; border-bottom: 2px solid #0f3460; padding-bottom: 0.25rem; }
+      pre { background: #f4f4f4; border-left: 4px solid #0f3460; padding: 1rem; overflow-x: auto; border-radius: 4px; }
+      code { font-family: 'Fira Code', monospace; font-size: 0.9em; }
+      .note { background: #e8f4fd; border: 1px solid #bee3f8; border-radius: 4px; padding: 0.75rem 1rem; margin: 1rem 0; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+      th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+      th { background: #f0f0f0; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0f3460; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to tsb playground</a>
+    <h1>merge_asof — Ordered Nearest-Key Join</h1>
+
+    <div class="note">
+      <strong>pandas equivalent:</strong> <code>pd.merge_asof(left, right, on="time")</code>
+    </div>
+
+    <p>
+      <code>mergeAsof</code> is an ordered left-join that matches on the <em>nearest key</em>
+      rather than an exact key. It is especially useful for time-series data — e.g., matching
+      each trade to the most recent quote.
+    </p>
+
+    <h2>Key concepts</h2>
+    <ul>
+      <li>Both DataFrames must be <strong>sorted ascending</strong> by the key column before calling <code>mergeAsof</code>.</li>
+      <li>The result always has the <strong>same number of rows as the left DataFrame</strong>.</li>
+      <li><code>direction</code>: controls whether to look <em>backward</em> (default), <em>forward</em>, or for the <em>nearest</em> key.</li>
+      <li><code>by</code>: require additional columns to match exactly before doing the asof lookup (e.g. by ticker).</li>
+      <li><code>tolerance</code>: ignore matches further than this numeric distance.</li>
+    </ul>
+
+    <h2>Basic example — backward (default)</h2>
+    <pre><code>import { DataFrame, mergeAsof } from "tsb";
+
+// Each trade is matched to the most recent quote (backward asof)
+const trades = DataFrame.fromColumns({
+  time:  [1,  5, 10],
+  price: [100, 200, 300],
+});
+const quotes = DataFrame.fromColumns({
+  time: [2,  6],
+  bid:  [98, 195],
+});
+
+const result = mergeAsof(trades, quotes, { on: "time" });
+// time | price | bid
+//    1 |   100 | null   ← no quote ≤ 1
+//    5 |   200 |   98   ← most recent quote ≤ 5 is at time=2
+//   10 |   300 |  195   ← most recent quote ≤ 10 is at time=6</code></pre>
+
+    <h2>Forward direction</h2>
+    <pre><code>// Match each event to the next scheduled announcement
+const events = DataFrame.fromColumns({ t: [1, 3, 7], v: [10, 30, 70] });
+const schedule = DataFrame.fromColumns({ t: [2, 6, 10], w: [20, 60, 100] });
+
+const result = mergeAsof(events, schedule, {
+  on: "t",
+  direction: "forward",
+});
+// t=1 → t=2 (w=20), t=3 → t=6 (w=60), t=7 → t=10 (w=100)</code></pre>
+
+    <h2>Nearest direction</h2>
+    <pre><code>const result = mergeAsof(trades, quotes, {
+  on: "time",
+  direction: "nearest",
+});
+// Picks the quote with the smallest absolute time difference.</code></pre>
+
+    <h2>Grouping with <code>by</code></h2>
+    <pre><code>// Match trades to quotes within the same ticker symbol
+const trades = DataFrame.fromColumns({
+  time:   [1,    2,      3,    4],
+  ticker: ["AAPL","MSFT","AAPL","MSFT"],
+  price:  [100,  200,    110,   210],
+});
+const quotes = DataFrame.fromColumns({
+  time:   [1,    1,      3,    3],
+  ticker: ["AAPL","MSFT","AAPL","MSFT"],
+  bid:    [99,   198,    109,   208],
+});
+
+mergeAsof(trades, quotes, { on: "time", by: "ticker" });</code></pre>
+
+    <h2>Tolerance</h2>
+    <pre><code>// Only match if the key distance is ≤ 2
+mergeAsof(left, right, { on: "t", tolerance: 2 });</code></pre>
+
+    <h2>Different key column names (left_on / right_on)</h2>
+    <pre><code>mergeAsof(left, right, {
+  left_on: "trade_time",
+  right_on: "quote_time",
+});</code></pre>
+
+    <h2>Using index as key</h2>
+    <pre><code>mergeAsof(left, right, {
+  left_index: true,
+  right_on: "timestamp",
+});</code></pre>
+
+    <h2>Options reference</h2>
+    <table>
+      <tr><th>Option</th><th>Default</th><th>Description</th></tr>
+      <tr><td><code>on</code></td><td>—</td><td>Shared key column name</td></tr>
+      <tr><td><code>left_on</code> / <code>right_on</code></td><td>—</td><td>Different key columns per side</td></tr>
+      <tr><td><code>left_index</code> / <code>right_index</code></td><td><code>false</code></td><td>Use index as key</td></tr>
+      <tr><td><code>by</code></td><td>—</td><td>Column(s) that must match exactly</td></tr>
+      <tr><td><code>left_by</code> / <code>right_by</code></td><td>—</td><td>Different by-columns per side</td></tr>
+      <tr><td><code>direction</code></td><td><code>"backward"</code></td><td><code>"backward"</code>, <code>"forward"</code>, or <code>"nearest"</code></td></tr>
+      <tr><td><code>tolerance</code></td><td><code>null</code></td><td>Max numeric key distance for a match</td></tr>
+      <tr><td><code>allow_exact_matches</code></td><td><code>true</code></td><td>Include exact key matches</td></tr>
+      <tr><td><code>suffixes</code></td><td><code>["_x","_y"]</code></td><td>Suffixes for overlapping column names</td></tr>
+    </table>
+  </body>
+</html>

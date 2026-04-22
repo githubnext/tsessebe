@@ -639,3 +639,5 @@ export {
   convertDtypesDataFrame,
 } from "./stats/index.ts";
 export type { InferObjectsOptions, ConvertDtypesOptions } from "./stats/index.ts";
+export { mergeAsof } from "./merge/index.ts";
+export type { MergeAsofOptions, AsofDirection } from "./merge/index.ts";
