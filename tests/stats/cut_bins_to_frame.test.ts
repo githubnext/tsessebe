@@ -5,7 +5,7 @@
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
 import { DataFrame } from "../../src/index.ts";
-import { cutBinsToFrame, cutBinCounts, binEdges } from "../../src/stats/cut_bins_to_frame.ts";
+import { binEdges, cutBinCounts, cutBinsToFrame } from "../../src/stats/cut_bins_to_frame.ts";
 import { cut, qcut } from "../../src/stats/cut_qcut.ts";
 
 // ─── cutBinsToFrame ───────────────────────────────────────────────────────────
@@ -111,7 +111,9 @@ describe("cutBinsToFrame", () => {
         fc.integer({ min: 2, max: 5 }),
         (data, nBins) => {
           const result = cut(data, nBins, { duplicates: "drop" });
-          if (result.labels.length === 0) return true;
+          if (result.labels.length === 0) {
+            return true;
+          }
           const df = cutBinsToFrame(result, { data });
           const counts = df.get("count")?.values as number[];
           const total = counts.reduce((a, b) => a + b, 0);
@@ -132,7 +134,9 @@ describe("cutBinsToFrame", () => {
         fc.integer({ min: 2, max: 5 }),
         (data, nBins) => {
           const result = cut(data, nBins, { duplicates: "drop" });
-          if (result.labels.length === 0) return true;
+          if (result.labels.length === 0) {
+            return true;
+          }
           const df = cutBinsToFrame(result);
           const left = df.get("left")?.values as number[];
           const right = df.get("right")?.values as number[];

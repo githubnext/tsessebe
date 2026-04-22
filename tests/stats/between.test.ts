@@ -159,7 +159,9 @@ describe("seriesBetween", () => {
             for (let i = 0; i < arr.length; i++) {
               const v = arr[i] as number;
               const expected = v >= left && v <= right;
-              if (result[i] !== expected) return false;
+              if (result[i] !== expected) {
+                return false;
+              }
             }
             return true;
           },
@@ -181,10 +183,13 @@ describe("seriesBetween", () => {
             const right = Math.max(a, b);
             const s = new Series<Scalar>({ data: arr });
             const both = seriesBetween(s, left, right, { inclusive: "both" }).values as boolean[];
-            const leftOnly = seriesBetween(s, left, right, { inclusive: "left" }).values as boolean[];
+            const leftOnly = seriesBetween(s, left, right, { inclusive: "left" })
+              .values as boolean[];
             // "left" must be a subset of "both"
             for (let i = 0; i < arr.length; i++) {
-              if (leftOnly[i] && !both[i]) return false;
+              if (leftOnly[i] && !both[i]) {
+                return false;
+              }
             }
             return true;
           },

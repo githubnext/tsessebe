@@ -82,11 +82,7 @@ function makeGlobal(pat: string | RegExp, flags?: string): RegExp {
  * JSON.parse(result.values[0] as string); // ["one", "two", "three"]
  * ```
  */
-export function strFindall(
-  input: StrInput,
-  pat: string | RegExp,
-  flags?: string,
-): Series<Scalar> {
+export function strFindall(input: StrInput, pat: string | RegExp, flags?: string): Series<Scalar> {
   const strs = toInputStrings(input);
   const re = makeGlobal(pat, flags);
 
@@ -106,9 +102,11 @@ export function strFindall(
     const matches: string[] = [];
     for (;;) {
       const m = re.exec(s);
-      if (m === null) break;
+      if (m === null) {
+        break;
+      }
       // If there are capture groups, use the first group (pandas behaviour).
-      matches.push(m.length > 1 ? (m[1] ?? "") : m[0] ?? "");
+      matches.push(m.length > 1 ? (m[1] ?? "") : (m[0] ?? ""));
     }
     return JSON.stringify(matches);
   });
@@ -159,7 +157,9 @@ export function strFindallCount(
     let count = 0;
     for (;;) {
       const m = re.exec(s);
-      if (m === null) break;
+      if (m === null) {
+        break;
+      }
       count++;
     }
     return count;
@@ -210,7 +210,9 @@ export function strFindFirst(
     }
 
     const m = re.exec(s);
-    if (m === null) return null;
+    if (m === null) {
+      return null;
+    }
     return m.length > 1 ? (m[1] ?? null) : (m[0] ?? null);
   });
 
@@ -266,11 +268,7 @@ export function strFindallExpand(
   // Count open parens that aren't non-capturing groups (?:
   let groupCount = 0;
   for (let i = 0; i < source.length; i++) {
-    if (
-      source[i] === "(" &&
-      source[i + 1] !== "?" &&
-      source[i + 1] !== "*"
-    ) {
+    if (source[i] === "(" && source[i + 1] !== "?" && source[i + 1] !== "*") {
       groupCount++;
     } else if (
       source[i] === "(" &&
@@ -302,12 +300,13 @@ export function strFindallExpand(
   }
 
   for (let i = 0; i < strs.length; i++) {
-    const isNull: boolean = input instanceof Series
-      ? ((): boolean => {
-          const v = input.values[i];
-          return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
-        })()
-      : (input as readonly string[])[i] === undefined;
+    const isNull: boolean =
+      input instanceof Series
+        ? ((): boolean => {
+            const v = input.values[i];
+            return v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+          })()
+        : (input as readonly string[])[i] === undefined;
 
     if (isNull) {
       for (const col of colNames) {

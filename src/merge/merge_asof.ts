@@ -97,15 +97,23 @@ export interface MergeAsofOptions {
 
 /** Extract numeric/string key for a given row from a DataFrame column. */
 function getKeyValue(df: DataFrame, colName: string | null, rowIdx: number): Scalar {
-  if (colName === null) return df.index.at(rowIdx) as Scalar;
+  if (colName === null) {
+    return df.index.at(rowIdx) as Scalar;
+  }
   return df.col(colName).iat(rowIdx);
 }
 
 /** Convert Label/Scalar to a comparable number for asof matching. */
 function toNum(v: Scalar): number {
-  if (v instanceof Date) return v.getTime();
-  if (typeof v === "number") return v;
-  if (typeof v === "bigint") return Number(v);
+  if (v instanceof Date) {
+    return v.getTime();
+  }
+  if (typeof v === "number") {
+    return v;
+  }
+  if (typeof v === "bigint") {
+    return Number(v);
+  }
   if (typeof v === "string") {
     const n = Number(v);
     return Number.isNaN(n) ? Number.NaN : n;
@@ -122,8 +130,11 @@ function lowerBound(arr: readonly number[], target: number): number {
   let hi = arr.length;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
-    if ((arr[mid] as number) < target) lo = mid + 1;
-    else hi = mid;
+    if ((arr[mid] as number) < target) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
   }
   return lo;
 }
@@ -133,8 +144,11 @@ function upperBound(arr: readonly number[], target: number): number {
   let hi = arr.length;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
-    if ((arr[mid] as number) <= target) lo = mid + 1;
-    else hi = mid;
+    if ((arr[mid] as number) <= target) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
   }
   return lo;
 }
@@ -149,17 +163,23 @@ function findMatch(
   direction: AsofDirection,
   allowExact: boolean,
 ): number {
-  if (rightKeys.length === 0) return -1;
+  if (rightKeys.length === 0) {
+    return -1;
+  }
 
   if (direction === "backward") {
     // largest right key that is <= leftKey (or < if !allowExact)
-    const bound = allowExact ? upperBound(rightKeys, leftKeyNum) : lowerBound(rightKeys, leftKeyNum);
+    const bound = allowExact
+      ? upperBound(rightKeys, leftKeyNum)
+      : lowerBound(rightKeys, leftKeyNum);
     return bound - 1; // -1 means no match
   }
 
   if (direction === "forward") {
     // smallest right key that is >= leftKey (or > if !allowExact)
-    const bound = allowExact ? lowerBound(rightKeys, leftKeyNum) : upperBound(rightKeys, leftKeyNum);
+    const bound = allowExact
+      ? lowerBound(rightKeys, leftKeyNum)
+      : upperBound(rightKeys, leftKeyNum);
     return bound < rightKeys.length ? bound : -1;
   }
 
@@ -171,9 +191,15 @@ function findMatch(
   const hasFwd = fwdBound < rightKeys.length;
 
   // If exact match exists and allow_exact_matches, it satisfies both directions
-  if (!hasBwd && !hasFwd) return -1;
-  if (!hasBwd) return fwdBound;
-  if (!hasFwd) return bwdBound;
+  if (!(hasBwd || hasFwd)) {
+    return -1;
+  }
+  if (!hasBwd) {
+    return fwdBound;
+  }
+  if (!hasFwd) {
+    return bwdBound;
+  }
 
   const bwdDist = leftKeyNum - (rightKeys[bwdBound] as number);
   const fwdDist = (rightKeys[fwdBound] as number) - leftKeyNum;
@@ -182,8 +208,12 @@ function findMatch(
   if (bwdDist === 0 && fwdDist === 0) {
     return allowExact ? bwdBound : -1;
   }
-  if (bwdDist === 0) return allowExact ? bwdBound : fwdBound;
-  if (fwdDist === 0) return allowExact ? fwdBound : bwdBound;
+  if (bwdDist === 0) {
+    return allowExact ? bwdBound : fwdBound;
+  }
+  if (fwdDist === 0) {
+    return allowExact ? fwdBound : bwdBound;
+  }
 
   return fwdDist < bwdDist ? fwdBound : bwdBound;
 }
@@ -197,11 +227,7 @@ interface KeySpec {
   readonly rightBy: readonly string[];
 }
 
-function resolveKeySpec(
-  left: DataFrame,
-  right: DataFrame,
-  opts: MergeAsofOptions,
-): KeySpec {
+function resolveKeySpec(left: DataFrame, right: DataFrame, opts: MergeAsofOptions): KeySpec {
   let leftKey: string | null;
   let rightKey: string | null;
 
@@ -234,7 +260,9 @@ function resolveKeySpec(
 
   // by columns
   const toArray = (v: string | readonly string[] | undefined): readonly string[] => {
-    if (v === undefined) return [];
+    if (v === undefined) {
+      return [];
+    }
     return typeof v === "string" ? [v] : v;
   };
 
@@ -293,7 +321,9 @@ function buildColPlan(
     if (c === keySpec.rightKey && keySpec.leftKey !== null) {
       // Skip the right key column when it's a named column (to avoid duplication)
       // unless left_on/right_on differ, in which case both are kept
-      if (keySpec.leftKey === keySpec.rightKey) continue;
+      if (keySpec.leftKey === keySpec.rightKey) {
+        continue;
+      }
     }
     // Check overlap with left output names (after accounting for suffixes)
     let outCol = c;
@@ -411,7 +441,9 @@ export function mergeAsof(
   if (tolerance !== null) {
     for (let li = 0; li < nLeft; li++) {
       const ri = rightMatchIdx[li] as number;
-      if (ri < 0) continue;
+      if (ri < 0) {
+        continue;
+      }
       const lkNum = toNum(getKeyValue(left, keySpec.leftKey, li));
       const rkNum = rightKeyNums[ri] as number;
       if (Math.abs(lkNum - rkNum) > tolerance) {
@@ -443,5 +475,3 @@ export function mergeAsof(
   const index = new RangeIndex(nLeft) as unknown as Index<Label>;
   return DataFrame.fromColumns(colData as Record<string, readonly Scalar[]>, { index });
 }
-
-

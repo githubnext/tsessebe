@@ -28,7 +28,7 @@
  * @module
  */
 
-import { DataFrame, Index, MultiIndex, Series } from "../core/index.ts";
+import { DataFrame, type Index, MultiIndex, Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -37,7 +37,11 @@ import type { Label, Scalar } from "../types.ts";
  * Resolve a level specifier (positive or negative integer, or name string) to
  * a non-negative index within `nlevels`.
  */
-function resolveLevel(spec: number | string, nlevels: number, names: readonly (string | null)[]): number {
+function resolveLevel(
+  spec: number | string,
+  nlevels: number,
+  names: readonly (string | null)[],
+): number {
   if (typeof spec === "string") {
     const idx = names.indexOf(spec);
     if (idx === -1) {
@@ -55,7 +59,11 @@ function resolveLevel(spec: number | string, nlevels: number, names: readonly (s
 /**
  * Create a new MultiIndex with levels `i` and `j` swapped.
  */
-function swapLevelsInMultiIndex(mi: MultiIndex, i: number | string, j: number | string): MultiIndex {
+function swapLevelsInMultiIndex(
+  mi: MultiIndex,
+  i: number | string,
+  j: number | string,
+): MultiIndex {
   const n = mi.nlevels;
   const pi = resolveLevel(i, n, mi.names);
   const pj = resolveLevel(j, n, mi.names);
@@ -63,8 +71,8 @@ function swapLevelsInMultiIndex(mi: MultiIndex, i: number | string, j: number | 
     return mi;
   }
 
-  const newLevels = [...mi.levels] as typeof mi.levels[number][];
-  const newCodes = [...mi.codes] as typeof mi.codes[number][];
+  const newLevels = [...mi.levels] as (typeof mi.levels)[number][];
+  const newCodes = [...mi.codes] as (typeof mi.codes)[number][];
   const newNames = [...mi.names] as (string | null)[];
 
   // swap positions pi and pj
@@ -81,7 +89,9 @@ function swapLevelsInMultiIndex(mi: MultiIndex, i: number | string, j: number | 
   newNames[pj] = tmpName;
 
   const arraysSwap = newLevels.map((levelIdx, idx) =>
-    (newCodes[idx] as readonly number[]).map((code) => (levelIdx.values as readonly Label[])[code] ?? null),
+    (newCodes[idx] as readonly number[]).map(
+      (code) => (levelIdx.values as readonly Label[])[code] ?? null,
+    ),
   );
   return MultiIndex.fromArrays(arraysSwap, { names: newNames });
 }
@@ -89,7 +99,10 @@ function swapLevelsInMultiIndex(mi: MultiIndex, i: number | string, j: number | 
 /**
  * Create a new MultiIndex with levels reordered according to `order`.
  */
-function reorderLevelsInMultiIndex(mi: MultiIndex, order: readonly (number | string)[]): MultiIndex {
+function reorderLevelsInMultiIndex(
+  mi: MultiIndex,
+  order: readonly (number | string)[],
+): MultiIndex {
   const n = mi.nlevels;
   if (order.length !== n) {
     throw new Error(`reorderLevels: order length (${order.length}) must equal nlevels (${n})`);
@@ -101,7 +114,9 @@ function reorderLevelsInMultiIndex(mi: MultiIndex, order: readonly (number | str
   const newNames = resolved.map((i) => mi.names[i] ?? null);
 
   const arraysReorder = newLevels.map((levelIdx, idx) =>
-    (newCodes[idx] as readonly number[]).map((code) => (levelIdx.values as readonly Label[])[code] ?? null),
+    (newCodes[idx] as readonly number[]).map(
+      (code) => (levelIdx.values as readonly Label[])[code] ?? null,
+    ),
   );
   return MultiIndex.fromArrays(arraysReorder, { names: newNames });
 }
@@ -196,12 +211,14 @@ export function swapLevelDataFrame(
     const cols = new Map<string, Series<Scalar>>();
     for (const name of colNames) {
       const col = df.col(name);
-      cols.set(name, new Series<Scalar>({ data: col.values as Scalar[], index: newIndex, dtype: col.dtype }));
+      cols.set(
+        name,
+        new Series<Scalar>({ data: col.values as Scalar[], index: newIndex, dtype: col.dtype }),
+      );
     }
     return new DataFrame(cols, newIndex);
-  } else {
-    throw new Error("swapLevelDataFrame: axis=1 (column MultiIndex) is not yet supported");
   }
+  throw new Error("swapLevelDataFrame: axis=1 (column MultiIndex) is not yet supported");
 }
 
 // ─── reorderLevelsSeries ──────────────────────────────────────────────────────
@@ -289,10 +306,12 @@ export function reorderLevelsDataFrame(
     const cols = new Map<string, Series<Scalar>>();
     for (const name of colNames) {
       const col = df.col(name);
-      cols.set(name, new Series<Scalar>({ data: col.values as Scalar[], index: newIndex, dtype: col.dtype }));
+      cols.set(
+        name,
+        new Series<Scalar>({ data: col.values as Scalar[], index: newIndex, dtype: col.dtype }),
+      );
     }
     return new DataFrame(cols, newIndex);
-  } else {
-    throw new Error("reorderLevelsDataFrame: axis=1 (column MultiIndex) is not yet supported");
   }
+  throw new Error("reorderLevelsDataFrame: axis=1 (column MultiIndex) is not yet supported");
 }

@@ -41,8 +41,12 @@ function isMissing(v: Scalar): boolean {
 
 /** True when the value is a whole-number finite number or bigint. */
 function isInteger(v: Scalar): boolean {
-  if (typeof v === "bigint") return true;
-  if (typeof v === "number") return Number.isFinite(v) && Math.floor(v) === v;
+  if (typeof v === "bigint") {
+    return true;
+  }
+  if (typeof v === "number") {
+    return Number.isFinite(v) && Math.floor(v) === v;
+  }
   return false;
 }
 
@@ -65,7 +69,9 @@ function inferBestDtype(values: readonly Scalar[]): Dtype | null {
   let nonNullCount = 0;
 
   for (const v of values) {
-    if (isMissing(v)) continue;
+    if (isMissing(v)) {
+      continue;
+    }
     nonNullCount++;
     if (typeof v === "boolean") {
       hasBool = true;
@@ -80,17 +86,30 @@ function inferBestDtype(values: readonly Scalar[]): Dtype | null {
     }
   }
 
-  if (nonNullCount === 0) return null;
-  if (hasOther) return null; // objects, dates, etc. — can't safely infer
+  if (nonNullCount === 0) {
+    return null;
+  }
+  if (hasOther) {
+    return null; // objects, dates, etc. — can't safely infer
+  }
 
-  const typeCount =
-    (hasBool ? 1 : 0) + (hasString ? 1 : 0) + (hasInt ? 1 : 0) + (hasFloat ? 1 : 0);
-  if (typeCount > 1) return null; // mixed types
+  const typeCount = (hasBool ? 1 : 0) + (hasString ? 1 : 0) + (hasInt ? 1 : 0) + (hasFloat ? 1 : 0);
+  if (typeCount > 1) {
+    return null; // mixed types
+  }
 
-  if (hasBool) return Dtype.from("bool");
-  if (hasInt) return Dtype.from("int64");
-  if (hasFloat) return Dtype.from("float64");
-  if (hasString) return Dtype.from("string");
+  if (hasBool) {
+    return Dtype.from("bool");
+  }
+  if (hasInt) {
+    return Dtype.from("int64");
+  }
+  if (hasFloat) {
+    return Dtype.from("float64");
+  }
+  if (hasString) {
+    return Dtype.from("string");
+  }
 
   return null;
 }
@@ -101,11 +120,19 @@ function inferBestDtype(values: readonly Scalar[]): Dtype | null {
  */
 function tryParseNumber(v: string): number | null {
   const trimmed = v.trim();
-  if (trimmed === "" || trimmed === "nan" || trimmed === "NaN") return Number.NaN;
-  if (trimmed === "inf" || trimmed === "Infinity") return Number.POSITIVE_INFINITY;
-  if (trimmed === "-inf" || trimmed === "-Infinity") return Number.NEGATIVE_INFINITY;
+  if (trimmed === "" || trimmed === "nan" || trimmed === "NaN") {
+    return Number.NaN;
+  }
+  if (trimmed === "inf" || trimmed === "Infinity") {
+    return Number.POSITIVE_INFINITY;
+  }
+  if (trimmed === "-inf" || trimmed === "-Infinity") {
+    return Number.NEGATIVE_INFINITY;
+  }
   const n = Number(trimmed);
-  if (Number.isNaN(n)) return null;
+  if (Number.isNaN(n)) {
+    return null;
+  }
   return n;
 }
 
@@ -179,10 +206,7 @@ export function inferObjectsSeries(
  * inferObjectsDataFrame(df); // same data, refined dtypes
  * ```
  */
-export function inferObjectsDataFrame(
-  df: DataFrame,
-  options?: InferObjectsOptions,
-): DataFrame {
+export function inferObjectsDataFrame(df: DataFrame, options?: InferObjectsOptions): DataFrame {
   const colData: Record<string, readonly Scalar[]> = {};
   for (const col of df.columns.values) {
     const inferred = inferObjectsSeries(df.col(col), options);
@@ -265,7 +289,9 @@ export function convertDtypesSeries(
 
   // String dtype: try numeric parse.
   if (kind === "string") {
-    if (!convertString) return s;
+    if (!convertString) {
+      return s;
+    }
     return tryConvertStringToNumeric(s);
   }
 
@@ -273,13 +299,13 @@ export function convertDtypesSeries(
   if (kind === "object") {
     // First try direct type inference (handles int/float/bool already).
     const inferred = inferObjectsSeries(s, { objectOnly: false });
-    if (inferred.dtype !== s.dtype) return inferred;
+    if (inferred.dtype !== s.dtype) {
+      return inferred;
+    }
 
     // If the values are all strings (or null), try string → numeric.
     if (convertString) {
-      const allStringOrNull = s.values.every(
-        (v) => isMissing(v) || typeof v === "string",
-      );
+      const allStringOrNull = s.values.every((v) => isMissing(v) || typeof v === "string");
       if (allStringOrNull) {
         const asSeries = new Series<Scalar>({
           data: s.values,
@@ -321,7 +347,7 @@ function tryConvertStringToNumeric(s: Series<Scalar>): Series<Scalar> {
       break;
     }
     converted[i] = n;
-    if (!Number.isNaN(n) && !Number.isFinite(n)) {
+    if (!(Number.isNaN(n) || Number.isFinite(n))) {
       // Infinity — treat as float
       allInt = false;
     } else if (Number.isFinite(n) && Math.floor(n) !== n) {
@@ -329,7 +355,9 @@ function tryConvertStringToNumeric(s: Series<Scalar>): Series<Scalar> {
     }
   }
 
-  if (!allNumeric) return s;
+  if (!allNumeric) {
+    return s;
+  }
 
   const dtype = allInt ? Dtype.from("int64") : Dtype.from("float64");
   return new Series<Scalar>({
@@ -355,10 +383,7 @@ function tryConvertStringToNumeric(s: Series<Scalar>): Series<Scalar> {
  * convertDtypesDataFrame(df).col("a").dtype.kind; // "int"
  * ```
  */
-export function convertDtypesDataFrame(
-  df: DataFrame,
-  options?: ConvertDtypesOptions,
-): DataFrame {
+export function convertDtypesDataFrame(df: DataFrame, options?: ConvertDtypesOptions): DataFrame {
   const colData: Record<string, readonly Scalar[]> = {};
   for (const col of df.columns.values) {
     const converted = convertDtypesSeries(df.col(col), options);

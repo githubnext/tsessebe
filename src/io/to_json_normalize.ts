@@ -18,7 +18,7 @@
  * @module
  */
 
-import { DataFrame } from "../core/index.ts";
+import type { DataFrame } from "../core/index.ts";
 import type { Scalar } from "../types.ts";
 
 // ─── JSON value types (no `any`) ──────────────────────────────────────────────
@@ -65,12 +65,18 @@ export interface JsonSplitOptions {
 
 /** Convert a Scalar to a JSON-compatible value. */
 function scalarToJson(v: Scalar): JsonPrimitive {
-  if (v === null || v === undefined) return null;
+  if (v === null || v === undefined) {
+    return null;
+  }
   if (typeof v === "number") {
-    if (Number.isNaN(v) || !Number.isFinite(v)) return null;
+    if (Number.isNaN(v) || !Number.isFinite(v)) {
+      return null;
+    }
     return v;
   }
-  if (typeof v === "boolean") return v;
+  if (typeof v === "boolean") {
+    return v;
+  }
   return String(v);
 }
 
@@ -82,12 +88,17 @@ function setNested(obj: JsonRecord, keys: readonly string[], value: JsonPrimitiv
   let current: JsonRecord = obj;
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i] as string;
-    if (!(k in current) || typeof current[k] !== "object" || current[k] === null || Array.isArray(current[k])) {
+    if (
+      !(k in current) ||
+      typeof current[k] !== "object" ||
+      current[k] === null ||
+      Array.isArray(current[k])
+    ) {
       current[k] = {};
     }
     current = current[k] as JsonRecord;
   }
-  const lastKey = keys[keys.length - 1] as string;
+  const lastKey = keys.at(-1) as string;
   current[lastKey] = value;
 }
 
@@ -140,7 +151,9 @@ export function toJsonDenormalize(
       const raw = col.values[r] as Scalar;
       const value = scalarToJson(raw);
 
-      if (dropNull && value === null) continue;
+      if (dropNull && value === null) {
+        continue;
+      }
 
       const keys = paths[c] as string[];
       setNested(record, keys, value);

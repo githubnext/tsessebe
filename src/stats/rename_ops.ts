@@ -79,10 +79,7 @@ function mapLabels(mapper: LabelMapper, labels: readonly Label[]): Label[] {
  * // ["x", "b", "z"]
  * ```
  */
-export function renameSeriesIndex<T extends Scalar>(
-  s: Series<T>,
-  mapper: LabelMapper,
-): Series<T> {
+export function renameSeriesIndex<T extends Scalar>(s: Series<T>, mapper: LabelMapper): Series<T> {
   const newLabels = mapLabels(mapper, s.index.values as readonly Label[]);
   return new Series<T>({
     data: s.values,
@@ -128,7 +125,9 @@ export function renameDataFrame(df: DataFrame, options: RenameDataFrameOptions):
   for (let i = 0; i < colNames.length; i++) {
     const oldName = colNames[i];
     const newName = newColNames[i];
-    if (oldName === undefined || newName === undefined) continue;
+    if (oldName === undefined || newName === undefined) {
+      continue;
+    }
     const col = df.col(oldName);
     const newCol = new Series<Scalar>({
       data: col.values,
@@ -232,10 +231,7 @@ export function addSuffixSeries<T extends Scalar>(s: Series<T>, suffix: string):
  * // ["x", "y", "z"]
  * ```
  */
-export function setAxisSeries<T extends Scalar>(
-  s: Series<T>,
-  labels: readonly Label[],
-): Series<T> {
+export function setAxisSeries<T extends Scalar>(s: Series<T>, labels: readonly Label[]): Series<T> {
   if (labels.length !== s.size) {
     throw new RangeError(
       `set_axis: labels length ${labels.length} does not match Series size ${s.size}`,
@@ -284,7 +280,9 @@ export function setAxisDataFrame(
     return renameDataFrame(df, {
       columns: (label) => {
         const idx = colNames.indexOf(String(label));
-        if (idx < 0 || idx >= labels.length) return label;
+        if (idx < 0 || idx >= labels.length) {
+          return label;
+        }
         const newLabel = labels[idx];
         return newLabel !== undefined ? newLabel : label;
       },
@@ -302,10 +300,7 @@ export function setAxisDataFrame(
   const newColMap = new Map<string, Series<Scalar>>();
   for (const name of colNames) {
     const col = df.col(name);
-    newColMap.set(
-      name,
-      new Series<Scalar>({ data: col.values, index: newRowIndex }),
-    );
+    newColMap.set(name, new Series<Scalar>({ data: col.values, index: newRowIndex }));
   }
   return new DataFrame(newColMap, newRowIndex, colNames);
 }
@@ -329,15 +324,9 @@ export function setAxisDataFrame(
  * seriesToFrame(s, "points").columns.values; // ["points"]
  * ```
  */
-export function seriesToFrame<T extends Scalar>(
-  s: Series<T>,
-  name?: string | null,
-): DataFrame {
+export function seriesToFrame<T extends Scalar>(s: Series<T>, name?: string | null): DataFrame {
   const colName = name !== undefined && name !== null ? name : (s.name ?? "0");
   const colMap = new Map<string, Series<Scalar>>();
-  colMap.set(
-    colName,
-    new Series<Scalar>({ data: s.values as readonly Scalar[], index: s.index }),
-  );
+  colMap.set(colName, new Series<Scalar>({ data: s.values as readonly Scalar[], index: s.index }));
   return new DataFrame(colMap, s.index, [colName]);
 }

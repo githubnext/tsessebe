@@ -32,7 +32,7 @@
  * @module
  */
 
-import { DataFrame, Series } from "../core/index.ts";
+import type { DataFrame, Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
 // ─── Series accessors ─────────────────────────────────────────────────────────
@@ -113,7 +113,9 @@ export function dataFrameIat(df: DataFrame, rowInt: number, colInt: number): Sca
   const nCols = df.columns.size;
   const normCol = colInt < 0 ? nCols + colInt : colInt;
   if (normCol < 0 || normCol >= nCols) {
-    throw new RangeError(`Column index ${colInt} out of bounds for DataFrame with ${nCols} columns`);
+    throw new RangeError(
+      `Column index ${colInt} out of bounds for DataFrame with ${nCols} columns`,
+    );
   }
   const colName = df.columns.at(normCol);
   return df.col(colName).iat(rowInt);

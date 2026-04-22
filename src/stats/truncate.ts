@@ -178,17 +178,19 @@ export function truncateDataFrame(
       cols.set(name, new Series<Scalar>({ data, index: newIndex, dtype: col.dtype }));
     }
     return new DataFrame(cols, newIndex);
-  } else {
-    // Truncate columns
-    const colIdx = df.columns;
-    const positions = filterPositions(colIdx as unknown as Index<Label>, before, after);
-    const colNames = df.columns.values as readonly string[];
-    const keptNames = positions.map((i) => colNames[i]!);
-    const cols = new Map<string, Series<Scalar>>();
-    for (const name of keptNames) {
-      const col = df.col(name);
-      cols.set(name, new Series<Scalar>({ data: col.values as Scalar[], index: df.index, dtype: col.dtype }));
-    }
-    return new DataFrame(cols, df.index);
   }
+  // Truncate columns
+  const colIdx = df.columns;
+  const positions = filterPositions(colIdx as unknown as Index<Label>, before, after);
+  const colNames = df.columns.values as readonly string[];
+  const keptNames = positions.map((i) => colNames[i]!);
+  const cols = new Map<string, Series<Scalar>>();
+  for (const name of keptNames) {
+    const col = df.col(name);
+    cols.set(
+      name,
+      new Series<Scalar>({ data: col.values as Scalar[], index: df.index, dtype: col.dtype }),
+    );
+  }
+  return new DataFrame(cols, df.index);
 }

@@ -10,12 +10,7 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  truncateDataFrame,
-  truncateSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series, truncateDataFrame, truncateSeries } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── truncateSeries ───────────────────────────────────────────────────────────
@@ -132,18 +127,12 @@ describe("truncateDataFrame", () => {
   });
 
   test("truncate rows with only before", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3, 4] },
-      { index: [0, 1, 2, 3] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3, 4] }, { index: [0, 1, 2, 3] });
     expect(truncateDataFrame(df, 2).col("x").values).toEqual([3, 4]);
   });
 
   test("truncate rows with only after", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3, 4] },
-      { index: [0, 1, 2, 3] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3, 4] }, { index: [0, 1, 2, 3] });
     expect(truncateDataFrame(df, undefined, 1).col("x").values).toEqual([1, 2]);
   });
 
@@ -154,9 +143,7 @@ describe("truncateDataFrame", () => {
   });
 
   test("truncate columns (axis=1)", () => {
-    const df = DataFrame.fromColumns(
-      { a: [1, 2], b: [3, 4], c: [5, 6] },
-    );
+    const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4], c: [5, 6] });
     const result = truncateDataFrame(df, "a", "b", { axis: 1 });
     expect(result.columns.values).toEqual(["a", "b"]);
     expect(result.col("a").values).toEqual([1, 2]);
@@ -181,10 +168,7 @@ describe("truncateDataFrame", () => {
   });
 
   test("string row index", () => {
-    const df = DataFrame.fromColumns(
-      { v: [10, 20, 30] },
-      { index: ["a", "b", "c"] },
-    );
+    const df = DataFrame.fromColumns({ v: [10, 20, 30] }, { index: ["a", "b", "c"] });
     const result = truncateDataFrame(df, "a", "b");
     expect(result.col("v").values).toEqual([10, 20]);
     expect(result.index.values).toEqual(["a", "b"]);
@@ -198,10 +182,7 @@ describe("truncateDataFrame", () => {
         fc.integer({ min: 0, max: 50 }),
         (indices, a, b) => {
           const [before, after] = a <= b ? [a, b] : [b, a];
-          const df = DataFrame.fromColumns(
-            { x: indices.map((_, i) => i) },
-            { index: indices },
-          );
+          const df = DataFrame.fromColumns({ x: indices.map((_, i) => i) }, { index: indices });
           const result = truncateDataFrame(df, before, after);
           return result.col("x").values.length <= indices.length;
         },

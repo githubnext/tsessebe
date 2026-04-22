@@ -9,14 +9,8 @@ import { DataFrame, crossJoin, join, joinAll } from "../../src/index.ts";
 // ─── join (index-based) ───────────────────────────────────────────────────────
 
 describe("join — index-based", () => {
-  const left = DataFrame.fromColumns(
-    { A: [1, 2, 3] as const },
-    { index: ["K0", "K1", "K2"] },
-  );
-  const right = DataFrame.fromColumns(
-    { B: [4, 5, 6] as const },
-    { index: ["K0", "K2", "K3"] },
-  );
+  const left = DataFrame.fromColumns({ A: [1, 2, 3] as const }, { index: ["K0", "K1", "K2"] });
+  const right = DataFrame.fromColumns({ B: [4, 5, 6] as const }, { index: ["K0", "K2", "K3"] });
 
   it("left join (default): keeps all left rows, null for missing right", () => {
     const result = join(left, right);
@@ -91,10 +85,7 @@ describe("join — index-based", () => {
 describe("join — on column", () => {
   it("join on a key column from left against right index", () => {
     const left = DataFrame.fromColumns({ key: ["a", "b", "c"], val: [1, 2, 3] });
-    const right = DataFrame.fromColumns(
-      { extra: [10, 20] },
-      { index: ["a", "b"] },
-    );
+    const right = DataFrame.fromColumns({ extra: [10, 20] }, { index: ["a", "b"] });
     const result = join(left, right, { on: "key" });
     expect(result.shape[0]).toBeGreaterThan(0);
     // 'val' column should be present
@@ -104,10 +95,7 @@ describe("join — on column", () => {
 
   it("left join preserves non-matching rows with null", () => {
     const left = DataFrame.fromColumns({ key: ["a", "b", "c"], val: [1, 2, 3] });
-    const right = DataFrame.fromColumns(
-      { extra: [10, 20] },
-      { index: ["a", "b"] },
-    );
+    const right = DataFrame.fromColumns({ extra: [10, 20] }, { index: ["a", "b"] });
     const result = join(left, right, { on: "key", how: "left" });
     expect(result.shape[0]).toBe(3);
     const extras = [...result.col("extra").values];

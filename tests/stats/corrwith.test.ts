@@ -4,13 +4,7 @@
 
 import { describe, expect, it } from "bun:test";
 import * as fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  autoCorr,
-  corrWith,
-  pearsonCorr,
-} from "../../src/index.ts";
+import { DataFrame, Series, autoCorr, corrWith, pearsonCorr } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -123,8 +117,8 @@ describe("corrWith – with Series", () => {
 
     expect(result).toBeInstanceOf(Series);
     expect(result.index.toArray()).toEqual(["A", "B"]);
-    expect(round(result.values[0] as number)).toBe(1);    // A vs [1..5] → 1
-    expect(round(result.values[1] as number)).toBe(-1);   // B vs [1..5] → -1
+    expect(round(result.values[0] as number)).toBe(1); // A vs [1..5] → 1
+    expect(round(result.values[1] as number)).toBe(-1); // B vs [1..5] → -1
   });
 
   it("result is indexed by df column names", () => {
@@ -165,8 +159,8 @@ describe("corrWith – with DataFrame", () => {
     const r = corrWith(df1, df2);
 
     expect(r.index.toArray()).toEqual(["A", "B"]);
-    expect(round(r.values[0] as number)).toBe(1);   // A vs A → 1
-    expect(round(r.values[1] as number)).toBe(-1);  // B vs B (inverted) → -1
+    expect(round(r.values[0] as number)).toBe(1); // A vs A → 1
+    expect(round(r.values[1] as number)).toBe(-1); // B vs B (inverted) → -1
   });
 
   it("columns in only one DataFrame get NaN by default (drop=false)", () => {
@@ -182,8 +176,8 @@ describe("corrWith – with DataFrame", () => {
 
     const bVal = r.values[idx.indexOf("B")] as number;
     const cVal = r.values[idx.indexOf("C")] as number;
-    expect(Number.isNaN(bVal)).toBe(true);  // B not in df2
-    expect(Number.isNaN(cVal)).toBe(true);  // C not in df1
+    expect(Number.isNaN(bVal)).toBe(true); // B not in df2
+    expect(Number.isNaN(cVal)).toBe(true); // C not in df1
   });
 
   it("drop=true keeps only common columns", () => {
@@ -224,7 +218,7 @@ describe("corrWith – with DataFrame", () => {
           const r = corrWith(df, df, { drop: true });
           for (const v of r.values) {
             const n = v as number;
-            if (!Number.isNaN(n) && !(Math.abs(n - 1) < 1e-9)) {
+            if (!(Number.isNaN(n) || Math.abs(n - 1) < 1e-9)) {
               return false;
             }
           }

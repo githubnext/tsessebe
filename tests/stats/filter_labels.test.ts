@@ -136,18 +136,22 @@ describe("filterDataFrame", () => {
     test("filtered columns are always a subset of original", () => {
       fc.assert(
         fc.property(
-          fc.array(fc.string({ minLength: 1, maxLength: 6 }), { minLength: 0, maxLength: 8 }).map(
-            (names) => [...new Set(names)],
-          ),
+          fc
+            .array(fc.string({ minLength: 1, maxLength: 6 }), { minLength: 0, maxLength: 8 })
+            .map((names) => [...new Set(names)]),
           fc.string({ minLength: 0, maxLength: 3 }),
           (colNames, pattern) => {
             const cols: Record<string, number[]> = {};
-            for (const name of colNames) cols[name] = [1, 2];
+            for (const name of colNames) {
+              cols[name] = [1, 2];
+            }
             const df2 = DataFrame.fromColumns(cols);
             const result = filterDataFrame(df2, { like: pattern });
             const original = new Set(colNames);
             for (const c of result.columns.values as string[]) {
-              if (!original.has(c)) return false;
+              if (!original.has(c)) {
+                return false;
+              }
             }
             return true;
           },

@@ -54,7 +54,9 @@ function alignTwoSeries(
   for (let i = 0; i < a.index.size; i++) {
     const label = String(a.index.at(i));
     const j = bMap.get(label);
-    if (j === undefined) continue;
+    if (j === undefined) {
+      continue;
+    }
     const av = a.values[i] as Scalar;
     const bv = b.values[j] as Scalar;
     aVals.push(isMissing(av) ? Number.NaN : (av as number));
@@ -90,7 +92,9 @@ export function seriesDotSeries(a: Series<Scalar>, b: Series<Scalar>): number {
   for (let i = 0; i < aVals.length; i++) {
     const av = aVals[i] as number;
     const bv = bVals[i] as number;
-    if (Number.isNaN(av) || Number.isNaN(bv)) return Number.NaN;
+    if (Number.isNaN(av) || Number.isNaN(bv)) {
+      return Number.NaN;
+    }
     sum += av * bv;
   }
   return sum;
@@ -127,7 +131,9 @@ export function seriesDotDataFrame(s: Series<Scalar>, df: DataFrame): Series<Sca
   for (let si = 0; si < s.index.size; si++) {
     const label = String(s.index.at(si));
     const ri = dfRowMap.get(label);
-    if (ri === undefined) continue;
+    if (ri === undefined) {
+      continue;
+    }
     const sv = s.values[si] as Scalar;
     const svNum = isMissing(sv) ? Number.NaN : (sv as number);
 
@@ -136,9 +142,10 @@ export function seriesDotDataFrame(s: Series<Scalar>, df: DataFrame): Series<Sca
       const cv = colSeries.values[ri] as Scalar;
       const cvNum = isMissing(cv) ? Number.NaN : (cv as number);
       const cur = result[ci] as number;
-      result[ci] = Number.isNaN(cur) || Number.isNaN(svNum) || Number.isNaN(cvNum)
-        ? Number.NaN
-        : cur + svNum * cvNum;
+      result[ci] =
+        Number.isNaN(cur) || Number.isNaN(svNum) || Number.isNaN(cvNum)
+          ? Number.NaN
+          : cur + svNum * cvNum;
     }
   }
 
@@ -197,9 +204,10 @@ export function dataFrameDotSeries(df: DataFrame, s: Series<Scalar>): Series<Sca
       const cv = col.values[ri] as Scalar;
       const cvNum = isMissing(cv) ? Number.NaN : (cv as number);
       const cur = result[ri] as number;
-      result[ri] = Number.isNaN(cur) || Number.isNaN(svNum) || Number.isNaN(cvNum)
-        ? Number.NaN
-        : cur + cvNum * svNum;
+      result[ri] =
+        Number.isNaN(cur) || Number.isNaN(svNum) || Number.isNaN(cvNum)
+          ? Number.NaN
+          : cur + cvNum * svNum;
     }
   }
 
@@ -264,9 +272,10 @@ export function dataFrameDotDataFrame(left: DataFrame, right: DataFrame): DataFr
         const lv = leftCol.values[ri] as Scalar;
         const lvNum = isMissing(lv) ? Number.NaN : (lv as number);
         const cur = outCol[ri] as number;
-        outCol[ri] = Number.isNaN(cur) || Number.isNaN(rvNum) || Number.isNaN(lvNum)
-          ? Number.NaN
-          : cur + lvNum * rvNum;
+        outCol[ri] =
+          Number.isNaN(cur) || Number.isNaN(rvNum) || Number.isNaN(lvNum)
+            ? Number.NaN
+            : cur + lvNum * rvNum;
       }
     }
   }
@@ -278,8 +287,5 @@ export function dataFrameDotDataFrame(left: DataFrame, right: DataFrame): DataFr
       index: left.index,
     });
   }
-  return new DataFrame(
-    new Map(Object.entries(finalColMap)),
-    left.index,
-  );
+  return new DataFrame(new Map(Object.entries(finalColMap)), left.index);
 }

@@ -55,8 +55,12 @@ function roundNum(v: number, decimals: number): number {
  */
 export function absSeries(s: Series<Scalar>): Series<Scalar> {
   const data: Scalar[] = s.values.map((v) => {
-    if (isMissing(v)) return v;
-    if (typeof v === "number") return Math.abs(v);
+    if (isMissing(v)) {
+      return v;
+    }
+    if (typeof v === "number") {
+      return Math.abs(v);
+    }
     return v; // non-numeric (string, boolean) — pass through unchanged
   });
   return new Series<Scalar>({ data, index: s.index, name: s.name });
@@ -113,8 +117,12 @@ export function absDataFrame(df: DataFrame): DataFrame {
  */
 export function roundSeries(s: Series<Scalar>, decimals = 0): Series<Scalar> {
   const data: Scalar[] = s.values.map((v) => {
-    if (isMissing(v)) return v;
-    if (typeof v === "number") return roundNum(v, decimals);
+    if (isMissing(v)) {
+      return v;
+    }
+    if (typeof v === "number") {
+      return roundNum(v, decimals);
+    }
     return v;
   });
   return new Series<Scalar>({ data, index: s.index, name: s.name });
@@ -152,10 +160,7 @@ export function roundDataFrame(df: DataFrame, decimals: RoundDataFrameSpec = 0):
   const colNames = df.columns.values as readonly string[];
   const newColMap = new Map<string, Series<Scalar>>();
   for (const name of colNames) {
-    const d =
-      typeof decimals === "number"
-        ? decimals
-        : (decimals[name] ?? 0);
+    const d = typeof decimals === "number" ? decimals : (decimals[name] ?? 0);
     newColMap.set(name, roundSeries(df.col(name), d));
   }
   return new DataFrame(newColMap, df.index, [...colNames]);

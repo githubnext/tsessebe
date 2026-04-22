@@ -75,9 +75,15 @@ function isMissing(v: Scalar): boolean {
 
 /** Coerce a Scalar to a number, returning NaN for missing/non-numeric values. */
 function toNum(v: Scalar): number {
-  if (isMissing(v)) return Number.NaN;
-  if (typeof v === "number") return v;
-  if (typeof v === "boolean") return v ? 1 : 0;
+  if (isMissing(v)) {
+    return Number.NaN;
+  }
+  if (typeof v === "number") {
+    return v;
+  }
+  if (typeof v === "boolean") {
+    return v ? 1 : 0;
+  }
   const n = Number(v);
   return Number.isNaN(n) ? Number.NaN : n;
 }
@@ -89,170 +95,240 @@ function toNum(v: Scalar): number {
  */
 function resolveBuiltin(name: TransformFuncName): (s: Series<Scalar>) => Series<Scalar> | Scalar {
   switch (name) {
-    case "sum": return (s) => {
-      let total = 0;
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n)) total += n;
-      }
-      return total as Scalar;
-    };
-    case "mean": return (s) => {
-      let total = 0; let cnt = 0;
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n)) { total += n; cnt++; }
-      }
-      return (cnt === 0 ? Number.NaN : total / cnt) as Scalar;
-    };
-    case "min": return (s) => {
-      let m = Number.POSITIVE_INFINITY;
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n) && n < m) m = n;
-      }
-      return (m === Number.POSITIVE_INFINITY ? Number.NaN : m) as Scalar;
-    };
-    case "max": return (s) => {
-      let m = Number.NEGATIVE_INFINITY;
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n) && n > m) m = n;
-      }
-      return (m === Number.NEGATIVE_INFINITY ? Number.NaN : m) as Scalar;
-    };
-    case "std": return (s) => {
-      const nums: number[] = [];
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n)) nums.push(n);
-      }
-      if (nums.length < 2) return Number.NaN as Scalar;
-      const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
-      const variance = nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / (nums.length - 1);
-      return Math.sqrt(variance) as Scalar;
-    };
-    case "var": return (s) => {
-      const nums: number[] = [];
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n)) nums.push(n);
-      }
-      if (nums.length < 2) return Number.NaN as Scalar;
-      const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
-      return (nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / (nums.length - 1)) as Scalar;
-    };
-    case "median": return (s) => {
-      const nums: number[] = [];
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n)) nums.push(n);
-      }
-      if (nums.length === 0) return Number.NaN as Scalar;
-      nums.sort((a, b) => a - b);
-      const mid = Math.floor(nums.length / 2);
-      return (nums.length % 2 === 0
-        ? ((nums[mid - 1] as number) + (nums[mid] as number)) / 2
-        : (nums[mid] as number)) as Scalar;
-    };
-    case "count": return (s) => {
-      let cnt = 0;
-      for (const v of s.values) {
-        if (!isMissing(v as Scalar)) cnt++;
-      }
-      return cnt as Scalar;
-    };
-    case "first": return (s) => {
-      for (const v of s.values) {
-        if (!isMissing(v as Scalar)) return v as Scalar;
-      }
-      return null as Scalar;
-    };
-    case "last": return (s) => {
-      let last: Scalar = null;
-      for (const v of s.values) {
-        if (!isMissing(v as Scalar)) last = v as Scalar;
-      }
-      return last;
-    };
-    case "prod": return (s) => {
-      let prod = 1;
-      for (const v of s.values) {
-        const n = toNum(v as Scalar);
-        if (!Number.isNaN(n)) prod *= n;
-      }
-      return prod as Scalar;
-    };
-    case "any": return (s) => {
-      for (const v of s.values) {
-        if (!isMissing(v as Scalar) && Boolean(v)) return true as Scalar;
-      }
-      return false as Scalar;
-    };
-    case "all": return (s) => {
-      for (const v of s.values) {
-        if (isMissing(v as Scalar) || !Boolean(v)) return false as Scalar;
-      }
-      return true as Scalar;
-    };
-    case "nunique": return (s) => {
-      const seen = new Set<string>();
-      for (const v of s.values) {
-        if (!isMissing(v as Scalar)) seen.add(String(v));
-      }
-      return seen.size as Scalar;
-    };
-    case "cumsum": return (s) => {
-      const out: Scalar[] = [];
-      let running = 0;
-      for (const v of s.values) {
-        if (isMissing(v as Scalar)) { out.push(v as Scalar); continue; }
-        running += toNum(v as Scalar);
-        out.push(running as Scalar);
-      }
-      return new Series<Scalar>({ data: out, index: s.index, name: s.name });
-    };
-    case "cumprod": return (s) => {
-      const out: Scalar[] = [];
-      let running = 1;
-      for (const v of s.values) {
-        if (isMissing(v as Scalar)) { out.push(v as Scalar); continue; }
-        running *= toNum(v as Scalar);
-        out.push(running as Scalar);
-      }
-      return new Series<Scalar>({ data: out, index: s.index, name: s.name });
-    };
-    case "cummin": return (s) => {
-      const out: Scalar[] = [];
-      let running = Number.POSITIVE_INFINITY;
-      for (const v of s.values) {
-        if (isMissing(v as Scalar)) { out.push(v as Scalar); continue; }
-        const n = toNum(v as Scalar);
-        if (n < running) running = n;
-        out.push(running as Scalar);
-      }
-      return new Series<Scalar>({ data: out, index: s.index, name: s.name });
-    };
-    case "cummax": return (s) => {
-      const out: Scalar[] = [];
-      let running = Number.NEGATIVE_INFINITY;
-      for (const v of s.values) {
-        if (isMissing(v as Scalar)) { out.push(v as Scalar); continue; }
-        const n = toNum(v as Scalar);
-        if (n > running) running = n;
-        out.push(running as Scalar);
-      }
-      return new Series<Scalar>({ data: out, index: s.index, name: s.name });
-    };
+    case "sum":
+      return (s) => {
+        let total = 0;
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n)) {
+            total += n;
+          }
+        }
+        return total as Scalar;
+      };
+    case "mean":
+      return (s) => {
+        let total = 0;
+        let cnt = 0;
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n)) {
+            total += n;
+            cnt++;
+          }
+        }
+        return (cnt === 0 ? Number.NaN : total / cnt) as Scalar;
+      };
+    case "min":
+      return (s) => {
+        let m = Number.POSITIVE_INFINITY;
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n) && n < m) {
+            m = n;
+          }
+        }
+        return (m === Number.POSITIVE_INFINITY ? Number.NaN : m) as Scalar;
+      };
+    case "max":
+      return (s) => {
+        let m = Number.NEGATIVE_INFINITY;
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n) && n > m) {
+            m = n;
+          }
+        }
+        return (m === Number.NEGATIVE_INFINITY ? Number.NaN : m) as Scalar;
+      };
+    case "std":
+      return (s) => {
+        const nums: number[] = [];
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n)) {
+            nums.push(n);
+          }
+        }
+        if (nums.length < 2) {
+          return Number.NaN as Scalar;
+        }
+        const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+        const variance = nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / (nums.length - 1);
+        return Math.sqrt(variance) as Scalar;
+      };
+    case "var":
+      return (s) => {
+        const nums: number[] = [];
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n)) {
+            nums.push(n);
+          }
+        }
+        if (nums.length < 2) {
+          return Number.NaN as Scalar;
+        }
+        const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+        return (nums.reduce((acc, v) => acc + (v - mean) ** 2, 0) / (nums.length - 1)) as Scalar;
+      };
+    case "median":
+      return (s) => {
+        const nums: number[] = [];
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n)) {
+            nums.push(n);
+          }
+        }
+        if (nums.length === 0) {
+          return Number.NaN as Scalar;
+        }
+        nums.sort((a, b) => a - b);
+        const mid = Math.floor(nums.length / 2);
+        return (
+          nums.length % 2 === 0
+            ? ((nums[mid - 1] as number) + (nums[mid] as number)) / 2
+            : (nums[mid] as number)
+        ) as Scalar;
+      };
+    case "count":
+      return (s) => {
+        let cnt = 0;
+        for (const v of s.values) {
+          if (!isMissing(v as Scalar)) {
+            cnt++;
+          }
+        }
+        return cnt as Scalar;
+      };
+    case "first":
+      return (s) => {
+        for (const v of s.values) {
+          if (!isMissing(v as Scalar)) {
+            return v as Scalar;
+          }
+        }
+        return null as Scalar;
+      };
+    case "last":
+      return (s) => {
+        let last: Scalar = null;
+        for (const v of s.values) {
+          if (!isMissing(v as Scalar)) {
+            last = v as Scalar;
+          }
+        }
+        return last;
+      };
+    case "prod":
+      return (s) => {
+        let prod = 1;
+        for (const v of s.values) {
+          const n = toNum(v as Scalar);
+          if (!Number.isNaN(n)) {
+            prod *= n;
+          }
+        }
+        return prod as Scalar;
+      };
+    case "any":
+      return (s) => {
+        for (const v of s.values) {
+          if (!isMissing(v as Scalar) && Boolean(v)) {
+            return true as Scalar;
+          }
+        }
+        return false as Scalar;
+      };
+    case "all":
+      return (s) => {
+        for (const v of s.values) {
+          if (isMissing(v as Scalar) || !v) {
+            return false as Scalar;
+          }
+        }
+        return true as Scalar;
+      };
+    case "nunique":
+      return (s) => {
+        const seen = new Set<string>();
+        for (const v of s.values) {
+          if (!isMissing(v as Scalar)) {
+            seen.add(String(v));
+          }
+        }
+        return seen.size as Scalar;
+      };
+    case "cumsum":
+      return (s) => {
+        const out: Scalar[] = [];
+        let running = 0;
+        for (const v of s.values) {
+          if (isMissing(v as Scalar)) {
+            out.push(v as Scalar);
+            continue;
+          }
+          running += toNum(v as Scalar);
+          out.push(running as Scalar);
+        }
+        return new Series<Scalar>({ data: out, index: s.index, name: s.name });
+      };
+    case "cumprod":
+      return (s) => {
+        const out: Scalar[] = [];
+        let running = 1;
+        for (const v of s.values) {
+          if (isMissing(v as Scalar)) {
+            out.push(v as Scalar);
+            continue;
+          }
+          running *= toNum(v as Scalar);
+          out.push(running as Scalar);
+        }
+        return new Series<Scalar>({ data: out, index: s.index, name: s.name });
+      };
+    case "cummin":
+      return (s) => {
+        const out: Scalar[] = [];
+        let running = Number.POSITIVE_INFINITY;
+        for (const v of s.values) {
+          if (isMissing(v as Scalar)) {
+            out.push(v as Scalar);
+            continue;
+          }
+          const n = toNum(v as Scalar);
+          if (n < running) {
+            running = n;
+          }
+          out.push(running as Scalar);
+        }
+        return new Series<Scalar>({ data: out, index: s.index, name: s.name });
+      };
+    case "cummax":
+      return (s) => {
+        const out: Scalar[] = [];
+        let running = Number.NEGATIVE_INFINITY;
+        for (const v of s.values) {
+          if (isMissing(v as Scalar)) {
+            out.push(v as Scalar);
+            continue;
+          }
+          const n = toNum(v as Scalar);
+          if (n > running) {
+            running = n;
+          }
+          out.push(running as Scalar);
+        }
+        return new Series<Scalar>({ data: out, index: s.index, name: s.name });
+      };
   }
 }
 
 /**
  * Resolve a `TransformFunc` to a callable.
  */
-function resolveFunc(
-  fn: TransformFunc,
-): (s: Series<Scalar>) => Series<Scalar> | Scalar {
+function resolveFunc(fn: TransformFunc): (s: Series<Scalar>) => Series<Scalar> | Scalar {
   if (typeof fn === "string") {
     return resolveBuiltin(fn);
   }
@@ -330,10 +406,7 @@ function applyOneSeries(
  */
 export function seriesTransform(
   s: Series<Scalar>,
-  func:
-    | TransformFunc
-    | readonly TransformFunc[]
-    | Record<string, TransformFunc>,
+  func: TransformFunc | readonly TransformFunc[] | Record<string, TransformFunc>,
 ): Series<Scalar> | DataFrame {
   // Array form → DataFrame with one column per function
   if (Array.isArray(func)) {
@@ -403,10 +476,7 @@ export function seriesTransform(
  */
 export function dataFrameTransform(
   df: DataFrame,
-  func:
-    | TransformFunc
-    | readonly TransformFunc[]
-    | Record<string, TransformFunc>,
+  func: TransformFunc | readonly TransformFunc[] | Record<string, TransformFunc>,
   options: DataFrameTransformOptions = {},
 ): DataFrame {
   const axis = options.axis ?? 0;
@@ -417,7 +487,9 @@ export function dataFrameTransform(
     const f = resolveFunc(
       typeof func === "string" || typeof func === "function"
         ? (func as TransformFunc)
-        : (() => { throw new Error("dataFrameTransform: axis=1 supports only a single function"); })(),
+        : (() => {
+            throw new Error("dataFrameTransform: axis=1 supports only a single function");
+          })(),
     );
     const nRows = df.index.size;
     const colNames = df.columns.values;
@@ -441,11 +513,14 @@ export function dataFrameTransform(
 
     const colMap = new Map<string, Series<Scalar>>();
     for (const c of colNames) {
-      colMap.set(c as string, new Series<Scalar>({
-        data: outCols[c as string] as Scalar[],
-        index: df.index,
-        name: c as string,
-      }));
+      colMap.set(
+        c as string,
+        new Series<Scalar>({
+          data: outCols[c as string] as Scalar[],
+          index: df.index,
+          name: c as string,
+        }),
+      );
     }
     return new DataFrame(colMap, df.index);
   }

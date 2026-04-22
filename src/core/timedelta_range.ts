@@ -120,7 +120,8 @@ const UNIT_MS: Record<string, number> = {
 };
 
 /** Regex: optional integer multiplier followed by unit alias. */
-const RE_FREQ = /^(\d+(?:\.\d+)?)\s*(W|D|H|T|min|S|L|ms|U|us|N|ns)$|^(W|D|H|T|min|S|L|ms|U|us|N|ns)$/;
+const RE_FREQ =
+  /^(\d+(?:\.\d+)?)\s*(W|D|H|T|min|S|L|ms|U|us|N|ns)$|^(W|D|H|T|min|S|L|ms|U|us|N|ns)$/;
 
 /**
  * Parse a freq string or number into milliseconds.
@@ -186,7 +187,7 @@ function applyClosedFilter(
     // "neither"
     const excludeStart = startMs !== null && v === startMs;
     const excludeEnd = endMs !== null && v === endMs;
-    return !excludeStart && !excludeEnd;
+    return !(excludeStart || excludeEnd);
   });
 }
 

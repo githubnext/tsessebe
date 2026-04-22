@@ -352,10 +352,7 @@ export function sortValuesDataFrame(
  * // columns in alphabetical order: "a", "m", "z"
  * ```
  */
-export function sortIndexDataFrame(
-  df: DataFrame,
-  options?: SortIndexDataFrameOptions,
-): DataFrame {
+export function sortIndexDataFrame(df: DataFrame, options?: SortIndexDataFrameOptions): DataFrame {
   const ascending = options?.ascending ?? true;
   const axis = options?.axis ?? 0;
   const naPosition = options?.naPosition ?? "last";

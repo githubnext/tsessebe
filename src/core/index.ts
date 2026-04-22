@@ -24,7 +24,11 @@ export type { PeriodFreq, PeriodIndexOptions } from "./period.ts";
 export { Timedelta, TimedeltaIndex } from "./timedelta.ts";
 export type { TimedeltaComponents, TimedeltaIndexOptions } from "./timedelta.ts";
 export { timedelta_range } from "./timedelta_range.ts";
-export type { TimedeltaFreq, TimedeltaRangeClosed, TimedeltaRangeOptions } from "./timedelta_range.ts";
+export type {
+  TimedeltaFreq,
+  TimedeltaRangeClosed,
+  TimedeltaRangeOptions,
+} from "./timedelta_range.ts";
 export {
   Day,
   Hour,

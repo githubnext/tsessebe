@@ -352,7 +352,9 @@ describe("mergeAsof — error handling", () => {
     const left = DataFrame.fromColumns({ a: [1, 2] });
     const right = DataFrame.fromColumns({ t: [1, 2] });
 
-    expect(() => mergeAsof(left, right, { left_on: "t", right_on: "t" })).toThrow(/left key column/i);
+    expect(() => mergeAsof(left, right, { left_on: "t", right_on: "t" })).toThrow(
+      /left key column/i,
+    );
   });
 
   it("throws when by column does not exist in right", () => {
@@ -414,8 +416,8 @@ describe("mergeAsof — property tests", () => {
           for (let i = 0; i < sortedLeft.length; i++) {
             const lt = sortedLeft[i] as number;
             const rw = result.col("w").at(i);
-            if (rw !== null && rw !== undefined) {
-              if ((rw as number) > lt) return false;
+            if (rw !== null && rw !== undefined && (rw as number) > lt) {
+              return false;
             }
           }
           return true;
@@ -441,8 +443,8 @@ describe("mergeAsof — property tests", () => {
           for (let i = 0; i < sortedLeft.length; i++) {
             const lt = sortedLeft[i] as number;
             const rw = result.col("w").at(i);
-            if (rw !== null && rw !== undefined) {
-              if ((rw as number) < lt) return false;
+            if (rw !== null && rw !== undefined && (rw as number) < lt) {
+              return false;
             }
           }
           return true;

@@ -381,7 +381,9 @@ describe("mergeOrdered — property-based", () => {
           for (let i = 1; i < kOut.length; i++) {
             const prev = kOut[i - 1];
             const curr = kOut[i];
-            if (prev !== undefined && curr !== undefined && prev > curr) return false;
+            if (prev !== undefined && curr !== undefined && prev > curr) {
+              return false;
+            }
           }
           return true;
         },
@@ -412,8 +414,12 @@ describe("mergeOrdered — property-based", () => {
             const vals = col(result, colName);
             let seenNonNull = false;
             for (const v of vals) {
-              if (v !== null && v !== undefined) seenNonNull = true;
-              if (seenNonNull && (v === null || v === undefined)) return false;
+              if (v !== null && v !== undefined) {
+                seenNonNull = true;
+              }
+              if (seenNonNull && (v === null || v === undefined)) {
+                return false;
+              }
             }
           }
           return true;

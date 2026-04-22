@@ -235,15 +235,9 @@ export function corrWith(
 }
 
 /** Correlate each column of `df` with a single Series. */
-function _corrWithSeries(
-  df: DataFrame,
-  other: Series<Scalar>,
-  minPeriods: number,
-): Series<Scalar> {
+function _corrWithSeries(df: DataFrame, other: Series<Scalar>, minPeriods: number): Series<Scalar> {
   const cols = df.columns.toArray();
-  const results: Scalar[] = cols.map((c) =>
-    pearsonCorr(df.col(c), other, { minPeriods }),
-  );
+  const results: Scalar[] = cols.map((c) => pearsonCorr(df.col(c), other, { minPeriods }));
   return new Series({ data: results, index: new Index<Label>(cols) });
 }
 
@@ -262,7 +256,7 @@ function _corrWithDataFrame(
     : [...new Set([...dfCols, ...otherCols])];
 
   const results: Scalar[] = allCols.map((c) => {
-    if (!dfCols.has(c) || !otherCols.has(c)) {
+    if (!(dfCols.has(c) && otherCols.has(c))) {
       return Number.NaN;
     }
     return pearsonCorr(df.col(c), other.col(c), { minPeriods });

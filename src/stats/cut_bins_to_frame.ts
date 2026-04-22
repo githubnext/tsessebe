@@ -51,10 +51,7 @@ export interface CutBinsToFrameOptions {
  * @param result  Result of {@link cut} or {@link qcut}.
  * @param options See {@link CutBinsToFrameOptions}.
  */
-export function cutBinsToFrame(
-  result: BinResult,
-  options: CutBinsToFrameOptions = {},
-): DataFrame {
+export function cutBinsToFrame(result: BinResult, options: CutBinsToFrameOptions = {}): DataFrame {
   const { data = [] } = options;
 
   const { labels, bins, codes } = result;

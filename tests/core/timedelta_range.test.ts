@@ -327,8 +327,7 @@ describe("timedelta_range — property-based", () => {
         }
         const expectedStep = step * 3_600_000;
         for (let i = 1; i < idx.size; i++) {
-          const diff =
-            idx.at(i).totalMilliseconds - idx.at(i - 1).totalMilliseconds;
+          const diff = idx.at(i).totalMilliseconds - idx.at(i - 1).totalMilliseconds;
           if (Math.abs(diff - expectedStep) > 1) {
             return false;
           }

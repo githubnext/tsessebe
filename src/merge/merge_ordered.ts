@@ -97,7 +97,9 @@ export interface MergeOrderedOptions {
 
 /** Normalise a string | readonly string[] | undefined into string[]. */
 function toCols(v: string | readonly string[] | undefined): string[] {
-  if (v === undefined) return [];
+  if (v === undefined) {
+    return [];
+  }
   return typeof v === "string" ? [v] : [...v];
 }
 
@@ -113,10 +115,18 @@ function makeGroupKey(df: DataFrame, cols: readonly string[], row: number): stri
 
 /** Compare two Scalar values for sort ordering (ascending). */
 function compareScalar(a: Scalar, b: Scalar): number {
-  if (a === null || a === undefined) return b === null || b === undefined ? 0 : 1;
-  if (b === null || b === undefined) return -1;
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  if (typeof a === "string" && typeof b === "string") return a < b ? -1 : a > b ? 1 : 0;
+  if (a === null || a === undefined) {
+    return b === null || b === undefined ? 0 : 1;
+  }
+  if (b === null || b === undefined) {
+    return -1;
+  }
+  if (typeof a === "number" && typeof b === "number") {
+    return a - b;
+  }
+  if (typeof a === "string" && typeof b === "string") {
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
   return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0;
 }
 
@@ -210,11 +220,11 @@ function buildPlan(
 
   // 4. Non-key, non-by left columns
   const leftNonKey = (left.columns.values as string[]).filter(
-    (c) => !leftKeysSet.has(c) && !leftBySet.has(c),
+    (c) => !(leftKeysSet.has(c) || leftBySet.has(c)),
   );
   // 5. Non-key, non-by right columns
   const rightNonKey = (right.columns.values as string[]).filter(
-    (c) => !rightKeysSet.has(c) && !rightBySet.has(c),
+    (c) => !(rightKeysSet.has(c) || rightBySet.has(c)),
   );
 
   const rightNonKeySet = new Set(rightNonKey);
@@ -278,14 +288,18 @@ function mergeSubset(
       while (li2 < leftRows.length) {
         const nextLr = leftRows[li2]!;
         const nextKey = leftKeys.map((k) => getVal(left, k, nextLr));
-        if (compareScalar(nextKey[0] ?? null, lKeyVals[0] ?? null) !== 0) break;
+        if (compareScalar(nextKey[0] ?? null, lKeyVals[0] ?? null) !== 0) {
+          break;
+        }
         li2++;
       }
       let ri2 = ri + 1;
       while (ri2 < rightRows.length) {
         const nextRr = rightRows[ri2]!;
         const nextKey = rightKeys.map((k) => getVal(right, k, nextRr));
-        if (compareScalar(nextKey[0] ?? null, rKeyVals[0] ?? null) !== 0) break;
+        if (compareScalar(nextKey[0] ?? null, rKeyVals[0] ?? null) !== 0) {
+          break;
+        }
         ri2++;
       }
       // Cartesian product of matching rows
@@ -377,7 +391,9 @@ function appendRows(
     const d = dest[k];
     const s = src[k];
     if (d !== undefined && s !== undefined) {
-      for (const v of s) d.push(v);
+      for (const v of s) {
+        d.push(v);
+      }
     }
   }
 }
@@ -448,7 +464,13 @@ export function mergeOrdered(
   const effectiveRightBy = rightBy.length > 0 ? rightBy : leftBy;
 
   const plan = buildPlan(
-    left, right, leftKeys, rightKeys, effectiveLeftBy, effectiveRightBy, suffixes,
+    left,
+    right,
+    leftKeys,
+    rightKeys,
+    effectiveLeftBy,
+    effectiveRightBy,
+    suffixes,
   );
   const outputColNames = plan.map((e) => e.outputName);
 
@@ -463,7 +485,14 @@ export function mergeOrdered(
     const rightAllRows = Array.from({ length: rightSorted.shape[0] }, (_, i) => i);
 
     const colData = mergeSubset(
-      leftSorted, rightSorted, leftAllRows, rightAllRows, leftKeys, rightKeys, plan, how,
+      leftSorted,
+      rightSorted,
+      leftAllRows,
+      rightAllRows,
+      leftKeys,
+      rightKeys,
+      plan,
+      how,
     );
 
     if (fillMethod === "ffill") {
@@ -471,7 +500,9 @@ export function mergeOrdered(
         // Don't fill key columns
         if (!leftKeys.includes(name)) {
           const arr = colData[name];
-          if (arr !== undefined) ffillArray(arr);
+          if (arr !== undefined) {
+            ffillArray(arr);
+          }
         }
       }
     }
@@ -490,7 +521,9 @@ export function mergeOrdered(
 
   // Initialise output column arrays
   const colData: Record<string, Scalar[]> = {};
-  for (const name of outputColNames) colData[name] = [];
+  for (const name of outputColNames) {
+    colData[name] = [];
+  }
 
   for (const gk of allGroupKeys) {
     const lRows = leftGroups.get(gk) ?? [];
@@ -501,18 +534,29 @@ export function mergeOrdered(
     const rightSortedRows = sortRowIndices(right, rRows, rightKeys);
 
     const groupCols = mergeSubset(
-      left, right, leftSortedRows, rightSortedRows, leftKeys, rightKeys, plan, how,
+      left,
+      right,
+      leftSortedRows,
+      rightSortedRows,
+      leftKeys,
+      rightKeys,
+      plan,
+      how,
     );
 
     if (fillMethod === "ffill") {
       for (const name of outputColNames) {
         if (
-          !leftKeys.includes(name) &&
-          !effectiveLeftBy.includes(name) &&
-          !effectiveRightBy.includes(name)
+          !(
+            leftKeys.includes(name) ||
+            effectiveLeftBy.includes(name) ||
+            effectiveRightBy.includes(name)
+          )
         ) {
           const arr = groupCols[name];
-          if (arr !== undefined) ffillArray(arr);
+          if (arr !== undefined) {
+            ffillArray(arr);
+          }
         }
       }
     }
@@ -527,7 +571,9 @@ export function mergeOrdered(
 
 /** Sort a DataFrame by key columns (returns new DataFrame). */
 function sortByKeys(df: DataFrame, keys: readonly string[]): DataFrame {
-  if (keys.length === 0) return df;
+  if (keys.length === 0) {
+    return df;
+  }
   const n = df.shape[0];
   const rows = Array.from({ length: n }, (_, i) => i);
   rows.sort((a, b) => {
@@ -535,7 +581,9 @@ function sortByKeys(df: DataFrame, keys: readonly string[]): DataFrame {
       const va = getVal(df, k, a);
       const vb = getVal(df, k, b);
       const c = compareScalar(va, vb);
-      if (c !== 0) return c;
+      if (c !== 0) {
+        return c;
+      }
     }
     return 0;
   });
@@ -550,18 +598,16 @@ function sortByKeys(df: DataFrame, keys: readonly string[]): DataFrame {
 }
 
 /** Sort an array of row-indices by key columns. */
-function sortRowIndices(
-  df: DataFrame,
-  rows: readonly number[],
-  keys: readonly string[],
-): number[] {
+function sortRowIndices(df: DataFrame, rows: readonly number[], keys: readonly string[]): number[] {
   const sorted = [...rows];
   sorted.sort((a, b) => {
     for (const k of keys) {
       const va = getVal(df, k, a);
       const vb = getVal(df, k, b);
       const c = compareScalar(va, vb);
-      if (c !== 0) return c;
+      if (c !== 0) {
+        return c;
+      }
     }
     return 0;
   });
@@ -585,7 +631,7 @@ function groupRows(df: DataFrame, byCols: readonly string[]): Map<string, number
 
 /** Build a DataFrame from a column-data record and an ordered list of column names. */
 function buildDataFrame(colData: Record<string, Scalar[]>, colNames: readonly string[]): DataFrame {
-  const n = colNames.length > 0 ? ((colData[colNames[0]!] as Scalar[]).length) : 0;
+  const n = colNames.length > 0 ? (colData[colNames[0]!] as Scalar[]).length : 0;
   const idx = new RangeIndex(n) as unknown as Index<Label>;
   const data: Record<string, readonly Scalar[]> = {};
   for (const c of colNames) {

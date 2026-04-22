@@ -286,7 +286,9 @@ describe("explodeSeries — property tests", () => {
           const s = new Series<Scalar>({ data, name: "test" });
           const result = explodeSeries(s);
           const expectedLen = items.reduce((sum: number, v) => {
-            if (Array.isArray(v)) return sum + (v as unknown[]).length;
+            if (Array.isArray(v)) {
+              return sum + (v as unknown[]).length;
+            }
             return sum + 1;
           }, 0);
           return result.values.length === expectedLen;

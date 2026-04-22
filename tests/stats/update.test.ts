@@ -88,8 +88,14 @@ describe("seriesUpdate", () => {
   test("property: when overwrite=true, non-NA from other always wins", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(fc.float({ noNaN: true }), fc.constant(null)), { minLength: 1, maxLength: 20 }),
-        fc.array(fc.oneof(fc.float({ noNaN: true }), fc.constant(null)), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.oneof(fc.float({ noNaN: true }), fc.constant(null)), {
+          minLength: 1,
+          maxLength: 20,
+        }),
+        fc.array(fc.oneof(fc.float({ noNaN: true }), fc.constant(null)), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (arr1, arr2) => {
           const n = Math.min(arr1.length, arr2.length);
           const idx = Array.from({ length: n }, (_, i) => i);
@@ -101,9 +107,11 @@ describe("seriesUpdate", () => {
             const sv = arr1[i];
             const rv = result.values[i];
             if (ov !== null && ov !== undefined) {
-              if (rv !== ov) return false;
-            } else if (sv !== null) {
-              if (rv !== sv) return false;
+              if (rv !== ov) {
+                return false;
+              }
+            } else if (sv !== null && rv !== sv) {
+              return false;
             }
           }
           return true;

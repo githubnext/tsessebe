@@ -35,7 +35,7 @@
  * @module
  */
 
-import { DataFrame } from "../core/index.ts";
+import type { DataFrame } from "../core/index.ts";
 import { Series } from "../core/index.ts";
 import type { Scalar } from "../types.ts";
 
@@ -87,11 +87,21 @@ function lex(expr: string): readonly Token[] {
 /** Lex one token starting at position `i`; return new position. */
 function lexOne(expr: string, i: number, out: Token[]): number {
   const ch = expr.charAt(i);
-  if (ch === " " || ch === "\t" || ch === "\r" || ch === "\n") return i + 1;
-  if (ch === "`") return lexBacktick(expr, i, out);
-  if (ch === '"' || ch === "'") return lexString(expr, i, out);
-  if (ch >= "0" && ch <= "9") return lexNumber(expr, i, out);
-  if (ch === "." && isDigit(expr.charAt(i + 1))) return lexNumber(expr, i, out);
+  if (ch === " " || ch === "\t" || ch === "\r" || ch === "\n") {
+    return i + 1;
+  }
+  if (ch === "`") {
+    return lexBacktick(expr, i, out);
+  }
+  if (ch === '"' || ch === "'") {
+    return lexString(expr, i, out);
+  }
+  if (ch >= "0" && ch <= "9") {
+    return lexNumber(expr, i, out);
+  }
+  if (ch === "." && isDigit(expr.charAt(i + 1))) {
+    return lexNumber(expr, i, out);
+  }
   if ((ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || ch === "_") {
     return lexIdent(expr, i, out);
   }
@@ -105,7 +115,9 @@ function isDigit(ch: string): boolean {
 function lexBacktick(expr: string, i: number, out: Token[]): number {
   const start = i + 1;
   let j = start;
-  while (j < expr.length && expr.charAt(j) !== "`") j++;
+  while (j < expr.length && expr.charAt(j) !== "`") {
+    j++;
+  }
   out.push({ kind: "BACKTICK", value: expr.slice(start, j), pos: i });
   return j + 1;
 }
@@ -128,45 +140,82 @@ function lexString(expr: string, i: number, out: Token[]): number {
 }
 
 function lexNumber(expr: string, i: number, out: Token[]): number {
-  const start = i;
-  while (i < expr.length) {
-    const c = expr.charAt(i);
-    if (!((c >= "0" && c <= "9") || c === ".")) break;
-    i++;
+  let pos = i;
+  const start = pos;
+  while (pos < expr.length) {
+    const c = expr.charAt(pos);
+    if (!((c >= "0" && c <= "9") || c === ".")) {
+      break;
+    }
+    pos++;
   }
-  if (i < expr.length && (expr.charAt(i) === "e" || expr.charAt(i) === "E")) {
-    i++;
-    const sign = expr.charAt(i);
-    if (sign === "+" || sign === "-") i++;
-    while (i < expr.length && isDigit(expr.charAt(i))) i++;
+  if (pos < expr.length && (expr.charAt(pos) === "e" || expr.charAt(pos) === "E")) {
+    pos++;
+    const sign = expr.charAt(pos);
+    if (sign === "+" || sign === "-") {
+      pos++;
+    }
+    while (pos < expr.length && isDigit(expr.charAt(pos))) {
+      pos++;
+    }
   }
-  out.push({ kind: "NUM", value: expr.slice(start, i), pos: start });
-  return i;
+  out.push({ kind: "NUM", value: expr.slice(start, pos), pos: start });
+  return pos;
 }
 
 function lexIdent(expr: string, i: number, out: Token[]): number {
-  const start = i;
-  while (i < expr.length && /\w/.test(expr.charAt(i))) i++;
-  out.push({ kind: "IDENT", value: expr.slice(start, i), pos: start });
-  return i;
+  let pos = i;
+  const start = pos;
+  while (pos < expr.length && /\w/.test(expr.charAt(pos))) {
+    pos++;
+  }
+  out.push({ kind: "IDENT", value: expr.slice(start, pos), pos: start });
+  return pos;
 }
 
 const SINGLE_CHAR_TOKENS: ReadonlyMap<string, TokKind> = new Map<string, TokKind>([
-  ["<", "LT"], [">", "GT"], ["+", "PLUS"], ["-", "MINUS"],
-  ["*", "STAR"], ["/", "SLASH"], ["%", "PERCENT"],
-  ["(", "LPAREN"], [")", "RPAREN"], ["[", "LBRACKET"], ["]", "RBRACKET"], [",", "COMMA"],
+  ["<", "LT"],
+  [">", "GT"],
+  ["+", "PLUS"],
+  ["-", "MINUS"],
+  ["*", "STAR"],
+  ["/", "SLASH"],
+  ["%", "PERCENT"],
+  ["(", "LPAREN"],
+  [")", "RPAREN"],
+  ["[", "LBRACKET"],
+  ["]", "RBRACKET"],
+  [",", "COMMA"],
 ]);
 
 function lexSymbol(expr: string, i: number, out: Token[]): number {
   const ch = expr.charAt(i);
   const ch2 = expr.charAt(i + 1);
-  if (ch === "=" && ch2 === "=") { out.push({ kind: "EQ", value: "==", pos: i }); return i + 2; }
-  if (ch === "!" && ch2 === "=") { out.push({ kind: "NEQ", value: "!=", pos: i }); return i + 2; }
-  if (ch === "<" && ch2 === "=") { out.push({ kind: "LE", value: "<=", pos: i }); return i + 2; }
-  if (ch === ">" && ch2 === "=") { out.push({ kind: "GE", value: ">=", pos: i }); return i + 2; }
-  if (ch === "*" && ch2 === "*") { out.push({ kind: "POW", value: "**", pos: i }); return i + 2; }
+  if (ch === "=" && ch2 === "=") {
+    out.push({ kind: "EQ", value: "==", pos: i });
+    return i + 2;
+  }
+  if (ch === "!" && ch2 === "=") {
+    out.push({ kind: "NEQ", value: "!=", pos: i });
+    return i + 2;
+  }
+  if (ch === "<" && ch2 === "=") {
+    out.push({ kind: "LE", value: "<=", pos: i });
+    return i + 2;
+  }
+  if (ch === ">" && ch2 === "=") {
+    out.push({ kind: "GE", value: ">=", pos: i });
+    return i + 2;
+  }
+  if (ch === "*" && ch2 === "*") {
+    out.push({ kind: "POW", value: "**", pos: i });
+    return i + 2;
+  }
   const kind = SINGLE_CHAR_TOKENS.get(ch);
-  if (kind !== undefined) { out.push({ kind, value: ch, pos: i }); return i + 1; }
+  if (kind !== undefined) {
+    out.push({ kind, value: ch, pos: i });
+    return i + 1;
+  }
   throw new SyntaxError(`Unexpected character '${ch}' at position ${i} in: ${expr}`);
 }
 
@@ -175,7 +224,12 @@ function lexSymbol(expr: string, i: number, out: Token[]): number {
 type AstNode =
   | { readonly type: "BinOp"; readonly op: string; readonly left: AstNode; readonly right: AstNode }
   | { readonly type: "UnaryOp"; readonly op: string; readonly operand: AstNode }
-  | { readonly type: "InOp"; readonly value: AstNode; readonly list: readonly AstNode[]; readonly negated: boolean }
+  | {
+      readonly type: "InOp";
+      readonly value: AstNode;
+      readonly list: readonly AstNode[];
+      readonly negated: boolean;
+    }
   | { readonly type: "Literal"; readonly value: Scalar }
   | { readonly type: "ColRef"; readonly name: string }
   | { readonly type: "FuncCall"; readonly name: string; readonly args: readonly AstNode[] };
@@ -206,7 +260,9 @@ class ExprParser {
 
   private expect(kind: TokKind): Token {
     const t = this.consume();
-    if (t.kind !== kind) throw new SyntaxError(`Expected ${kind} but got ${t.kind} ('${t.value}')`);
+    if (t.kind !== kind) {
+      throw new SyntaxError(`Expected ${kind} but got ${t.kind} ('${t.value}')`);
+    }
     return t;
   }
 
@@ -259,8 +315,11 @@ class ExprParser {
 
   private parseCmpRhs(left: AstNode): AstNode {
     const CMP_KINDS: readonly TokKind[] = ["EQ", "NEQ", "LT", "LE", "GT", "GE"];
-    if (this.matchKw("not") && this.peek2().kind === "IDENT" &&
-        this.peek2().value.toLowerCase() === "in") {
+    if (
+      this.matchKw("not") &&
+      this.peek2().kind === "IDENT" &&
+      this.peek2().value.toLowerCase() === "in"
+    ) {
       this.consume(); // "not"
       this.consume(); // "in"
       return { type: "InOp", value: left, list: this.parseListLiteral(), negated: true };
@@ -269,7 +328,9 @@ class ExprParser {
       this.consume(); // "in"
       return { type: "InOp", value: left, list: this.parseListLiteral(), negated: false };
     }
-    if (!CMP_KINDS.includes(this.peek().kind)) return left;
+    if (!CMP_KINDS.includes(this.peek().kind)) {
+      return left;
+    }
     const op = this.consume().value;
     const right = this.parseAdd();
     return { type: "BinOp", op, left, right };
@@ -286,7 +347,9 @@ class ExprParser {
     const close: TokKind = open === "LPAREN" ? "RPAREN" : "RBRACKET";
     while (this.peek().kind !== close && this.peek().kind !== "EOF") {
       items.push(this.parsePrimary());
-      if (this.peek().kind === "COMMA") this.consume();
+      if (this.peek().kind === "COMMA") {
+        this.consume();
+      }
     }
     this.expect(close);
     return items;
@@ -340,11 +403,24 @@ class ExprParser {
 
   private parsePrimary(): AstNode {
     const t = this.peek();
-    if (t.kind === "LPAREN") return this.parseParenExpr();
-    if (t.kind === "BACKTICK") { this.consume(); return { type: "ColRef", name: t.value }; }
-    if (t.kind === "NUM") { this.consume(); return { type: "Literal", value: Number(t.value) }; }
-    if (t.kind === "STR") { this.consume(); return { type: "Literal", value: t.value }; }
-    if (t.kind === "IDENT") return this.parseIdentOrCall();
+    if (t.kind === "LPAREN") {
+      return this.parseParenExpr();
+    }
+    if (t.kind === "BACKTICK") {
+      this.consume();
+      return { type: "ColRef", name: t.value };
+    }
+    if (t.kind === "NUM") {
+      this.consume();
+      return { type: "Literal", value: Number(t.value) };
+    }
+    if (t.kind === "STR") {
+      this.consume();
+      return { type: "Literal", value: t.value };
+    }
+    if (t.kind === "IDENT") {
+      return this.parseIdentOrCall();
+    }
     throw new SyntaxError(`Unexpected token '${t.value}' at position ${t.pos}`);
   }
 
@@ -358,9 +434,15 @@ class ExprParser {
   private parseIdentOrCall(): AstNode {
     const t = this.consume();
     const low = t.value.toLowerCase();
-    if (low === "true") return { type: "Literal", value: true };
-    if (low === "false") return { type: "Literal", value: false };
-    if (low === "none" || low === "null" || low === "nan") return { type: "Literal", value: null };
+    if (low === "true") {
+      return { type: "Literal", value: true };
+    }
+    if (low === "false") {
+      return { type: "Literal", value: false };
+    }
+    if (low === "none" || low === "null" || low === "nan") {
+      return { type: "Literal", value: null };
+    }
     if (this.peek().kind === "LPAREN") {
       this.consume(); // "("
       const args = this.parseFuncArgs();
@@ -374,7 +456,9 @@ class ExprParser {
     const args: AstNode[] = [];
     while (this.peek().kind !== "RPAREN" && this.peek().kind !== "EOF") {
       args.push(this.parseOr());
-      if (this.peek().kind === "COMMA") this.consume();
+      if (this.peek().kind === "COMMA") {
+        this.consume();
+      }
     }
     return args;
   }
@@ -388,7 +472,9 @@ function evalNode(node: AstNode, row: ReadonlyMap<string, Scalar>): Scalar {
     case "Literal":
       return node.value;
     case "ColRef": {
-      if (!row.has(node.name)) throw new Error(`Column '${node.name}' not found in DataFrame`);
+      if (!row.has(node.name)) {
+        throw new Error(`Column '${node.name}' not found in DataFrame`);
+      }
       return row.get(node.name) ?? null;
     }
     case "UnaryOp":
@@ -403,75 +489,133 @@ function evalNode(node: AstNode, row: ReadonlyMap<string, Scalar>): Scalar {
 }
 
 function isTruthy(v: Scalar): boolean {
-  if (v === null || v === undefined) return false;
-  if (typeof v === "boolean") return v;
-  if (typeof v === "number") return v !== 0 && !Number.isNaN(v);
-  if (typeof v === "string") return v.length > 0;
-  if (typeof v === "bigint") return v !== 0n;
+  if (v === null || v === undefined) {
+    return false;
+  }
+  if (typeof v === "boolean") {
+    return v;
+  }
+  if (typeof v === "number") {
+    return v !== 0 && !Number.isNaN(v);
+  }
+  if (typeof v === "string") {
+    return v.length > 0;
+  }
+  if (typeof v === "bigint") {
+    return v !== 0n;
+  }
   return true;
 }
 
 function evalUnary(op: string, val: Scalar): Scalar {
-  if (op === "-") return typeof val === "number" ? -val : null;
-  if (op === "+") return typeof val === "number" ? val : null;
-  if (op === "not") return !isTruthy(val);
+  if (op === "-") {
+    return typeof val === "number" ? -val : null;
+  }
+  if (op === "+") {
+    return typeof val === "number" ? val : null;
+  }
+  if (op === "not") {
+    return !isTruthy(val);
+  }
   return null;
 }
 
-function evalBinOp(op: string, leftNode: AstNode, rightNode: AstNode, row: ReadonlyMap<string, Scalar>): Scalar {
+function evalBinOp(
+  op: string,
+  leftNode: AstNode,
+  rightNode: AstNode,
+  row: ReadonlyMap<string, Scalar>,
+): Scalar {
   // Short-circuit logical ops
   if (op === "or") {
     return isTruthy(evalNode(leftNode, row)) ? true : isTruthy(evalNode(rightNode, row));
   }
   if (op === "and") {
-    return !isTruthy(evalNode(leftNode, row)) ? false : isTruthy(evalNode(rightNode, row));
+    return isTruthy(evalNode(leftNode, row)) ? isTruthy(evalNode(rightNode, row)) : false;
   }
   return applyBinOp(op, evalNode(leftNode, row), evalNode(rightNode, row));
 }
 
 function scalarEq(l: Scalar, r: Scalar): boolean {
-  if (l === null || l === undefined) return r === null || r === undefined;
-  if (typeof l === "number" && Number.isNaN(l)) return false;
-  if (l instanceof Date && r instanceof Date) return l.getTime() === r.getTime();
+  if (l === null || l === undefined) {
+    return r === null || r === undefined;
+  }
+  if (typeof l === "number" && Number.isNaN(l)) {
+    return false;
+  }
+  if (l instanceof Date && r instanceof Date) {
+    return l.getTime() === r.getTime();
+  }
   return l === r;
 }
 
 function numericCmp(l: Scalar, r: Scalar): number {
-  if (l == null || r == null) return Number.NaN;
-  if (l instanceof Date && r instanceof Date) return l.getTime() - r.getTime();
-  if (typeof l === "number" && typeof r === "number") return l - r;
-  if (typeof l === "string" && typeof r === "string") return l < r ? -1 : l > r ? 1 : 0;
+  if (l == null || r == null) {
+    return Number.NaN;
+  }
+  if (l instanceof Date && r instanceof Date) {
+    return l.getTime() - r.getTime();
+  }
+  if (typeof l === "number" && typeof r === "number") {
+    return l - r;
+  }
+  if (typeof l === "string" && typeof r === "string") {
+    return l < r ? -1 : l > r ? 1 : 0;
+  }
   return Number.NaN;
 }
 
 function numericOp(l: Scalar, r: Scalar, fn: (a: number, b: number) => number): Scalar {
-  if (l == null || r == null) return null;
-  if (typeof l === "number" && typeof r === "number") return canonicalizeZero(fn(l, r));
+  if (l == null || r == null) {
+    return null;
+  }
+  if (typeof l === "number" && typeof r === "number") {
+    return canonicalizeZero(fn(l, r));
+  }
   return null;
 }
 
 function applyBinOp(op: string, l: Scalar, r: Scalar): Scalar {
   switch (op) {
-    case "==": return scalarEq(l, r);
-    case "!=": return !scalarEq(l, r);
-    case "<": return numericCmp(l, r) < 0;
-    case "<=": return numericCmp(l, r) <= 0;
-    case ">": return numericCmp(l, r) > 0;
-    case ">=": return numericCmp(l, r) >= 0;
-    case "+": return addScalar(l, r);
-    case "-": return numericOp(l, r, (a, b) => a - b);
-    case "*": return numericOp(l, r, (a, b) => a * b);
-    case "/": return numericOp(l, r, (a, b) => a / b);
-    case "%": return numericOp(l, r, (a, b) => a % b);
-    case "**": return numericOp(l, r, Math.pow);
-    default: return null;
+    case "==":
+      return scalarEq(l, r);
+    case "!=":
+      return !scalarEq(l, r);
+    case "<":
+      return numericCmp(l, r) < 0;
+    case "<=":
+      return numericCmp(l, r) <= 0;
+    case ">":
+      return numericCmp(l, r) > 0;
+    case ">=":
+      return numericCmp(l, r) >= 0;
+    case "+":
+      return addScalar(l, r);
+    case "-":
+      return numericOp(l, r, (a, b) => a - b);
+    case "*":
+      return numericOp(l, r, (a, b) => a * b);
+    case "/":
+      return numericOp(l, r, (a, b) => a / b);
+    case "%":
+      return numericOp(l, r, (a, b) => a % b);
+    case "**":
+      return numericOp(l, r, Math.pow);
+    default:
+      return null;
   }
 }
 
 function addScalar(l: Scalar, r: Scalar): Scalar {
-  if (l == null || r == null) return null;
-  if (typeof l === "string" || typeof r === "string") return String(l) + String(r);
-  if (typeof l === "number" && typeof r === "number") return canonicalizeZero(l + r);
+  if (l == null || r == null) {
+    return null;
+  }
+  if (typeof l === "string" || typeof r === "string") {
+    return String(l) + String(r);
+  }
+  if (typeof l === "number" && typeof r === "number") {
+    return canonicalizeZero(l + r);
+  }
   return null;
 }
 
@@ -479,7 +623,10 @@ function canonicalizeZero(value: number): number {
   return Object.is(value, -0) ? 0 : value;
 }
 
-function evalInOp(node: Extract<AstNode, { type: "InOp" }>, row: ReadonlyMap<string, Scalar>): boolean {
+function evalInOp(
+  node: Extract<AstNode, { type: "InOp" }>,
+  row: ReadonlyMap<string, Scalar>,
+): boolean {
   const val = evalNode(node.value, row);
   const found = node.list.some((item) => scalarEq(val, evalNode(item, row)));
   return node.negated ? !found : found;
@@ -488,42 +635,130 @@ function evalInOp(node: Extract<AstNode, { type: "InOp" }>, row: ReadonlyMap<str
 type BuiltinFn = (args: readonly Scalar[]) => Scalar;
 
 const BUILTIN_FUNCS: ReadonlyMap<string, BuiltinFn> = new Map<string, BuiltinFn>([
-  ["abs", (a) => { const x = a[0]; return typeof x === "number" ? Math.abs(x) : null; }],
-  ["round", (a) => {
-    const x = a[0]; const d = a[1];
-    return typeof x === "number" ? Number(x.toFixed(typeof d === "number" ? d : 0)) : null;
-  }],
-  ["str", (a) => { const x = a[0]; return x == null ? null : String(x); }],
-  ["len", (a) => { const x = a[0]; return typeof x === "string" ? x.length : null; }],
-  ["lower", (a) => { const x = a[0]; return typeof x === "string" ? x.toLowerCase() : null; }],
-  ["upper", (a) => { const x = a[0]; return typeof x === "string" ? x.toUpperCase() : null; }],
-  ["isnull", (a) => {
-    const x = a[0];
-    return x == null || (typeof x === "number" && Number.isNaN(x));
-  }],
-  ["isna", (a) => {
-    const x = a[0];
-    return x == null || (typeof x === "number" && Number.isNaN(x));
-  }],
-  ["notnull", (a) => {
-    const x = a[0];
-    return x != null && !(typeof x === "number" && Number.isNaN(x));
-  }],
-  ["notna", (a) => {
-    const x = a[0];
-    return x != null && !(typeof x === "number" && Number.isNaN(x));
-  }],
-  ["sqrt", (a) => { const x = a[0]; return typeof x === "number" ? Math.sqrt(x) : null; }],
-  ["log", (a) => { const x = a[0]; return typeof x === "number" ? Math.log(x) : null; }],
-  ["log2", (a) => { const x = a[0]; return typeof x === "number" ? Math.log2(x) : null; }],
-  ["log10", (a) => { const x = a[0]; return typeof x === "number" ? Math.log10(x) : null; }],
-  ["floor", (a) => { const x = a[0]; return typeof x === "number" ? Math.floor(x) : null; }],
-  ["ceil", (a) => { const x = a[0]; return typeof x === "number" ? Math.ceil(x) : null; }],
+  [
+    "abs",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.abs(x) : null;
+    },
+  ],
+  [
+    "round",
+    (a) => {
+      const x = a[0];
+      const d = a[1];
+      return typeof x === "number" ? Number(x.toFixed(typeof d === "number" ? d : 0)) : null;
+    },
+  ],
+  [
+    "str",
+    (a) => {
+      const x = a[0];
+      return x == null ? null : String(x);
+    },
+  ],
+  [
+    "len",
+    (a) => {
+      const x = a[0];
+      return typeof x === "string" ? x.length : null;
+    },
+  ],
+  [
+    "lower",
+    (a) => {
+      const x = a[0];
+      return typeof x === "string" ? x.toLowerCase() : null;
+    },
+  ],
+  [
+    "upper",
+    (a) => {
+      const x = a[0];
+      return typeof x === "string" ? x.toUpperCase() : null;
+    },
+  ],
+  [
+    "isnull",
+    (a) => {
+      const x = a[0];
+      return x == null || (typeof x === "number" && Number.isNaN(x));
+    },
+  ],
+  [
+    "isna",
+    (a) => {
+      const x = a[0];
+      return x == null || (typeof x === "number" && Number.isNaN(x));
+    },
+  ],
+  [
+    "notnull",
+    (a) => {
+      const x = a[0];
+      return x != null && !(typeof x === "number" && Number.isNaN(x));
+    },
+  ],
+  [
+    "notna",
+    (a) => {
+      const x = a[0];
+      return x != null && !(typeof x === "number" && Number.isNaN(x));
+    },
+  ],
+  [
+    "sqrt",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.sqrt(x) : null;
+    },
+  ],
+  [
+    "log",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.log(x) : null;
+    },
+  ],
+  [
+    "log2",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.log2(x) : null;
+    },
+  ],
+  [
+    "log10",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.log10(x) : null;
+    },
+  ],
+  [
+    "floor",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.floor(x) : null;
+    },
+  ],
+  [
+    "ceil",
+    (a) => {
+      const x = a[0];
+      return typeof x === "number" ? Math.ceil(x) : null;
+    },
+  ],
 ]);
 
-function evalFuncCall(name: string, argNodes: readonly AstNode[], row: ReadonlyMap<string, Scalar>): Scalar {
+function evalFuncCall(
+  name: string,
+  argNodes: readonly AstNode[],
+  row: ReadonlyMap<string, Scalar>,
+): Scalar {
   const fn = BUILTIN_FUNCS.get(name.toLowerCase());
-  if (fn === undefined) throw new Error(`Unknown function '${name}()'`);
+  if (fn === undefined) {
+    throw new Error(`Unknown function '${name}()'`);
+  }
   return fn(argNodes.map((a) => evalNode(a, row)));
 }
 
@@ -564,7 +799,9 @@ export function queryDataFrame(df: DataFrame, expr: string): DataFrame {
   const nRows = df.shape[0];
   const keep: number[] = [];
   for (let i = 0; i < nRows; i++) {
-    if (isTruthy(evalNode(ast, buildRowMap(df, i)))) keep.push(i);
+    if (isTruthy(evalNode(ast, buildRowMap(df, i)))) {
+      keep.push(i);
+    }
   }
   return df.iloc(keep);
 }

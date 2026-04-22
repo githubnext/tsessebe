@@ -567,7 +567,10 @@ export {
   reorderLevelsSeries,
   reorderLevelsDataFrame,
 } from "./stats/swaplevel.ts";
-export type { SwapLevelDataFrameOptions, ReorderLevelsDataFrameOptions } from "./stats/swaplevel.ts";
+export type {
+  SwapLevelDataFrameOptions,
+  ReorderLevelsDataFrameOptions,
+} from "./stats/swaplevel.ts";
 export { truncateSeries, truncateDataFrame } from "./stats/truncate.ts";
 export type { TruncateOptions } from "./stats/truncate.ts";
 export { seriesBetween } from "./stats/index.ts";

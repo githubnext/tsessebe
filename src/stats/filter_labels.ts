@@ -72,7 +72,8 @@ export interface FilterLabelsOptions {
  */
 function buildPredicate(options: FilterLabelsOptions): (label: Label) => boolean {
   const { items, like, regex } = options;
-  const setCount = (items !== undefined ? 1 : 0) + (like !== undefined ? 1 : 0) + (regex !== undefined ? 1 : 0);
+  const setCount =
+    (items !== undefined ? 1 : 0) + (like !== undefined ? 1 : 0) + (regex !== undefined ? 1 : 0);
   if (setCount === 0) {
     throw new TypeError("filterDataFrame: exactly one of items, like, or regex must be specified");
   }
@@ -149,16 +150,18 @@ export function filterDataFrame(df: DataFrame, options: FilterLabelsOptions): Da
       cols.set(name, new Series<Scalar>({ data, index: newIndex, dtype: col.dtype }));
     }
     return new DataFrame(cols, newIndex);
-  } else {
-    const colNames = df.columns.values as readonly string[];
-    const kept = colNames.filter((name) => predicate(name));
-    const cols = new Map<string, Series<Scalar>>();
-    for (const name of kept) {
-      const col = df.col(name);
-      cols.set(name, new Series<Scalar>({ data: col.values as Scalar[], index: df.index, dtype: col.dtype }));
-    }
-    return new DataFrame(cols, df.index);
   }
+  const colNames = df.columns.values as readonly string[];
+  const kept = colNames.filter((name) => predicate(name));
+  const cols = new Map<string, Series<Scalar>>();
+  for (const name of kept) {
+    const col = df.col(name);
+    cols.set(
+      name,
+      new Series<Scalar>({ data: col.values as Scalar[], index: df.index, dtype: col.dtype }),
+    );
+  }
+  return new DataFrame(cols, df.index);
 }
 
 // ─── filterSeries ─────────────────────────────────────────────────────────────

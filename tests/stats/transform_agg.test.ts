@@ -17,12 +17,7 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  dataFrameTransform,
-  seriesTransform,
-} from "../../src/index.ts";
+import { DataFrame, Series, dataFrameTransform, seriesTransform } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── seriesTransform — single function ────────────────────────────────────────
@@ -36,8 +31,13 @@ describe("seriesTransform — single function", () => {
 
   test("element-wise doubling via series return", () => {
     const s = new Series<Scalar>({ data: [1, 2, 3] });
-    const result = seriesTransform(s, (x) =>
-      new Series<Scalar>({ data: x.values.map((v) => (v as number) * 2) as Scalar[], index: x.index }),
+    const result = seriesTransform(
+      s,
+      (x) =>
+        new Series<Scalar>({
+          data: x.values.map((v) => (v as number) * 2) as Scalar[],
+          index: x.index,
+        }),
     ) as Series<Scalar>;
     expect([...result.values]).toEqual([2, 4, 6]);
   });
@@ -242,7 +242,11 @@ describe("seriesTransform — Record → DataFrame", () => {
   test("custom function in record", () => {
     const s = new Series<Scalar>({ data: [1, 2, 3] });
     const result = seriesTransform(s, {
-      doubled: (x) => new Series<Scalar>({ data: x.values.map((v) => (v as number) * 2) as Scalar[], index: x.index }),
+      doubled: (x) =>
+        new Series<Scalar>({
+          data: x.values.map((v) => (v as number) * 2) as Scalar[],
+          index: x.index,
+        }),
     }) as DataFrame;
     expect([...result.col("doubled").values]).toEqual([2, 4, 6]);
   });
@@ -283,9 +287,7 @@ describe("dataFrameTransform — single function", () => {
   test("preserves row index", () => {
     const s = new Series<Scalar>({ data: [0, 0], index: ["r0", "r1"] });
     const df = new DataFrame(
-      new Map([
-        ["a", new Series<Scalar>({ data: [1, 2] as Scalar[], index: s.index })],
-      ]),
+      new Map([["a", new Series<Scalar>({ data: [1, 2] as Scalar[], index: s.index })]]),
       s.index,
     );
     const result = dataFrameTransform(df, "cumsum");
@@ -371,14 +373,19 @@ describe("seriesTransform — property tests", () => {
   test("identity transform preserves all values", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (arr) => {
           const s = new Series<Scalar>({ data: arr as Scalar[] });
           const result = seriesTransform(s, (x) => x) as Series<Scalar>;
           for (let i = 0; i < arr.length; i++) {
             const orig = arr[i] as number;
             const got = result.values[i] as number;
-            if (Math.abs(orig - got) > 1e-9) return false;
+            if (Math.abs(orig - got) > 1e-9) {
+              return false;
+            }
           }
           return true;
         },
@@ -389,12 +396,15 @@ describe("seriesTransform — property tests", () => {
   test("cumsum last element equals sum", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (arr) => {
           const s = new Series<Scalar>({ data: arr as Scalar[] });
           const cumResult = seriesTransform(s, "cumsum") as Series<Scalar>;
           const sumResult = seriesTransform(s, "sum") as Series<Scalar>;
-          const lastCum = cumResult.values[cumResult.values.length - 1] as number;
+          const lastCum = cumResult.values.at(-1) as number;
           const sum = sumResult.values[0] as number;
           return Math.abs(lastCum - sum) < 1e-6;
         },

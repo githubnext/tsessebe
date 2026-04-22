@@ -9,12 +9,7 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import {
-  DataFrame,
-  Series,
-  combineDataFrame,
-  combineSeries,
-} from "../../src/index.ts";
+import { DataFrame, Series, combineDataFrame, combineSeries } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 describe("combineSeries", () => {
@@ -36,8 +31,12 @@ describe("combineSeries", () => {
     const a = new Series<Scalar>({ data: [1, 2], index: ["x", "y"] });
     const b = new Series<Scalar>({ data: [10, 30], index: ["x", "z"] });
     const result = combineSeries(a, b, (x, y) => {
-      if (x === null) return y;
-      if (y === null) return x;
+      if (x === null) {
+        return y;
+      }
+      if (y === null) {
+        return x;
+      }
       return (x as number) + (y as number);
     });
     // x: 1+10=11, y: 2+null→2, z: null+30→30
@@ -85,8 +84,12 @@ describe("combineSeries", () => {
     const a = new Series<Scalar>({ data: [1, 2], index: ["a", "b"] });
     const b = new Series<Scalar>({ data: [10, 20], index: ["c", "d"] });
     const result = combineSeries(a, b, (x, y) => {
-      if (x === null) return y;
-      if (y === null) return x;
+      if (x === null) {
+        return y;
+      }
+      if (y === null) {
+        return x;
+      }
       return (x as number) + (y as number);
     });
     expect(result.index.size).toBe(4);
@@ -112,8 +115,12 @@ describe("combineSeries", () => {
           const a = new Series<Scalar>({ data: arrA, index: idxA });
           const b = new Series<Scalar>({ data: arrB, index: idxB });
           const result = combineSeries(a, b, (x, y) => {
-            if (x === null) return y;
-            if (y === null) return x;
+            if (x === null) {
+              return y;
+            }
+            if (y === null) {
+              return x;
+            }
             return (x as number) + (y as number);
           });
           return result.index.size >= Math.max(arrA.length, arrB.length);
@@ -136,8 +143,14 @@ describe("combineSeries", () => {
         }),
         (arrA, arrB) => {
           const len = Math.min(arrA.length, arrB.length);
-          const a = new Series<Scalar>({ data: arrA.slice(0, len), index: Array.from({ length: len }, (_, i) => i) });
-          const b = new Series<Scalar>({ data: arrB.slice(0, len), index: Array.from({ length: len }, (_, i) => i) });
+          const a = new Series<Scalar>({
+            data: arrA.slice(0, len),
+            index: Array.from({ length: len }, (_, i) => i),
+          });
+          const b = new Series<Scalar>({
+            data: arrB.slice(0, len),
+            index: Array.from({ length: len }, (_, i) => i),
+          });
           const result = combineSeries(a, b, (x, y) => (x as number) + (y as number));
           const vals = result.values as number[];
           return vals.every((v, i) => {
@@ -173,12 +186,9 @@ describe("combineDataFrame", () => {
   test("overwrite=false preserves unshared columns unchanged", () => {
     const a = DataFrame.fromColumns({ x: [1, 2], y: [10, 20] });
     const b = DataFrame.fromColumns({ x: [100, 200], z: [1000, 2000] });
-    const result = combineDataFrame(
-      a,
-      b,
-      (p, q) => Math.min(p as number, q as number),
-      { overwrite: false },
-    );
+    const result = combineDataFrame(a, b, (p, q) => Math.min(p as number, q as number), {
+      overwrite: false,
+    });
     // y only in a; overwrite=false → preserved as-is
     expect([...result.col("y").values]).toEqual([10, 20]);
     // z only in b; overwrite=false → preserved as-is
@@ -227,25 +237,30 @@ describe("combineDataFrame", () => {
           const uniqueB = [...new Set(colsB)];
           const dataA: Record<string, number[]> = {};
           const dataB: Record<string, number[]> = {};
-          for (const c of uniqueA) dataA[c] = [1, 2];
-          for (const c of uniqueB) dataB[c] = [3, 4];
+          for (const c of uniqueA) {
+            dataA[c] = [1, 2];
+          }
+          for (const c of uniqueB) {
+            dataB[c] = [3, 4];
+          }
           const a = DataFrame.fromColumns(dataA);
           const b = DataFrame.fromColumns(dataB);
           const result = combineDataFrame(
             a,
             b,
             (p, q) => {
-              if (p === null) return q;
-              if (q === null) return p;
+              if (p === null) {
+                return q;
+              }
+              if (q === null) {
+                return p;
+              }
               return p;
             },
             { overwrite: false },
           );
           const resultCols = new Set(result.columns.values);
-          return (
-            uniqueA.every((c) => resultCols.has(c)) &&
-            uniqueB.every((c) => resultCols.has(c))
-          );
+          return uniqueA.every((c) => resultCols.has(c)) && uniqueB.every((c) => resultCols.has(c));
         },
       ),
     );

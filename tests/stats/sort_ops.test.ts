@@ -217,19 +217,13 @@ describe("sortValuesDataFrame", () => {
   });
 
   it("preserves row index labels after sort", () => {
-    const df = DataFrame.fromColumns(
-      { a: [3, 1, 2] },
-      { index: ["r2", "r0", "r1"] },
-    );
+    const df = DataFrame.fromColumns({ a: [3, 1, 2] }, { index: ["r2", "r0", "r1"] });
     const sorted = sortValuesDataFrame(df, "a");
     expect([...sorted.index.values]).toEqual(["r0", "r1", "r2"]);
   });
 
   it("ignoreIndex resets the row index", () => {
-    const df = DataFrame.fromColumns(
-      { a: [3, 1, 2] },
-      { index: ["r2", "r0", "r1"] },
-    );
+    const df = DataFrame.fromColumns({ a: [3, 1, 2] }, { index: ["r2", "r0", "r1"] });
     const sorted = sortValuesDataFrame(df, "a", { ignoreIndex: true });
     expect([...sorted.index.values]).toEqual([0, 1, 2]);
     expect([...sorted.col("a").values]).toEqual([1, 2, 3]);
@@ -271,20 +265,14 @@ describe("sortValuesDataFrame", () => {
 
 describe("sortIndexDataFrame", () => {
   it("sorts rows by index labels ascending", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3] },
-      { index: ["b", "a", "c"] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3] }, { index: ["b", "a", "c"] });
     const sorted = sortIndexDataFrame(df);
     expect([...sorted.index.values]).toEqual(["a", "b", "c"]);
     expect([...sorted.col("x").values]).toEqual([2, 1, 3]);
   });
 
   it("sorts rows by index labels descending", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3] },
-      { index: ["b", "a", "c"] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3] }, { index: ["b", "a", "c"] });
     const sorted = sortIndexDataFrame(df, { ascending: false });
     expect([...sorted.index.values]).toEqual(["c", "b", "a"]);
     expect([...sorted.col("x").values]).toEqual([3, 1, 2]);
@@ -303,30 +291,21 @@ describe("sortIndexDataFrame", () => {
   });
 
   it("ignoreIndex resets the row index to 0,1,2…", () => {
-    const df = DataFrame.fromColumns(
-      { x: [10, 20] },
-      { index: ["b", "a"] },
-    );
+    const df = DataFrame.fromColumns({ x: [10, 20] }, { index: ["b", "a"] });
     const sorted = sortIndexDataFrame(df, { ignoreIndex: true });
     expect([...sorted.index.values]).toEqual([0, 1]);
     expect([...sorted.col("x").values]).toEqual([20, 10]);
   });
 
   it("already-sorted DataFrame is unchanged", () => {
-    const df = DataFrame.fromColumns(
-      { v: [1, 2, 3] },
-      { index: ["a", "b", "c"] },
-    );
+    const df = DataFrame.fromColumns({ v: [1, 2, 3] }, { index: ["a", "b", "c"] });
     const sorted = sortIndexDataFrame(df);
     expect([...sorted.index.values]).toEqual(["a", "b", "c"]);
     expect([...sorted.col("v").values]).toEqual([1, 2, 3]);
   });
 
   it("does not mutate the original", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3] },
-      { index: ["b", "a", "c"] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3] }, { index: ["b", "a", "c"] });
     sortIndexDataFrame(df);
     expect([...df.index.values]).toEqual(["b", "a", "c"]);
   });

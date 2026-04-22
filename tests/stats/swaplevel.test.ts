@@ -48,7 +48,7 @@ function dfWithMultiIndex(
   names?: (string | null)[],
 ): DataFrame {
   const mi = MultiIndex.fromTuples(tuples, names !== undefined ? { names } : undefined);
-  const firstCol = Object.keys(data)[0]!;
+  const _firstCol = Object.keys(data)[0]!;
   const df = DataFrame.fromColumns(data, {
     index: mi as unknown as Index<Label>,
   });
@@ -82,7 +82,14 @@ describe("swapLevelSeries", () => {
   });
 
   test("explicit i=0, j=1", () => {
-    const s = seriesWithMultiIndex([1, 2, 3], [["x", "A"], ["y", "B"], ["z", "C"]]);
+    const s = seriesWithMultiIndex(
+      [1, 2, 3],
+      [
+        ["x", "A"],
+        ["y", "B"],
+        ["z", "C"],
+      ],
+    );
     const swapped = swapLevelSeries(s, 0, 1);
     const result = miToTuples(swapped.index as unknown as MultiIndex);
     expect(result[0]).toEqual(["A", "x"]);
@@ -91,7 +98,13 @@ describe("swapLevelSeries", () => {
   });
 
   test("negative index -2, -1 is the default", () => {
-    const s = seriesWithMultiIndex([1, 2], [["a", 1], ["b", 2]]);
+    const s = seriesWithMultiIndex(
+      [1, 2],
+      [
+        ["a", 1],
+        ["b", 2],
+      ],
+    );
     const explicit = swapLevelSeries(s, 0, 1);
     const defaultSwap = swapLevelSeries(s);
     expect(miToTuples(explicit.index as unknown as MultiIndex)).toEqual(
@@ -100,7 +113,13 @@ describe("swapLevelSeries", () => {
   });
 
   test("swap same level is identity", () => {
-    const s = seriesWithMultiIndex([1, 2], [["a", 1], ["b", 2]]);
+    const s = seriesWithMultiIndex(
+      [1, 2],
+      [
+        ["a", 1],
+        ["b", 2],
+      ],
+    );
     const result = swapLevelSeries(s, 0, 0);
     expect(miToTuples(result.index as unknown as MultiIndex)).toEqual(
       miToTuples(s.index as unknown as MultiIndex),
@@ -110,7 +129,10 @@ describe("swapLevelSeries", () => {
   test("swap by name", () => {
     const s = seriesWithMultiIndex(
       [10, 20],
-      [["a", 1], ["b", 2]],
+      [
+        ["a", 1],
+        ["b", 2],
+      ],
       ["letter", "number"],
     );
     const swapped = swapLevelSeries(s, "letter", "number");
@@ -130,7 +152,10 @@ describe("swapLevelSeries", () => {
   });
 
   test("three-level swap preserves third level unchanged", () => {
-    const tuples3 = [["a", 1, "x"], ["b", 2, "y"]] as (readonly Label[])[];
+    const tuples3 = [
+      ["a", 1, "x"],
+      ["b", 2, "y"],
+    ] as (readonly Label[])[];
     const s = seriesWithMultiIndex([10, 20], tuples3);
     const swapped = swapLevelSeries(s, 0, 1);
     const result = miToTuples(swapped.index as unknown as MultiIndex);
@@ -139,7 +164,14 @@ describe("swapLevelSeries", () => {
   });
 
   test("double swap restores original", () => {
-    const s = seriesWithMultiIndex([10, 20, 30], [["a", 1], ["b", 2], ["c", 3]]);
+    const s = seriesWithMultiIndex(
+      [10, 20, 30],
+      [
+        ["a", 1],
+        ["b", 2],
+        ["c", 3],
+      ],
+    );
     const once = swapLevelSeries(s, 0, 1);
     const twice = swapLevelSeries(once, 0, 1);
     expect(miToTuples(twice.index as unknown as MultiIndex)).toEqual(
@@ -151,10 +183,7 @@ describe("swapLevelSeries", () => {
     fc.assert(
       fc.property(
         fc.array(
-          fc.tuple(
-            fc.string({ minLength: 1, maxLength: 3 }),
-            fc.integer({ min: 0, max: 9 }),
-          ),
+          fc.tuple(fc.string({ minLength: 1, maxLength: 3 }), fc.integer({ min: 0, max: 9 })),
           { minLength: 1, maxLength: 8 },
         ),
         (pairs) => {
@@ -177,10 +206,11 @@ describe("swapLevelSeries", () => {
 
 describe("swapLevelDataFrame", () => {
   test("swaps row index levels", () => {
-    const df = dfWithMultiIndex(
-      { x: [1, 2, 3], y: [4, 5, 6] },
-      [["a", 1], ["b", 2], ["c", 3]],
-    );
+    const df = dfWithMultiIndex({ x: [1, 2, 3], y: [4, 5, 6] }, [
+      ["a", 1],
+      ["b", 2],
+      ["c", 3],
+    ]);
     const swapped = swapLevelDataFrame(df, 0, 1);
     const mi = swapped.index as unknown as MultiIndex;
     expect(miToTuples(mi)[0]).toEqual([1, "a"]);
@@ -188,16 +218,19 @@ describe("swapLevelDataFrame", () => {
   });
 
   test("data values are preserved after swap", () => {
-    const df = dfWithMultiIndex(
-      { val: [10, 20] },
-      [["x", 1], ["y", 2]],
-    );
+    const df = dfWithMultiIndex({ val: [10, 20] }, [
+      ["x", 1],
+      ["y", 2],
+    ]);
     const swapped = swapLevelDataFrame(df, 0, 1);
     expect(swapped.col("val").values).toEqual([10, 20]);
   });
 
   test("default axes parameter is 0 (rows)", () => {
-    const df = dfWithMultiIndex({ v: [1, 2] }, [["a", 1], ["b", 2]]);
+    const df = dfWithMultiIndex({ v: [1, 2] }, [
+      ["a", 1],
+      ["b", 2],
+    ]);
     const dfAxis0 = swapLevelDataFrame(df, 0, 1, { axis: 0 });
     const dfDefault = swapLevelDataFrame(df, 0, 1);
     const mi0 = dfAxis0.index as unknown as MultiIndex;
@@ -215,7 +248,10 @@ describe("swapLevelDataFrame", () => {
 
 describe("reorderLevelsSeries", () => {
   test("reorder [0,1,2] → [2,0,1]", () => {
-    const tuples = [["a", 1, "x"], ["b", 2, "y"]] as (readonly Label[])[];
+    const tuples = [
+      ["a", 1, "x"],
+      ["b", 2, "y"],
+    ] as (readonly Label[])[];
     const s = seriesWithMultiIndex([10, 20], tuples);
     const reordered = reorderLevelsSeries(s, [2, 0, 1]);
     const result = miToTuples(reordered.index as unknown as MultiIndex);
@@ -224,7 +260,13 @@ describe("reorderLevelsSeries", () => {
   });
 
   test("identity reorder preserves tuples", () => {
-    const s = seriesWithMultiIndex([1, 2], [["a", 1], ["b", 2]]);
+    const s = seriesWithMultiIndex(
+      [1, 2],
+      [
+        ["a", 1],
+        ["b", 2],
+      ],
+    );
     const result = reorderLevelsSeries(s, [0, 1]);
     expect(miToTuples(result.index as unknown as MultiIndex)).toEqual(
       miToTuples(s.index as unknown as MultiIndex),
@@ -232,14 +274,24 @@ describe("reorderLevelsSeries", () => {
   });
 
   test("reorder preserves values", () => {
-    const s = seriesWithMultiIndex([100, 200, 300], [["a", 1], ["b", 2], ["c", 3]]);
+    const s = seriesWithMultiIndex(
+      [100, 200, 300],
+      [
+        ["a", 1],
+        ["b", 2],
+        ["c", 3],
+      ],
+    );
     expect(reorderLevelsSeries(s, [1, 0]).values).toEqual([100, 200, 300]);
   });
 
   test("reorder by name", () => {
     const s = seriesWithMultiIndex(
       [1, 2],
-      [["a", 1], ["b", 2]],
+      [
+        ["a", 1],
+        ["b", 2],
+      ],
       ["letter", "number"],
     );
     const reordered = reorderLevelsSeries(s, ["number", "letter"]);
@@ -264,10 +316,10 @@ describe("reorderLevelsSeries", () => {
 
 describe("reorderLevelsDataFrame", () => {
   test("reorders row index levels", () => {
-    const df = dfWithMultiIndex(
-      { a: [1, 2] },
-      [["x", 10], ["y", 20]],
-    );
+    const df = dfWithMultiIndex({ a: [1, 2] }, [
+      ["x", 10],
+      ["y", 20],
+    ]);
     const reordered = reorderLevelsDataFrame(df, [1, 0]);
     const mi = reordered.index as unknown as MultiIndex;
     expect(miToTuples(mi)[0]).toEqual([10, "x"]);
@@ -275,7 +327,10 @@ describe("reorderLevelsDataFrame", () => {
   });
 
   test("data preserved after reorder", () => {
-    const df = dfWithMultiIndex({ v: [5, 15] }, [["a", 1], ["b", 2]]);
+    const df = dfWithMultiIndex({ v: [5, 15] }, [
+      ["a", 1],
+      ["b", 2],
+    ]);
     const reordered = reorderLevelsDataFrame(df, [1, 0]);
     expect(reordered.col("v").values).toEqual([5, 15]);
   });

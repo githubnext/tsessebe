@@ -127,10 +127,7 @@ describe("keepFalse", () => {
           const falseVals = [...keepFalse(s, mask).values] as number[];
           const combined = [...trueVals, ...falseVals].sort((a, b) => a - b);
           const original = vals.slice(0, len).sort((a, b) => a - b);
-          return (
-            combined.length === original.length &&
-            combined.every((v, i) => v === original[i])
-          );
+          return combined.length === original.length && combined.every((v, i) => v === original[i]);
         },
       ),
     );
@@ -191,17 +188,14 @@ describe("filterBy", () => {
   // property: filterBy result row count equals number of truthy mask values
   test("property: result rows = count of truthy mask values", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.boolean(), { minLength: 0, maxLength: 10 }),
-        (mask) => {
-          const df = DataFrame.fromColumns({
-            v: Array.from({ length: mask.length }, (_, i) => i),
-          });
-          const result = filterBy(df, mask);
-          const expected = mask.filter(Boolean).length;
-          return result.index.size === expected;
-        },
-      ),
+      fc.property(fc.array(fc.boolean(), { minLength: 0, maxLength: 10 }), (mask) => {
+        const df = DataFrame.fromColumns({
+          v: Array.from({ length: mask.length }, (_, i) => i),
+        });
+        const result = filterBy(df, mask);
+        const expected = mask.filter(Boolean).length;
+        return result.index.size === expected;
+      }),
     );
   });
 });

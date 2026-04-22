@@ -4,11 +4,11 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series } from "../../src/index.ts";
+import { Series } from "../../src/index.ts";
 import {
+  strFindFirst,
   strFindall,
   strFindallCount,
-  strFindFirst,
   strFindallExpand,
 } from "../../src/stats/str_findall.ts";
 

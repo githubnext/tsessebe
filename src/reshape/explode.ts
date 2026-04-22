@@ -192,7 +192,9 @@ export function explodeDataFrame(
       outLabels.push(label);
       for (const col of allCols) {
         const colArr = outData[col];
-        if (colArr === undefined) continue;
+        if (colArr === undefined) {
+          continue;
+        }
         if (explodeCols.includes(col)) {
           const val = df.col(col).iat(i);
           const cells = expandCell(val);

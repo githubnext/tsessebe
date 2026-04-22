@@ -14,8 +14,8 @@ import {
   firstValidIndex,
   itemSeries,
   lastValidIndex,
-  squeezeSeries,
   squeezeDataFrame,
+  squeezeSeries,
 } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
@@ -327,10 +327,7 @@ describe("dataFrameFirstValidIndex", () => {
   });
 
   it("uses the row index label (not position) when custom index is set", () => {
-    const df = DataFrame.fromColumns(
-      { A: [null, null, 5] },
-      { index: ["r0", "r1", "r2"] },
-    );
+    const df = DataFrame.fromColumns({ A: [null, null, 5] }, { index: ["r0", "r1", "r2"] });
     expect(dataFrameFirstValidIndex(df)).toBe("r2");
   });
 });
@@ -357,10 +354,7 @@ describe("dataFrameLastValidIndex", () => {
   });
 
   it("uses the row index label", () => {
-    const df = DataFrame.fromColumns(
-      { A: [5, null, null] },
-      { index: ["x", "y", "z"] },
-    );
+    const df = DataFrame.fromColumns({ A: [5, null, null] }, { index: ["x", "y", "z"] });
     expect(dataFrameLastValidIndex(df)).toBe("x");
   });
 });

@@ -7,9 +7,9 @@ import * as fc from "fast-check";
 import { DataFrame } from "../../src/index.ts";
 import {
   toJsonDenormalize,
+  toJsonIndex,
   toJsonRecords,
   toJsonSplit,
-  toJsonIndex,
 } from "../../src/io/to_json_normalize.ts";
 
 // ─── toJsonDenormalize ────────────────────────────────────────────────────────
@@ -50,8 +50,8 @@ describe("toJsonDenormalize", () => {
 
   test("custom separator", () => {
     const df = DataFrame.fromColumns({
-      "x__y": [1, 2],
-      "x__z": [3, 4],
+      x__y: [1, 2],
+      x__z: [3, 4],
     });
     const result = toJsonDenormalize(df, { sep: "__" });
     expect(result[0]).toEqual({ x: { y: 1, z: 3 } });
@@ -89,10 +89,12 @@ describe("toJsonDenormalize", () => {
   test("property: round-trip for flat numeric DataFrames", () => {
     fc.assert(
       fc.property(
-        fc.record({
-          x: fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 5 }),
-          y: fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 5 }),
-        }).filter((r) => r.x.length === r.y.length),
+        fc
+          .record({
+            x: fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 5 }),
+            y: fc.array(fc.integer({ min: -100, max: 100 }), { minLength: 1, maxLength: 5 }),
+          })
+          .filter((r) => r.x.length === r.y.length),
         ({ x, y }) => {
           const df = DataFrame.fromColumns({ x, y });
           const records = toJsonDenormalize(df);
@@ -160,7 +162,10 @@ describe("toJsonSplit", () => {
     const df = DataFrame.fromColumns({ a: [1, 2], b: ["x", "y"] });
     const result = toJsonSplit(df);
     expect(result.columns).toEqual(["a", "b"]);
-    expect(result.data).toEqual([[1, "x"], [2, "y"]]);
+    expect(result.data).toEqual([
+      [1, "x"],
+      [2, "y"],
+    ]);
     expect(result.index).toEqual([0, 1]);
   });
 
@@ -193,14 +198,11 @@ describe("toJsonSplit", () => {
   // property: data rows count equals index.size
   test("property: data length equals row count", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { minLength: 0, maxLength: 10 }),
-        (nums) => {
-          const df = DataFrame.fromColumns({ n: nums });
-          const result = toJsonSplit(df);
-          expect(result.data.length).toBe(nums.length);
-        },
-      ),
+      fc.property(fc.array(fc.integer(), { minLength: 0, maxLength: 10 }), (nums) => {
+        const df = DataFrame.fromColumns({ n: nums });
+        const result = toJsonSplit(df);
+        expect(result.data.length).toBe(nums.length);
+      }),
     );
   });
 });
@@ -240,14 +242,11 @@ describe("toJsonIndex", () => {
   // property: number of keys equals row count
   test("property: key count equals rows", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { minLength: 0, maxLength: 10 }),
-        (nums) => {
-          const df = DataFrame.fromColumns({ n: nums });
-          const result = toJsonIndex(df);
-          expect(Object.keys(result).length).toBe(nums.length);
-        },
-      ),
+      fc.property(fc.array(fc.integer(), { minLength: 0, maxLength: 10 }), (nums) => {
+        const df = DataFrame.fromColumns({ n: nums });
+        const result = toJsonIndex(df);
+        expect(Object.keys(result).length).toBe(nums.length);
+      }),
     );
   });
 });

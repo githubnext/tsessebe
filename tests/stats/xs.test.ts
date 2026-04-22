@@ -4,17 +4,14 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Index, MultiIndex, Series } from "../../src/index.ts";
+import { DataFrame, type Index, MultiIndex, Series } from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 import { xsDataFrame, xsSeries } from "../../src/stats/xs.ts";
 
 // ─── xsDataFrame — flat index ─────────────────────────────────────────────────
 
 describe("xsDataFrame (flat index, axis=0)", () => {
-  const df = DataFrame.fromColumns(
-    { a: [1, 2, 3], b: [4, 5, 6] },
-    { index: ["x", "y", "z"] },
-  );
+  const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] }, { index: ["x", "y", "z"] });
 
   test("single-row key returns Series of column values", () => {
     const result = xsDataFrame(df, "x");
@@ -47,10 +44,7 @@ describe("xsDataFrame (flat index, axis=0)", () => {
 // ─── xsDataFrame — axis=1 (columns) ──────────────────────────────────────────
 
 describe("xsDataFrame (axis=1)", () => {
-  const df = DataFrame.fromColumns(
-    { a: [1, 2, 3], b: [4, 5, 6] },
-    { index: ["x", "y", "z"] },
-  );
+  const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] }, { index: ["x", "y", "z"] });
 
   test("returns the column as a Series", () => {
     const result = xsDataFrame(df, "a", { axis: 1 });
@@ -77,10 +71,7 @@ describe("xsDataFrame (axis=1)", () => {
 // ─── xsDataFrame — duplicate index labels → DataFrame result ─────────────────
 
 describe("xsDataFrame (duplicate labels)", () => {
-  const df = DataFrame.fromColumns(
-    { val: [10, 20, 30, 40] },
-    { index: ["a", "b", "a", "c"] },
-  );
+  const df = DataFrame.fromColumns({ val: [10, 20, 30, 40] }, { index: ["a", "b", "a", "c"] });
 
   test("multiple matches return DataFrame", () => {
     const result = xsDataFrame(df, "a");

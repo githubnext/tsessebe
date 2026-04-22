@@ -123,8 +123,7 @@ export function join(left: DataFrame, right: DataFrame, options?: JoinOptions): 
   const overlap = overlappingCols(left, right, on);
   if (overlap.length > 0 && lsuffix === "" && rsuffix === "") {
     throw new Error(
-      `join: columns overlap but no suffix specified: ${overlap.join(", ")}. ` +
-        `Pass lsuffix or rsuffix to disambiguate.`,
+      `join: columns overlap but no suffix specified: ${overlap.join(", ")}. Pass lsuffix or rsuffix to disambiguate.`,
     );
   }
 
@@ -206,8 +205,7 @@ export function crossJoin(
   const overlap = overlappingCols(left, right, undefined);
   if (overlap.length > 0 && lsuffix === "" && rsuffix === "") {
     throw new Error(
-      `crossJoin: columns overlap but no suffix specified: ${overlap.join(", ")}. ` +
-        `Pass lsuffix or rsuffix to disambiguate.`,
+      `crossJoin: columns overlap but no suffix specified: ${overlap.join(", ")}. Pass lsuffix or rsuffix to disambiguate.`,
     );
   }
 

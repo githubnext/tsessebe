@@ -42,14 +42,11 @@ describe("seriesAt", () => {
 
   it("property: seriesAt matches direct s.at(label)", () => {
     fc.assert(
-      fc.property(
-        fc.array(fc.integer(), { minLength: 1, maxLength: 20 }),
-        (data) => {
-          const s = new Series({ data });
-          const i = Math.floor(data.length / 2);
-          return seriesAt(s, i) === s.at(i);
-        },
-      ),
+      fc.property(fc.array(fc.integer(), { minLength: 1, maxLength: 20 }), (data) => {
+        const s = new Series({ data });
+        const i = Math.floor(data.length / 2);
+        return seriesAt(s, i) === s.at(i);
+      }),
     );
   });
 });
@@ -97,20 +94,14 @@ describe("seriesIat", () => {
 
 describe("dataFrameAt", () => {
   it("returns scalar by row label and column name", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3], y: [4, 5, 6] },
-      { index: ["r0", "r1", "r2"] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3], y: [4, 5, 6] }, { index: ["r0", "r1", "r2"] });
     expect(dataFrameAt(df, "r0", "x")).toBe(1);
     expect(dataFrameAt(df, "r1", "y")).toBe(5);
     expect(dataFrameAt(df, "r2", "x")).toBe(3);
   });
 
   it("returns null for null values", () => {
-    const df = DataFrame.fromColumns(
-      { a: [null, 2] },
-      { index: ["r0", "r1"] },
-    );
+    const df = DataFrame.fromColumns({ a: [null, 2] }, { index: ["r0", "r1"] });
     expect(dataFrameAt(df, "r0", "a")).toBeNull();
   });
 
@@ -152,10 +143,7 @@ describe("dataFrameAt", () => {
 
 describe("dataFrameIat", () => {
   it("returns scalar by integer row and column position", () => {
-    const df = DataFrame.fromColumns(
-      { x: [1, 2, 3], y: [4, 5, 6] },
-      { index: ["r0", "r1", "r2"] },
-    );
+    const df = DataFrame.fromColumns({ x: [1, 2, 3], y: [4, 5, 6] }, { index: ["r0", "r1", "r2"] });
     expect(dataFrameIat(df, 0, 0)).toBe(1); // row 0, col 0 = "x"
     expect(dataFrameIat(df, 1, 1)).toBe(5); // row 1, col 1 = "y"
     expect(dataFrameIat(df, 2, 0)).toBe(3);
@@ -192,9 +180,7 @@ describe("dataFrameIat", () => {
         fc.array(fc.integer({ min: 0, max: 99 }), { minLength: 2, maxLength: 8 }),
         (col1, col2) => {
           const nRows = Math.min(col1.length, col2.length);
-          const df = DataFrame.fromColumns(
-            { a: col1.slice(0, nRows), b: col2.slice(0, nRows) },
-          );
+          const df = DataFrame.fromColumns({ a: col1.slice(0, nRows), b: col2.slice(0, nRows) });
           const ri = Math.floor(nRows / 2);
           return (
             dataFrameIat(df, ri, 0) === df.col("a").iat(ri) &&

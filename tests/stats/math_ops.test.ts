@@ -12,7 +12,14 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Series, absDataFrame, absSeries, roundDataFrame, roundSeries } from "../../src/index.ts";
+import {
+  DataFrame,
+  Series,
+  absDataFrame,
+  absSeries,
+  roundDataFrame,
+  roundSeries,
+} from "../../src/index.ts";
 import type { Scalar } from "../../src/index.ts";
 
 // ─── absSeries ────────────────────────────────────────────────────────────────
@@ -193,7 +200,10 @@ describe("math_ops property tests", () => {
   test("abs is idempotent: abs(abs(x)) == abs(x)", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const s = new Series<Scalar>({ data });
           const once = absSeries(s);
@@ -207,7 +217,10 @@ describe("math_ops property tests", () => {
   test("abs values are all >= 0", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (data) => {
           const s = new Series<Scalar>({ data });
           for (const v of absSeries(s).values) {

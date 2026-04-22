@@ -104,18 +104,16 @@ export function seriesUpdate(
 
     if (otherMap.has(label)) {
       const otherVal = otherMap.get(label) as Scalar;
-      if (!isMissing(otherVal)) {
-        if (!overwrite && !isMissing(selfVal)) {
-          if (errors === "raise") {
-            throw new RangeError(
-              `update: non-NA value overlap at label "${String(label)}" and overwrite=false`,
-            );
-          }
-          newData.push(selfVal);
-        } else {
-          newData.push(otherVal);
-        }
+      if (isMissing(otherVal)) {
+        newData.push(selfVal);
+      } else if (overwrite || isMissing(selfVal)) {
+        newData.push(otherVal);
       } else {
+        if (errors === "raise") {
+          throw new RangeError(
+            `update: non-NA value overlap at label "${String(label)}" and overwrite=false`,
+          );
+        }
         newData.push(selfVal);
       }
     } else {
@@ -180,7 +178,10 @@ export function dataFrameUpdate(
       cols.set(name, updated);
     } else {
       const col = self.col(name);
-      cols.set(name, new Series<Scalar>({ data: col.values as Scalar[], index: self.index, dtype: col.dtype }));
+      cols.set(
+        name,
+        new Series<Scalar>({ data: col.values as Scalar[], index: self.index, dtype: col.dtype }),
+      );
     }
   }
 

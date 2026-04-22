@@ -93,11 +93,7 @@ function resolveLevel(mi: MultiIndex, level: number | string | undefined): numbe
  * Find all positions in `idx` where the value at `levelIdx` equals `key`.
  * For a flat Index, `levelIdx` is ignored.
  */
-function matchingRows(
-  idx: Index<Label> | MultiIndex,
-  key: Label,
-  levelIdx: number,
-): number[] {
+function matchingRows(idx: Index<Label> | MultiIndex, key: Label, levelIdx: number): number[] {
   const positions: number[] = [];
 
   if (idx instanceof MultiIndex) {

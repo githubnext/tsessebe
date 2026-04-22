@@ -304,7 +304,10 @@ function applyWeek(date: Date, n: number, jsDow: number | null): Date {
 export class Day implements DateOffset {
   readonly name = "Day";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   /** Convenience factory: `Day.of(3)` equivalent to `new Day(3)`. */
   static of(n = 1): Day {
@@ -347,7 +350,10 @@ export class Day implements DateOffset {
 export class Hour implements DateOffset {
   readonly name = "Hour";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): Hour {
     return new Hour(n);
@@ -386,7 +392,10 @@ export class Hour implements DateOffset {
 export class Minute implements DateOffset {
   readonly name = "Minute";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): Minute {
     return new Minute(n);
@@ -425,7 +434,10 @@ export class Minute implements DateOffset {
 export class Second implements DateOffset {
   readonly name = "Second";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): Second {
     return new Second(n);
@@ -464,7 +476,10 @@ export class Second implements DateOffset {
 export class Milli implements DateOffset {
   readonly name = "Milli";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): Milli {
     return new Milli(n);
@@ -522,12 +537,11 @@ export class Week implements DateOffset {
    * Weekday anchor (pandas convention: 0 = Monday, …, 6 = Sunday).
    * `null` means no alignment.
    */
+  readonly n: number;
   readonly weekday: number | null;
 
-  constructor(
-    readonly n = 1,
-    options: WeekOptions = {},
-  ) {
+  constructor(n = 1, options: WeekOptions = {}) {
+    this.n = n;
     this.weekday = options.weekday ?? null;
   }
 
@@ -591,7 +605,10 @@ export class Week implements DateOffset {
 export class MonthEnd implements DateOffset {
   readonly name = "MonthEnd";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): MonthEnd {
     return new MonthEnd(n);
@@ -652,7 +669,10 @@ export class MonthEnd implements DateOffset {
 export class MonthBegin implements DateOffset {
   readonly name = "MonthBegin";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): MonthBegin {
     return new MonthBegin(n);
@@ -709,7 +729,10 @@ export class MonthBegin implements DateOffset {
 export class YearEnd implements DateOffset {
   readonly name = "YearEnd";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): YearEnd {
     return new YearEnd(n);
@@ -761,7 +784,10 @@ export class YearEnd implements DateOffset {
 export class YearBegin implements DateOffset {
   readonly name = "YearBegin";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): YearBegin {
     return new YearBegin(n);
@@ -816,7 +842,10 @@ export class YearBegin implements DateOffset {
 export class BusinessDay implements DateOffset {
   readonly name = "BusinessDay";
 
-  constructor(readonly n = 1) {}
+  readonly n: number;
+  constructor(n = 1) {
+    this.n = n;
+  }
 
   static of(n = 1): BusinessDay {
     return new BusinessDay(n);

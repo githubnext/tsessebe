@@ -45,11 +45,15 @@ describe("Timedelta", () => {
   });
 
   it("add()", () => {
-    expect(Timedelta.fromMilliseconds(1000).add(Timedelta.fromMilliseconds(2000)).totalMs).toBe(3000);
+    expect(Timedelta.fromMilliseconds(1000).add(Timedelta.fromMilliseconds(2000)).totalMs).toBe(
+      3000,
+    );
   });
 
   it("subtract()", () => {
-    expect(Timedelta.fromMilliseconds(5000).subtract(Timedelta.fromMilliseconds(2000)).totalMs).toBe(3000);
+    expect(
+      Timedelta.fromMilliseconds(5000).subtract(Timedelta.fromMilliseconds(2000)).totalMs,
+    ).toBe(3000);
   });
 
   it("scale()", () => {

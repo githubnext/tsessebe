@@ -81,8 +81,14 @@ describe("seriesDotSeries", () => {
   test("property: commutativity", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 10 }),
-        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), { minLength: 1, maxLength: 10 }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 10,
+        }),
+        fc.array(fc.float({ noNaN: true, noDefaultInfinity: true }), {
+          minLength: 1,
+          maxLength: 10,
+        }),
         (xs, ys) => {
           const len = Math.min(xs.length, ys.length);
           const a = new Series<Scalar>({ data: xs.slice(0, len) as Scalar[] });
@@ -185,9 +191,7 @@ describe("dataFrameDotDataFrame", () => {
     const A = DataFrame.fromColumns({ a: [1], b: [2] });
     // B: rows indexed by ["a","b"] which match A's columns
     const B = new DataFrame(
-      new Map([
-        ["r", new Series<Scalar>({ data: [3, 4] as Scalar[] })]
-      ]),
+      new Map([["r", new Series<Scalar>({ data: [3, 4] as Scalar[] })]]),
       // index must be ["a","b"] — build via fromColumns then can't set index directly
       // Use workaround via Series with string index
       new Series<Scalar>({ data: [0, 0], index: ["a", "b"] }).index,

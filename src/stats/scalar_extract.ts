@@ -15,7 +15,7 @@
  * @module
  */
 
-import { DataFrame, Index, Series } from "../core/index.ts";
+import { type DataFrame, Index, Series } from "../core/index.ts";
 import type { Axis, Label, Scalar } from "../types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -145,9 +145,7 @@ function _rowSeries(df: DataFrame, row: number): Series<Scalar> {
  */
 export function itemSeries(s: Series<Scalar>): Scalar {
   if (s.size !== 1) {
-    throw new RangeError(
-      `itemSeries: Series must have exactly 1 element, got ${s.size}`,
-    );
+    throw new RangeError(`itemSeries: Series must have exactly 1 element, got ${s.size}`);
   }
   return atVal(s.values, 0);
 }

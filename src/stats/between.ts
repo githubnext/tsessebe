@@ -75,8 +75,10 @@ function inRange(v: Scalar, left: Scalar, right: Scalar, inclusive: BetweenInclu
   if (isMissing(v) || isMissing(left) || isMissing(right)) {
     return false;
   }
-  const leftOk = inclusive === "both" || inclusive === "left" ? scalarLte(left, v) : scalarLt(left, v);
-  const rightOk = inclusive === "both" || inclusive === "right" ? scalarLte(v, right) : scalarLt(v, right);
+  const leftOk =
+    inclusive === "both" || inclusive === "left" ? scalarLte(left, v) : scalarLt(left, v);
+  const rightOk =
+    inclusive === "both" || inclusive === "right" ? scalarLte(v, right) : scalarLt(v, right);
   return leftOk && rightOk;
 }
 

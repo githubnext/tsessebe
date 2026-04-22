@@ -27,7 +27,7 @@
  * @module
  */
 
-import { DataFrame, Series } from "../core/index.ts";
+import { type DataFrame, Series } from "../core/index.ts";
 import type { Label, Scalar } from "../types.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -139,10 +139,7 @@ export function keepFalse(
  * filterBy(df, [true, false, true]).col("a").values; // [1, 3]
  * ```
  */
-export function filterBy(
-  df: DataFrame,
-  mask: Series<Scalar> | readonly boolean[],
-): DataFrame {
+export function filterBy(df: DataFrame, mask: Series<Scalar> | readonly boolean[]): DataFrame {
   const maskVals: readonly (Scalar | boolean)[] =
     mask instanceof Series ? (mask.values as readonly Scalar[]) : mask;
 
