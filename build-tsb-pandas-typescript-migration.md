@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T20:22:00Z |
-| Iteration Count | 252 |
+| Last Run | 2026-04-22T21:30:00Z |
+| Iteration Count | 253 |
 | Best Metric | 134 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -35,13 +35,13 @@
 
 ## 🎯 Current Priorities
 
-Completed iters 239–252:
+Completed iters 239–253:
 - ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
 - ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
 - ✅ join/joinAll/crossJoin (iter 247), infer_objects/convertDtypes (iter 247)
 - ✅ merge_asof (iter 248), merge_ordered (iter 249)
 - ✅ resample (SeriesResampler/DataFrameResampler, D/H/T/S/W/M/Q/A, agg fns) (iter 251)
-- ✅ period_range (standalone period_range() factory, start+periods/end+periods/start+end modes) (iter 252)
+- ✅ period_range (standalone top-level factory: start+periods, end+periods, start+end, freq inference) (iter 253)
 
 Next:
 - `str.normalize()` — Unicode normalization (NFC/NFD/NFKC/NFKD) on StringAccessor
@@ -80,20 +80,9 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iter 252 — 2026-04-22 20:22 UTC — ⏳ pending-ci — +period_range (standalone period_range() factory: start+periods, end+periods, start+end modes, freq inference from Period objects, full property-based tests). Metric: 134 (+1). Commit: 9deb56b. [Run](https://github.com/githubnext/tsessebe/actions/runs/24800650435)
-### Iter 251 — 2026-04-22 19:10 UTC — ⏳ pending-ci — +resample (SeriesResampler/DataFrameResampler: D/H/T/S/W/M/Q/A freq, sum/mean/min/max/count/first/last/std/size/median/agg, property-based tests). Metric: 133 (+1). Commit: 6926720. [Run](https://github.com/githubnext/tsessebe/actions/runs/24796561104)
-
-### Iter 250 — 2026-04-22 17:23 UTC — ⏳ pending-ci — +periodRange (standalone period_range top-level fn). Metric: 133 (+1). Commit: 09beefb. [Run](https://github.com/githubnext/tsessebe/actions/runs/24792490497)
-
-### Iter 249 — 2026-04-22 16:34 UTC — ⏳ pending-ci — +mergeOrdered (ordered outer/inner/left/right merge, fill_method:ffill, left_by/right_by groups, left_on/right_on, suffix handling). Metric: 132 (+1). Commit: 0be568b. [Run](https://github.com/githubnext/tsessebe/actions/runs/24790234983)
-
-### Iter 248 — 2026-04-22 14:36 UTC — ⏳ pending-ci — +merge_asof (backward/forward/nearest, by-groups, tolerance, allow_exact_matches, left_on/right_on, left_index/right_index). Metric: 131 (+1). Commit: 2d9afd6. [Run](https://github.com/githubnext/tsessebe/actions/runs/24784359725)
-
-### Iter 247 — 2026-04-22 13:35 UTC — ⏳ pending-ci — +join/joinAll/crossJoin (label-based index join, multi-join chain, Cartesian product) +inferObjects/convertDtypes (dtype inference and string→numeric conversion). Metric: 130 (same, branch was at 128; +2 new files). Commit: 191e790. [Run](https://github.com/githubnext/tsessebe/actions/runs/24781267123)
-
-### Iter 246 — 2026-04-22 12:51 UTC — ⚠️ Lost — +merge_asof +merge_ordered committed on canonical branch but commit not found; state file showed 130 but branch was at 128. [Run](https://github.com/githubnext/tsessebe/actions/runs/24779203996)
-
-### Iter 245 — 2026-04-22 11:55 UTC — ✅ Accepted — +seriesMap +dataFrameAt/dataFrameIat. Metric: 128 (+2). Commit: db85e5c. [Run](https://github.com/githubnext/tsessebe/actions/runs/24776626741)
+### Iter 253 — 2026-04-22 21:30 UTC — ⏳ pending-ci — +period_range (top-level factory: start+periods/end+periods/start+end, freq inference). Metric: 134 (+1). Commit: d0cb0a3. [Run](https://github.com/githubnext/tsessebe/actions/runs/24803209740)
+### Iters 246–252 — ✅/⚠️ (metrics 128→133): +resample, +mergeOrdered, +mergeAsof, +join/joinAll/crossJoin, +inferObjects/convertDtypes. Two iterations lost due to branch sync issues.
+### Iter 245 — 2026-04-22 11:55 UTC — ✅ Accepted — +seriesMap +dataFrameAt/dataFrameIat. Metric: 128 (+2). Commit: db85e5c.
 ### Iters 239–244 — ✅ (metrics 117→126): +swapLevel/truncate, +between/Update/filter, +combine/keepTrue/keepFalse, +squeeze/item/bool/firstValidIndex/autoCorr/corrWith, +rename_ops/math_ops, +dot_matmul/transform_agg.
-### Iters 218–238 — ✅/⚠️ (metrics 51→115): +jsonNormalize, +readExcel, +nancumops, +to_timedelta, +date_range, +timedelta_range, +queryDataFrame/evalDataFrame, +strFindall+toJson, +cutBinsToFrame+xs, fix-type-errors.
+### Iters 218–238 — ✅/⚠️ (metrics 51→115): +jsonNormalize, +readExcel, +nancumops, +to_timedelta, +date_range, +timedelta_range, +queryDataFrame/evalDataFrame, +strFindall+toJson, +cutBinsToFrame+xs.
 ### Iters 53–217 — ✅/⚠️ (metrics 8→50): selectDtypes, interpolate, factorize, pivotTable, crosstab, getDummies, Interval, cut/qcut, clip, sample, duplicated, diff_shift, where_mask, replace, astype, idxmin/idxmax, na_ops, 22+ core features.
