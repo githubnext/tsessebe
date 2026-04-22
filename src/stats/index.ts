@@ -459,3 +459,13 @@ export type {
   SortValuesDataFrameOptions,
   SortIndexDataFrameOptions,
 } from "./sort_ops.ts";
+export {
+  inferObjectsSeries,
+  inferObjectsDataFrame,
+  convertDtypesSeries,
+  convertDtypesDataFrame,
+} from "./infer_objects.ts";
+export type {
+  InferObjectsOptions,
+  ConvertDtypesOptions,
+} from "./infer_objects.ts";

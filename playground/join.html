@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — join: label-based DataFrame join</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+    h1 { color: #2563eb; }
+    h2 { color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4rem; }
+    pre { background: #f1f5f9; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9em; }
+    .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 0.75rem 1rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f8fafc; font-weight: 600; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <a href="index.html">← Back to tsb playground</a>
+  <h1>join — label-based DataFrame join</h1>
+
+  <div class="note">
+    <strong>pandas equivalent:</strong> <code>DataFrame.join(other, on=None, how='left', lsuffix='', rsuffix='', sort=False)</code>
+  </div>
+
+  <h2>What it does</h2>
+  <p>
+    <code>join(left, right, options?)</code> aligns two DataFrames by their <strong>index labels</strong> (or a key column).
+    Unlike the general-purpose <code>merge()</code>, <code>join()</code> defaults to a <em>left join on index</em>
+    — the idiomatic way to combine DataFrames that already share an index.
+  </p>
+
+  <h2>Left join (default)</h2>
+  <pre><code>import { DataFrame, join } from "tsb";
+
+const employees = DataFrame.fromColumns(
+  { dept: ["Engineering", "Marketing", "Engineering"] },
+  { index: ["alice", "bob", "charlie"] },
+);
+
+const salaries = DataFrame.fromColumns(
+  { salary: [90_000, 75_000] },
+  { index: ["alice", "charlie"] },
+);
+
+join(employees, salaries);
+// dept          salary
+// alice    Engineering  90000
+// bob      Marketing    null    ← no salary for bob
+// charlie  Engineering  75000</code></pre>
+
+  <h2>Inner / outer / right join</h2>
+  <pre><code>join(employees, salaries, { how: "inner" });
+// Only alice and charlie (keys in BOTH DataFrames)
+
+join(employees, salaries, { how: "outer" });
+// All keys from either DataFrame (nulls where absent)
+
+join(employees, salaries, { how: "right" });
+// All keys from salaries: alice and charlie</code></pre>
+
+  <h2>Overlapping columns — use lsuffix / rsuffix</h2>
+  <pre><code>const a = DataFrame.fromColumns({ score: [10, 20] }, { index: ["x", "y"] });
+const b = DataFrame.fromColumns({ score: [15, 25] }, { index: ["x", "y"] });
+
+// This would throw — 'score' exists in both without suffix disambiguation:
+// join(a, b);
+
+join(a, b, { lsuffix: "_a", rsuffix: "_b" });
+// score_a  score_b
+// x  10    15
+// y  20    25</code></pre>
+
+  <h2>Join on a column key</h2>
+  <pre><code>const orders = DataFrame.fromColumns({
+  customerId: ["C1", "C2", "C1"],
+  amount:     [100, 200, 150],
+});
+const customers = DataFrame.fromColumns(
+  { name: ["Alice", "Bob"] },
+  { index: ["C1", "C2"] },
+);
+
+// Join orders.customerId against customers index
+join(orders, customers, { on: "customerId", how: "left" });
+// customerId  amount  name
+// C1          100     Alice
+// C2          200     Bob
+// C1          150     Alice</code></pre>
+
+  <h2>joinAll — chain multiple joins</h2>
+  <pre><code>import { joinAll } from "tsb";
+
+const base = DataFrame.fromColumns({ A: [1,2,3] }, { index: ["K0","K1","K2"] });
+const b1   = DataFrame.fromColumns({ B: [10,20,30] }, { index: ["K0","K1","K2"] });
+const b2   = DataFrame.fromColumns({ C: [100,200,300] }, { index: ["K0","K1","K2"] });
+
+joinAll(base, [b1, b2]);
+// A  B   C
+// 1  10  100
+// 2  20  200
+// 3  30  300</code></pre>
+
+  <h2>crossJoin — Cartesian product</h2>
+  <pre><code>import { crossJoin } from "tsb";
+
+const colors = DataFrame.fromColumns({ color: ["red", "blue"] });
+const sizes  = DataFrame.fromColumns({ size:  ["S", "M", "L"] });
+
+crossJoin(colors, sizes);
+// color  size
+// red    S
+// red    M
+// red    L
+// blue   S
+// blue   M
+// blue   L</code></pre>
+
+  <h2>API reference</h2>
+  <table>
+    <tr><th>Function</th><th>Description</th></tr>
+    <tr><td><code>join(left, right, options?)</code></td><td>Label-based join (default: left join on index)</td></tr>
+    <tr><td><code>joinAll(left, others[], options?)</code></td><td>Chain joins left-to-right</td></tr>
+    <tr><td><code>crossJoin(left, right, options?)</code></td><td>Cartesian product of two DataFrames</td></tr>
+  </table>
+
+  <h3>JoinOptions</h3>
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>how</code></td><td><code>"left" | "right" | "inner" | "outer"</code></td><td><code>"left"</code></td><td>Join type</td></tr>
+    <tr><td><code>on</code></td><td><code>string</code></td><td><em>index</em></td><td>Left column to use as join key</td></tr>
+    <tr><td><code>lsuffix</code></td><td><code>string</code></td><td><code>""</code></td><td>Suffix for overlapping left columns</td></tr>
+    <tr><td><code>rsuffix</code></td><td><code>string</code></td><td><code>""</code></td><td>Suffix for overlapping right columns</td></tr>
+    <tr><td><code>sort</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Sort result by join keys</td></tr>
+  </table>
+
+  <footer style="margin-top:3rem; color:#64748b; font-size:0.85em;">
+    tsb — TypeScript port of pandas &nbsp;|&nbsp; <a href="index.html">← back to playground</a>
+  </footer>
+</body>
+</html>

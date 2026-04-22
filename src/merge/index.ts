@@ -8,3 +8,5 @@ export { concat } from "./concat.ts";
 export type { ConcatOptions } from "./concat.ts";
 export { merge } from "./merge.ts";
 export type { MergeOptions } from "./merge.ts";
+export { join, joinAll, crossJoin } from "./join.ts";
+export type { JoinOptions } from "./join.ts";

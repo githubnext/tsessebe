@@ -630,3 +630,12 @@ export type {
   SortValuesDataFrameOptions,
   SortIndexDataFrameOptions,
 } from "./stats/index.ts";
+export { join, joinAll, crossJoin } from "./merge/index.ts";
+export type { JoinOptions } from "./merge/index.ts";
+export {
+  inferObjectsSeries,
+  inferObjectsDataFrame,
+  convertDtypesSeries,
+  convertDtypesDataFrame,
+} from "./stats/index.ts";
+export type { InferObjectsOptions, ConvertDtypesOptions } from "./stats/index.ts";
