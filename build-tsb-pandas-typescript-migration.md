@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T13:35:57Z |
-| Iteration Count | 247 |
-| Best Metric | 130 |
+| Last Run | 2026-04-22T14:36:49Z |
+| Iteration Count | 248 |
+| Best Metric | 131 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, accepted, accepted, pending-ci, accepted, accepted, accepted, accepted, pending-ci |
+| Recent Statuses | accepted, error, accepted, accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci |
 
 ---
 
@@ -35,16 +35,16 @@
 
 ## 🎯 Current Priorities
 
-Completed iters 239–247:
+Completed iters 239–248:
 - ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
 - ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
-- ✅ merge_asof (iter 246, not landed on canonical branch — retry next)
 - ✅ join/joinAll/crossJoin (iter 247), infer_objects/convertDtypes (iter 247)
+- ✅ merge_asof (iter 248, reimplemented after loss in iter 246)
 
 Next:
 - `stats/period_range.ts` — standalone `period_range()` wrapper
 - `stats/map_values.ts` — Series.map (fn/dict/Map/Series mapper, na_action)
-- `merge/merge_asof.ts` — asof/nearest-key merge (iter 246 lost, needs reimplementation)
+- `merge/merge_ordered.ts` — merge_ordered (ordered merge with optional fill)
 
 ---
 
@@ -72,13 +72,14 @@ Next:
 
 - `core/str_accessor` — wire `.str.extractall()` via late-binding (inject DataFrame factory)
 - `str.normalize()` — Unicode normalization (NFC/NFD/NFKC/NFKD) on StringAccessor
-- `merge/join.ts` — DataFrame.join (label-based join, shorthand for merge on index)
+- `merge/merge_ordered.ts` — merge_ordered (ordered merge with optional fill method)
 - `stats/period_range.ts` — standalone `period_range()` top-level function
-- `stats/infer_objects.ts` — infer_objects / convert_dtypes helpers
 
 ---
 
 ## 📊 Iteration History
+### Iter 248 — 2026-04-22 14:36 UTC — ⏳ pending-ci — +merge_asof (backward/forward/nearest, by-groups, tolerance, allow_exact_matches, left_on/right_on, left_index/right_index). Metric: 131 (+1). Commit: 2d9afd6. [Run](https://github.com/githubnext/tsessebe/actions/runs/24784359725)
+
 ### Iter 247 — 2026-04-22 13:35 UTC — ⏳ pending-ci — +join/joinAll/crossJoin (label-based index join, multi-join chain, Cartesian product) +inferObjects/convertDtypes (dtype inference and string→numeric conversion). Metric: 130 (same, branch was at 128; +2 new files). Commit: 191e790. [Run](https://github.com/githubnext/tsessebe/actions/runs/24781267123)
 
 ### Iter 246 — 2026-04-22 12:51 UTC — ⚠️ Lost — +merge_asof +merge_ordered committed on canonical branch but commit not found; state file showed 130 but branch was at 128. [Run](https://github.com/githubnext/tsessebe/actions/runs/24779203996)
