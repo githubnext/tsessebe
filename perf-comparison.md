@@ -44,24 +44,14 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 279**: Merging main brought 125 new benchmark pairs from previously suffixed-branch commits (iters 277/278 fixes). Added 5 new pairs for newer API options (diffSeries options, shiftSeries fillValue, dataFrameFfill axis=1, anySeries/allSeries skipna, nunique reduce_ops). Result: 638 pairs.
-- **Iter 278 (canonical 532)**: Fixed 300+ benchmark API bugs: wrong export names (dataFrameWhere→whereDataFrame etc.), method-not-found (diff/explode/pct_change/abs/where/mask/sample/replace/astype/pivot/groupby.var), fromColumns(Map) with empty index, rollingQuantile arg order, fromDictOriented API. Added proper pgid-based timeout kill for parallel runner. Result: 532/631 pairs.
-- **subprocess.run timeout doesn't kill child processes**: Must use `Popen` + capture pgid BEFORE `communicate()`, then `os.killpg(pgid, SIGKILL)` in the except. subprocess.run with timeout kills only the direct child; `start_new_session=True` grandchildren survive.
-- **Iter 277 (canonical 382)**: Fixed Series constructor (142 files), import paths, cummax/cummin standalone, DataFrame.fromColumns, plus installed pandas + added Python-based parallel runner with process-group kill. Result: 382/508 pairs. Commit b95658d pushed to PR #166.
-- **Pandas must be installed**: Previous runs got 2-11/508 because pandas wasn't installed. Always install pandas before running benchmarks.
-- **Import paths**: Use `../../src/index.ts` not `"tsb"` — the tsb package may not be installed in runner environments.
-- **Series constructor**: Use `new Series({ data: [...] })` — passing an array directly fails with tsx/node.
-- **Balanced-paren fix needed**: The Series constructor fix requires balanced-paren parsing (not regex) — `Array.from({ length: N }, (_, i) => i)` has nested parens.
-- **Standalone functions vs methods**: cummax/cummin/cumprod/cumsum/diff/explode/pct_change/seriesAbs/where/mask/sample/replace/astype/pivot are standalone. NOT methods on Series/DataFrame.
-- **DataFrame construction**: use `DataFrame.fromColumns({...})` not `new DataFrame({...})`.
-- **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only — no "var".
-- **whereDataFrame/maskDataFrame cond**: Must be function or boolean DataFrame, NOT a plain boolean array.
-- **fromDictOriented orient**: Only "columns"|"index"|"split"|"tight" — NOT "records".
-- **rollingQuantile arg order**: `rollingQuantile(series, q, window)` — q first, window second.
-- **fromColumns Map pattern**: `DataFrame.fromColumns(new Map([...]), { index: })` = broken. Use `DataFrame.fromColumns({ col: array })` directly.
-
----
-
+- **Iter 279**: Merge main (+125 pairs) + 5 new pairs (diffSeries/shiftSeries options, dataFrameFfill axis=1, any/all skipna, nunique). Result: 638.
+- **Iter 278**: Fixed 300+ API bugs (wrong names, method→standalone, rollingQuantile args, fromDictOriented). pgid kill. Result: 532.
+- **subprocess timeout**: `Popen` + `start_new_session=True`, then `os.killpg(pgid, SIGKILL)`.
+- **Iter 277**: Fixed constructors (142 files), import paths, cummax/cummin standalone, installed pandas. Result: 382.
+- **Import paths**: `../../src/index.ts` not `"tsb"`. Series: `new Series({ data: [...] })`. DF: `DataFrame.fromColumns({...})`.
+- **Standalones**: cummax/cummin/cumprod/cumsum/diff/explode/pct_change/seriesAbs/where/mask/sample/replace/astype/pivot.
+- **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
+- **whereDataFrame cond**: function or boolean DataFrame. **rollingQuantile**: `(series, q, window)`. **fromDictOriented orient**: "columns"|"index"|"split"|"tight".
 ## 🚧 Foreclosed Avenues
 
 - **Suffixed branches**: Never commit to `autoloop/perf-comparison-{suffix}` branches. Only `autoloop/perf-comparison` counts.

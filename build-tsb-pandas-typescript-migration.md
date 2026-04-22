@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T03:41:00Z |
-| Iteration Count | 238 |
-| Best Metric | 115 |
+| Last Run | 2026-04-22T05:12:00Z |
+| Iteration Count | 239 |
+| Best Metric | 117 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, error, accepted, accepted, accepted, pending-ci |
+| Recent Statuses | error, accepted, error, error, error, accepted, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -35,8 +35,9 @@
 
 ## 🎯 Current Priorities
 
-- `stats/swaplevel.ts` ✅ iter 238: swapLevelDataFrame/swapLevelSeries/reorderLevelsDataFrame/reorderLevelsSeries
-- `stats/truncate.ts` ✅ iter 238: truncateDataFrame/truncateSeries
+- `stats/swaplevel.ts` ✅ iter 239: swapLevelDataFrame/swapLevelSeries/reorderLevelsDataFrame/reorderLevelsSeries
+- `stats/truncate.ts` ✅ iter 239: truncateDataFrame/truncateSeries
+- CI fix ✅ iter 239: xs.ts .length→.size, xs.test Series<Scalar>, to_json_normalize test, cut_bins test, str_findall test
 - `core/str_accessor` — add `.str.extractall()` method (blocked by circular dep; standalone `strExtractAll` already in string_ops.ts)
 - Next: `stats/melt_extended.ts` — wide_to_long helper / melt with value_vars patterns
 - Next: `stats/notna_boolean.ts` — boolean indexing helpers (keepTrue/keepFalse/filterBy)
@@ -45,6 +46,7 @@
 
 ## 📚 Lessons Learned
 
+- **CI type errors**: `Index<Label>.size` (not `.length`). `Series<Scalar>` (not `Series<unknown>`). Spread `readonly string[]` for toEqual. Use `.values` when comparing `Index<string>` in toEqual. Non-null assertion `arr[i]!` for `noUncheckedIndexedAccess` in loop bodies.
 - **Biome**: `useBlockStatements --write --unsafe`. `Number.NaN`/`Number.POSITIVE_INFINITY`. Default import fc. `import type` for value-unused imports.
 - **TypeScript**: `(value as unknown) instanceof X` for instanceof. `as Scalar`/`as number` for noUncheckedIndexedAccess. `readonly T[]`. Extract helpers for ≤15 complexity. `df.columns.values` (not `.map(String)`) — `df.columns` is `Index<string>`. `(record[key] as T[]).push(v)` for pre-initialized Record dicts.
 - **MultiIndex**: Does not extend `Index<Label>`. Use `mi as unknown as Index<Label>` cast when passing to Series/DataFrame constructor. `mi.at(i)` returns `readonly Label[]`. `mi.size` for length.
@@ -73,7 +75,8 @@
 
 ## 📊 Iteration History
 
-### Iter 238 — 2026-04-22 03:41 UTC — ⏳ CI pending — +swapLevelDataFrame/swapLevelSeries/reorderLevels + truncateDataFrame/truncateSeries. Metric: 115 (+2). Commit: 04243a5. [Run](https://github.com/githubnext/tsessebe/actions/runs/24758931868)
+### Iter 239 — 2026-04-22 05:12 UTC — ⏳ CI pending — Fix 5 TS type errors from iter 237 + +swapLevelSeries/DataFrame/reorderLevels + truncateSeries/DataFrame. Metric: 117 (+2). Commit: 39f912d. [Run](https://github.com/githubnext/tsessebe/actions/runs/24761017221)
+### Iter 238 — 2026-04-22 03:41 UTC — ❌ never pushed (state premature) — +swapLevelDataFrame/swapLevelSeries/reorderLevels + truncateDataFrame/truncateSeries. [Run](https://github.com/githubnext/tsessebe/actions/runs/24758931868)
 ### Iter 237 — 2026-04-22 00:42 UTC — ✅ +cutBinsToFrame/cutBinCounts/binEdges + xsDataFrame/xsSeries. Metric: 113 (+2). Commit: b542fde. [Run](https://github.com/githubnext/tsessebe/actions/runs/24753646544)
 ### Iter 236 — 2026-04-21 23:16 UTC — (state discrepancy: commit 7dc2dc8 not found in branch; iter 237 re-implements same metric) [Run](https://github.com/githubnext/tsessebe/actions/runs/24751361866)
 ### Iter 235 — 2026-04-21 22:18 UTC — ✅ +strFindall/strFindallCount/strFindFirst/strFindallExpand + toJsonDenormalize/toJsonRecords/toJsonSplit/toJsonIndex. Metric: 111. Commit: 3f9fcf0. [Run](https://github.com/githubnext/tsessebe/actions/runs/24749266130)
