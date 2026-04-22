@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T10:32:00Z |
-| Iteration Count | 244 |
-| Best Metric | 126 |
+| Last Run | 2026-04-22T11:27:08Z |
+| Iteration Count | 245 |
+| Best Metric | 128 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, error, accepted, accepted, accepted, pending-ci, accepted, accepted |
+| Recent Statuses | error, error, error, accepted, accepted, accepted, pending-ci, accepted, accepted, pending-ci |
 
 ---
 
@@ -47,9 +47,9 @@
 - `stats/dot_matmul.ts` ✅ iter 244: seriesDotSeries/DataFrame/dataFrameDotSeries/DataFrame
 - `stats/transform_agg.ts` ✅ iter 244: seriesTransform/dataFrameTransform (20 built-ins, single/array/record forms)
 - Note: `stats/assign.ts` already exists as `core/assign.ts` (dataFrameAssign) — skip
-- `core/str_accessor` — add `.str.extractall()` method (blocked by circular dep)
-- Next: `stats/xs_advanced.ts` — DataFrame.xs with level/axis/drop_level options
-- Next: `stats/at_iat.ts` — Series.at/iat, DataFrame.at/iat fast scalar access
+- `stats/at_iat.ts` ✅ iter 245: seriesAt/seriesIat/dataFrameAt/dataFrameIat (fast scalar accessors)
+- `stats/sort_ops.ts` ✅ iter 245: sortValuesSeries/sortIndexSeries/sortValuesDataFrame/sortIndexDataFrame
+- Next: `stats/pop_insert.ts` — DataFrame.pop (remove column), DataFrame.insert (insert column at position)
 
 ---
 
@@ -77,16 +77,14 @@
 
 - `core/str_accessor` — wire `.str.extractall()` via late-binding (inject DataFrame factory)
 - `str.normalize()` — Unicode normalization (NFC/NFD/NFKC/NFKD) on StringAccessor
-- `stats/rename_ops.ts` ✅ iter 243: renameSeriesIndex/DataFrame, addPrefix/Suffix, setAxis, seriesToFrame
-- `stats/math_ops.ts` ✅ iter 243: absSeries/absDataFrame/roundSeries/roundDataFrame
-- Next: `stats/dot_matmul.ts` — Series.dot/DataFrame.dot (matrix multiplication)
-- Next: `stats/transform_agg.ts` — Series.transform/DataFrame.transform (standalone, not groupby)
+- Next: `stats/pop_insert.ts` — DataFrame.pop/insert column operations
 
 ---
 
 ## 📊 Iteration History
 
+### Iter 245 — 2026-04-22 11:27 UTC — ⏳ Pending CI — +at_iat (seriesAt/seriesIat/dataFrameAt/dataFrameIat) +sort_ops (sortValuesSeries/sortIndexSeries/sortValuesDataFrame/sortIndexDataFrame). Metric: 128 (+2). Commit: 12687fd. [Run](https://github.com/githubnext/tsessebe/actions/runs/24775678901)
 ### Iter 243 — 2026-04-22 09:52 UTC — ✅ Accepted — +rename_ops (renameSeriesIndex/DataFrame, addPrefix/Suffix, setAxis, seriesToFrame) +math_ops (absSeries/absDataFrame/roundSeries/roundDataFrame). Metric: 124 (+2). Commit: ce632a1. [Run](https://github.com/githubnext/tsessebe/actions/runs/24771121921)
-### Iters 239–244 — ✅ (metrics 117→126): +swapLevel/truncate, +between/Update/filter, +combine/keepTrue/keepFalse, +squeeze/item/bool/firstValidIndex/autoCorr/corrWith, +rename_ops/math_ops, +dot_matmul/transform_agg.
+### Iters 239–245 — ✅ (metrics 117→128): +swapLevel/truncate, +between/Update/filter, +combine/keepTrue/keepFalse, +squeeze/item/bool/firstValidIndex/autoCorr/corrWith, +rename_ops/math_ops, +dot_matmul/transform_agg, +at_iat/sort_ops.
 ### Iters 218–238 — ✅/⚠️ (metrics 51→115): +jsonNormalize, +readExcel, +nancumops, +to_timedelta, +date_range, +timedelta_range, +queryDataFrame/evalDataFrame, +strFindall+toJson, +cutBinsToFrame+xs, fix-type-errors.
 ### Iters 53–217 — ✅/⚠️ (metrics 8→50): selectDtypes, interpolate, factorize, pivotTable, crosstab, getDummies, Interval, cut/qcut, clip, sample, duplicated, diff_shift, where_mask, replace, astype, idxmin/idxmax, na_ops, 22+ core features.
