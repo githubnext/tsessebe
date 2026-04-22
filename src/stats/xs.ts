@@ -108,7 +108,7 @@ function matchingRows(
       }
     }
   } else {
-    for (let i = 0; i < idx.length; i++) {
+    for (let i = 0; i < idx.size; i++) {
       if (idx.at(i) === key) {
         positions.push(i);
       }

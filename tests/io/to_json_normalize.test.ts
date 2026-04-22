@@ -98,8 +98,8 @@ describe("toJsonDenormalize", () => {
           const records = toJsonDenormalize(df);
           expect(records.length).toBe(x.length);
           for (let i = 0; i < x.length; i++) {
-            expect((records[i] as { x: number; y: number }).x).toBe(x[i]);
-            expect((records[i] as { x: number; y: number }).y).toBe(y[i]);
+            expect((records[i] as { x: number; y: number }).x).toBe(x[i]!);
+            expect((records[i] as { x: number; y: number }).y).toBe(y[i]!);
           }
         },
       ),

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame, Index, MultiIndex, Series } from "../../src/index.ts";
+import { DataFrame, Index, MultiIndex, Scalar, Series } from "../../src/index.ts";
 import { xsDataFrame, xsSeries } from "../../src/stats/xs.ts";
 
 // ─── xsDataFrame — flat index ─────────────────────────────────────────────────
@@ -18,23 +18,23 @@ describe("xsDataFrame (flat index, axis=0)", () => {
   test("single-row key returns Series of column values", () => {
     const result = xsDataFrame(df, "x");
     expect(result).toBeInstanceOf(Series);
-    const s = result as Series<unknown>;
+    const s = result as Series<Scalar>;
     expect(s.values).toEqual([1, 4]);
     expect(s.index.values).toEqual(["a", "b"]);
   });
 
   test("name of returned Series is the key", () => {
-    const s = xsDataFrame(df, "y") as Series<unknown>;
+    const s = xsDataFrame(df, "y") as Series<Scalar>;
     expect(s.name).toBe("y");
   });
 
   test("returns correct values for middle row", () => {
-    const s = xsDataFrame(df, "y") as Series<unknown>;
+    const s = xsDataFrame(df, "y") as Series<Scalar>;
     expect(s.values).toEqual([2, 5]);
   });
 
   test("returns correct values for last row", () => {
-    const s = xsDataFrame(df, "z") as Series<unknown>;
+    const s = xsDataFrame(df, "z") as Series<Scalar>;
     expect(s.values).toEqual([3, 6]);
   });
 
@@ -54,12 +54,12 @@ describe("xsDataFrame (axis=1)", () => {
   test("returns the column as a Series", () => {
     const result = xsDataFrame(df, "a", { axis: 1 });
     expect(result).toBeInstanceOf(Series);
-    const s = result as Series<unknown>;
+    const s = result as Series<Scalar>;
     expect(s.values).toEqual([1, 2, 3]);
   });
 
   test("column Series has correct index", () => {
-    const s = xsDataFrame(df, "b", { axis: 1 }) as Series<unknown>;
+    const s = xsDataFrame(df, "b", { axis: 1 }) as Series<Scalar>;
     expect(s.index.values).toEqual(["x", "y", "z"]);
     expect(s.values).toEqual([4, 5, 6]);
   });
@@ -167,12 +167,12 @@ describe("xsSeries (duplicate labels)", () => {
   test("multiple matches return Series", () => {
     const result = xsSeries(s, "a");
     expect(result).toBeInstanceOf(Series);
-    const r = result as Series<unknown>;
+    const r = result as Series<Scalar>;
     expect(r.values).toEqual([1, 3]);
   });
 
   test("returned Series has correct length", () => {
-    const result = xsSeries(s, "a") as Series<unknown>;
+    const result = xsSeries(s, "a") as Series<Scalar>;
     expect(result.length).toBe(2);
   });
 
@@ -199,14 +199,14 @@ describe("xsSeries (MultiIndex)", () => {
   test("outer level match returns Series", () => {
     const result = xsSeries(s, "X");
     expect(result).toBeInstanceOf(Series);
-    const r = result as Series<unknown>;
+    const r = result as Series<Scalar>;
     expect(r.values).toEqual([100, 200]);
   });
 
   test("inner level match returns correct values", () => {
     const result = xsSeries(s, 1, { level: 1 });
     expect(result).toBeInstanceOf(Series);
-    const r = result as Series<unknown>;
+    const r = result as Series<Scalar>;
     expect(r.values).toEqual([100, 300]);
   });
 
@@ -234,8 +234,8 @@ describe("xsDataFrame property tests", () => {
           const slicedA = aData.slice(0, len);
           const slicedB = bData.slice(0, len);
           const df = DataFrame.fromColumns({ a: slicedA, b: slicedB });
-          const colA = xsDataFrame(df, "a", { axis: 1 }) as Series<unknown>;
-          const colB = xsDataFrame(df, "b", { axis: 1 }) as Series<unknown>;
+          const colA = xsDataFrame(df, "a", { axis: 1 }) as Series<Scalar>;
+          const colB = xsDataFrame(df, "b", { axis: 1 }) as Series<Scalar>;
           return (
             JSON.stringify(colA.values) === JSON.stringify(slicedA) &&
             JSON.stringify(colB.values) === JSON.stringify(slicedB)
@@ -255,7 +255,7 @@ describe("xsDataFrame property tests", () => {
           const df = DataFrame.fromColumns({ x: data }, { index: labels });
           const rowIdx = Math.floor(len / 2);
           const key = labels[rowIdx] as string;
-          const row = xsDataFrame(df, key) as Series<unknown>;
+          const row = xsDataFrame(df, key) as Series<Scalar>;
           return row.values[0] === data[rowIdx] && row.index.values[0] === "x";
         },
       ),

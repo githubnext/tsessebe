@@ -391,3 +391,12 @@ export {
 export type { CutBinsToFrameOptions } from "./cut_bins_to_frame.ts";
 export { xsDataFrame, xsSeries } from "./xs.ts";
 export type { XsDataFrameOptions, XsSeriesOptions } from "./xs.ts";
+export {
+  swapLevelSeries,
+  swapLevelDataFrame,
+  reorderLevelsSeries,
+  reorderLevelsDataFrame,
+} from "./swaplevel.ts";
+export type { SwapLevelDataFrameOptions, ReorderLevelsDataFrameOptions } from "./swaplevel.ts";
+export { truncateSeries, truncateDataFrame } from "./truncate.ts";
+export type { TruncateOptions } from "./truncate.ts";

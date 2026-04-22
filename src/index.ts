@@ -563,3 +563,12 @@ export { cutBinsToFrame, cutBinCounts, binEdges } from "./stats/index.ts";
 export type { CutBinsToFrameOptions } from "./stats/index.ts";
 export { xsDataFrame, xsSeries } from "./stats/index.ts";
 export type { XsDataFrameOptions, XsSeriesOptions } from "./stats/index.ts";
+export {
+  swapLevelSeries,
+  swapLevelDataFrame,
+  reorderLevelsSeries,
+  reorderLevelsDataFrame,
+} from "./stats/swaplevel.ts";
+export type { SwapLevelDataFrameOptions, ReorderLevelsDataFrameOptions } from "./stats/swaplevel.ts";
+export { truncateSeries, truncateDataFrame } from "./stats/truncate.ts";
+export type { TruncateOptions } from "./stats/truncate.ts";

@@ -225,7 +225,7 @@ describe("strFindallExpand", () => {
   test("named capture groups become columns", () => {
     const s = new Series({ data: ["John 30", "Jane 25", "unknown"] });
     const df = strFindallExpand(s, /(?<name>\w+)\s+(?<age>\d+)/);
-    expect(df.columns).toEqual(["name", "age"]);
+    expect(df.columns.values).toEqual(["name", "age"]);
     expect(df.col("name").values).toEqual(["John", "Jane", null]);
     expect(df.col("age").values).toEqual(["30", "25", null]);
   });

@@ -149,7 +149,7 @@ describe("cutBinCounts", () => {
   test("returns a Record with label keys", () => {
     const result = cut([1, 2, 3, 4, 5], 2);
     const counts = cutBinCounts(result);
-    expect(Object.keys(counts)).toEqual(result.labels);
+    expect(Object.keys(counts)).toEqual([...result.labels]);
   });
 
   test("counts sum to number of valid observations", () => {
