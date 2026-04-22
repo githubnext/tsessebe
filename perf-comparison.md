@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T02:19:30Z |
-| Iteration Count | 279 |
-| Best Metric | 638 |
+| Last Run | 2026-04-22T08:37:55Z |
+| Iteration Count | 280 |
+| Best Metric | 639 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | — |
+| PR | — (pending creation from iter 280) |
 | Steering Issue | #131 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -31,7 +31,7 @@
 **Goal**: Benchmark every tsb function vs pandas equivalent, one per iteration.
 **Metric**: benchmarked_functions (higher is better)
 **Branch**: [`autoloop/perf-comparison`](../../tree/autoloop/perf-comparison)
-**Pull Request**: — (new PR from iteration 279, pending CI)
+**Pull Request**: — (pending creation from iter 280)
 **Steering Issue**: #131
 
 ---
@@ -44,14 +44,14 @@
 
 ## 📚 Lessons Learned
 
+- **Iter 280**: Merge main (633 pairs) into canonical branch (was at 508) + 6 new pairs. Result: 639 on canonical branch.
+- **Key insight**: Previous iters 277-279 updated state file best_metric (638) but committed to suffixed/wrong branches. The canonical `autoloop/perf-comparison` was still at 508.
 - **Iter 279**: Merge main (+125 pairs) + 5 new pairs (diffSeries/shiftSeries options, dataFrameFfill axis=1, any/all skipna, nunique). Result: 638.
 - **Iter 278**: Fixed 300+ API bugs (wrong names, method→standalone, rollingQuantile args, fromDictOriented). pgid kill. Result: 532.
 - **subprocess timeout**: `Popen` + `start_new_session=True`, then `os.killpg(pgid, SIGKILL)`.
-- **Iter 277**: Fixed constructors (142 files), import paths, cummax/cummin standalone, installed pandas. Result: 382.
 - **Import paths**: `../../src/index.ts` not `"tsb"`. Series: `new Series({ data: [...] })`. DF: `DataFrame.fromColumns({...})`.
 - **Standalones**: cummax/cummin/cumprod/cumsum/diff/explode/pct_change/seriesAbs/where/mask/sample/replace/astype/pivot.
 - **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
-- **whereDataFrame cond**: function or boolean DataFrame. **rollingQuantile**: `(series, q, window)`. **fromDictOriented orient**: "columns"|"index"|"split"|"tight".
 ## 🚧 Foreclosed Avenues
 
 - **Suffixed branches**: Never commit to `autoloop/perf-comparison-{suffix}` branches. Only `autoloop/perf-comparison` counts.
@@ -63,16 +63,22 @@
 
 ## 🔭 Future Directions
 
-- **Fix remaining pairs** (638/638 files, but CI run quality unknown):
-  1. Previous issues with timeouts (concat_axis1, expanding/rolling) may be resolved in merged main
-  2. Continue adding benchmarks for new functions as tsb library grows
-  3. DataFrame.median() and df.round() standalone functions — add if library adds them
+- **Add more benchmarks** (639 pairs, canonical branch up to date):
+  1. Continue adding benchmarks for new functions as tsb library grows
+  2. Look for any remaining options-API variants not yet benchmarked
+  3. Check for any new src/ modules added since iteration 280
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 279 — 2026-04-22T02:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24756754833)
+### Iteration 280 — 2026-04-22T08:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24768692351)
+
+- **Status**: ✅ Accepted
+- **Change**: Merge main (633 pairs) into canonical branch + 6 new pairs (ffill axis=1, any/all skipna=false, shift fillValue, diff periods, nunique dropna=false, df any/all boolOnly)
+- **Metric**: 639 (previous best: 638, delta: +1)
+- **Commit**: 7b525fe
+- **Notes**: Canonical branch was at 508 (iter 158). After merging main (633) + 6 new: 639. Previous state best_metric 638 was achieved on wrong/suffixed branches. This is the first 639+ on the canonical branch.
 
 - **Status**: ✅ Accepted
 - **Change**: Merge main (125 new pairs from merged suffixed-branch work) + 5 new benchmark pairs for options-API functions
