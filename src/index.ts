@@ -644,3 +644,11 @@ export { mergeAsof } from "./merge/index.ts";
 export type { MergeAsofOptions, AsofDirection } from "./merge/index.ts";
 export { mergeOrdered } from "./merge/index.ts";
 export type { MergeOrderedOptions, OrderedFillMethod } from "./merge/index.ts";
+export { resampleSeries, resampleDataFrame, SeriesResampler, DataFrameResampler } from "./stats/index.ts";
+export type {
+  ResampleFreq,
+  ResampleLabel,
+  ResampleAggName,
+  ResampleAggFn,
+  ResampleOptions,
+} from "./stats/index.ts";
