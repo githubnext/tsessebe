@@ -378,11 +378,35 @@ Each run executes **one iteration for the single selected program**:
    - Program `build-tsb-pandas-typescript-migration` → branch `autoloop/build-tsb-pandas-typescript-migration`
 
    ```bash
-   git fetch origin
+   git fetch origin main
    if git ls-remote --exit-code origin autoloop/{program-name}; then
-     # Branch exists — check it out and merge the default branch
-     git checkout -b autoloop/{program-name} origin/autoloop/{program-name}
-     git merge origin/main --no-edit -m "Merge main into autoloop/{program-name}"
+     # Branch exists — fetch it too so the ahead/behind counts below are
+     # computed against up-to-date local copies of the remote tips.
+     git fetch origin autoloop/{program-name}
+
+     ahead=$(git rev-list --count origin/main..origin/autoloop/{program-name})
+     behind=$(git rev-list --count origin/autoloop/{program-name}..origin/main)
+
+     if [ "$ahead" = "0" ] && [ "$behind" != "0" ]; then
+       # All of the branch's commits are already in main (typical case after a
+       # successful merge of the previous iteration's PR). A merge here would
+       # produce a noisy "Merge main into branch" commit that re-exposes every
+       # historical file as a patch touch — the failure mode that triggers
+       # gh-aw's E003 (>100 files) when a new PR is opened. Fast-forward the
+       # canonical branch to main instead. This is lossless because ahead=0
+       # proves every commit on the branch is already reachable from main.
+       git checkout -B autoloop/{program-name} origin/main
+       git push --force-with-lease origin autoloop/{program-name}
+     elif [ "$ahead" != "0" ] && [ "$behind" != "0" ]; then
+       # True divergence: branch has unique commits AND main has moved on.
+       # Merge main into the branch so the iteration builds on the latest code.
+       git checkout -B autoloop/{program-name} origin/autoloop/{program-name}
+       git merge origin/main --no-edit -m "Merge main into autoloop/{program-name}"
+     else
+       # Already at main (ahead=0, behind=0) or only ahead of main (ahead>0,
+       # behind=0). Nothing to merge — just check out the branch.
+       git checkout -B autoloop/{program-name} origin/autoloop/{program-name}
+     fi
    else
      # Branch does not exist — create it from the default branch
      git checkout -b autoloop/{program-name} origin/main

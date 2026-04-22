@@ -82,7 +82,68 @@ steps:
               failed.append(branch)
               continue
 
-          # Merge the default branch into the program branch
+          # Determine whether the branch can be fast-forwarded to the default
+          # branch (ahead=0) or has truly diverged and needs a merge.
+          ahead_proc = subprocess.run(
+              ["git", "rev-list", "--count", f"origin/{default_branch}..origin/{branch}"],
+              capture_output=True, text=True,
+          )
+          behind_proc = subprocess.run(
+              ["git", "rev-list", "--count", f"origin/{branch}..origin/{default_branch}"],
+              capture_output=True, text=True,
+          )
+          if ahead_proc.returncode != 0 or behind_proc.returncode != 0:
+              # Don't guess — a failed rev-list with empty stdout would
+              # otherwise be parsed as 0 below and could trigger an
+              # incorrect fast-forward that loses commits.
+              print(f"  Failed to compute ahead/behind for {branch}: "
+                    f"ahead.rc={ahead_proc.returncode} stderr={ahead_proc.stderr.strip()!r} "
+                    f"behind.rc={behind_proc.returncode} stderr={behind_proc.stderr.strip()!r}")
+              failed.append(branch)
+              continue
+          try:
+              ahead = int(ahead_proc.stdout.strip())
+              behind = int(behind_proc.stdout.strip())
+          except ValueError:
+              print(f"  Failed to parse ahead/behind counts for {branch}: "
+                    f"ahead={ahead_proc.stdout!r} behind={behind_proc.stdout!r}")
+              failed.append(branch)
+              continue
+
+          if behind == 0:
+              # Branch already contains every commit on the default branch.
+              print(f"  {branch} is already up to date with {default_branch} (ahead={ahead}, behind=0)")
+              continue
+
+          if ahead == 0:
+              # Lossless fast-forward: every commit on the branch is already
+              # reachable from the default branch (typical case once the
+              # previous iteration's PR has been merged). A real merge here
+              # would create a "Merge default into branch" commit that re-
+              # exposes every historical file as a patch touch — the noise
+              # that trips gh-aw's MAX_FILES limit when the next iteration
+              # opens a new PR. Reset the branch to the default branch's HEAD
+              # and force-push (with lease) instead.
+              reset = subprocess.run(
+                  ["git", "reset", "--hard", f"origin/{default_branch}"],
+                  capture_output=True, text=True,
+              )
+              if reset.returncode != 0:
+                  print(f"  Failed to fast-forward {branch}: {reset.stderr}")
+                  failed.append(branch)
+                  continue
+              push = subprocess.run(
+                  ["git", "push", "--force-with-lease", "origin", branch],
+                  capture_output=True, text=True,
+              )
+              if push.returncode != 0:
+                  print(f"  Failed to push fast-forward of {branch}: {push.stderr}")
+                  failed.append(branch)
+                  continue
+              print(f"  Fast-forwarded {branch} to {default_branch} (was behind by {behind})")
+              continue
+
+          # True divergence (ahead>0 and behind>0): merge the default branch in.
           merge = subprocess.run(
               ["git", "merge", f"origin/{default_branch}", "--no-edit",
                "-m", f"Merge {default_branch} into {branch}"],
