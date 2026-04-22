@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>math_ops — abs, round — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>math_ops — abs, round</h1>
+  <p>
+    Element-wise mathematical transformations for Series and DataFrame.
+    Mirrors <code>pandas.Series.abs()</code>, <code>pandas.DataFrame.abs()</code>,
+    <code>pandas.Series.round()</code>, and <code>pandas.DataFrame.round()</code>.
+    Missing values (<code>null</code>, <code>NaN</code>) are preserved as-is.
+  </p>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runAbsSeries()">absSeries</button>
+  <button onclick="runAbsDataFrame()">absDataFrame</button>
+  <button onclick="runRoundSeries()">roundSeries</button>
+  <button onclick="runRoundDf()">roundDataFrame (per-column)</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Code Examples</h2>
+  <pre><code>import { Series, DataFrame, absSeries, absDataFrame, roundSeries, roundDataFrame } from "tsb";
+
+// ── absSeries ────────────────────────────────────────────────────────────────
+const s = new Series({ data: [-1, 2, -3, null] });
+absSeries(s).values;   // [1, 2, 3, null]
+
+// ── absDataFrame ─────────────────────────────────────────────────────────────
+const df = DataFrame.fromColumns({ a: [-1, 2], b: [3, -4] });
+absDataFrame(df).col("a").values;  // [1, 2]
+absDataFrame(df).col("b").values;  // [3, 4]
+
+// ── roundSeries ──────────────────────────────────────────────────────────────
+const prices = new Series({ data: [1.234, 5.678, null] });
+roundSeries(prices, 2).values;    // [1.23, 5.68, null]
+roundSeries(prices, 0).values;    // [1, 6, null]
+roundSeries(prices, -1).values;   // nearest 10: [0, 10, null]
+
+// ── roundDataFrame ────────────────────────────────────────────────────────────
+const data = DataFrame.fromColumns({ price: [1.111, 2.222], qty: [3.7, 4.4] });
+roundDataFrame(data, 2).col("price").values;        // [1.11, 2.22]
+roundDataFrame(data, { price: 1, qty: 0 }).col("qty").values; // [4, 4]
+</code></pre>
+
+  <script type="module">
+    import {
+      Series, DataFrame,
+      absSeries, absDataFrame,
+      roundSeries, roundDataFrame,
+    } from "https://esm.sh/tsb@latest";
+
+    const out = document.getElementById("output");
+    function show(text) { out.textContent = text; }
+
+    window.runAbsSeries = function() {
+      try {
+        const s = new Series({ data: [-1, 2, -3, null] });
+        show("absSeries([-1, 2, -3, null]) → " + JSON.stringify([...absSeries(s).values]));
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runAbsDataFrame = function() {
+      try {
+        const df = DataFrame.fromColumns({ a: [-1, 2], b: [3, -4] });
+        const r = absDataFrame(df);
+        show(`col "a": ${JSON.stringify([...r.col("a").values])}\n`
+           + `col "b": ${JSON.stringify([...r.col("b").values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runRoundSeries = function() {
+      try {
+        const s = new Series({ data: [1.234, 5.678, null] });
+        show(`round 2:  ${JSON.stringify([...roundSeries(s, 2).values])}\n`
+           + `round 0:  ${JSON.stringify([...roundSeries(s, 0).values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runRoundDf = function() {
+      try {
+        const df = DataFrame.fromColumns({ price: [1.111, 2.222], qty: [3.7, 4.4] });
+        const r = roundDataFrame(df, { price: 1, qty: 0 });
+        show(`price: ${JSON.stringify([...r.col("price").values])}\n`
+           + `qty:   ${JSON.stringify([...r.col("qty").values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+  </script>
+</body>
+</html>

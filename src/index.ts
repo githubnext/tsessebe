@@ -595,3 +595,17 @@ export {
 export type { SqueezeResult } from "./stats/index.ts";
 export { autoCorr, corrWith } from "./stats/index.ts";
 export type { CorrWithOptions } from "./stats/index.ts";
+export {
+  renameSeriesIndex,
+  renameDataFrame,
+  addPrefixDataFrame,
+  addSuffixDataFrame,
+  addPrefixSeries,
+  addSuffixSeries,
+  setAxisSeries,
+  setAxisDataFrame,
+  seriesToFrame,
+} from "./stats/index.ts";
+export type { LabelMapper, RenameDataFrameOptions } from "./stats/index.ts";
+export { absSeries, absDataFrame, roundSeries, roundDataFrame } from "./stats/index.ts";
+export type { RoundDataFrameSpec } from "./stats/index.ts";

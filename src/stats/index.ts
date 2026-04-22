@@ -424,3 +424,17 @@ export {
 export type { SqueezeResult } from "./scalar_extract.ts";
 export { autoCorr, corrWith } from "./corrwith.ts";
 export type { CorrWithOptions } from "./corrwith.ts";
+export {
+  renameSeriesIndex,
+  renameDataFrame,
+  addPrefixDataFrame,
+  addSuffixDataFrame,
+  addPrefixSeries,
+  addSuffixSeries,
+  setAxisSeries,
+  setAxisDataFrame,
+  seriesToFrame,
+} from "./rename_ops.ts";
+export type { LabelMapper, RenameDataFrameOptions } from "./rename_ops.ts";
+export { absSeries, absDataFrame, roundSeries, roundDataFrame } from "./math_ops.ts";
+export type { RoundDataFrameSpec } from "./math_ops.ts";
