@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T15:59:14Z |
-| Iteration Count | 281 |
-| Best Metric | 639 |
+| Last Run | 2026-04-22T22:17:59Z |
+| Iteration Count | 282 |
+| Best Metric | 637 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — (pending) |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -44,10 +44,10 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 281**: Canonical branch was at 508 (iter 158). Fast-forward merged main (633) + 6 new option-API pairs = 639. Push pending via PR creation.
-- **Iter 280**: Merge main (633 pairs) into canonical branch (was at 508) + 6 new pairs. Result: 639 on canonical branch.
-- **Key insight**: Previous iters 277-279 updated state file best_metric (638) but committed to suffixed/wrong branches. The canonical `autoloop/perf-comparison` was still at 508.
-- **Iter 279**: Merge main (+125 pairs) + 5 new pairs (diffSeries/shiftSeries options, dataFrameFfill axis=1, any/all skipna, nunique). Result: 638.
+- **Iter 282**: Fast-forward canonical branch to main (ahead=0, behind=100). Added 4 new option-variant pairs: quantile_df_axis1, interpolate_df_axis1, ffill_bfill_df_limit, ffill_bfill_series_limit. Result: 637.
+- **Best metric clarification**: Previous "639" was on a wrong branch that was never merged. Actual canonical best after iter 281 was 633 (from main). This iter adds 4 new pairs = 637.
+- **Iter 281**: Canonical branch was at 508 (iter 158). Fast-forward merged main (633) + 6 new option-API pairs = 639 (push pending, never confirmed merged).
+- **Key insight**: Previous iters 277-281 updated state file best_metric but committed to wrong/unmerged branches. Canonical `autoloop/perf-comparison` was still at 508 until this iter.
 - **Iter 278**: Fixed 300+ API bugs (wrong names, method→standalone, rollingQuantile args, fromDictOriented). pgid kill. Result: 532.
 - **subprocess timeout**: `Popen` + `start_new_session=True`, then `os.killpg(pgid, SIGKILL)`.
 - **Import paths**: `../../src/index.ts` not `"tsb"`. Series: `new Series({ data: [...] })`. DF: `DataFrame.fromColumns({...})`.
@@ -64,14 +64,22 @@
 
 ## 🔭 Future Directions
 
-- **Add more benchmarks** (639 pairs, canonical branch up to date):
-  1. Continue adding benchmarks for new functions as tsb library grows
-  2. Look for any remaining options-API variants not yet benchmarked
-  3. Check for any new src/ modules added since iteration 280
+- **Add more benchmarks** (637 pairs on canonical branch):
+  1. Continue adding option-variant benchmarks for axis/limit/method parameters
+  2. Check for any new src/ modules added to the tsb library
+  3. Look at interpolate limitDirection variants, quantile skipna variants, etc.
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 282 — 2026-04-22T22:17 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24805528063)
+
+- **Status**: ✅ Accepted (PR pending CI)
+- **Change**: Fast-forward canonical branch to main (633) + 4 new option-variant pairs (quantile_df_axis1, interpolate_df_axis1, ffill_bfill_df_limit, ffill_bfill_series_limit)
+- **Metric**: 637 (previous canonical: 633 from main, delta: +4)
+- **Commit**: 1585784
+- **Notes**: Previous "best_metric: 639" was on wrong branches. Canonical was at 633 (main). Added 4 new option-variant pairs covering axis=1 and limit parameters.
 
 ### Iteration 281 — 2026-04-22T15:59 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24788564007)
 
