@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — merge_ordered (ordered fill merge)</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; border-bottom: 2px solid #0f3460; padding-bottom: 0.25rem; }
+      pre { background: #f4f4f4; border-left: 4px solid #0f3460; padding: 1rem; overflow-x: auto; border-radius: 4px; }
+      code { font-family: 'Fira Code', monospace; font-size: 0.9em; }
+      .note { background: #e8f4fd; border: 1px solid #bee3f8; border-radius: 4px; padding: 0.75rem 1rem; margin: 1rem 0; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+      th, td { border: 1px solid #ddd; padding: 0.5rem 0.75rem; text-align: left; }
+      th { background: #f0f0f0; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0f3460; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to tsb playground</a>
+    <h1>merge_ordered — Ordered Fill Merge</h1>
+
+    <div class="note">
+      <strong>pandas equivalent:</strong> <code>pd.merge_ordered(left, right, on="date")</code>
+    </div>
+
+    <p>
+      <code>mergeOrdered</code> is an ordered merge (default <strong>outer</strong> join) that
+      sorts the result by the key column(s). It is ideal for time-series and event data where
+      both DataFrames have partially overlapping key ranges and you want a complete timeline
+      with optional forward-fill (<code>fill_method: "ffill"</code>) to carry values forward.
+    </p>
+
+    <h2>Key concepts</h2>
+    <ul>
+      <li>Default <code>how: "outer"</code> — keeps all keys from both DataFrames.</li>
+      <li>Result is always <strong>sorted ascending</strong> by the key column.</li>
+      <li><code>fill_method: "ffill"</code> forward-fills <code>null</code> gaps in non-key columns after the merge.</li>
+      <li><code>left_by</code> / <code>right_by</code>: perform the ordered merge independently per group and concatenate.</li>
+      <li><code>left_on</code> / <code>right_on</code>: use different key column names per side.</li>
+    </ul>
+
+    <h2>Basic outer ordered merge</h2>
+    <pre><code>import { DataFrame, mergeOrdered } from "tsb";
+
+const left = DataFrame.fromColumns({
+  date:  [1, 3, 5],
+  price: [10, 30, 50],
+});
+const right = DataFrame.fromColumns({
+  date:   [2, 3, 6],
+  volume: [200, 300, 600],
+});
+
+const result = mergeOrdered(left, right, { on: "date" });
+// date | price | volume
+//    1 |    10 |   null
+//    2 |  null |    200
+//    3 |    30 |    300
+//    5 |    50 |   null
+//    6 |  null |    600</code></pre>
+
+    <h2>Forward-fill after merge</h2>
+    <pre><code>const result = mergeOrdered(left, right, {
+  on: "date",
+  fill_method: "ffill",
+});
+// date | price | volume
+//    1 |    10 |   null   ← no earlier price to fill
+//    2 |    10 |    200   ← price carried forward from date=1
+//    3 |    30 |    300
+//    5 |    50 |    300   ← volume carried forward from date=3
+//    6 |    50 |    600</code></pre>
+
+    <h2>Inner join variant</h2>
+    <pre><code>// Only rows where both DataFrames have a key
+mergeOrdered(left, right, { on: "date", how: "inner" });
+// date | price | volume
+//    3 |    30 |    300</code></pre>
+
+    <h2>Different key column names per side</h2>
+    <pre><code>const left2 = DataFrame.fromColumns({ t_left:  [1, 3, 5], a: [10, 30, 50] });
+const right2 = DataFrame.fromColumns({ t_right: [2, 3, 6], b: [200, 300, 600] });
+
+mergeOrdered(left2, right2, { left_on: "t_left", right_on: "t_right" });
+// t_left | a    | b
+//      1 |   10 | null
+//      2 | null |  200
+//      3 |   30 |  300
+//      5 |   50 | null
+//      6 | null |  600</code></pre>
+
+    <h2>Group-wise ordered merge (left_by / right_by)</h2>
+    <pre><code>// Perform the ordered merge independently for each group
+const left3 = DataFrame.fromColumns({
+  grp: ["A", "A", "B", "B"],
+  k:   [1,   3,   1,   3],
+  a:   [10,  30, 100, 300],
+});
+const right3 = DataFrame.fromColumns({
+  grp: ["A", "A", "B", "B"],
+  k:   [2,   3,   2,   3],
+  b:   [20,  30, 200, 300],
+});
+
+mergeOrdered(left3, right3, {
+  on: "k",
+  left_by: "grp",
+  right_by: "grp",
+});
+// grp | k | a    | b
+//   A | 1 |   10 | null
+//   A | 2 | null |   20
+//   A | 3 |   30 |   30
+//   B | 1 |  100 | null
+//   B | 2 | null |  200
+//   B | 3 |  300 |  300</code></pre>
+
+    <h2>Overlapping non-key columns — suffixes</h2>
+    <pre><code>const left4 = DataFrame.fromColumns({ k: [1, 2, 3], val: [10, 20, 30] });
+const right4 = DataFrame.fromColumns({ k: [2, 3, 4], val: [200, 300, 400] });
+
+mergeOrdered(left4, right4, { on: "k", suffixes: ["_L", "_R"] });
+// k | val_L | val_R
+// 1 |    10 |  null
+// 2 |    20 |   200
+// 3 |    30 |   300
+// 4 |  null |   400</code></pre>
+
+    <h2>API reference</h2>
+    <table>
+      <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>on</code></td><td><code>string | string[]</code></td><td>—</td><td>Key column(s) present in both DataFrames</td></tr>
+        <tr><td><code>left_on</code></td><td><code>string | string[]</code></td><td>—</td><td>Key column(s) in the left DataFrame</td></tr>
+        <tr><td><code>right_on</code></td><td><code>string | string[]</code></td><td>—</td><td>Key column(s) in the right DataFrame</td></tr>
+        <tr><td><code>how</code></td><td><code>"outer" | "inner" | "left" | "right"</code></td><td><code>"outer"</code></td><td>Join type</td></tr>
+        <tr><td><code>fill_method</code></td><td><code>"ffill" | null</code></td><td><code>null</code></td><td>Forward-fill null gaps after merge</td></tr>
+        <tr><td><code>left_by</code></td><td><code>string | string[]</code></td><td>—</td><td>Group columns in left DataFrame</td></tr>
+        <tr><td><code>right_by</code></td><td><code>string | string[]</code></td><td>—</td><td>Group columns in right DataFrame</td></tr>
+        <tr><td><code>suffixes</code></td><td><code>[string, string]</code></td><td><code>["_x", "_y"]</code></td><td>Suffixes for overlapping non-key columns</td></tr>
+      </tbody>
+    </table>
+  </body>
+</html>

@@ -12,3 +12,5 @@ export { join, joinAll, crossJoin } from "./join.ts";
 export type { JoinOptions } from "./join.ts";
 export { mergeAsof } from "./merge_asof.ts";
 export type { MergeAsofOptions, AsofDirection } from "./merge_asof.ts";
+export { mergeOrdered } from "./merge_ordered.ts";
+export type { MergeOrderedOptions, OrderedFillMethod } from "./merge_ordered.ts";
