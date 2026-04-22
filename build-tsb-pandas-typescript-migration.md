@@ -8,7 +8,7 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T18:55:41Z |
+| Last Run | 2026-04-22T19:10:00Z |
 | Iteration Count | 251 |
 | Best Metric | 133 |
 | Target Metric | — |
@@ -39,13 +39,13 @@ Completed iters 239–251:
 - ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
 - ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
 - ✅ join/joinAll/crossJoin (iter 247), infer_objects/convertDtypes (iter 247)
-- ✅ merge_asof (iter 248), merge_ordered (iter 249), period_range (iter 250)
-- ✅ resample (iter 251) — time-based groupby agg for Series/DataFrame
+- ✅ merge_asof (iter 248), merge_ordered (iter 249)
+- ✅ resample (SeriesResampler/DataFrameResampler, D/H/T/S/W/M/Q/A, agg fns) (iter 251)
 
 Next:
 - `str.normalize()` — Unicode normalization (NFC/NFD/NFKC/NFKD) on StringAccessor
-- `stats/expanding.ts` — expanding window aggregation (pandas-style)
-- `core/interval.ts` / `IntervalIndex` — interval data type and indexing
+- `core/period_range.ts` — standalone top-level `period_range()` function
+- `stats/ewm_extended.ts` — ewm span/halflife/alpha/com variations
 
 ---
 
@@ -53,6 +53,8 @@ Next:
 
 - **CI type errors**: `Index<Label>.size` (not `.length`). `Series<Scalar>` (not `Series<unknown>`). Spread `readonly string[]` for toEqual. Use `.values` when comparing `Index<string>` in toEqual. Non-null assertion `arr[i]!` for `noUncheckedIndexedAccess` in loop bodies.
 - **Biome**: `useBlockStatements --write --unsafe`. `Number.NaN`/`Number.POSITIVE_INFINITY`. Default import fc. `import type` for value-unused imports.
+- **resample / Date as Label**: `Date` is NOT a `Label` (Label = number|string|boolean|null). Time-indexed Series/DataFrames must use ISO strings or numeric ms as index labels. Use `new Date(isoString).getTime()` when computing bucket keys. Output index comes from `DatetimeIndex.fromDates(dates) as unknown as Index<Label>`.
+- **Biome imports**: All imports in `src/stats/*.ts` must come from `../core` (not `../core/specific-file.ts`), from `../types.ts`, or from sibling `../stats/` files. Tests must import from `../../src/index.ts` only.
 - **TypeScript**: `(value as unknown) instanceof X` for instanceof. `as Scalar`/`as number` for noUncheckedIndexedAccess. `readonly T[]`. Extract helpers for ≤15 complexity. `df.columns.values` (not `.map(String)`) — `df.columns` is `Index<string>`. `(record[key] as T[]).push(v)` for pre-initialized Record dicts.
 - **MultiIndex**: Does not extend `Index<Label>`. Use `mi as unknown as Index<Label>` cast when passing to Series/DataFrame constructor. `mi.at(i)` returns `readonly Label[]`. `mi.size` for length.
 - **Tests**: Import from `../../src/index.ts`. `Series<Scalar>` type. `fc.float({ noNaN: true, noDefaultInfinity: true })` to avoid Infinity in multiply-by-zero tests.
@@ -78,7 +80,8 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iter 251 — 2026-04-22 18:55 UTC — ⏳ pending-ci — +resample (time-based resampling for Series/DataFrame: 14 freq strings, sum/mean/min/max/count/first/last/std/var/size/ohlc/agg, empty bin fill). Metric: 134 (+1). Commit: 873c5d2. [Run](https://github.com/githubnext/tsessebe/actions/runs/24795318981)
+### Iter 251 — 2026-04-22 19:10 UTC — ⏳ pending-ci — +resample (SeriesResampler/DataFrameResampler: D/H/T/S/W/M/Q/A freq, sum/mean/min/max/count/first/last/std/size/median/agg, property-based tests). Metric: 133 (+1). Commit: 6926720. [Run](https://github.com/githubnext/tsessebe/actions/runs/24796561104)
+
 ### Iter 250 — 2026-04-22 17:23 UTC — ⏳ pending-ci — +periodRange (standalone period_range top-level fn). Metric: 133 (+1). Commit: 09beefb. [Run](https://github.com/githubnext/tsessebe/actions/runs/24792490497)
 
 ### Iter 249 — 2026-04-22 16:34 UTC — ⏳ pending-ci — +mergeOrdered (ordered outer/inner/left/right merge, fill_method:ffill, left_by/right_by groups, left_on/right_on, suffix handling). Metric: 132 (+1). Commit: 0be568b. [Run](https://github.com/githubnext/tsessebe/actions/runs/24790234983)
