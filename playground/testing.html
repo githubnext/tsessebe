@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — testing utilities</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; line-height: 1.6; background: #f8f9fa; color: #212529; }
+      header { background: #0d6efd; color: #fff; padding: 1.5rem 2rem; }
+      header h1 { font-size: 1.8rem; }
+      header p { opacity: 0.85; margin-top: 0.25rem; }
+      main { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
+      section { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 2rem; padding: 1.5rem; }
+      h2 { font-size: 1.25rem; margin-bottom: 1rem; color: #0d6efd; border-bottom: 1px solid #e9ecef; padding-bottom: 0.5rem; }
+      h3 { font-size: 1rem; margin: 1rem 0 0.5rem; color: #495057; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; }
+      code { font-family: "Cascadia Code", "Fira Code", monospace; }
+      .pass { color: #198754; font-weight: bold; }
+      .fail { color: #dc3545; font-weight: bold; }
+      .note { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.75rem 1rem; font-size: 0.9rem; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+      th, td { border: 1px solid #dee2e6; padding: 0.4rem 0.7rem; text-align: left; }
+      th { background: #f1f3f5; font-weight: 600; }
+      a { color: #0d6efd; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>tsb — <code>testing</code> utilities</h1>
+      <p>assertSeriesEqual · assertFrameEqual · assertIndexEqual · mirrors <code>pandas.testing</code></p>
+    </header>
+
+    <main>
+
+      <section>
+        <h2>Overview</h2>
+        <p>
+          The <strong>tsb testing</strong> module provides assertion helpers for comparing tsb objects
+          in test suites — analogous to <code>pandas.testing.assert_series_equal</code>,
+          <code>assert_frame_equal</code>, and <code>assert_index_equal</code>.
+        </p>
+        <p style="margin-top:0.75rem">
+          When a check fails, a descriptive <code>AssertionError</code> is thrown with information about
+          which element differed and at which position — making test failures easy to diagnose.
+        </p>
+      </section>
+
+      <section>
+        <h2>Import</h2>
+        <pre><code>import {
+  assertSeriesEqual,
+  assertFrameEqual,
+  assertIndexEqual,
+  AssertionError,
+} from "tsb";</code></pre>
+      </section>
+
+      <section>
+        <h2><code>assertSeriesEqual(left, right, options?)</code></h2>
+        <p>Assert that two Series contain identical values (with optional tolerance for floats).</p>
+        <h3>Passing example</h3>
+        <pre><code>import { Series, assertSeriesEqual } from "tsb";
+
+const a = new Series({ data: [1, 2, 3], name: "x" });
+const b = new Series({ data: [1, 2, 3], name: "x" });
+assertSeriesEqual(a, b);
+// ✅ no exception thrown</code></pre>
+
+        <h3>Failing example</h3>
+        <pre><code>const c = new Series({ data: [1, 2, 99], name: "x" });
+assertSeriesEqual(a, c);
+// ❌ AssertionError: Series: values differ at index 2 (position 2).
+//    left=3, right=99</code></pre>
+
+        <h3>Float tolerance</h3>
+        <pre><code>const p = new Series({ data: [1.0, 2.0] });
+const q = new Series({ data: [1.0 + 1e-9, 2.0] });  // tiny rounding error
+assertSeriesEqual(p, q);                              // ✅ passes (within default atol=1e-8)
+
+assertSeriesEqual(p, q, { checkExact: true });        // ❌ exact comparison fails</code></pre>
+
+        <h3>Options</h3>
+        <table>
+          <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>checkDtypes</code></td><td>boolean</td><td>true</td><td>Compare dtype of both Series</td></tr>
+          <tr><td><code>checkIndex</code></td><td>boolean</td><td>true</td><td>Compare row index labels</td></tr>
+          <tr><td><code>checkNames</code></td><td>boolean</td><td>true</td><td>Compare Series name and index name</td></tr>
+          <tr><td><code>checkExact</code></td><td>boolean</td><td>false</td><td>Exact numeric equality (no tolerance)</td></tr>
+          <tr><td><code>rtol</code></td><td>number</td><td>1e-5</td><td>Relative tolerance</td></tr>
+          <tr><td><code>atol</code></td><td>number</td><td>1e-8</td><td>Absolute tolerance</td></tr>
+          <tr><td><code>objLabel</code></td><td>string</td><td>"Series"</td><td>Error message prefix</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2><code>assertFrameEqual(left, right, options?)</code></h2>
+        <p>Assert that two DataFrames are structurally and value-identical.</p>
+
+        <h3>Passing example</h3>
+        <pre><code>import { DataFrame, assertFrameEqual } from "tsb";
+
+const a = DataFrame.fromColumns({ x: [1, 2], y: [3, 4] });
+const b = DataFrame.fromColumns({ x: [1, 2], y: [3, 4] });
+assertFrameEqual(a, b); // ✅</code></pre>
+
+        <h3>Ignore column order</h3>
+        <pre><code>const c = DataFrame.fromColumns({ y: [3, 4], x: [1, 2] }); // columns reversed
+assertFrameEqual(a, c, { checkLike: true }); // ✅ order ignored</code></pre>
+
+        <h3>Options</h3>
+        <table>
+          <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+          <tr><td><code>checkDtypes</code></td><td>boolean</td><td>true</td><td>Compare column dtypes</td></tr>
+          <tr><td><code>checkIndex</code></td><td>boolean</td><td>true</td><td>Compare row index labels</td></tr>
+          <tr><td><code>checkNames</code></td><td>boolean</td><td>true</td><td>Compare index and column names</td></tr>
+          <tr><td><code>checkLike</code></td><td>boolean</td><td>false</td><td>Ignore column order</td></tr>
+          <tr><td><code>checkExact</code></td><td>boolean</td><td>false</td><td>Exact numeric equality</td></tr>
+          <tr><td><code>rtol</code></td><td>number</td><td>1e-5</td><td>Relative tolerance</td></tr>
+          <tr><td><code>atol</code></td><td>number</td><td>1e-8</td><td>Absolute tolerance</td></tr>
+          <tr><td><code>objLabel</code></td><td>string</td><td>"DataFrame"</td><td>Error message prefix</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2><code>assertIndexEqual(left, right, options?)</code></h2>
+        <p>Assert that two Index objects have identical labels.</p>
+        <pre><code>import { Index, assertIndexEqual } from "tsb";
+
+const a = new Index(["a", "b", "c"]);
+const b = new Index(["a", "b", "c"]);
+assertIndexEqual(a, b); // ✅
+
+const c = new Index(["a", "b", "z"]);
+assertIndexEqual(a, c);
+// ❌ AssertionError: Index: Index values differ at position 2. left=c, right=z</code></pre>
+      </section>
+
+      <section>
+        <h2><code>AssertionError</code></h2>
+        <p>
+          All failed assertions throw an <code>AssertionError</code> instance (extends <code>Error</code>).
+          It can be caught explicitly or used with <code>expect().toThrow(AssertionError)</code> in bun:test.
+        </p>
+        <pre><code>import { AssertionError, assertSeriesEqual, Series } from "tsb";
+
+try {
+  assertSeriesEqual(
+    new Series({ data: [1, 2, 3] }),
+    new Series({ data: [1, 2, 4] }),
+  );
+} catch (e) {
+  if (e instanceof AssertionError) {
+    console.error("Assertion failed:", e.message);
+  }
+}</code></pre>
+        <p class="note" style="margin-top:0.75rem">
+          💡 In <code>bun:test</code>, use <code>expect(() =&gt; assertSeriesEqual(a, b)).toThrow(AssertionError)</code>
+          to write negative assertions.
+        </p>
+      </section>
+
+      <section>
+        <h2>pandas equivalents</h2>
+        <table>
+          <tr><th>tsb</th><th>pandas</th></tr>
+          <tr><td><code>assertSeriesEqual(a, b)</code></td><td><code>pd.testing.assert_series_equal(a, b)</code></td></tr>
+          <tr><td><code>assertFrameEqual(a, b)</code></td><td><code>pd.testing.assert_frame_equal(a, b)</code></td></tr>
+          <tr><td><code>assertIndexEqual(a, b)</code></td><td><code>pd.testing.assert_index_equal(a, b)</code></td></tr>
+          <tr><td><code>AssertionError</code></td><td><code>AssertionError</code> (Python built-in)</td></tr>
+        </table>
+      </section>
+
+    </main>
+  </body>
+</html>

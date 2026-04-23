@@ -652,3 +652,14 @@ export type {
   ResampleAggFn,
   ResampleOptions,
 } from "./stats/index.ts";
+export {
+  AssertionError,
+  assertSeriesEqual,
+  assertFrameEqual,
+  assertIndexEqual,
+} from "./testing/index.ts";
+export type {
+  AssertSeriesEqualOptions,
+  AssertFrameEqualOptions,
+  AssertIndexEqualOptions,
+} from "./testing/index.ts";
