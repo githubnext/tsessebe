@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T12:24:28Z |
-| Iteration Count | 263 |
+| Last Run | 2026-04-23T13:00:00Z |
+| Iteration Count | 264 |
 | Best Metric | 135 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -47,10 +47,11 @@ Completed through iter 261:
 - ✅ hashPandasObject/hashSeries/hashDataFrame (iter 261)
 - ✅ case_when — caseWhenSeries/caseWhenDataFrame (iter 262)
 - ✅ where/mask aligned — whereSeriesAligned/maskSeriesAligned/whereDataFrameSeries/maskDataFrameAligned etc. (iter 263)
+- ✅ Styler (DataFrame.style API) — fluent CSS styling + toHtml/toLatex (iter 264)
 
 Next:
-- `DataFrame.style` (basic styling API)
-- `Series.pipe()` / `DataFrame.pipe()` with arbitrary function composition
+- `DataFrame.pipe()` / `Series.pipe()` with arbitrary function composition
+- `core/str_accessor` — wire `.str.extractall()` via late-binding
 
 ---
 
@@ -83,8 +84,7 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iter 263 — 2026-04-23 12:24 UTC — ⏳ pending-ci — +whereSeriesAligned/maskSeriesAligned/whereDataFrameSeries/maskDataFrameSeries/whereDataFrameAligned/maskDataFrameAligned. Metric: 135. Commit: d93bd01. [Run](https://github.com/githubnext/tsessebe/actions/runs/24834967392)
-### Iter 262 — 2026-04-23 11:37 UTC — ⏳ pending-ci — +caseWhenSeries/caseWhenDataFrame. Metric: 135. Commit: 699ad0e. [Run](https://github.com/githubnext/tsessebe/actions/runs/24832588026)
-### Iters 257–261 — ⏳/✅ (134→135): +options API, +pd.testing, +hash, +case_when.
+### Iter 264 — 2026-04-23 13:00 UTC — ⏳ pending-ci — +Styler/dataFrameStyle (DataFrame.style API): highlightMax/Min/Null/Between, backgroundGradient, textGradient, barChart, format, apply/applymap, toHtml, toLatex. Metric: 135. Commit: 2719284. [Run](https://github.com/githubnext/tsessebe/actions/runs/24838264967)
+### Iters 258–263 — ⏳/✅ (134→135): +pd.testing, +hash, +case_when, +where/mask aligned.
 ### Iters 246–256 — ✅/⚠️ (128→134): +resample, +mergeOrdered/Asof, +join, +inferObjects, +str.normalize, +ewmCov/Corr, +xs, +toHtml/Markdown, +toRecords/fromRecords, +isocalendar, +periodRange.
 ### Iters 53–245 — ✅/⚠️ (8→128): 185+ pandas features ported.
