@@ -328,15 +328,15 @@ function aggMean(vals: readonly Scalar[]): Scalar {
 }
 
 function aggMin(vals: readonly Scalar[]): Scalar {
-  const c = vals.filter((v) => !isMissing(v));
+  const c = vals.filter((v): v is Exclude<Scalar, null | undefined> => !isMissing(v));
   if (c.length === 0) return Number.NaN;
-  return c.reduce((a, b) => (a < b ? a : b)) as Scalar;
+  return c.reduce((a, b) => (a < b ? a : b));
 }
 
 function aggMax(vals: readonly Scalar[]): Scalar {
-  const c = vals.filter((v) => !isMissing(v));
+  const c = vals.filter((v): v is Exclude<Scalar, null | undefined> => !isMissing(v));
   if (c.length === 0) return Number.NaN;
-  return c.reduce((a, b) => (a > b ? a : b)) as Scalar;
+  return c.reduce((a, b) => (a > b ? a : b));
 }
 
 function aggCount(vals: readonly Scalar[]): Scalar {
