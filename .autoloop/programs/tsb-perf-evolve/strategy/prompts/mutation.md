@@ -1,6 +1,6 @@
 # Mutation prompt — tsb-perf-evolve
 
-You are about to apply a **single-parent operator** — either exploitation (refine an elite) or exploration (try something new in an under-represented island). This file frames how to reason about that change. Use it together with `strategy/alphaevolve.md`.
+You are about to apply a **single-parent operator** — either exploitation (refine an elite) or exploration (try something new in an under-represented island). This file frames how to reason about that change. Use it together with `strategy/openevolve.md`.
 
 ## What this operator is for
 

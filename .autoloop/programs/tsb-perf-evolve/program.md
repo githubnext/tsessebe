@@ -14,7 +14,7 @@ Concretely, we minimize the **ratio**
 
 `fitness < 1.0` means tsb is faster than pandas; lower is better. We will keep iterating as long as fitness keeps improving.
 
-This is a **performance-evolution program** — there is one self-contained artifact (`Series.sortValues`), one scalar fitness (the ratio), and many plausible algorithmic families to try (comparison sort, typed-array indirect sort, dtype-dispatched non-comparison sort, batched/SoA, etc.). It is the canonical case for the AlphaEvolve strategy.
+This is a **performance-evolution program** — there is one self-contained artifact (`Series.sortValues`), one scalar fitness (the ratio), and many plausible algorithmic families to try (comparison sort, typed-array indirect sort, dtype-dispatched non-comparison sort, batched/SoA, etc.). It is the canonical case for the OpenEvolve strategy.
 
 ### Validity invariants
 
@@ -43,10 +43,10 @@ Do NOT modify:
 
 ## Evolution Strategy
 
-This program uses the **AlphaEvolve** strategy. On every iteration, read `strategy/alphaevolve.md` and follow it literally — it supersedes the generic analyze/accept/reject steps in the default autoloop loop.
+This program uses the **OpenEvolve** strategy (modeled on [openevolve](https://github.com/algorithmicsuperintelligence/openevolve)). On every iteration, read `strategy/openevolve.md` and follow it literally — it supersedes the generic analyze/accept/reject steps in the default autoloop loop.
 
 Support files:
-- `strategy/alphaevolve.md` — the runtime playbook (operators, parent selection, population rules).
+- `strategy/openevolve.md` — the runtime playbook (operators, parent selection, population rules).
 - `strategy/prompts/mutation.md` — framing for exploitation and exploration operators.
 - `strategy/prompts/crossover.md` — framing for crossover and migration operators.
 

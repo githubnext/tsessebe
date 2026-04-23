@@ -1,19 +1,21 @@
-# Adopting the AlphaEvolve strategy for a new program
+# Adopting the OpenEvolve strategy for a new program
 
-This file is a **creator-time guide** — it is read by the maintainer (or a "create program" agent) **once**, when authoring a new program that wants to use AlphaEvolve. It is **not** copied into the program's `strategy/` directory and is **not** read by the iteration agent at runtime.
+> **Inspiration.** This strategy is modeled on [OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve) — an open-source implementation of the evolutionary-code-search approach popularized by DeepMind's AlphaEvolve paper. We've adapted the core ideas (MAP-Elites niching, island model, four operators — exploitation / exploration / crossover / migration) into a playbook the autoloop agent follows at iteration time. Consult the OpenEvolve repo for background on the underlying algorithm and worked examples.
 
-If you are an iteration agent and have somehow ended up here: stop, go back to `strategy/alphaevolve.md` in the program directory, and follow that.
+This file is a **creator-time guide** — it is read by the maintainer (or a "create program" agent) **once**, when authoring a new program that wants to use OpenEvolve. It is **not** copied into the program's `strategy/` directory and is **not** read by the iteration agent at runtime.
 
-## When to pick AlphaEvolve
+If you are an iteration agent and have somehow ended up here: stop, go back to `strategy/openevolve.md` in the program directory, and follow that.
 
-AlphaEvolve is the right strategy when **all** of the following are true:
+## When to pick OpenEvolve
+
+OpenEvolve is the right strategy when **all** of the following are true:
 
 - The target is a **self-contained artifact** — a single function, a single file, a config blob — that can be replaced atomically each iteration.
 - Fitness is a **scalar metric** the evaluator can produce in a few seconds to a few minutes (lower or higher is better — pick one).
-- There are **multiple plausible algorithmic families**, not just one obvious approach with knobs to tune. AlphaEvolve's island model is wasted if everything collapses to one family.
-- Iterations are **independent** — a candidate's fitness does not depend on the previous candidate's state. (If you need to *accumulate* changes, use the default loop, not AlphaEvolve.)
+- There are **multiple plausible algorithmic families**, not just one obvious approach with knobs to tune. OpenEvolve's island model is wasted if everything collapses to one family.
+- Iterations are **independent** — a candidate's fitness does not depend on the previous candidate's state. (If you need to *accumulate* changes, use the default loop, not OpenEvolve.)
 
-If the program is "add another test", "port another feature", or any kind of coverage / accumulation task — **do not use AlphaEvolve**. Use the default loop.
+If the program is "add another test", "port another feature", or any kind of coverage / accumulation task — **do not use OpenEvolve**. Use the default loop.
 
 ## Steps to adopt
 
@@ -22,15 +24,15 @@ If the program is "add another test", "port another feature", or any kind of cov
 
    ```bash
    mkdir -p .autoloop/programs/<program-name>/strategy/prompts
-   cp .autoloop/strategies/alphaevolve/strategy.md \
-      .autoloop/programs/<program-name>/strategy/alphaevolve.md
-   cp .autoloop/strategies/alphaevolve/prompts/mutation.md \
+   cp .autoloop/strategies/openevolve/strategy.md \
+      .autoloop/programs/<program-name>/strategy/openevolve.md
+   cp .autoloop/strategies/openevolve/prompts/mutation.md \
       .autoloop/programs/<program-name>/strategy/prompts/mutation.md
-   cp .autoloop/strategies/alphaevolve/prompts/crossover.md \
+   cp .autoloop/strategies/openevolve/prompts/crossover.md \
       .autoloop/programs/<program-name>/strategy/prompts/crossover.md
    ```
 
-3. Resolve every `<CUSTOMIZE: …>` marker in `strategy/alphaevolve.md` and the two prompt files. See the marker-by-marker guidance below.
+3. Resolve every `<CUSTOMIZE: …>` marker in `strategy/openevolve.md` and the two prompt files. See the marker-by-marker guidance below.
 4. Add the `## Evolution Strategy` pointer block to `program.md` (template below).
 5. Sanity-check: `grep -R "<CUSTOMIZE" .autoloop/programs/<program-name>/strategy/` should return **nothing**.
 
@@ -41,10 +43,10 @@ Replace (or add) `program.md`'s `## Evolution Strategy` section with exactly thi
 ```markdown
 ## Evolution Strategy
 
-This program uses the **AlphaEvolve** strategy. On every iteration, read `strategy/alphaevolve.md` and follow it literally — it supersedes the generic analyze/accept/reject steps in the default autoloop loop.
+This program uses the **OpenEvolve** strategy. On every iteration, read `strategy/openevolve.md` and follow it literally — it supersedes the generic analyze/accept/reject steps in the default autoloop loop.
 
 Support files:
-- `strategy/alphaevolve.md` — the runtime playbook (operators, parent selection, population rules).
+- `strategy/openevolve.md` — the runtime playbook (operators, parent selection, population rules).
 - `strategy/prompts/mutation.md` — framing for exploitation and exploration operators.
 - `strategy/prompts/crossover.md` — framing for crossover and migration operators.
 
@@ -55,7 +57,7 @@ Population state lives in the state file on the `memory/autoloop` branch under t
 
 ### `strategy.md` markers
 
-- **`# AlphaEvolve Strategy — <CUSTOMIZE: program-name>`** — the program name as it appears in the file path.
+- **`# OpenEvolve Strategy — <CUSTOMIZE: program-name>`** — the program name as it appears in the file path.
 - **`## Problem framing`** — 2–4 sentences. State the artifact, the fitness function, and the validity invariants. The agent reads this every iteration; make it dense.
 - **Operator weight table** — only change defaults if you have a strong prior. The defaults bias toward exploitation, which is right for most perf problems.
 - **Islands** — the most important thing to get right. Pick 3–6 **algorithmic families** that span the design space. Examples:

@@ -349,7 +349,7 @@ Each run executes **one iteration for the single selected program**:
 Before executing the generic iteration loop below, check whether this program has opted into a specialized strategy:
 
 1. Read `<program-dir>/program.md` and look for a `## Evolution Strategy` section.
-2. If that section points to a strategy file — e.g., "This program uses the **AlphaEvolve** strategy. Read `strategy/alphaevolve.md` at the start of every iteration and follow it literally." — read the referenced file and follow it.
+2. If that section points to a strategy file — e.g., "This program uses the **OpenEvolve** strategy. Read `strategy/openevolve.md` at the start of every iteration and follow it literally." — read the referenced file and follow it.
 3. The strategy playbook **supersedes** the generic "Step 2: Analyze" through "Step 5: Accept or Reject" steps below. The other steps (state read, branch management, state file updates, CI gating) still apply.
 4. If `## Evolution Strategy` is absent, contains only prose, or points to a file that does not exist, fall back to the default iteration flow below.
 
