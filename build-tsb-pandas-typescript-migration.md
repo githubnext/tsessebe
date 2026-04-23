@@ -8,19 +8,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T03:15:00Z |
-| Iteration Count | 258 |
-| Best Metric | 134 |
+| Last Run | 2026-04-23T06:50:00Z |
+| Iteration Count | 259 |
+| Best Metric | 135 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | #174 |
+| PR | pending-ci |
 | Steering Issue | #107 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -47,10 +47,9 @@ Completed iters 239–258:
 - ✅ pd.testing: assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError (iter 258)
 
 Next:
+- ✅ `pd.util.hash_pandas_object()` — hashSeries / hashDataFrame (iter 259)
 - `df.where(cond, other=df2)` — fill-with-other-dataframe/series variant
 - `DataFrame.style` (basic styling API)
-- `pd.util.hash_pandas_object()` — hashing DataFrame/Series
-- `pd.api.types` type-checking utilities (is_numeric_dtype, is_string_dtype, etc.)
 
 ---
 
@@ -83,6 +82,7 @@ Next:
 ---
 
 ## 📊 Iteration History
+### Iter 259 — 2026-04-23 06:50 UTC — ⏳ pending-ci — +hashSeries/hashDataFrame (pd.util.hash_pandas_object). Metric: 135 (+1 from 134). Commit: cea2db5. [Run](https://github.com/githubnext/tsessebe/actions/runs/24820886444)
 ### Iter 258 — 2026-04-23 03:15 UTC — ⏳ pending-ci — +pd.testing (assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError). Metric: 134 (+1 from branch base 133). Commit: bb30765. [Run](https://github.com/githubnext/tsessebe/actions/runs/24814455663)
 ### Iter 257 — 2026-04-23 01:37 UTC — ⏳ pending-ci — +options (getOption/setOption/resetOption/describeOption/listOptions/optionContext). Metric: 134 (+1). Commit: e1d8fc3. [Run](https://github.com/githubnext/tsessebe/actions/runs/24811857064)
 ### Iters 253–256 — ⏳ pending-ci — +dataFrameToHtml/Markdown, +dataFrameToRecords/fromRecords, +dtIsocalendar, +periodRange, +str.normalize, +ewmCovMatrix/ewmCorrMatrix. Metrics 134→137.
