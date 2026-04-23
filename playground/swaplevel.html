@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>swapLevel / reorderLevels — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>swapLevel &amp; reorderLevels</h1>
+    <p>
+      Reorder the levels of a <strong>MultiIndex</strong> on a Series or DataFrame.
+      Mirrors <code>pandas.Series.swaplevel</code>,
+      <code>pandas.DataFrame.swaplevel</code>,
+      <code>pandas.Series.reorder_levels</code>, and
+      <code>pandas.DataFrame.reorder_levels</code>.
+    </p>
+
+    <h2>swapLevelSeries — swap two levels</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+idx = pd.MultiIndex.from_tuples([("a", 1), ("a", 2), ("b", 1)])
+s = pd.Series([10, 20, 30], index=idx)
+
+swapped = s.swaplevel(0, 1)
+print(swapped.index.tolist())
+# [(1, 'a'), (2, 'a'), (1, 'b')]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { MultiIndex, Series, swapLevelSeries } from "tsb";
+import type { Index, Label } from "tsb";
+
+const mi = MultiIndex.fromTuples([["a", 1], ["a", 2], ["b", 1]]);
+const s = new Series({ data: [10, 20, 30], index: mi as unknown as Index&lt;Label&gt; });
+
+const swapped = swapLevelSeries(s, 0, 1);
+// index tuples: [(1,"a"), (2,"a"), (1,"b")]
+// values: [10, 20, 30]
+</code></pre>
+
+    <h2>swapLevelDataFrame — swap row-index levels</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+idx = pd.MultiIndex.from_tuples([("a", 1), ("b", 2)], names=["letter", "number"])
+df = pd.DataFrame({"x": [10, 20]}, index=idx)
+
+swapped = df.swaplevel("letter", "number")
+print(swapped.index.tolist())
+# [(1, 'a'), (2, 'b')]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, MultiIndex, swapLevelDataFrame } from "tsb";
+import type { Index, Label } from "tsb";
+
+const mi = MultiIndex.fromTuples([["a", 1], ["b", 2]], { names: ["letter", "number"] });
+const df = DataFrame.fromColumns(
+  { x: [10, 20] },
+  { index: mi as unknown as Index&lt;Label&gt; },
+);
+
+const swapped = swapLevelDataFrame(df, "letter", "number");
+// row index tuples: [(1,"a"), (2,"b")]
+</code></pre>
+
+    <h2>reorderLevelsSeries — arbitrary level reordering</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+idx = pd.MultiIndex.from_arrays([["a", "b"], [1, 2], ["x", "y"]])
+s = pd.Series([10, 20], index=idx)
+
+reordered = s.reorder_levels([2, 0, 1])
+print(reordered.index.tolist())
+# [("x", "a", 1), ("y", "b", 2)]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { MultiIndex, Series, reorderLevelsSeries } from "tsb";
+import type { Index, Label } from "tsb";
+
+const mi = MultiIndex.fromArrays([["a", "b"], [1, 2], ["x", "y"]]);
+const s = new Series({ data: [10, 20], index: mi as unknown as Index&lt;Label&gt; });
+
+const reordered = reorderLevelsSeries(s, [2, 0, 1]);
+// index tuples: [("x","a",1), ("y","b",2)]
+</code></pre>
+
+    <h2>reorderLevelsDataFrame</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+idx = pd.MultiIndex.from_tuples([("a", 1), ("b", 2)])
+df = pd.DataFrame({"v": [5, 15]}, index=idx)
+
+reordered = df.reorder_levels([1, 0])
+print(reordered.index.tolist())
+# [(1, 'a'), (2, 'b')]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, MultiIndex, reorderLevelsDataFrame } from "tsb";
+import type { Index, Label } from "tsb";
+
+const mi = MultiIndex.fromTuples([["a", 1], ["b", 2]]);
+const df = DataFrame.fromColumns(
+  { v: [5, 15] },
+  { index: mi as unknown as Index&lt;Label&gt; },
+);
+
+const reordered = reorderLevelsDataFrame(df, [1, 0]);
+// row index tuples: [(1,"a"), (2,"b")]
+</code></pre>
+  </body>
+</html>

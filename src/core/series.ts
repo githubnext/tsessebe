@@ -172,7 +172,7 @@ export class Series<T extends Scalar = Scalar> {
 
     if (index === undefined) {
       this.index = defaultIndex(data.length);
-    } else if (index instanceof Index) {
+    } else if (isIndexLike(index)) {
       if (index.size !== data.length) {
         throw new RangeError(
           `Index length ${index.size} does not match data length ${data.length}`,
@@ -1028,4 +1028,16 @@ export class Series<T extends Scalar = Scalar> {
   groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
     return new SeriesGroupBy(this as Series<Scalar>, by);
   }
+}
+
+function isIndexLike(v: unknown): v is Index<Label> {
+  if (typeof v !== "object" || v === null) {
+    return false;
+  }
+  const rec = v as Record<string, unknown>;
+  return (
+    typeof rec["size"] === "number" &&
+    typeof rec["at"] === "function" &&
+    typeof rec["getLoc"] === "function"
+  );
 }

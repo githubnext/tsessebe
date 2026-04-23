@@ -131,13 +131,13 @@ function normalizeWeights(
  * Falls back to basic weighted sampling when `replace=true`.
  */
 function weightedSampleWithoutReplacement(
-  poolSize: number,
+  _poolSize: number,
   k: number,
   probs: number[],
   rng: () => number,
 ): number[] {
   // Use reservoir sampling with exponential keys: assign key = rand^(1/w), take top-k
-  const keys: Array<[number, number]> = probs.map((p, i) => {
+  const keys: [number, number][] = probs.map((p, i) => {
     const r = rng();
     const key = p > 0 ? r ** (1 / p) : 0;
     return [key, i];

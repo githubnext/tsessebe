@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>update — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>update</h1>
+    <p>
+      Update a Series or DataFrame in-place using non-NA values from another object.
+      Mirrors <code>pandas.DataFrame.update</code> and <code>pandas.Series.update</code>.
+    </p>
+
+    <h2>seriesUpdate — basic overwrite</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+import numpy as np
+
+s = pd.Series([1, np.nan, 3], index=[0, 1, 2])
+other = pd.Series([np.nan, 20, np.nan], index=[0, 1, 2])
+s.update(other)
+print(s.tolist())
+# [1.0, 20.0, 3.0]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesUpdate } from "tsb";
+
+const s = new Series({ data: [1, null, 3], index: [0, 1, 2] });
+const other = new Series({ data: [null, 20, null], index: [0, 1, 2] });
+seriesUpdate(s, other).values;
+// [1, 20, 3]
+</code></pre>
+
+    <h2>overwrite=false — only fill NA</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+import numpy as np
+
+s = pd.Series([1, np.nan, 3])
+other = pd.Series([10, 20, 30])
+s.update(other, overwrite=False)
+print(s.tolist())
+# [1.0, 20.0, 3.0]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesUpdate } from "tsb";
+
+const s = new Series({ data: [1, null, 3] });
+const other = new Series({ data: [10, 20, 30] });
+seriesUpdate(s, other, { overwrite: false }).values;
+// [1, 20, 3]
+</code></pre>
+
+    <h2>dataFrameUpdate — update from another DataFrame</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+import numpy as np
+
+df = pd.DataFrame({"a": [1, np.nan, 3], "b": [10, 20, 30]})
+other = pd.DataFrame({"a": [np.nan, 99, np.nan]})
+df.update(other)
+print(df)
+#      a     b
+# 0  1.0  10.0
+# 1  99.0  20.0
+# 2  3.0  30.0
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, dataFrameUpdate } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1, null, 3], b: [10, 20, 30] });
+const other = DataFrame.fromColumns({ a: [null, 99, null] });
+const result = dataFrameUpdate(df, other);
+result.col("a").values; // [1, 99, 3]
+result.col("b").values; // [10, 20, 30]
+</code></pre>
+
+    <h2>Label alignment</h2>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesUpdate } from "tsb";
+
+const s = new Series({ data: [1, 2, 3], index: [0, 1, 2] });
+// other only has label 1 — other labels unchanged
+const other = new Series({ data: [99], index: [1] });
+seriesUpdate(s, other).values;
+// [1, 99, 3]
+</code></pre>
+  </body>
+</html>

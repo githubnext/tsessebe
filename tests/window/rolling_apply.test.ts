@@ -4,14 +4,14 @@
 
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
-import { DataFrame } from "../../src/core/index.ts";
-import { Series } from "../../src/core/index.ts";
 import {
+  DataFrame,
+  Series,
   dataFrameRollingAgg,
   dataFrameRollingApply,
   rollingAgg,
   rollingApply,
-} from "../../src/window/rolling_apply.ts";
+} from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -121,7 +121,7 @@ describe("rollingApply", () => {
 
   test("pairwise diff function", () => {
     // last - first in window
-    const diff = (nums: readonly number[]) => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
+    const diff = (nums: readonly number[]): number => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
     const out = rollingApply(s(1, 3, 6, 10, 15), 3, diff);
     expect(out.toArray()).toEqual([null, null, 5, 7, 9]);
   });
@@ -151,7 +151,7 @@ describe("rollingApply", () => {
   });
 
   test("range function over window", () => {
-    const range = (nums: readonly number[]) => Math.max(...nums) - Math.min(...nums);
+    const range = (nums: readonly number[]): number => Math.max(...nums) - Math.min(...nums);
     const out = rollingApply(s(1, 5, 2, 8, 3), 3, range);
     expect(out.toArray()).toEqual([null, null, 4, 6, 6]);
   });
@@ -244,7 +244,7 @@ describe("dataFrameRollingApply", () => {
   });
 
   test("custom function applied independently per column", () => {
-    const diff = (nums: readonly number[]) => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
+    const diff = (nums: readonly number[]): number => (nums.at(-1) ?? 0) - (nums[0] ?? 0);
     const df = DataFrame.fromColumns({ a: [1, 3, 6], b: [10, 15, 21] });
     const out = dataFrameRollingApply(df, 2, diff);
     expect(out.col("a").toArray()).toEqual([null, 2, 3]);

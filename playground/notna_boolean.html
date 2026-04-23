@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>keepTrue / keepFalse / filterBy — Boolean Indexing — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>keepTrue / keepFalse / filterBy — Boolean Indexing</h1>
+  <p>
+    Boolean-mask selection helpers that mirror the pandas
+    <code>series[mask]</code> / <code>df[mask]</code> idiom.
+  </p>
+  <ul>
+    <li><code>keepTrue(series, mask)</code> — keep elements where mask is truthy</li>
+    <li><code>keepFalse(series, mask)</code> — keep elements where mask is falsy</li>
+    <li><code>filterBy(df, mask)</code> — filter DataFrame rows by boolean mask</li>
+  </ul>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runKeepTrue()">keepTrue</button>
+  <button onclick="runKeepFalse()">keepFalse</button>
+  <button onclick="runFilterBy()">filterBy (DataFrame)</button>
+  <button onclick="runSeriesMask()">Series as mask</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Code Examples</h2>
+  <pre><code>import { Series, DataFrame, keepTrue, keepFalse, filterBy } from "tsb";
+
+const s = new Series({ data: [10, 20, 30, 40], index: ["a", "b", "c", "d"] });
+
+// Keep elements where mask is true
+keepTrue(s, [true, false, true, false]).values;  // [10, 30]
+
+// Keep elements where mask is false (complement)
+keepFalse(s, [true, false, true, false]).values; // [20, 40]
+
+// Filter DataFrame rows
+const df = DataFrame.fromColumns(
+  { age: [25, 30, 35, 40], score: [88, 72, 95, 60] },
+  { index: ["alice", "bob", "carol", "dave"] },
+);
+const highScore = df.col("score").values.map((v) => (v as number) >= 80);
+filterBy(df, highScore).col("age").values; // [25, 35]
+
+// Use a Series as a mask
+const mask = new Series({ data: [true, null, true, false], index: ["a", "b", "c", "d"] });
+keepTrue(s, mask).values; // [10, 30]  (null treated as false)
+</code></pre>
+
+  <script type="module">
+    const mod = await import("../src/index.ts").catch(() => null);
+
+    function display(label, text) {
+      document.getElementById("output").textContent = label + "\n\n" + text;
+    }
+
+    window.runKeepTrue = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { Series, keepTrue } = mod;
+      const s = new Series({ data: [10, 20, 30, 40], index: ["a", "b", "c", "d"] });
+      const result = keepTrue(s, [true, false, true, false]);
+      display("keepTrue(s, [true, false, true, false]):", String(result));
+    };
+
+    window.runKeepFalse = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { Series, keepFalse } = mod;
+      const s = new Series({ data: [10, 20, 30, 40], index: ["a", "b", "c", "d"] });
+      const result = keepFalse(s, [true, false, true, false]);
+      display("keepFalse(s, [true, false, true, false]):", String(result));
+    };
+
+    window.runFilterBy = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { DataFrame, filterBy } = mod;
+      const df = DataFrame.fromColumns(
+        { age: [25, 30, 35, 40], score: [88, 72, 95, 60] },
+        { index: ["alice", "bob", "carol", "dave"] },
+      );
+      const mask = df.col("score").values.map((v) => (v) >= 80);
+      const result = filterBy(df, mask);
+      display("filterBy(df, score >= 80):", String(result));
+    };
+
+    window.runSeriesMask = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { Series, keepTrue } = mod;
+      const s = new Series({ data: [10, 20, 30, 40], index: ["a", "b", "c", "d"] });
+      const mask = new Series({ data: [true, null, true, false], index: ["a", "b", "c", "d"] });
+      const result = keepTrue(s, mask);
+      display("keepTrue(s, Series mask with null):", String(result));
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scalar_extract — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>scalar_extract — squeeze / item / bool / first_valid_index / last_valid_index</h1>
+    <p>
+      Utilities to extract scalar values from Series and DataFrames.
+      Mirrors <code>pandas.Series.squeeze()</code>, <code>Series.item()</code>,
+      <code>Series.bool()</code>, <code>Series.first_valid_index()</code>,
+      <code>Series.last_valid_index()</code>, and their DataFrame equivalents.
+    </p>
+
+    <h2>squeezeSeries — extract scalar from a single-element Series</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series([42])
+print(s.squeeze())    # 42
+
+s2 = pd.Series([1, 2, 3])
+print(s2.squeeze())   # Series unchanged
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, squeezeSeries } from "tsb";
+
+squeezeSeries(new Series({ data: [42] }));     // 42
+squeezeSeries(new Series({ data: [1, 2, 3] })); // Series([1, 2, 3])
+</code></pre>
+
+    <h2>squeezeDataFrame — squeeze 1-D axis objects</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df1x1 = pd.DataFrame({"A": [10]})
+print(df1x1.squeeze())          # 10 (scalar)
+
+df1xN = pd.DataFrame({"A": [1], "B": [2], "C": [3]})
+print(df1xN.squeeze())          # Series indexed by column names
+
+dfNx1 = pd.DataFrame({"A": [1, 2, 3]})
+print(dfNx1.squeeze())          # Series indexed by row labels
+print(dfNx1.squeeze(axis=1))    # same as above
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, squeezeDataFrame } from "tsb";
+
+// 1×1 → scalar
+squeezeDataFrame(DataFrame.fromColumns({ A: [10] }));          // 10
+
+// 1 row, N cols → Series over columns
+squeezeDataFrame(DataFrame.fromColumns({ A: [1], B: [2] }));   // Series([1, 2])
+
+// N rows, 1 col → Series over rows
+squeezeDataFrame(DataFrame.fromColumns({ A: [1, 2, 3] }));     // Series([1, 2, 3])
+
+// axis=1: force squeeze along columns axis
+squeezeDataFrame(DataFrame.fromColumns({ A: [1, 2, 3] }), 1);  // Series([1, 2, 3])
+</code></pre>
+
+    <h2>itemSeries — return the single element of a Series</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series([7])
+print(s.item())   # 7
+
+s2 = pd.Series([1, 2])
+s2.item()  # ValueError
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, itemSeries } from "tsb";
+
+itemSeries(new Series({ data: [7] }));       // 7
+itemSeries(new Series({ data: [1, 2] }));    // throws RangeError
+</code></pre>
+
+    <h2>boolSeries / boolDataFrame — convert to boolean</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+pd.Series([1]).bool()     # True
+pd.Series([0]).bool()     # False
+pd.DataFrame({"A": [1]}).bool()  # True
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, DataFrame, boolSeries, boolDataFrame } from "tsb";
+
+boolSeries(new Series({ data: [1] }));               // true
+boolSeries(new Series({ data: [0] }));               // false
+boolDataFrame(DataFrame.fromColumns({ A: [1] }));    // true
+boolDataFrame(DataFrame.fromColumns({ A: [false] })); // false
+</code></pre>
+
+    <h2>firstValidIndex / lastValidIndex — find first/last non-NA label</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+import numpy as np
+
+s = pd.Series([None, np.nan, 3.0, 4.0], index=["a", "b", "c", "d"])
+print(s.first_valid_index())  # "a" ... wait: "c"
+print(s.last_valid_index())   # "d"
+
+s_all_na = pd.Series([None, None])
+print(s_all_na.first_valid_index())  # None
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, firstValidIndex, lastValidIndex } from "tsb";
+
+const s = new Series({ data: [null, NaN, 3, 4], index: ["a", "b", "c", "d"] });
+firstValidIndex(s);   // "c"
+lastValidIndex(s);    // "d"
+
+const allNA = new Series({ data: [null, null] });
+firstValidIndex(allNA);  // null
+</code></pre>
+
+    <h2>dataFrameFirstValidIndex / dataFrameLastValidIndex</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+import numpy as np
+
+df = pd.DataFrame({"A": [None, None, 1], "B": [None, 2, 3]})
+print(df.first_valid_index())  # 1  (row 1 has B=2)
+print(df.last_valid_index())   # 2  (row 2 has A=1, B=3)
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, dataFrameFirstValidIndex, dataFrameLastValidIndex } from "tsb";
+
+const df = DataFrame.fromColumns({
+  A: [null, null, 1],
+  B: [null, 2, 3],
+});
+dataFrameFirstValidIndex(df);  // 1
+dataFrameLastValidIndex(df);   // 2
+</code></pre>
+
+    <footer style="margin-top: 3rem; color: #777; font-size: 0.85rem;">
+      <p>🤖 Generated by <a href="https://github.com/githubnext/autoloop">Autoloop</a>.</p>
+    </footer>
+  </body>
+</html>

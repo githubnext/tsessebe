@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sort_ops — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>sort_ops — sort_values and sort_index for Series and DataFrame</h1>
+    <p>
+      Sorting utilities that mirror pandas' <code>sort_values</code> and
+      <code>sort_index</code> methods. All functions are pure — they return a
+      new object without modifying the input.
+    </p>
+
+    <h2>sortValuesSeries — sort a Series by its values</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+s = pd.Series([3, 1, 2], index=["b", "a", "c"])
+s.sort_values()
+# a    1
+# c    2
+# b    3
+s.sort_values(ascending=False)
+# b    3
+# c    2
+# a    1
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, sortValuesSeries } from "tsb";
+
+const s = new Series({ data: [3, 1, 2], index: ["b", "a", "c"] });
+
+sortValuesSeries(s);                      // [1, 2, 3] index: ["a","c","b"]
+sortValuesSeries(s, { ascending: false }); // [3, 2, 1] index: ["b","c","a"]
+sortValuesSeries(s, { ignoreIndex: true }); // resets index to [0, 1, 2]
+</code></pre>
+
+    <h2>NaN / null handling</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>s = pd.Series([3.0, None, 1.0])
+s.sort_values()               # 1, 3, NaN  (NaN last by default)
+s.sort_values(na_position="first")  # NaN, 1, 3
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>const s2 = new Series({ data: [3, null, 1] });
+sortValuesSeries(s2);                           // [1, 3, null]
+sortValuesSeries(s2, { naPosition: "first" }); // [null, 1, 3]
+</code></pre>
+
+    <h2>sortIndexSeries — sort a Series by its index labels</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>s.sort_index()  # sort by label alphabetically / numerically
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { sortIndexSeries } from "tsb";
+
+const s = new Series({ data: [3, 1, 2], index: ["b", "a", "c"] });
+sortIndexSeries(s);
+// values: [1, 3, 2], index: ["a", "b", "c"]
+</code></pre>
+
+    <h2>sortValuesDataFrame — sort DataFrame rows by column values</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>df = pd.DataFrame({"a": [3, 1, 2], "b": [10, 30, 20]})
+df.sort_values("a")
+#    a   b
+# 1  1  30
+# 2  2  20
+# 0  3  10
+
+df.sort_values(["a", "b"], ascending=[True, False])
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, sortValuesDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [3, 1, 2], b: [10, 30, 20] });
+
+sortValuesDataFrame(df, "a");
+// col a: [1, 2, 3]  col b: [30, 20, 10]
+
+sortValuesDataFrame(df, ["a", "b"], { ascending: [true, false] });
+// compound sort: by a ascending, then b descending
+</code></pre>
+
+    <h2>sortIndexDataFrame — sort DataFrame rows (or columns) by index</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>df.sort_index()           # sort rows by row-index labels
+df.sort_index(axis=1)    # sort columns alphabetically
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { sortIndexDataFrame } from "tsb";
+
+const df2 = DataFrame.fromColumns({ z: [1], a: [2], m: [3] });
+sortIndexDataFrame(df2, { axis: 1 });
+// columns in alphabetical order: "a", "m", "z"
+
+const df3 = DataFrame.fromColumns({ v: [1, 2, 3] }, { index: ["c", "a", "b"] });
+sortIndexDataFrame(df3);
+// rows in index order: "a" (2), "b" (3), "c" (1)
+</code></pre>
+
+    <h2>Summary of options</h2>
+    <pre><code>// sortValuesSeries(s, { ascending?, naPosition?, ignoreIndex? })
+// sortIndexSeries(s, { ascending?, naPosition?, ignoreIndex? })
+// sortValuesDataFrame(df, by, { ascending?, naPosition?, ignoreIndex? })
+// sortIndexDataFrame(df, { ascending?, axis?, naPosition?, ignoreIndex? })
+//
+// ascending    — true (default) or false
+// naPosition   — "last" (default) or "first"
+// ignoreIndex  — false (default) or true (resets index to 0, 1, 2, ...)
+// axis         — 0 (rows, default) or 1 (columns, sortIndexDataFrame only)
+</code></pre>
+  </body>
+</html>

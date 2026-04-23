@@ -4,10 +4,8 @@
 
 import { describe, expect, it } from "bun:test";
 import fc from "fast-check";
-import { DataFrame, DataFrameRolling, Series } from "../../src/index.ts";
-import type { Scalar } from "../../src/types.ts";
-import { Rolling } from "../../src/window/index.ts";
-import type { RollingSeriesLike } from "../../src/window/index.ts";
+import { DataFrame, DataFrameRolling, Rolling, Series } from "../../src/index.ts";
+import type { RollingSeriesLike, Scalar } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 

@@ -15,7 +15,7 @@ export interface TimedeltaLike {
 }
 
 /** A label used to identify rows or columns (similar to pandas Index). */
-export type Label = number | string | boolean | null;
+export type Label = number | string | boolean | null | Date;
 
 /** Axis identifiers — pandas supports axis=0 (rows) and axis=1 (columns). */
 export type Axis = 0 | 1 | "index" | "columns";

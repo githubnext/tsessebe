@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cutBinsToFrame — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #1345b3; }
+    label { font-weight: 600; }
+    input[type=number], input[type=range] { margin: 0.25rem 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>cutBinsToFrame</h1>
+  <p>
+    <code>cutBinsToFrame(result, { data })</code> converts the output of
+    <code>cut()</code> or <code>qcut()</code> into a summary DataFrame with
+    one row per bin, showing the bin label, edges, count, and frequency.
+  </p>
+
+  <h2>Interactive Demo</h2>
+  <p>
+    <label>Number of values: <input type="number" id="nValues" value="20" min="5" max="200" /></label>
+    <label>Number of bins: <input type="number" id="nBins" value="4" min="2" max="10" /></label>
+    <button onclick="run()">Run</button>
+  </p>
+  <div class="output" id="output">Click "Run" to see the result.</div>
+
+  <h2>What it does</h2>
+  <pre><code>import { cut, cutBinsToFrame, cutBinCounts, binEdges } from "tsb";
+
+// Bin 20 random values into 4 equal-width bins
+const data = Array.from({ length: 20 }, () => Math.random() * 100);
+const result = cut(data, 4);
+
+// Summary DataFrame: bin | left | right | count | frequency
+const df = cutBinsToFrame(result, { data });
+
+// Just the count dictionary
+const counts = cutBinCounts(result);
+// { "(0.0, 25.0]": 5, "(25.0, 50.0]": 6, ... }
+
+// Just edges indexed by label
+const edges = binEdges(result);
+</code></pre>
+
+  <h2>Related Functions</h2>
+  <ul>
+    <li><code>cut(data, bins)</code> — bin values into equal-width bins</li>
+    <li><code>qcut(data, bins)</code> — bin values into quantile-based bins</li>
+    <li><code>cutBinsToFrame(result, { data })</code> — summary DataFrame</li>
+    <li><code>cutBinCounts(result)</code> — label → count dictionary</li>
+    <li><code>binEdges(result)</code> — edges DataFrame indexed by label</li>
+  </ul>
+
+  <script type="module">
+    // Dynamic import for browser use
+    const { cut, qcut, cutBinsToFrame, cutBinCounts } = await import("../src/index.ts").catch(() => {
+      document.getElementById("output").textContent = "(Module unavailable in static preview — run via bun)";
+    }) ?? {};
+
+    window.run = function() {
+      if (!cut) { return; }
+      const n = parseInt(document.getElementById("nValues").value) || 20;
+      const b = parseInt(document.getElementById("nBins").value) || 4;
+      const data = Array.from({ length: n }, () => Math.random() * 100);
+      const result = cut(data, b, { duplicates: "drop" });
+      const df = cutBinsToFrame(result, { data });
+      const counts = cutBinCounts(result);
+
+      let out = `cut([${n} values], ${b})\n\n`;
+      out += `cutBinsToFrame result (${df.shape[0]} rows × ${df.shape[1]} cols):\n`;
+      out += `${"bin".padEnd(20)} ${"left".padEnd(10)} ${"right".padEnd(10)} ${"count".padEnd(8)} frequency\n`;
+      out += `${"-".repeat(20)} ${"-".repeat(10)} ${"-".repeat(10)} ${"-".repeat(8)} ---------\n`;
+      const binCol = df.get("bin")?.values ?? [];
+      const leftCol = df.get("left")?.values ?? [];
+      const rightCol = df.get("right")?.values ?? [];
+      const cntCol = df.get("count")?.values ?? [];
+      const freqCol = df.get("frequency")?.values ?? [];
+      for (let i = 0; i < binCol.length; i++) {
+        out += `${String(binCol[i]).padEnd(20)} ${String(leftCol[i]).slice(0,9).padEnd(10)} ${String(rightCol[i]).slice(0,9).padEnd(10)} ${String(cntCol[i]).padEnd(8)} ${Number(freqCol[i]).toFixed(4)}\n`;
+      }
+      document.getElementById("output").textContent = out;
+    };
+  </script>
+</body>
+</html>

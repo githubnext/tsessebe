@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>rename_ops — Rename, Prefix/Suffix, set_axis, to_frame — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>rename_ops — Rename, add_prefix/suffix, set_axis, to_frame</h1>
+  <p>
+    Functions for renaming labels, adding prefix/suffix to column or index labels,
+    replacing an axis entirely (<code>set_axis</code>), and converting a Series to a
+    single-column DataFrame (<code>to_frame</code>). Mirrors the corresponding
+    pandas methods.
+  </p>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runRenameColumns()">renameDataFrame (columns)</button>
+  <button onclick="runRenameIndex()">renameSeriesIndex</button>
+  <button onclick="runAddPrefix()">addPrefixDataFrame</button>
+  <button onclick="runAddSuffix()">addSuffixSeries</button>
+  <button onclick="runSetAxis()">setAxisDataFrame (axis=1)</button>
+  <button onclick="runToFrame()">seriesToFrame</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Code Examples</h2>
+  <pre><code>import {
+  Series, DataFrame,
+  renameSeriesIndex, renameDataFrame,
+  addPrefixDataFrame, addSuffixDataFrame,
+  addPrefixSeries, addSuffixSeries,
+  setAxisSeries, setAxisDataFrame,
+  seriesToFrame,
+} from "tsb";
+
+// ── renameSeriesIndex ────────────────────────────────────────────────────────
+const s = new Series({ data: [1, 2, 3], index: ["a", "b", "c"] });
+
+// Record mapping — only matched labels are changed
+renameSeriesIndex(s, { a: "x", c: "z" }).index.values;  // ["x", "b", "z"]
+
+// Function mapper — called for every index label
+renameSeriesIndex(s, l => l.toUpperCase()).index.values; // ["A", "B", "C"]
+
+// ── renameDataFrame ──────────────────────────────────────────────────────────
+const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] },
+                                  { index: ["r0", "r1"] });
+
+// Rename columns
+renameDataFrame(df, { columns: { a: "x", b: "y" } }).columns.values; // ["x","y"]
+
+// Rename row index
+renameDataFrame(df, { index: { r0: "row0", r1: "row1" } }).index.values;
+
+// ── add_prefix / add_suffix ──────────────────────────────────────────────────
+addPrefixDataFrame(df, "col_").columns.values;         // ["col_a","col_b"]
+addSuffixDataFrame(df, "_v1").columns.values;          // ["a_v1","b_v1"]
+
+addPrefixSeries(s, "idx_").index.values;               // ["idx_a","idx_b","idx_c"]
+addSuffixSeries(s, "_end").index.values;               // ["a_end","b_end","c_end"]
+
+// ── set_axis ─────────────────────────────────────────────────────────────────
+setAxisSeries(s, ["x", "y", "z"]).index.values;         // ["x","y","z"]
+setAxisDataFrame(df, ["col1","col2"], 1).columns.values; // ["col1","col2"]
+setAxisDataFrame(df, ["rowA","rowB"], 0).index.values;   // ["rowA","rowB"]
+
+// ── to_frame ─────────────────────────────────────────────────────────────────
+const score = new Series({ data: [90, 80, 70], name: "score" });
+seriesToFrame(score).columns.values;          // ["score"]
+seriesToFrame(score, "points").columns.values; // ["points"]
+</code></pre>
+
+  <script type="module">
+    import {
+      Series, DataFrame,
+      renameSeriesIndex, renameDataFrame,
+      addPrefixDataFrame, addSuffixSeries,
+      setAxisDataFrame,
+      seriesToFrame,
+    } from "https://esm.sh/tsb@latest";
+
+    const out = document.getElementById("output");
+    function show(text) { out.textContent = text; }
+
+    window.runRenameColumns = function() {
+      try {
+        const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
+        const r = renameDataFrame(df, { columns: { a: "x", b: "y" } });
+        show(`columns: ${JSON.stringify([...r.columns.values])}\n`
+           + `col "x": ${JSON.stringify([...r.col("x").values])}\n`
+           + `col "y": ${JSON.stringify([...r.col("y").values])}`);
+      } catch(e) { show("Note: requires tsb package (use with bundler).\n" + e); }
+    };
+
+    window.runRenameIndex = function() {
+      try {
+        const s = new Series({ data: [1, 2, 3], index: ["a", "b", "c"] });
+        const r = renameSeriesIndex(s, { a: "x", c: "z" });
+        show(`index: ${JSON.stringify([...r.index.values])}\nvalues: ${JSON.stringify([...r.values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runAddPrefix = function() {
+      try {
+        const df = DataFrame.fromColumns({ alpha: [1], beta: [2] });
+        const r = addPrefixDataFrame(df, "col_");
+        show(`columns: ${JSON.stringify([...r.columns.values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runAddSuffix = function() {
+      try {
+        const s = new Series({ data: [10, 20], index: ["a", "b"] });
+        const r = addSuffixSeries(s, "_end");
+        show(`index: ${JSON.stringify([...r.index.values])}\nvalues: ${JSON.stringify([...r.values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runSetAxis = function() {
+      try {
+        const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
+        const r = setAxisDataFrame(df, ["col1", "col2"], 1);
+        show(`columns: ${JSON.stringify([...r.columns.values])}\ncol1: ${JSON.stringify([...r.col("col1").values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+
+    window.runToFrame = function() {
+      try {
+        const s = new Series({ data: [90, 80, 70], name: "score" });
+        const df = seriesToFrame(s);
+        show(`columns: ${JSON.stringify([...df.columns.values])}\nscore: ${JSON.stringify([...df.col("score").values])}`);
+      } catch(e) { show("Note: requires tsb package.\n" + e); }
+    };
+  </script>
+</body>
+</html>

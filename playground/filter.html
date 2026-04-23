@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>filter — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>filter</h1>
+    <p>
+      Filter a DataFrame's rows or columns by label using exact names, substring matching,
+      or regular expressions. Mirrors <code>pandas.DataFrame.filter</code>.
+    </p>
+
+    <h2>filterDataFrame — by items (column names)</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame({"one": [1, 2], "two": [3, 4], "three": [5, 6]})
+print(df.filter(items=["one", "three"]).columns.tolist())
+# ['one', 'three']
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, filterDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ one: [1, 2], two: [3, 4], three: [5, 6] });
+filterDataFrame(df, { items: ["one", "three"] }).columns.values;
+// ["one", "three"]
+</code></pre>
+
+    <h2>filterDataFrame — by like (substring)</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame({"apple": [1], "apricot": [2], "banana": [3]})
+print(df.filter(like="ap").columns.tolist())
+# ['apple', 'apricot']
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, filterDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ apple: [1], apricot: [2], banana: [3] });
+filterDataFrame(df, { like: "ap" }).columns.values;
+// ["apple", "apricot"]
+</code></pre>
+
+    <h2>filterDataFrame — by regex</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame({"a1": [1], "a2": [2], "b1": [3], "b2": [4]})
+print(df.filter(regex="^a").columns.tolist())
+# ['a1', 'a2']
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, filterDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ a1: [1], a2: [2], b1: [3], b2: [4] });
+filterDataFrame(df, { regex: "^a" }).columns.values;
+// ["a1", "a2"]
+</code></pre>
+
+    <h2>filterDataFrame — filter rows (axis=0)</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame(
+    {"x": [10, 20, 30]},
+    index=["foo", "bar", "baz"],
+)
+print(df.filter(like="ba", axis=0).index.tolist())
+# ['bar', 'baz']
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, filterDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ x: [10, 20, 30] }, { index: ["foo", "bar", "baz"] });
+filterDataFrame(df, { like: "ba", axis: 0 }).index.values;
+// ["bar", "baz"]
+</code></pre>
+
+    <h2>filterSeries — by label</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series([1, 2, 3, 4], index=["alpha", "beta", "gamma", "aleph"])
+print(s.filter(like="al").index.tolist())
+# ['alpha', 'aleph']
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, filterSeries } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4], index: ["alpha", "beta", "gamma", "aleph"] });
+filterSeries(s, { like: "al" }).index.values;
+// ["alpha", "aleph"]
+</code></pre>
+  </body>
+</html>

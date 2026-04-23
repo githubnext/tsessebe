@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>between — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>between</h1>
+    <p>
+      Element-wise range check: returns a boolean Series indicating whether each value lies
+      within <code>[left, right]</code>. Mirrors <code>pandas.Series.between</code>.
+    </p>
+
+    <h2>seriesBetween — inclusive="both" (default)</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+print(s.between(2, 4))
+# 0    False
+# 1     True
+# 2     True
+# 3     True
+# 4    False
+# dtype: bool
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesBetween } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+seriesBetween(s, 2, 4).values;
+// [false, true, true, true, false]
+</code></pre>
+
+    <h2>Inclusive options</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series([1, 2, 3, 4, 5])
+
+s.between(2, 4, inclusive="left").tolist()
+# [False, True, True, False, False]
+
+s.between(2, 4, inclusive="right").tolist()
+# [False, False, True, True, False]
+
+s.between(2, 4, inclusive="neither").tolist()
+# [False, False, True, False, False]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesBetween } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4, 5] });
+
+seriesBetween(s, 2, 4, { inclusive: "left" }).values;
+// [false, true, true, false, false]
+
+seriesBetween(s, 2, 4, { inclusive: "right" }).values;
+// [false, false, true, true, false]
+
+seriesBetween(s, 2, 4, { inclusive: "neither" }).values;
+// [false, false, true, false, false]
+</code></pre>
+
+    <h2>Missing values</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+import numpy as np
+
+s = pd.Series([1, None, np.nan, 4])
+s.between(0, 5).tolist()
+# [True, False, False, True]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesBetween } from "tsb";
+
+const s = new Series({ data: [1, null, NaN, 4] });
+seriesBetween(s, 0, 5).values;
+// [true, false, false, true]
+</code></pre>
+
+    <h2>String comparison</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series(["apple", "banana", "cherry", "date"])
+s.between("banana", "cherry").tolist()
+# [False, True, True, False]
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, seriesBetween } from "tsb";
+
+const s = new Series({ data: ["apple", "banana", "cherry", "date"] });
+seriesBetween(s, "banana", "cherry").values;
+// [false, true, true, false]
+</code></pre>
+  </body>
+</html>

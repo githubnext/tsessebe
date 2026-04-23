@@ -126,9 +126,15 @@ const UNIT_NORM: Readonly<Record<string, string>> = {
 function normaliseUnit(raw: string): string {
   // Case-sensitive lowercase tokens — millisecond aliases must come first
   // so they are not confused with "MS" (month-start) after uppercasing.
-  if (raw === "ms" || raw === "L") return "ms";
-  if (raw === "us") return "us";
-  if (raw === "ns") return "ns";
+  if (raw === "ms" || raw === "L") {
+    return "ms";
+  }
+  if (raw === "us") {
+    return "us";
+  }
+  if (raw === "ns") {
+    return "ns";
+  }
   const u = raw.toUpperCase();
   // Tokens that are passed through unchanged (already canonical)
   if (u === "MS" || u === "QS" || u === "D" || u === "B") {
@@ -447,36 +453,51 @@ function snapToCalendarBoundary(d: Date, unit: string): Date {
   const m = d.getUTCMonth();
   const day = d.getUTCDate();
   switch (unit) {
-    case "MS":
+    case "MS": {
       // If not already month-start, advance to first day of next month.
-      if (day === 1) return d;
+      if (day === 1) {
+        return d;
+      }
       return new Date(Date.UTC(y, m + 1, 1));
+    }
     case "ME": {
       // If not already month-end, snap to end of the current month.
       const lastDay = daysInMonth(y, m);
-      if (day === lastDay) return d;
+      if (day === lastDay) {
+        return d;
+      }
       return new Date(Date.UTC(y, m, lastDay));
     }
     case "QS": {
       // Quarter-starts are Jan/Apr/Jul/Oct 1.
       const isQS = (m === 0 || m === 3 || m === 6 || m === 9) && day === 1;
-      if (isQS) return d;
+      if (isQS) {
+        return d;
+      }
       return nextQStart(d);
     }
     case "QE": {
       // Quarter-ends are Mar 31, Jun 30, Sep 30, Dec 31.
       const isQE = (m === 2 || m === 5 || m === 8 || m === 11) && day === daysInMonth(y, m);
-      if (isQE) return d;
+      if (isQE) {
+        return d;
+      }
       return nextQEnd(d);
     }
-    case "YS":
+    case "YS": {
       // Year-start is Jan 1.
-      if (m === 0 && day === 1) return d;
+      if (m === 0 && day === 1) {
+        return d;
+      }
       return new Date(Date.UTC(y + 1, 0, 1));
-    case "YE":
+    }
+    case "YE": {
       // Year-end is Dec 31.
-      if (m === 11 && day === 31) return d;
+      if (m === 11 && day === 31) {
+        return d;
+      }
       return new Date(Date.UTC(y, 11, 31));
+    }
     default:
       return d;
   }

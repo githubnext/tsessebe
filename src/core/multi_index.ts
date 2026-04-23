@@ -633,9 +633,21 @@ export class MultiIndex {
 // ─── tuple comparison helpers ────────────────────────────────────────────────
 
 /** Compare two non-null scalar labels; return -1 / 0 / 1. */
-function compareScalars(av: number | string | boolean, bv: number | string | boolean): number {
+function compareScalars(
+  av: number | string | boolean | Date,
+  bv: number | string | boolean | Date,
+): number {
   if (av === bv) {
     return 0;
+  }
+  if (av instanceof Date && bv instanceof Date) {
+    return av.getTime() < bv.getTime() ? -1 : 1;
+  }
+  if (av instanceof Date) {
+    return 1;
+  }
+  if (bv instanceof Date) {
+    return -1;
   }
   return av < bv ? -1 : 1;
 }

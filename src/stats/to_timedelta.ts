@@ -16,7 +16,7 @@
  * @module
  */
 
-import { Dtype, Series } from "../core/index.ts";
+import { Dtype, Series, Timedelta } from "../core/index.ts";
 import type { Scalar } from "../types.ts";
 
 // ─── top-level regex constants (biome: useTopLevelRegex) ──────────────────────
@@ -34,97 +34,6 @@ const RE_HUMAN_UNIT =
 
 /** Pure integer string (no decimal). */
 const RE_INT = /^-?\d+$/;
-
-// ─── Timedelta class ───────────────────────────────────────────────────────────
-
-/**
- * Represents a fixed duration with millisecond precision internally.
- *
- * Mirrors `pandas.Timedelta` (a thin wrapper around a signed millisecond count).
- */
-export class Timedelta {
-  /** Total duration in milliseconds (may be negative). */
-  readonly totalMs: number;
-
-  constructor(ms: number) {
-    this.totalMs = ms;
-  }
-
-  /** Sign: +1 for non-negative, -1 for negative. */
-  get sign(): number {
-    return this.totalMs < 0 ? -1 : 1;
-  }
-
-  /** Absolute millisecond value. */
-  get absMs(): number {
-    return Math.abs(this.totalMs);
-  }
-
-  /** Whole days component (floor). */
-  get days(): number {
-    return Math.trunc(this.totalMs / 86_400_000);
-  }
-
-  /** Whole hours within the current day (0–23). */
-  get hours(): number {
-    return Math.trunc((this.absMs % 86_400_000) / 3_600_000);
-  }
-
-  /** Whole minutes within the current hour (0–59). */
-  get minutes(): number {
-    return Math.trunc((this.absMs % 3_600_000) / 60_000);
-  }
-
-  /** Whole seconds within the current minute (0–59). */
-  get seconds(): number {
-    return Math.trunc((this.absMs % 60_000) / 1_000);
-  }
-
-  /** Whole milliseconds within the current second (0–999). */
-  get ms(): number {
-    return Math.trunc(this.absMs % 1_000);
-  }
-
-  /** Return a new Timedelta with the absolute value. */
-  abs(): Timedelta {
-    return new Timedelta(this.absMs);
-  }
-
-  /** Add another Timedelta to this one. */
-  add(other: Timedelta): Timedelta {
-    return new Timedelta(this.totalMs + other.totalMs);
-  }
-
-  /** Subtract another Timedelta from this one. */
-  subtract(other: Timedelta): Timedelta {
-    return new Timedelta(this.totalMs - other.totalMs);
-  }
-
-  /** Multiply duration by a numeric scalar. */
-  scale(factor: number): Timedelta {
-    return new Timedelta(this.totalMs * factor);
-  }
-
-  /** Return true if this duration is less than other. */
-  lt(other: Timedelta): boolean {
-    return this.totalMs < other.totalMs;
-  }
-
-  /** Return true if this duration is greater than other. */
-  gt(other: Timedelta): boolean {
-    return this.totalMs > other.totalMs;
-  }
-
-  /** Return true if durations are equal (within 0 ms). */
-  eq(other: Timedelta): boolean {
-    return this.totalMs === other.totalMs;
-  }
-
-  /** Human-readable representation matching pandas Timedelta.__str__. */
-  toString(): string {
-    return formatTimedelta(this);
-  }
-}
 
 // ─── public types ──────────────────────────────────────────────────────────────
 
@@ -259,7 +168,7 @@ function convertNumber(value: number, options: ToTimedeltaOptions): Timedelta | 
       `Invalid numeric timedelta: ${value}`,
     );
   }
-  return new Timedelta(ms);
+  return Timedelta.fromMilliseconds(ms);
 }
 
 /** Scale a value from the given unit to milliseconds. */
@@ -341,7 +250,7 @@ function parsePandas(m: RegExpExecArray): Timedelta | null {
   if (neg) {
     ms = -ms;
   }
-  return new Timedelta(ms);
+  return Timedelta.fromMilliseconds(ms);
 }
 
 // ─── ISO 8601 parser ───────────────────────────────────────────────────────────
@@ -362,7 +271,7 @@ function parseIso(m: RegExpExecArray): Timedelta | null {
   if (neg) {
     ms = -ms;
   }
-  return new Timedelta(ms);
+  return Timedelta.fromMilliseconds(ms);
 }
 
 // ─── human-readable parser ─────────────────────────────────────────────────────
@@ -379,7 +288,7 @@ function parseHuman(value: string): Timedelta | null {
     totalMs += humanUnitToMs(qty, unit);
   }
 
-  return matched ? new Timedelta(totalMs) : null;
+  return matched ? Timedelta.fromMilliseconds(totalMs) : null;
 }
 
 /** Map a human unit token to milliseconds. */

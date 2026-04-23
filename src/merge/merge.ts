@@ -32,8 +32,7 @@
  * @module
  */
 
-import { DataFrame } from "../core/index.ts";
-import type { Index } from "../core/index.ts";
+import { DataFrame, Index } from "../core/index.ts";
 import { RangeIndex } from "../core/index.ts";
 import type { JoinHow, Label, Scalar } from "../types.ts";
 
@@ -208,12 +207,48 @@ function computePairs(
   rightMap: Map<string, number[]>,
   how: JoinHow,
 ): RowPair[] {
+  if (how === "left") {
+    const pairs: RowPair[] = [];
+    for (const [key, leftIdxs] of leftMap) {
+      const rightIdxs = rightMap.get(key);
+      if (rightIdxs === undefined) {
+        for (const li of leftIdxs) {
+          pairs.push({ left: li, right: null });
+        }
+        continue;
+      }
+      for (const li of leftIdxs) {
+        for (const ri of rightIdxs) {
+          pairs.push({ left: li, right: ri });
+        }
+      }
+    }
+    return pairs;
+  }
+  if (how === "right") {
+    const pairs: RowPair[] = [];
+    for (const [key, rightIdxs] of rightMap) {
+      const leftIdxs = leftMap.get(key);
+      if (leftIdxs === undefined) {
+        for (const ri of rightIdxs) {
+          pairs.push({ left: null, right: ri });
+        }
+        continue;
+      }
+      for (const li of leftIdxs) {
+        for (const ri of rightIdxs) {
+          pairs.push({ left: li, right: ri });
+        }
+      }
+    }
+    return pairs;
+  }
   const pairs: RowPair[] = [];
   const matched = addMatchedPairs(leftMap, rightMap, pairs);
-  if (how === "left" || how === "outer") {
+  if (how === "outer") {
     addLeftUnmatched(leftMap, matched, pairs);
   }
-  if (how === "right" || how === "outer") {
+  if (how === "outer") {
     addRightUnmatched(rightMap, matched, pairs);
   }
   return pairs;
@@ -420,12 +455,25 @@ function buildResultDataFrame(
   right: DataFrame,
   pairs: readonly RowPair[],
   plan: readonly ColPlanEntry[],
+  keySpec: KeySpec,
 ): DataFrame {
   const colData: Record<string, Scalar[]> = {};
   for (const entry of plan) {
     colData[entry.outputName] = buildResultColumn(left, right, pairs, entry);
   }
-  const index = new RangeIndex(pairs.length) as unknown as Index<Label>;
+  let index = new RangeIndex(pairs.length) as unknown as Index<Label>;
+  if (keySpec.leftUseIndex && keySpec.rightUseIndex) {
+    const labels: Label[] = pairs.map((p) => {
+      if (p.left !== null) {
+        return (left.index.values[p.left] ?? null) as Label;
+      }
+      if (p.right !== null) {
+        return (right.index.values[p.right] ?? null) as Label;
+      }
+      return null;
+    });
+    index = new Index<Label>(labels);
+  }
   return DataFrame.fromColumns(colData as Record<string, readonly Scalar[]>, { index });
 }
 
@@ -499,7 +547,7 @@ export function merge(left: DataFrame, right: DataFrame, options?: MergeOptions)
 
   const plan = buildColPlan(left, right, keySpec, suffixes);
 
-  const result = buildResultDataFrame(left, right, pairs, plan);
+  const result = buildResultDataFrame(left, right, pairs, plan, keySpec);
 
   if (sort && plan.length > 0) {
     const sortCols = keySortCols(plan);

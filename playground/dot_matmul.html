@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dot_matmul — dot product &amp; matrix multiply — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>dot_matmul — dot product &amp; matrix multiplication</h1>
+  <p>
+    Dot product and matrix multiplication for Series and DataFrame.
+    Mirrors <code>pandas.Series.dot()</code> and <code>pandas.DataFrame.dot()</code>.
+    Index alignment is performed automatically (inner join on shared labels).
+  </p>
+
+  <h2>API</h2>
+  <pre>
+import { seriesDotSeries, seriesDotDataFrame, dataFrameDotSeries, dataFrameDotDataFrame } from "tsb";
+
+// Series · Series → scalar
+seriesDotSeries(a, b);
+
+// Series · DataFrame → Series
+seriesDotDataFrame(s, df);
+
+// DataFrame · Series → Series
+dataFrameDotSeries(df, s);
+
+// DataFrame · DataFrame → DataFrame
+dataFrameDotDataFrame(A, B);
+  </pre>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runSeriesDot()">Series · Series</button>
+  <button onclick="runSeriesDotDf()">Series · DataFrame</button>
+  <button onclick="runDfDotSeries()">DataFrame · Series</button>
+  <button onclick="runMatMul()">Matrix multiply</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Examples</h2>
+  <pre>
+// Series dot product
+const a = new Series({ data: [1, 2, 3], index: ["x","y","z"] });
+const b = new Series({ data: [4, 5, 6], index: ["x","y","z"] });
+seriesDotSeries(a, b); // 1*4 + 2*5 + 3*6 = 32
+
+// DataFrame · vector
+const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
+const v  = new Series({ data: [1, 1], index: ["a", "b"] });
+dataFrameDotSeries(df, v).values; // [4, 6]  (row sums)
+
+// Matrix multiply
+const A = DataFrame.fromColumns({ k: [1, 2] });     // 2×1
+// ... B with row index ["k"] ...
+dataFrameDotDataFrame(A, B).col("r").values;         // [3, 6]
+  </pre>
+
+  <script type="module">
+    import {
+      Series,
+      DataFrame,
+      seriesDotSeries,
+      seriesDotDataFrame,
+      dataFrameDotSeries,
+      dataFrameDotDataFrame,
+      Index,
+    } from "../src/index.ts";
+
+    const out = (msg) => { document.getElementById("output").textContent = msg; };
+
+    window.runSeriesDot = () => {
+      const a = new Series({ data: [1, 2, 3], index: ["x","y","z"] });
+      const b = new Series({ data: [4, 5, 6], index: ["x","y","z"] });
+      const result = seriesDotSeries(a, b);
+      out(`seriesDotSeries([1,2,3] · [4,5,6]) = ${result}\n(expected 32: 1×4 + 2×5 + 3×6)`);
+    };
+
+    window.runSeriesDotDf = () => {
+      const s = new Series({ data: [1, 2], index: [0, 1] });
+      const df = DataFrame.fromColumns({ a: [1, 3], b: [2, 4] });
+      const result = seriesDotDataFrame(s, df);
+      out(`seriesDotDataFrame([1,2] · df{a:[1,3],b:[2,4]}):\n  a = ${result.values[0]}  (1×1 + 2×3 = 7)\n  b = ${result.values[1]}  (1×2 + 2×4 = 10)`);
+    };
+
+    window.runDfDotSeries = () => {
+      const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
+      const v  = new Series({ data: [1, 1], index: ["a", "b"] });
+      const result = dataFrameDotSeries(df, v);
+      out(`dataFrameDotSeries(df{a:[1,2],b:[3,4]} · [1,1]):\n  row0 = ${result.values[0]}  (1×1 + 3×1 = 4)\n  row1 = ${result.values[1]}  (2×1 + 4×1 = 6)`);
+    };
+
+    window.runMatMul = () => {
+      // A = [[1,2],[3,4]] (rows [0,1], cols ["c0","c1"])
+      // B = [[5,6],[7,8]] (rows ["c0","c1"], cols ["d0","d1"])
+      const A = DataFrame.fromColumns({ c0: [1, 3], c1: [2, 4] });
+      const colIdx = new Series({ data: [0, 0], index: ["c0","c1"] }).index;
+      const B = new DataFrame(
+        new Map([
+          ["d0", new Series({ data: [5, 7], index: colIdx })],
+          ["d1", new Series({ data: [6, 8], index: colIdx })],
+        ]),
+        colIdx,
+      );
+      const result = dataFrameDotDataFrame(A, B);
+      out(
+        `dataFrameDotDataFrame([[1,2],[3,4]] × [[5,6],[7,8]]):\n` +
+        `  d0: [${[...result.col("d0").values]}]  (expected [19, 43])\n` +
+        `  d1: [${[...result.col("d1").values]}]  (expected [22, 50])`
+      );
+    };
+  </script>
+</body>
+</html>

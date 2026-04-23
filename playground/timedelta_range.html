@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — timedelta_range</title>
+  <style>
+    :root {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+      --green: #3fb950; --red: #f85149; --yellow: #d29922;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; line-height: 1.6; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; }
+    header h1 { font-size: 1.4rem; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); font-size: 0.9rem; }
+    main { max-width: 960px; margin: 0 auto; padding: 2rem; }
+    h2 { color: var(--accent); margin: 2rem 0 0.75rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.25rem; margin-top: 0.75rem; }
+    input, select { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem; width: 100%; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button { background: var(--accent); color: #0d1117; border: none; border-radius: 4px; padding: 0.45rem 1.2rem; font-weight: 600; cursor: pointer; font-size: 0.9rem; margin-top: 1rem; }
+    button:hover { opacity: 0.85; }
+    .output { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 1rem; font-family: monospace; font-size: 0.82rem; white-space: pre-wrap; max-height: 360px; overflow-y: auto; color: var(--green); margin-top: 1rem; }
+    .error { color: var(--red) !important; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+    th, td { border: 1px solid var(--border); padding: 0.4rem 0.75rem; text-align: left; }
+    th { background: var(--surface); color: var(--muted); font-weight: 500; }
+    td { font-family: monospace; }
+    .pill { display: inline-block; background: var(--border); border-radius: 3px; padding: 0.1rem 0.4rem; font-family: monospace; font-size: 0.8rem; }
+    .back { color: var(--muted); font-size: 0.85rem; text-decoration: none; }
+    .back:hover { color: var(--accent); }
+    code { background: var(--border); padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.85rem; }
+    p { color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>tsb — <span>timedelta_range</span></h1>
+  <p>Generate fixed-frequency TimedeltaIndex sequences · mirrors <code>pandas.timedelta_range</code></p>
+</header>
+<main>
+  <a href="index.html" class="back">← back to index</a>
+
+  <h2>Frequency Reference</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>String</th><th>Duration</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><span class="pill">W</span></td><td>1 week (7 days)</td><td><code>"2W"</code> → 14 days per step</td></tr>
+        <tr><td><span class="pill">D</span></td><td>1 calendar day</td><td><code>"3D"</code> → 3 days per step</td></tr>
+        <tr><td><span class="pill">H</span></td><td>1 hour</td><td><code>"6H"</code> → 6 hours per step</td></tr>
+        <tr><td><span class="pill">T</span> / <span class="pill">min</span></td><td>1 minute</td><td><code>"30min"</code> → 30 minutes</td></tr>
+        <tr><td><span class="pill">S</span></td><td>1 second</td><td><code>"10S"</code> → 10 seconds</td></tr>
+        <tr><td><span class="pill">L</span> / <span class="pill">ms</span></td><td>1 millisecond</td><td><code>"500ms"</code> → 500 ms</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Interactive Builder</h2>
+  <div class="card">
+    <p>Provide at least <strong>2</strong> of: <code>start</code>, <code>end</code>, <code>periods</code>, <code>freq</code>.</p>
+
+    <div class="grid">
+      <div>
+        <label>start (e.g. "0 days", "1 days 02:00:00", leave blank)</label>
+        <input id="start" type="text" value="0 days" placeholder='e.g. "0 days"' />
+      </div>
+      <div>
+        <label>end (e.g. "4 days", leave blank)</label>
+        <input id="end" type="text" value="4 days" placeholder='e.g. "4 days"' />
+      </div>
+      <div>
+        <label>periods (integer, leave blank)</label>
+        <input id="periods" type="number" value="" placeholder="e.g. 5" />
+      </div>
+      <div>
+        <label>freq (e.g. "D", "6H", "30min", leave blank)</label>
+        <input id="freq" type="text" value="D" placeholder='e.g. "D"' />
+      </div>
+      <div>
+        <label>name (optional)</label>
+        <input id="name" type="text" value="" placeholder="optional label" />
+      </div>
+      <div>
+        <label>closed</label>
+        <select id="closed">
+          <option value="both" selected>both (default)</option>
+          <option value="left">left</option>
+          <option value="right">right</option>
+          <option value="neither">neither</option>
+        </select>
+      </div>
+    </div>
+
+    <button onclick="run()">Generate</button>
+    <div id="out" class="output">Click Generate to produce the TimedeltaIndex.</div>
+  </div>
+
+  <h2>Preset Examples</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Description</th><th>Code</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>5 daily intervals from 0</td>
+          <td><code>timedelta_range({ start:"0 days", periods:5, freq:"D" })</code></td>
+          <td><button style="margin:0;padding:0.25rem 0.7rem;" onclick="preset('0 days','','5','D','','both')">Run</button></td>
+        </tr>
+        <tr>
+          <td>1-to-3 days in daily steps</td>
+          <td><code>timedelta_range({ start:"1 days", end:"3 days", freq:"D" })</code></td>
+          <td><button style="margin:0;padding:0.25rem 0.7rem;" onclick="preset('1 days','3 days','','D','','both')">Run</button></td>
+        </tr>
+        <tr>
+          <td>4 entries ending at 3 days (freq D)</td>
+          <td><code>timedelta_range({ end:"3 days", periods:4, freq:"D" })</code></td>
+          <td><button style="margin:0;padding:0.25rem 0.7rem;" onclick="preset('','3 days','4','D','','both')">Run</button></td>
+        </tr>
+        <tr>
+          <td>Linear space 0→2 days, 5 points</td>
+          <td><code>timedelta_range({ start:"0 days", end:"2 days", periods:5 })</code></td>
+          <td><button style="margin:0;padding:0.25rem 0.7rem;" onclick="preset('0 days','2 days','5','','','both')">Run</button></td>
+        </tr>
+        <tr>
+          <td>6-hour steps, closed=left</td>
+          <td><code>timedelta_range({ start:"0 days", end:"1 days", freq:"6H", closed:"left" })</code></td>
+          <td><button style="margin:0;padding:0.25rem 0.7rem;" onclick="preset('0 days','1 days','','6H','','left')">Run</button></td>
+        </tr>
+        <tr>
+          <td>30-minute intervals, 8 periods</td>
+          <td><code>timedelta_range({ start:"0 days", periods:8, freq:"30min" })</code></td>
+          <td><button style="margin:0;padding:0.25rem 0.7rem;" onclick="preset('0 days','','8','30min','','both')">Run</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script type="module">
+import { timedelta_range, Timedelta } from "../src/index.ts";
+
+function fmtTd(td) {
+  const sign = td.totalMilliseconds < 0 ? "-" : "";
+  const abs = Math.abs(td.totalMilliseconds);
+  const d = Math.floor(abs / 86400000);
+  const rem = abs % 86400000;
+  const h = Math.floor(rem / 3600000).toString().padStart(2,"0");
+  const m = Math.floor((rem % 3600000) / 60000).toString().padStart(2,"0");
+  const s = Math.floor((rem % 60000) / 1000).toString().padStart(2,"0");
+  const ms = (rem % 1000);
+  const msPart = ms > 0 ? `.${ms.toString().padStart(3,"0")}` : "";
+  return `${sign}${d} days ${h}:${m}:${s}${msPart}`;
+}
+
+function buildAndRender(opts) {
+  const out = document.getElementById("out");
+  try {
+    const idx = timedelta_range(opts);
+    let lines = [`TimedeltaIndex (size=${idx.size}, name=${JSON.stringify(idx.name)})`, ""];
+    for (let i = 0; i < idx.size; i++) {
+      const td = idx.at(i);
+      lines.push(`  [${i}]  ${fmtTd(td)}   (${td.totalMilliseconds} ms)`);
+    }
+    if (idx.size === 0) lines.push("  (empty)");
+    out.textContent = lines.join("\n");
+    out.className = "output";
+  } catch (e) {
+    out.textContent = String(e);
+    out.className = "output error";
+  }
+}
+
+window.run = function() {
+  const start = document.getElementById("start").value.trim();
+  const end = document.getElementById("end").value.trim();
+  const periodsRaw = document.getElementById("periods").value.trim();
+  const freq = document.getElementById("freq").value.trim();
+  const name = document.getElementById("name").value.trim() || null;
+  const closed = document.getElementById("closed").value;
+
+  const opts = {};
+  if (start) opts.start = start;
+  if (end) opts.end = end;
+  if (periodsRaw) opts.periods = parseInt(periodsRaw, 10);
+  if (freq) opts.freq = freq;
+  if (name) opts.name = name;
+  opts.closed = closed;
+
+  buildAndRender(opts);
+};
+
+window.preset = function(start, end, periods, freq, name, closed) {
+  document.getElementById("start").value = start;
+  document.getElementById("end").value = end;
+  document.getElementById("periods").value = periods;
+  document.getElementById("freq").value = freq;
+  document.getElementById("name").value = name;
+  document.getElementById("closed").value = closed;
+  window.run();
+};
+</script>
+</body>
+</html>

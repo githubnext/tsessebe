@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — infer_objects / convert_dtypes</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+    h1 { color: #2563eb; }
+    h2 { color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4rem; }
+    pre { background: #f1f5f9; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9em; }
+    .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 0.75rem 1rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f8fafc; font-weight: 600; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <a href="index.html">← Back to tsb playground</a>
+  <h1>infer_objects / convert_dtypes</h1>
+
+  <div class="note">
+    <strong>pandas equivalent:</strong>
+    <code>Series.infer_objects()</code> &nbsp;/&nbsp;
+    <code>DataFrame.infer_objects()</code> &nbsp;/&nbsp;
+    <code>Series.convert_dtypes()</code> &nbsp;/&nbsp;
+    <code>DataFrame.convert_dtypes()</code>
+  </div>
+
+  <h2>What it does</h2>
+  <p>
+    These utilities refine dtypes automatically — useful after reading data from
+    CSV/JSON where everything starts as <code>object</code> or <code>string</code>:
+  </p>
+  <ul>
+    <li><strong><code>inferObjectsSeries</code></strong> — promotes an <code>object</code>-typed Series to a
+      more specific dtype (int, float, bool, string) when all values have a consistent type.</li>
+    <li><strong><code>inferObjectsDataFrame</code></strong> — applies per-column inference to every column.</li>
+    <li><strong><code>convertDtypesSeries</code></strong> — like <code>inferObjectsSeries</code> but also
+      parses string columns as numbers when possible.</li>
+    <li><strong><code>convertDtypesDataFrame</code></strong> — per-column <code>convertDtypesSeries</code>.</li>
+  </ul>
+
+  <h2>inferObjectsSeries — promote object → typed</h2>
+  <pre><code>import { Series, Dtype, inferObjectsSeries } from "tsb";
+
+// Object series holding integers
+const s = new Series({ data: [1, 2, 3], dtype: Dtype.object });
+s.dtype.kind;  // "object"
+
+const better = inferObjectsSeries(s);
+better.dtype.kind; // "int"
+better.values;     // [1, 2, 3]
+
+// Mixed types — cannot infer, returns original
+const mixed = new Series({ data: [1, "a", true], dtype: Dtype.object });
+inferObjectsSeries(mixed).dtype.kind; // "object"
+
+// All null — no inference possible
+const nulls = new Series({ data: [null, null], dtype: Dtype.object });
+inferObjectsSeries(nulls).dtype.kind; // "object"</code></pre>
+
+  <h2>inferObjectsDataFrame — all columns at once</h2>
+  <pre><code>import { DataFrame, inferObjectsDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({
+  ints:   [1, 2, 3],
+  floats: [1.1, 2.2, 3.3],
+  strs:   ["a", "b", "c"],
+  bools:  [true, false, true],
+});
+
+const inferred = inferObjectsDataFrame(df);
+inferred.col("ints").dtype.kind;   // "int"
+inferred.col("floats").dtype.kind; // "float"
+inferred.col("strs").dtype.kind;   // "string"
+inferred.col("bools").dtype.kind;  // "bool"</code></pre>
+
+  <h2>convertDtypesSeries — also parses numeric strings</h2>
+  <pre><code>import { Series, convertDtypesSeries } from "tsb";
+
+// String values that look like integers
+const ints = new Series({ data: ["1", "2", "3"] });
+const result = convertDtypesSeries(ints);
+result.dtype.kind; // "int"
+result.values;     // [1, 2, 3]
+
+// String values that look like floats
+const floats = new Series({ data: ["1.5", "2.5", "3.5"] });
+convertDtypesSeries(floats).dtype.kind; // "float"
+
+// Non-numeric strings: unchanged
+const text = new Series({ data: ["apple", "banana"] });
+convertDtypesSeries(text);  // same Series, dtype "string"
+
+// Int series with nulls → can convert to float for NA safety
+import { Dtype } from "tsb";
+const withNull = new Series({ data: [1, null, 3], dtype: Dtype.int64 });
+convertDtypesSeries(withNull, { convertIntegerToFloat: true }).dtype.kind;
+// "float"  (null becomes NaN-compatible)</code></pre>
+
+  <h2>convertDtypesDataFrame — per-column conversion</h2>
+  <pre><code>import { DataFrame, convertDtypesDataFrame } from "tsb";
+
+// After reading a CSV, all columns come back as strings:
+const raw = DataFrame.fromColumns({
+  age:   ["25", "30", "22"],
+  score: ["88.5", "92.1", "78.0"],
+  name:  ["Alice", "Bob", "Charlie"],
+});
+
+const typed = convertDtypesDataFrame(raw);
+typed.col("age").dtype.kind;   // "int"
+typed.col("score").dtype.kind; // "float"
+typed.col("name").dtype.kind;  // "string" (unchanged — not numeric)</code></pre>
+
+  <h2>API reference</h2>
+  <table>
+    <tr><th>Function</th><th>Description</th></tr>
+    <tr><td><code>inferObjectsSeries(s, options?)</code></td><td>Infer better dtype for object-typed Series</td></tr>
+    <tr><td><code>inferObjectsDataFrame(df, options?)</code></td><td>Infer better dtypes for all columns</td></tr>
+    <tr><td><code>convertDtypesSeries(s, options?)</code></td><td>Convert to best dtype, including string→number parsing</td></tr>
+    <tr><td><code>convertDtypesDataFrame(df, options?)</code></td><td>Per-column <code>convertDtypesSeries</code></td></tr>
+  </table>
+
+  <h3>InferObjectsOptions</h3>
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>objectOnly</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Only infer for object-dtype Series (mirrors pandas default)</td></tr>
+  </table>
+
+  <h3>ConvertDtypesOptions</h3>
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>convertString</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Parse string values as numbers when possible</td></tr>
+    <tr><td><code>convertIntegerToFloat</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Convert int series with nulls to float</td></tr>
+  </table>
+
+  <h2>When to use which</h2>
+  <table>
+    <tr><th>Use case</th><th>Function</th></tr>
+    <tr><td>Promote object columns after creation</td><td><code>inferObjectsSeries / DataFrame</code></td></tr>
+    <tr><td>Parse CSV/JSON string columns to numbers</td><td><code>convertDtypesSeries / DataFrame</code></td></tr>
+    <tr><td>Make int columns nullable (float)</td><td><code>convertDtypesSeries(s, { convertIntegerToFloat: true })</code></td></tr>
+  </table>
+
+  <footer style="margin-top:3rem; color:#64748b; font-size:0.85em;">
+    tsb — TypeScript port of pandas &nbsp;|&nbsp; <a href="index.html">← back to playground</a>
+  </footer>
+</body>
+</html>

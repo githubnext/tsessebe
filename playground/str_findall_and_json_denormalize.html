@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — str.findall & to_json_normalize</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; border-bottom: 2px solid #0f3460; padding-bottom: 0.3rem; }
+      .section { margin: 2rem 0; }
+      pre { background: #f4f4f4; border: 1px solid #ddd; border-radius: 4px; padding: 1rem; overflow-x: auto; }
+      code { font-family: 'Fira Code', monospace; font-size: 0.9rem; }
+      .output { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 0.5rem 1rem; margin-top: 0.5rem; }
+      .note { background: #fff3e0; border-left: 4px solid #ff9800; padding: 0.5rem 1rem; margin: 0.5rem 0; }
+      a { color: #0f3460; }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 tsb — <code>str.findall</code> &amp; <code>toJsonDenormalize</code></h1>
+    <p>
+      Two new features in tsb:
+      <strong>strFindall / strFindallCount / strFindFirst / strFindallExpand</strong>
+      (mirrors <code>pandas.Series.str.findall</code>)
+      and
+      <strong>toJsonDenormalize / toJsonRecords / toJsonSplit / toJsonIndex</strong>
+      (the inverse of <code>jsonNormalize</code>).
+    </p>
+    <p><a href="index.html">← Back to feature index</a></p>
+
+    <!-- ─── strFindall ─────────────────────────────────────────────── -->
+    <div class="section">
+      <h2>1. <code>strFindall</code> — all regex matches per element</h2>
+      <p>Mirrors <code>pandas.Series.str.findall(pat)</code>. Returns a Series where each value is a JSON-encoded array of all non-overlapping matches.</p>
+      <pre><code>// pandas equivalent:
+// s.str.findall(r'\d+')
+
+import { Series } from 'tsb';
+import { strFindall, strFindallCount, strFindFirst } from 'tsb';
+
+const prices = new Series({ data: ['$10.99 and $5.00', 'free!', '$3.50'] });
+
+const allPrices = strFindall(prices, /\$[\d.]+/);
+// Series [
+//   '["$10.99","$5.00"]',   ← JSON string
+//   '[]',
+//   '["$3.50"]'
+// ]
+
+// Parse the JSON to get actual arrays:
+JSON.parse(allPrices.values[0]); // ["$10.99", "$5.00"]
+JSON.parse(allPrices.values[1]); // []</code></pre>
+      <div class="output">✅ Each element contains a <code>JSON.stringify(string[])</code> result.</div>
+
+      <h3>With capture groups</h3>
+      <pre><code>// When the pattern has a capture group, returns the captured value
+const s = new Series({ data: ['name: Alice', 'name: Bob', 'unknown'] });
+const names = strFindall(s, /name: (\w+)/);
+// Series ['["Alice"]', '["Bob"]', '[]']
+
+// First capture group is extracted (pandas behaviour)</code></pre>
+
+      <h3>Null / NaN handling</h3>
+      <pre><code>const s = new Series({ data: ['hello', null, NaN, 'world'] });
+const result = strFindall(s, /\w+/);
+// Series ['["hello"]', null, null, '["world"]']
+// Null/NaN elements return null (not []) — matches pandas</code></pre>
+    </div>
+
+    <!-- ─── strFindallCount ────────────────────────────────────────── -->
+    <div class="section">
+      <h2>2. <code>strFindallCount</code> — count matches per element</h2>
+      <pre><code>import { strFindallCount } from 'tsb';
+
+const words = new Series({ data: ['one two three', 'four', 'five six'] });
+const counts = strFindallCount(words, /\b\w+\b/);
+// Series [3, 1, 2]
+
+// Count vowels per word
+const vowels = new Series({ data: ['beautiful', 'rhythm', 'aeiou'] });
+strFindallCount(vowels, /[aeiou]/i);
+// Series [5, 0, 5]</code></pre>
+      <div class="note">💡 More efficient than <code>strFindall</code> when you only need the count, not the matches themselves.</div>
+    </div>
+
+    <!-- ─── strFindFirst ───────────────────────────────────────────── -->
+    <div class="section">
+      <h2>3. <code>strFindFirst</code> — first match per element</h2>
+      <pre><code>import { strFindFirst } from 'tsb';
+
+const logs = new Series({ data: [
+  '2024-01-15: ERROR occurred',
+  '2024-02-20: INFO ok',
+  'no date here',
+] });
+
+const dates = strFindFirst(logs, /\d{4}-\d{2}-\d{2}/);
+// Series ['2024-01-15', '2024-02-20', null]
+
+// Extract just the year (first capture group)
+const years = strFindFirst(logs, /(\d{4})-\d{2}-\d{2}/);
+// Series ['2024', '2024', null]</code></pre>
+    </div>
+
+    <!-- ─── strFindallExpand ───────────────────────────────────────── -->
+    <div class="section">
+      <h2>4. <code>strFindallExpand</code> — expand capture groups into a DataFrame</h2>
+      <p>Mirrors <code>pandas.Series.str.extract(pat, expand=True)</code>.</p>
+      <pre><code>import { strFindallExpand } from 'tsb';
+
+const people = new Series({ data: ['John 30', 'Jane 25', 'unknown'] });
+
+// Named capture groups → column names
+const df = strFindallExpand(people, /(?&lt;name&gt;\w+)\s+(?&lt;age&gt;\d+)/);
+//    name  age
+// 0  John  30
+// 1  Jane  25
+// 2  null  null
+
+// Unnamed groups → numbered columns "0", "1", ...
+const df2 = strFindallExpand(people, /(\w+)\s+(\d+)/);
+//    0     1
+// 0  John  30
+// 1  Jane  25
+// 2  null  null</code></pre>
+    </div>
+
+    <!-- ─── toJsonDenormalize ─────────────────────────────────────── -->
+    <div class="section">
+      <h2>5. <code>toJsonDenormalize</code> — flat DataFrame → nested JSON</h2>
+      <p>The inverse of <code>jsonNormalize</code>: takes a DataFrame with dot-separated column names and reconstructs nested JSON objects.</p>
+      <pre><code>import { DataFrame } from 'tsb';
+import { toJsonDenormalize } from 'tsb';
+
+// Start with a flattened DataFrame (as jsonNormalize would produce)
+const flat = DataFrame.fromColumns({
+  name:             ['Alice', 'Bob'],
+  'address.city':   ['New York', 'Los Angeles'],
+  'address.zip':    ['10001',    '90001'],
+  'address.country':['US',       'US'],
+});
+
+// Reconstruct nested JSON
+const records = toJsonDenormalize(flat);
+// [
+//   { name: 'Alice', address: { city: 'New York',    zip: '10001', country: 'US' } },
+//   { name: 'Bob',   address: { city: 'Los Angeles', zip: '90001', country: 'US' } },
+// ]
+
+// Round-trip: jsonNormalize → toJsonDenormalize
+import { jsonNormalize } from 'tsb';
+const original = [
+  { user: { name: 'Alice', age: 30 }, score: 100 },
+  { user: { name: 'Bob',   age: 25 }, score: 200 },
+];
+const df = jsonNormalize(original);
+const recovered = toJsonDenormalize(df);
+// recovered ≈ original (with the same structure)</code></pre>
+
+      <h3>Custom separator</h3>
+      <pre><code>// If jsonNormalize was called with sep='__'
+const df2 = DataFrame.fromColumns({
+  'user__name': ['Alice'],
+  'user__city': ['NYC'],
+});
+toJsonDenormalize(df2, { sep: '__' });
+// [{ user: { name: 'Alice', city: 'NYC' } }]</code></pre>
+
+      <h3>Drop null values</h3>
+      <pre><code>const df3 = DataFrame.fromColumns({ a: [1, null], b: [null, 2] });
+toJsonDenormalize(df3, { dropNull: true });
+// [{ a: 1 }, { b: 2 }]  ← null fields are omitted</code></pre>
+    </div>
+
+    <!-- ─── toJsonRecords / toJsonSplit / toJsonIndex ──────────────── -->
+    <div class="section">
+      <h2>6. JSON serialization utilities</h2>
+
+      <h3><code>toJsonRecords</code> — orient="records"</h3>
+      <pre><code>import { toJsonRecords } from 'tsb';
+const df = DataFrame.fromColumns({ a: [1, 2], b: ['x', 'y'] });
+toJsonRecords(df);
+// [{ a: 1, b: 'x' }, { a: 2, b: 'y' }]</code></pre>
+
+      <h3><code>toJsonSplit</code> — orient="split"</h3>
+      <pre><code>import { toJsonSplit } from 'tsb';
+toJsonSplit(df);
+// { columns: ['a', 'b'], index: [0, 1], data: [[1, 'x'], [2, 'y']] }
+
+toJsonSplit(df, { includeIndex: false });
+// { columns: ['a', 'b'], data: [[1, 'x'], [2, 'y']] }</code></pre>
+
+      <h3><code>toJsonIndex</code> — orient="index"</h3>
+      <pre><code>import { toJsonIndex } from 'tsb';
+toJsonIndex(df);
+// { '0': { a: 1, b: 'x' }, '1': { a: 2, b: 'y' } }
+
+// With custom string index
+const df2 = DataFrame.fromColumns(
+  { v: [10, 20] },
+  { index: ['alice', 'bob'] }
+);
+toJsonIndex(df2);
+// { alice: { v: 10 }, bob: { v: 20 } }</code></pre>
+    </div>
+
+    <div class="section">
+      <h2>API reference</h2>
+      <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse">
+        <thead>
+          <tr><th>Function</th><th>Signature</th><th>pandas equivalent</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>strFindall</code></td>
+            <td><code>(input, pat, flags?) → Series&lt;Scalar&gt;</code></td>
+            <td><code>s.str.findall(pat)</code></td>
+          </tr>
+          <tr>
+            <td><code>strFindallCount</code></td>
+            <td><code>(input, pat, flags?) → Series&lt;Scalar&gt;</code></td>
+            <td><code>s.str.findall(pat).map(len)</code></td>
+          </tr>
+          <tr>
+            <td><code>strFindFirst</code></td>
+            <td><code>(input, pat, flags?) → Series&lt;Scalar&gt;</code></td>
+            <td><code>s.str.extract(pat)[0]</code></td>
+          </tr>
+          <tr>
+            <td><code>strFindallExpand</code></td>
+            <td><code>(input, pat, flags?) → DataFrame</code></td>
+            <td><code>s.str.extract(pat, expand=True)</code></td>
+          </tr>
+          <tr>
+            <td><code>toJsonDenormalize</code></td>
+            <td><code>(df, options?) → JsonRecord[]</code></td>
+            <td>inverse of <code>json_normalize</code></td>
+          </tr>
+          <tr>
+            <td><code>toJsonRecords</code></td>
+            <td><code>(df) → JsonRecord[]</code></td>
+            <td><code>df.to_json(orient='records')</code></td>
+          </tr>
+          <tr>
+            <td><code>toJsonSplit</code></td>
+            <td><code>(df, options?) → JsonSplitResult</code></td>
+            <td><code>df.to_json(orient='split')</code></td>
+          </tr>
+          <tr>
+            <td><code>toJsonIndex</code></td>
+            <td><code>(df) → JsonRecord</code></td>
+            <td><code>df.to_json(orient='index')</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>

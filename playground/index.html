@@ -289,6 +289,11 @@
           <p>Element-wise conditional selection: <code>seriesWhere</code> / <code>seriesMask</code> and <code>dataFrameWhere</code> / <code>dataFrameMask</code>. Accepts boolean arrays, label-aligned boolean Series/DataFrame, or callables. Mirrors <code>pandas.Series.where</code>, <code>pandas.DataFrame.where</code>, and their <code>.mask()</code> inverses.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3><a href="eval_query.html" style="color: var(--accent); text-decoration: none;">🔎 query / eval</a></h3>
+          <p>Filter rows or evaluate expressions using a pandas-style expression string. <code>queryDataFrame(df, "col &gt; 5 and label in ['a', 'b']")</code> and <code>evalDataFrame(df, "price * qty")</code>. Supports arithmetic, comparisons, logical operators, membership tests, backtick-quoted column names, and built-in functions (<code>abs</code>, <code>round</code>, <code>isnull</code>, <code>lower</code>, …). Mirrors <code>pandas.DataFrame.query</code> and <code>pandas.DataFrame.eval</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
         <div class="card">
           <h3><a href="notna_isna.html" style="color: var(--accent); text-decoration: none;">🔍 isna / notna</a></h3>
           <p>Module-level missing-value detection: <code>isna</code>, <code>notna</code>, <code>isnull</code>, <code>notnull</code> work on scalars, arrays, Series, and DataFrames. Plus standalone <code>fillna</code>, <code>dropna</code>, <code>countna</code>, and <code>countValid</code>. Mirrors <code>pandas.isna</code>, <code>pandas.notna</code>, <code>pandas.isnull</code>, <code>pandas.notnull</code>.</p>
@@ -359,10 +364,92 @@
           <p>Convert scalars, arrays, or Series to Timedelta objects. Accepts pandas-style strings, ISO 8601, human-readable, and numeric values. Timedelta class with arithmetic: add/subtract/scale/abs/lt/gt/eq.</p>
           <div class="status done">✅ Complete</div>
         </div>
+        <div class="feature-card">
+          <h3><a href="timedelta_range.html" style="color: var(--accent); text-decoration: none;">⏳ timedelta_range</a></h3>
+          <p>Generate fixed-frequency TimedeltaIndex sequences. Supports start/end/periods/freq combinations, multiplier prefixes (e.g. "2H", "30min"), linear spacing, and closed endpoint control.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="str_findall_and_json_denormalize.html" style="color: var(--accent); text-decoration: none;">🔍 strFindall &amp; toJsonDenormalize</a></h3>
+          <p>strFindall/strFindallCount/strFindFirst/strFindallExpand — regex match extraction per element (mirrors pandas str.findall). toJsonDenormalize/toJsonRecords/toJsonSplit/toJsonIndex — serialize DataFrames to nested or flat JSON.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="cut_bins_to_frame.html" style="color: var(--accent); text-decoration: none;">📊 cutBinsToFrame</a></h3>
+          <p>Convert cut/qcut BinResult into a tidy summary DataFrame. cutBinsToFrame returns bin labels, edges, counts, and frequencies. cutBinCounts returns a label→count dict. binEdges returns an edges-only DataFrame.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="xs.html" style="color: var(--accent); text-decoration: none;">✂️ xs — Cross-Section</a></h3>
+          <p>xsDataFrame / xsSeries — select rows or columns by label (mirrors pandas .xs()). Supports flat and MultiIndex, axis selection, level targeting, and dropLevel control.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="between.html" style="color: var(--accent); text-decoration: none;">↔️ between — Range Check</a></h3>
+          <p>seriesBetween — element-wise range check returning a boolean Series. Mirrors pandas Series.between(). Supports inclusive="both"|"left"|"right"|"neither".</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="update.html" style="color: var(--accent); text-decoration: none;">🔄 update — In-place Update</a></h3>
+          <p>seriesUpdate / dataFrameUpdate — update values from another object using label alignment. Non-NA values in other overwrite self. Mirrors pandas DataFrame.update().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="filter.html" style="color: var(--accent); text-decoration: none;">🔽 filter — Filter Labels</a></h3>
+          <p>filterDataFrame / filterSeries — filter rows or columns by label using items list, substring (like), or regex pattern. Mirrors pandas DataFrame.filter().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="combine.html" style="color: var(--accent); text-decoration: none;">🔀 combine — Element-wise Combination</a></h3>
+          <p>combineSeries / combineDataFrame — combine two objects element-wise with a caller-supplied binary function. Result index is the union of both indices. Mirrors pandas Series.combine() / DataFrame.combine().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="notna_boolean.html" style="color: var(--accent); text-decoration: none;">✅ keepTrue / keepFalse / filterBy — Boolean Indexing</a></h3>
+          <p>keepTrue / keepFalse / filterBy — boolean-mask selection helpers for Series and DataFrames. Mirrors pandas boolean indexing (series[mask], df[mask]).</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="scalar_extract.html" style="color: var(--accent); text-decoration: none;">🔢 scalar_extract — squeeze / item / bool / first_valid_index</a></h3>
+          <p>squeezeSeries / squeezeDataFrame / itemSeries / boolSeries / boolDataFrame / firstValidIndex / lastValidIndex — scalar-extraction helpers for Series and DataFrames. Mirrors pandas Series.squeeze(), item(), bool(), first_valid_index(), last_valid_index().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="corrwith.html" style="color: var(--accent); text-decoration: none;">📊 corrWith / autoCorr — Pairwise Correlation &amp; Autocorrelation</a></h3>
+          <p>corrWith / autoCorr — compute pairwise Pearson correlations between a DataFrame and a Series or DataFrame, and compute lag-N autocorrelation for a Series. Mirrors pandas DataFrame.corrwith() and Series.autocorr().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="join.html" style="color: var(--accent); text-decoration: none;">🔗 join / joinAll / crossJoin — Label-Based Joins</a></h3>
+          <p>join / joinAll / crossJoin — join DataFrames by index labels or a key column. join() defaults to left-join-on-index, joinAll() chains multiple joins, crossJoin() produces the Cartesian product. Mirrors pandas DataFrame.join().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="merge_asof.html" style="color: var(--accent); text-decoration: none;">⏱️ merge_asof — Ordered Nearest-Key Join</a></h3>
+          <p>mergeAsof — ordered left-join on the nearest key (backward/forward/nearest). Ideal for time-series: match trades to most recent quotes. Supports by-group matching, tolerance, allow_exact_matches, and custom suffixes. Mirrors pandas.merge_asof().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="merge_ordered.html" style="color: var(--accent); text-decoration: none;">📋 merge_ordered — Ordered Fill Merge</a></h3>
+          <p>mergeOrdered — ordered outer/inner/left/right merge sorted by key column(s). Supports fill_method: "ffill" to forward-fill null gaps, left_by/right_by for group-wise ordered merging, left_on/right_on for different key names, and suffix handling. Mirrors pandas.merge_ordered().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="resample.html" style="color: var(--accent); text-decoration: none;">📅 resample — Time-Based Resampling</a></h3>
+          <p>resampleSeries / resampleDataFrame — time-based groupby aggregation. Supports S/T/H/D/W/MS/ME/QS/QE/YS/YE frequencies, aggregations (sum, mean, min, max, count, first, last, std, var, size, ohlc), per-column agg specs, and automatic empty-bin filling. Mirrors pandas.DataFrame.resample().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="infer_objects.html" style="color: var(--accent); text-decoration: none;">🔍 infer_objects / convert_dtypes — Dtype Inference</a></h3>
+          <p>inferObjectsSeries / inferObjectsDataFrame / convertDtypesSeries / convertDtypesDataFrame — promote object-typed Series to better dtypes and parse string columns as numbers. Mirrors pandas infer_objects() and convert_dtypes().</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="testing.html" style="color: var(--accent); text-decoration: none;">🧪 testing — Assertion Utilities</a></h3>
+          <p>assertSeriesEqual / assertFrameEqual / assertIndexEqual — rich assertion helpers for use in test suites. Numeric tolerance, checkLike column-order mode, dtype checks, AssertionError with detailed diff messages. Mirrors pandas.testing.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
     </section>
-
-    <section style="margin-top: 3rem;">
-      <h2 style="margin-bottom: 1rem; font-size: 1.25rem;">Performance</h2>
       <div class="features-grid">
         <div class="feature-card">
           <h3><a href="benchmarks.html" style="color: var(--accent); text-decoration: none;">⚡ Benchmarks</a></h3>

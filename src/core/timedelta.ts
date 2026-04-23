@@ -69,8 +69,8 @@ const MS_PER_WEEK = 7 * MS_PER_DAY;
 const RE_ISO =
   /^-?P(?:(\d+(?:\.\d+)?)W)?(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i;
 
-/** pandas-style: "N days HH:MM:SS[.mmm]" */
-const RE_PANDAS = /^(-)?(\d+) days? (\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?$/i;
+/** pandas-style: "N days[ HH:MM:SS[.mmm]]" — time part is optional */
+const RE_PANDAS = /^(-)?(\d+) days?(?:\s+(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?)?$/i;
 
 /** Simple "HH:MM:SS[.mmm]" with optional sign */
 const RE_HHMMSS = /^(-)?(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?$/;
@@ -95,6 +95,47 @@ function parseFrac(frac: string | undefined): number {
 /** Zero-pad a number to at least 2 digits. */
 function pad2(n: number): string {
   return String(Math.abs(n)).padStart(2, "0");
+}
+
+/** Parse ISO 8601 match array into milliseconds. */
+function parseIsoMatch(trimmed: string, m: RegExpExecArray): number {
+  const sign = trimmed.startsWith("-") ? -1 : 1;
+  const [, wStr, dStr, hStr, mStr, sStr] = m;
+  return (
+    sign *
+    (Number(wStr ?? 0) * MS_PER_WEEK +
+      Number(dStr ?? 0) * MS_PER_DAY +
+      Number(hStr ?? 0) * MS_PER_HOUR +
+      Number(mStr ?? 0) * MS_PER_MINUTE +
+      Number(sStr ?? 0) * MS_PER_SECOND)
+  );
+}
+
+/** Parse pandas-style match array into milliseconds. */
+function parsePandasMatch(m: RegExpExecArray): number {
+  const [, signStr, daysStr, hStr, mStr, sStr, fracStr] = m;
+  const sign = signStr === "-" ? -1 : 1;
+  return (
+    sign *
+    (Number(daysStr) * MS_PER_DAY +
+      Number(hStr ?? "0") * MS_PER_HOUR +
+      Number(mStr ?? "0") * MS_PER_MINUTE +
+      Number(sStr ?? "0") * MS_PER_SECOND +
+      parseFrac(fracStr))
+  );
+}
+
+/** Parse HH:MM:SS match array into milliseconds. */
+function parseHhmmssMatch(m: RegExpExecArray): number {
+  const [, signStr, hStr, mStr, sStr, fracStr] = m;
+  const sign = signStr === "-" ? -1 : 1;
+  return (
+    sign *
+    (Number(hStr) * MS_PER_HOUR +
+      Number(mStr) * MS_PER_MINUTE +
+      Number(sStr) * MS_PER_SECOND +
+      parseFrac(fracStr))
+  );
 }
 
 // ─── Timedelta ────────────────────────────────────────────────────────────────
@@ -163,48 +204,18 @@ export class Timedelta {
    */
   static parse(s: string): Timedelta {
     const trimmed = s.trim();
-
-    // ISO 8601
     const iso = RE_ISO.exec(trimmed);
     if (iso !== null) {
-      const sign = trimmed.startsWith("-") ? -1 : 1;
-      const [, wStr, dStr, hStr, mStr, sStr] = iso;
-      const ms =
-        Number(wStr ?? 0) * MS_PER_WEEK +
-        Number(dStr ?? 0) * MS_PER_DAY +
-        Number(hStr ?? 0) * MS_PER_HOUR +
-        Number(mStr ?? 0) * MS_PER_MINUTE +
-        Number(sStr ?? 0) * MS_PER_SECOND;
-      return new Timedelta(sign * ms);
+      return new Timedelta(parseIsoMatch(trimmed, iso));
     }
-
-    // pandas-style "N days HH:MM:SS[.mmm]"
     const pandas = RE_PANDAS.exec(trimmed);
     if (pandas !== null) {
-      const [, signStr, daysStr, hStr, mStr, sStr, fracStr] = pandas;
-      const sign = signStr === "-" ? -1 : 1;
-      const ms =
-        Number(daysStr) * MS_PER_DAY +
-        Number(hStr) * MS_PER_HOUR +
-        Number(mStr) * MS_PER_MINUTE +
-        Number(sStr) * MS_PER_SECOND +
-        parseFrac(fracStr);
-      return new Timedelta(sign * ms);
+      return new Timedelta(parsePandasMatch(pandas));
     }
-
-    // HH:MM:SS[.mmm]
     const hms = RE_HHMMSS.exec(trimmed);
     if (hms !== null) {
-      const [, signStr, hStr, mStr, sStr, fracStr] = hms;
-      const sign = signStr === "-" ? -1 : 1;
-      const ms =
-        Number(hStr) * MS_PER_HOUR +
-        Number(mStr) * MS_PER_MINUTE +
-        Number(sStr) * MS_PER_SECOND +
-        parseFrac(fracStr);
-      return new Timedelta(sign * ms);
+      return new Timedelta(parseHhmmssMatch(hms));
     }
-
     throw new SyntaxError(`Timedelta.parse: cannot parse "${s}"`);
   }
 
@@ -239,7 +250,27 @@ export class Timedelta {
     return Math.abs(this.totalMilliseconds) % MS_PER_SECOND;
   }
 
+  /** Alias for {@link milliseconds} — backward compatibility (`pandas.Timedelta.ms`). */
+  get ms(): number {
+    return this.milliseconds;
+  }
+
+  /** Absolute millisecond value — backward compatibility. */
+  get absMs(): number {
+    return Math.abs(this.totalMilliseconds);
+  }
+
+  /** Sign: `+1` for non-negative, `-1` for negative. */
+  get sign(): number {
+    return this.totalMilliseconds < 0 ? -1 : 1;
+  }
+
   // ── total-unit conversions ────────────────────────────────────────────────
+
+  /** Alias for {@link totalMilliseconds} — backward compatibility. */
+  get totalMs(): number {
+    return this.totalMilliseconds;
+  }
 
   /** Duration expressed in whole + fractional days. */
   get totalDays(): number {
@@ -291,6 +322,11 @@ export class Timedelta {
     return new Timedelta(this.totalMilliseconds - other.totalMilliseconds);
   }
 
+  /** Alias for {@link sub} — backward compatibility. */
+  subtract(other: Timedelta): Timedelta {
+    return this.sub(other);
+  }
+
   /**
    * Return `this * scalar`.
    *
@@ -301,6 +337,11 @@ export class Timedelta {
    */
   mul(scalar: number): Timedelta {
     return new Timedelta(this.totalMilliseconds * scalar);
+  }
+
+  /** Alias for {@link mul} — backward compatibility. */
+  scale(factor: number): Timedelta {
+    return this.mul(factor);
   }
 
   /**
@@ -353,6 +394,21 @@ export class Timedelta {
   /** Return `true` if `this` represents the same duration as `other`. */
   equals(other: Timedelta): boolean {
     return this.totalMilliseconds === other.totalMilliseconds;
+  }
+
+  /** Alias for `compareTo(other) < 0`. */
+  lt(other: Timedelta): boolean {
+    return this.totalMilliseconds < other.totalMilliseconds;
+  }
+
+  /** Alias for `compareTo(other) > 0`. */
+  gt(other: Timedelta): boolean {
+    return this.totalMilliseconds > other.totalMilliseconds;
+  }
+
+  /** Alias for {@link equals}. */
+  eq(other: Timedelta): boolean {
+    return this.equals(other);
   }
 
   // ── string representation ─────────────────────────────────────────────────

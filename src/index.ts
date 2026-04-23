@@ -56,6 +56,8 @@ export { readJson, toJson } from "./io/index.ts";
 export type { ReadJsonOptions, ToJsonOptions, JsonOrient } from "./io/index.ts";
 export { jsonNormalize } from "./io/index.ts";
 export type { JsonNormalizeOptions, JsonPath } from "./io/index.ts";
+export { toJsonDenormalize, toJsonRecords, toJsonSplit, toJsonIndex } from "./io/index.ts";
+export type { JsonDenormalizeOptions, JsonSplitOptions, JsonSplitResult } from "./io/index.ts";
 export { pearsonCorr, dataFrameCorr, dataFrameCov } from "./stats/index.ts";
 export type { CorrMethod, CorrOptions, CovOptions } from "./stats/index.ts";
 export { Rolling } from "./window/index.ts";
@@ -182,8 +184,10 @@ export {
 
 export { Period, PeriodIndex } from "./core/index.ts";
 export type { PeriodFreq, PeriodIndexOptions } from "./core/index.ts";
-export { TimedeltaIndex } from "./core/index.ts";
+export { TimedeltaIndex, Timedelta } from "./core/index.ts";
 export type { TimedeltaComponents, TimedeltaIndexOptions } from "./core/index.ts";
+export { timedelta_range } from "./core/index.ts";
+export type { TimedeltaFreq, TimedeltaRangeClosed, TimedeltaRangeOptions } from "./core/index.ts";
 export {
   Day,
   Hour,
@@ -344,9 +348,7 @@ export type { Attrs } from "./core/index.ts";
 export {
   pipe,
   seriesApply,
-  seriesTransform,
   dataFrameApplyMap,
-  dataFrameTransform,
   dataFrameTransformRows,
 } from "./core/index.ts";
 export {
@@ -537,7 +539,7 @@ export { toDatetime } from "./stats/index.ts";
 export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./stats/index.ts";
 
 // Branch-unique exports not yet in main
-export { toTimedelta, parseFrac, formatTimedelta, Timedelta } from "./stats/index.ts";
+export { toTimedelta, parseFrac, formatTimedelta } from "./stats/index.ts";
 export type { TimedeltaUnit, TimedeltaErrors, ToTimedeltaOptions } from "./stats/index.ts";
 export { dateRange, parseFreq, advanceDate, toDateInput } from "./stats/index.ts";
 export type { DateRangeInclusive, ParsedFreq } from "./stats/index.ts";
@@ -553,3 +555,116 @@ export type { FillDirectionOptions, DataFrameFillOptions } from "./stats/index.t
 export { intervalRange } from "./stats/index.ts";
 export type { ClosedType } from "./stats/index.ts";
 export { nunique } from "./stats/index.ts";
+export { queryDataFrame, evalDataFrame } from "./stats/index.ts";
+export { strFindall, strFindallCount, strFindFirst, strFindallExpand } from "./stats/index.ts";
+export { cutBinsToFrame, cutBinCounts, binEdges } from "./stats/index.ts";
+export type { CutBinsToFrameOptions } from "./stats/index.ts";
+export { xsDataFrame, xsSeries } from "./stats/index.ts";
+export type { XsDataFrameOptions, XsSeriesOptions } from "./stats/index.ts";
+export {
+  swapLevelSeries,
+  swapLevelDataFrame,
+  reorderLevelsSeries,
+  reorderLevelsDataFrame,
+} from "./stats/swaplevel.ts";
+export type {
+  SwapLevelDataFrameOptions,
+  ReorderLevelsDataFrameOptions,
+} from "./stats/swaplevel.ts";
+export { truncateSeries, truncateDataFrame } from "./stats/truncate.ts";
+export type { TruncateOptions } from "./stats/truncate.ts";
+export { seriesBetween } from "./stats/index.ts";
+export type { BetweenInclusive, BetweenOptions } from "./stats/index.ts";
+export { seriesUpdate, dataFrameUpdate } from "./stats/index.ts";
+export type { UpdateOptions } from "./stats/index.ts";
+export { filterDataFrame, filterSeries } from "./stats/index.ts";
+export type { FilterLabelsOptions } from "./stats/index.ts";
+export { combineSeries, combineDataFrame } from "./stats/index.ts";
+export type { CombineDataFrameOptions } from "./stats/index.ts";
+export { keepTrue, keepFalse, filterBy } from "./stats/index.ts";
+export {
+  squeezeSeries,
+  squeezeDataFrame,
+  itemSeries,
+  boolSeries,
+  boolDataFrame,
+  firstValidIndex,
+  lastValidIndex,
+  dataFrameFirstValidIndex,
+  dataFrameLastValidIndex,
+} from "./stats/index.ts";
+export type { SqueezeResult } from "./stats/index.ts";
+export { autoCorr, corrWith } from "./stats/index.ts";
+export type { CorrWithOptions } from "./stats/index.ts";
+export {
+  renameSeriesIndex,
+  renameDataFrame,
+  addPrefixDataFrame,
+  addSuffixDataFrame,
+  addPrefixSeries,
+  addSuffixSeries,
+  setAxisSeries,
+  setAxisDataFrame,
+  seriesToFrame,
+} from "./stats/index.ts";
+export type { LabelMapper, RenameDataFrameOptions } from "./stats/index.ts";
+export { absSeries, absDataFrame, roundSeries, roundDataFrame } from "./stats/index.ts";
+export type { RoundDataFrameSpec } from "./stats/index.ts";
+export {
+  seriesDotSeries,
+  seriesDotDataFrame,
+  dataFrameDotSeries,
+  dataFrameDotDataFrame,
+} from "./stats/index.ts";
+export { seriesTransform, dataFrameTransform } from "./stats/index.ts";
+export type { TransformFunc, TransformFuncName, DataFrameTransformOptions } from "./stats/index.ts";
+export { seriesAt, seriesIat, dataFrameAt, dataFrameIat } from "./stats/index.ts";
+export {
+  sortValuesSeries,
+  sortIndexSeries,
+  sortValuesDataFrame,
+  sortIndexDataFrame,
+} from "./stats/index.ts";
+export type {
+  SortValuesSeriesOptions,
+  SortIndexSeriesOptions,
+  SortValuesDataFrameOptions,
+  SortIndexDataFrameOptions,
+} from "./stats/index.ts";
+export { join, joinAll, crossJoin } from "./merge/index.ts";
+export type { JoinOptions } from "./merge/index.ts";
+export {
+  inferObjectsSeries,
+  inferObjectsDataFrame,
+  convertDtypesSeries,
+  convertDtypesDataFrame,
+} from "./stats/index.ts";
+export type { InferObjectsOptions, ConvertDtypesOptions } from "./stats/index.ts";
+export { mergeAsof } from "./merge/index.ts";
+export type { MergeAsofOptions, AsofDirection } from "./merge/index.ts";
+export { mergeOrdered } from "./merge/index.ts";
+export type { MergeOrderedOptions, OrderedFillMethod } from "./merge/index.ts";
+export {
+  resampleSeries,
+  resampleDataFrame,
+  SeriesResampler,
+  DataFrameResampler,
+} from "./stats/index.ts";
+export type {
+  ResampleFreq,
+  ResampleLabel,
+  ResampleAggName,
+  ResampleAggFn,
+  ResampleOptions,
+} from "./stats/index.ts";
+export {
+  AssertionError,
+  assertSeriesEqual,
+  assertFrameEqual,
+  assertIndexEqual,
+} from "./testing/index.ts";
+export type {
+  AssertSeriesEqualOptions,
+  AssertFrameEqualOptions,
+  AssertIndexEqualOptions,
+} from "./testing/index.ts";

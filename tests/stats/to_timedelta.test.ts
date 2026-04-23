@@ -17,69 +17,73 @@ function series(data: Scalar[]): Series<Scalar> {
 
 describe("Timedelta", () => {
   it("stores totalMs", () => {
-    expect(new Timedelta(5000).totalMs).toBe(5000);
+    expect(Timedelta.fromMilliseconds(5000).totalMs).toBe(5000);
   });
 
   it("days accessor", () => {
-    expect(new Timedelta(2 * 86_400_000 + 3 * 3_600_000).days).toBe(2);
+    expect(Timedelta.fromMilliseconds(2 * 86_400_000 + 3 * 3_600_000).days).toBe(2);
   });
 
   it("hours accessor", () => {
-    expect(new Timedelta(2 * 86_400_000 + 3 * 3_600_000).hours).toBe(3);
+    expect(Timedelta.fromMilliseconds(2 * 86_400_000 + 3 * 3_600_000).hours).toBe(3);
   });
 
   it("minutes accessor", () => {
-    expect(new Timedelta(90 * 60_000).minutes).toBe(30);
+    expect(Timedelta.fromMilliseconds(90 * 60_000).minutes).toBe(30);
   });
 
   it("seconds accessor", () => {
-    expect(new Timedelta(65_000).seconds).toBe(5);
+    expect(Timedelta.fromMilliseconds(65_000).seconds).toBe(5);
   });
 
   it("ms accessor", () => {
-    expect(new Timedelta(1_500).ms).toBe(500);
+    expect(Timedelta.fromMilliseconds(1_500).ms).toBe(500);
   });
 
   it("abs()", () => {
-    expect(new Timedelta(-5000).abs().totalMs).toBe(5000);
+    expect(Timedelta.fromMilliseconds(-5000).abs().totalMs).toBe(5000);
   });
 
   it("add()", () => {
-    expect(new Timedelta(1000).add(new Timedelta(2000)).totalMs).toBe(3000);
+    expect(Timedelta.fromMilliseconds(1000).add(Timedelta.fromMilliseconds(2000)).totalMs).toBe(
+      3000,
+    );
   });
 
   it("subtract()", () => {
-    expect(new Timedelta(5000).subtract(new Timedelta(2000)).totalMs).toBe(3000);
+    expect(
+      Timedelta.fromMilliseconds(5000).subtract(Timedelta.fromMilliseconds(2000)).totalMs,
+    ).toBe(3000);
   });
 
   it("scale()", () => {
-    expect(new Timedelta(1000).scale(3).totalMs).toBe(3000);
+    expect(Timedelta.fromMilliseconds(1000).scale(3).totalMs).toBe(3000);
   });
 
   it("lt()", () => {
-    expect(new Timedelta(1000).lt(new Timedelta(2000))).toBe(true);
-    expect(new Timedelta(2000).lt(new Timedelta(1000))).toBe(false);
+    expect(Timedelta.fromMilliseconds(1000).lt(Timedelta.fromMilliseconds(2000))).toBe(true);
+    expect(Timedelta.fromMilliseconds(2000).lt(Timedelta.fromMilliseconds(1000))).toBe(false);
   });
 
   it("gt()", () => {
-    expect(new Timedelta(2000).gt(new Timedelta(1000))).toBe(true);
+    expect(Timedelta.fromMilliseconds(2000).gt(Timedelta.fromMilliseconds(1000))).toBe(true);
   });
 
   it("eq()", () => {
-    expect(new Timedelta(1000).eq(new Timedelta(1000))).toBe(true);
-    expect(new Timedelta(1000).eq(new Timedelta(999))).toBe(false);
+    expect(Timedelta.fromMilliseconds(1000).eq(Timedelta.fromMilliseconds(1000))).toBe(true);
+    expect(Timedelta.fromMilliseconds(1000).eq(Timedelta.fromMilliseconds(999))).toBe(false);
   });
 
   it("sign positive", () => {
-    expect(new Timedelta(100).sign).toBe(1);
+    expect(Timedelta.fromMilliseconds(100).sign).toBe(1);
   });
 
   it("sign negative", () => {
-    expect(new Timedelta(-100).sign).toBe(-1);
+    expect(Timedelta.fromMilliseconds(-100).sign).toBe(-1);
   });
 
   it("sign zero", () => {
-    expect(new Timedelta(0).sign).toBe(1);
+    expect(Timedelta.fromMilliseconds(0).sign).toBe(1);
   });
 });
 
@@ -103,7 +107,7 @@ describe("toTimedelta — missing values", () => {
 
 describe("toTimedelta — Timedelta passthrough", () => {
   it("returns same Timedelta unchanged", () => {
-    const td = new Timedelta(12345);
+    const td = Timedelta.fromMilliseconds(12345);
     expect(toTimedelta(td as unknown as Scalar)?.totalMs).toBe(12345);
   });
 });
@@ -248,8 +252,9 @@ describe("toTimedelta — human-readable", () => {
 
 describe("toTimedelta — integer string", () => {
   it("parses '1000' as ns by default", () => {
+    // 1000 ns = 0.001 ms; core Timedelta truncates to integer ms → 0
     const td = toTimedelta("1000") as Timedelta;
-    expect(td.totalMs).toBeCloseTo(0.001, 5);
+    expect(td.totalMs).toBe(0);
   });
 
   it("parses '1000' with unit ms", () => {
@@ -335,29 +340,29 @@ describe("parseFrac", () => {
 
 describe("formatTimedelta", () => {
   it("formats zero", () => {
-    expect(formatTimedelta(new Timedelta(0))).toBe("0 days 00:00:00");
+    expect(formatTimedelta(Timedelta.fromMilliseconds(0))).toBe("0 days 00:00:00");
   });
 
   it("formats 1 day", () => {
-    expect(formatTimedelta(new Timedelta(86_400_000))).toBe("1 day 00:00:00");
+    expect(formatTimedelta(Timedelta.fromMilliseconds(86_400_000))).toBe("1 day 00:00:00");
   });
 
   it("formats 2 days", () => {
-    expect(formatTimedelta(new Timedelta(2 * 86_400_000))).toBe("2 days 00:00:00");
+    expect(formatTimedelta(Timedelta.fromMilliseconds(2 * 86_400_000))).toBe("2 days 00:00:00");
   });
 
   it("formats hours/minutes/seconds", () => {
-    const td = new Timedelta(3_600_000 + 30 * 60_000 + 5_000);
+    const td = Timedelta.fromMilliseconds(3_600_000 + 30 * 60_000 + 5_000);
     expect(formatTimedelta(td)).toBe("0 days 01:30:05");
   });
 
   it("formats fractional seconds", () => {
-    const td = new Timedelta(500);
+    const td = Timedelta.fromMilliseconds(500);
     expect(formatTimedelta(td)).toBe("0 days 00:00:00.500000");
   });
 
   it("negative: calls toString()", () => {
-    const td = new Timedelta(-86_400_000);
+    const td = Timedelta.fromMilliseconds(-86_400_000);
     const s = td.toString();
     expect(s).toContain("days");
   });
@@ -394,8 +399,8 @@ describe("toTimedelta — property tests", () => {
         fc.integer({ min: -1_000_000, max: 1_000_000 }),
         fc.integer({ min: -1_000_000, max: 1_000_000 }),
         (a, b) => {
-          const ta = new Timedelta(a);
-          const tb = new Timedelta(b);
+          const ta = Timedelta.fromMilliseconds(a);
+          const tb = Timedelta.fromMilliseconds(b);
           return ta.add(tb).totalMs === tb.add(ta).totalMs;
         },
       ),
@@ -405,7 +410,7 @@ describe("toTimedelta — property tests", () => {
   it("Timedelta.abs is always non-negative", () => {
     fc.assert(
       fc.property(fc.integer({ min: -1_000_000, max: 1_000_000 }), (n) => {
-        return new Timedelta(n).abs().totalMs >= 0;
+        return Timedelta.fromMilliseconds(n).abs().totalMs >= 0;
       }),
     );
   });

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>truncate — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 1.2rem; margin-top: 2rem; }
+      pre { background: #f6f8fa; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: monospace; }
+      .label { color: #555; font-size: 0.85rem; }
+      .back { display: inline-block; margin-bottom: 1rem; color: #0969da; text-decoration: none; }
+      .back:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html">← Back to playground index</a>
+    <h1>truncate</h1>
+    <p>
+      Truncate a Series or DataFrame to keep only the elements within a label window
+      <code>[before, after]</code> (both bounds inclusive).
+      Mirrors <code>pandas.Series.truncate</code> and
+      <code>pandas.DataFrame.truncate</code>.
+    </p>
+
+    <h2>truncateSeries — keep rows within [before, after]</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series([10, 20, 30, 40, 50], index=[0, 1, 2, 3, 4])
+
+print(s.truncate(before=1, after=3))
+# 1    20
+# 2    30
+# 3    40
+
+print(s.truncate(before=2))
+# 2    30
+# 3    40
+# 4    50
+
+print(s.truncate(after=2))
+# 0    10
+# 1    20
+# 2    30
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, truncateSeries } from "tsb";
+
+const s = new Series({ data: [10, 20, 30, 40, 50], index: [0, 1, 2, 3, 4] });
+
+truncateSeries(s, 1, 3).values;    // [20, 30, 40]
+truncateSeries(s, 2).values;       // [30, 40, 50]
+truncateSeries(s, undefined, 2).values; // [10, 20, 30]
+</code></pre>
+
+    <h2>truncateDataFrame — truncate rows</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame(
+    {"a": [10, 20, 30, 40, 50], "b": [1, 2, 3, 4, 5]},
+    index=[0, 1, 2, 3, 4],
+)
+
+print(df.truncate(before=1, after=3))
+#     a  b
+# 1  20  2
+# 2  30  3
+# 3  40  4
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, truncateDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns(
+  { a: [10, 20, 30, 40, 50], b: [1, 2, 3, 4, 5] },
+  { index: [0, 1, 2, 3, 4] },
+);
+
+const result = truncateDataFrame(df, 1, 3);
+result.col("a").values; // [20, 30, 40]
+result.index.values;    // [1, 2, 3]
+</code></pre>
+
+    <h2>truncateDataFrame — truncate columns (axis=1)</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame({"a": [1, 2], "b": [3, 4], "c": [5, 6]})
+
+print(df.truncate(before="a", after="b", axis=1))
+#    a  b
+# 0  1  3
+# 1  2  4
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { DataFrame, truncateDataFrame } from "tsb";
+
+const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4], c: [5, 6] });
+
+const result = truncateDataFrame(df, "a", "b", { axis: 1 });
+result.columns.values; // ["a", "b"]
+</code></pre>
+
+    <h2>String index truncation</h2>
+    <p class="label">Python pandas equivalent:</p>
+    <pre><code>import pandas as pd
+
+s = pd.Series(
+    [1, 2, 3, 4, 5],
+    index=["apple", "banana", "cherry", "date", "elderberry"],
+)
+
+print(s.truncate(before="banana", after="date"))
+# banana    2
+# cherry    3
+# date      4
+</code></pre>
+    <p class="label">tsb equivalent:</p>
+    <pre><code>import { Series, truncateSeries } from "tsb";
+
+const s = new Series({
+  data: [1, 2, 3, 4, 5],
+  index: ["apple", "banana", "cherry", "date", "elderberry"],
+});
+
+truncateSeries(s, "banana", "date").values; // [2, 3, 4]
+</code></pre>
+  </body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>combine — Element-wise Combination — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>combine — Element-wise Combination</h1>
+  <p>
+    <code>combineSeries(a, b, func)</code> and <code>combineDataFrame(a, b, func)</code>
+    combine two objects element-wise using a caller-supplied binary function.
+    The result index is the <strong>union</strong> of both indices; a
+    <code>fillValue</code> (default <code>null</code>) is used when only one
+    side has a value for a given label.
+  </p>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runSeriesMax()">Series: max</button>
+  <button onclick="runSeriesUnion()">Series: union index</button>
+  <button onclick="runDfShared()">DataFrame: shared columns</button>
+  <button onclick="runDfUnion()">DataFrame: union columns</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Code Examples</h2>
+  <pre><code>import { Series, DataFrame, combineSeries, combineDataFrame } from "tsb";
+
+// ── Series ──────────────────────────────────────────────────────────────────
+const a = new Series({ data: [1, 5, 3], index: [0, 1, 2] });
+const b = new Series({ data: [10, 2, 30], index: [0, 1, 2] });
+
+// Element-wise max
+combineSeries(a, b, (x, y) => Math.max(x, y)).values; // [10, 5, 30]
+
+// Union index with fillValue=0
+const c = new Series({ data: [1, 2], index: ["x", "y"] });
+const d = new Series({ data: [10, 30], index: ["x", "z"] });
+combineSeries(c, d, (x, y) => (x ?? 0) + (y ?? 0), 0).values;
+// x:11, y:2, z:30
+
+// ── DataFrame ───────────────────────────────────────────────────────────────
+const df1 = DataFrame.fromColumns({ a: [1, 5], b: [100, 200] });
+const df2 = DataFrame.fromColumns({ a: [10, 2], c: [1000, 2000] });
+
+// Shared column "a": element-wise min; unshared columns processed with fillValue
+combineDataFrame(df1, df2, (p, q) => Math.min(p ?? Infinity, q ?? Infinity));
+
+// overwrite: false — unshared columns preserved as-is
+combineDataFrame(df1, df2, (p, q) => Math.min(p ?? Infinity, q ?? Infinity),
+  { overwrite: false });
+</code></pre>
+
+  <script type="module">
+    const mod = await import("../src/index.ts").catch(() => null);
+
+    function display(label, text) {
+      document.getElementById("output").textContent = label + "\n\n" + text;
+    }
+
+    window.runSeriesMax = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { Series, combineSeries } = mod;
+      const a = new Series({ data: [1, 5, 3], index: [0, 1, 2] });
+      const b = new Series({ data: [10, 2, 30], index: [0, 1, 2] });
+      const result = combineSeries(a, b, (x, y) => Math.max(x, y));
+      display("combineSeries(a, b, Math.max):", String(result));
+    };
+
+    window.runSeriesUnion = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { Series, combineSeries } = mod;
+      const c = new Series({ data: [1, 2], index: ["x", "y"] });
+      const d = new Series({ data: [10, 30], index: ["x", "z"] });
+      const result = combineSeries(c, d, (x, y) => (x ?? 0) + (y ?? 0), 0);
+      display("combineSeries with union index (fillValue=0):", String(result));
+    };
+
+    window.runDfShared = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { DataFrame, combineDataFrame } = mod;
+      const df1 = DataFrame.fromColumns({ a: [1, 5, 3], b: [100, 200, 300] });
+      const df2 = DataFrame.fromColumns({ a: [10, 2, 30], b: [50, 250, 150] });
+      const result = combineDataFrame(df1, df2, (p, q) => Math.max(p, q));
+      display("combineDataFrame(df1, df2, Math.max) — shared columns:", String(result));
+    };
+
+    window.runDfUnion = function () {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { DataFrame, combineDataFrame } = mod;
+      const df1 = DataFrame.fromColumns({ a: [1, 2], b: [10, 20] });
+      const df2 = DataFrame.fromColumns({ a: [100, 200], c: [1000, 2000] });
+      const result = combineDataFrame(df1, df2, (p, q) => {
+        if (p === null) return q;
+        if (q === null) return p;
+        return Math.min(p, q);
+      }, { overwrite: false });
+      display("combineDataFrame — union columns, overwrite=false:", String(result));
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transform — Series.transform / DataFrame.transform — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>transform — Series.transform / DataFrame.transform</h1>
+  <p>
+    Apply one or more functions to a Series or DataFrame and return a result with the
+    <strong>same index</strong> (broadcast scalars to full length).
+    Mirrors <code>pandas.Series.transform()</code> and <code>pandas.DataFrame.transform()</code>.
+  </p>
+
+  <h2>API</h2>
+  <pre>
+import { seriesTransform, dataFrameTransform } from "tsb";
+
+// single function or built-in name → Series
+seriesTransform(s, "cumsum");
+seriesTransform(s, (x) => x);
+
+// array → DataFrame (one column per function)
+seriesTransform(s, ["sum", "cumsum", "mean"]);
+
+// Record → DataFrame with named columns
+seriesTransform(s, { total: "sum", running: "cumsum" });
+
+// DataFrame transform (column-wise by default)
+dataFrameTransform(df, "cumsum");
+dataFrameTransform(df, { a: "sum", b: "cummin" });  // per-column
+dataFrameTransform(df, "cumsum", { axis: 1 });       // row-wise
+  </pre>
+
+  <h2>Built-in names</h2>
+  <pre>
+Aggregating (broadcast): "sum", "mean", "min", "max", "std", "var", "median",
+                          "count", "first", "last", "prod", "any", "all", "nunique"
+Cumulative (same shape): "cumsum", "cumprod", "cummin", "cummax"
+  </pre>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runCumsum()">Series cumsum</button>
+  <button onclick="runBroadcast()">Series sum (broadcast)</button>
+  <button onclick="runMulti()">Series multi-func → DataFrame</button>
+  <button onclick="runRecord()">Series record → DataFrame</button>
+  <button onclick="runDfTransform()">DataFrame transform</button>
+  <button onclick="runDfPerCol()">DataFrame per-column</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Examples</h2>
+  <pre>
+import { Series, DataFrame, seriesTransform, dataFrameTransform } from "tsb";
+
+const s = new Series({ data: [1, 2, 3, 4] });
+
+// cumulative sum
+seriesTransform(s, "cumsum").values;       // [1, 3, 6, 10]
+
+// broadcast aggregate
+seriesTransform(s, "sum").values;          // [10, 10, 10, 10]
+
+// multiple functions
+const df = seriesTransform(s, ["sum", "cumsum", "mean"]);
+df.col("sum").values;    // [10, 10, 10, 10]
+df.col("cumsum").values; // [1, 3, 6, 10]
+df.col("mean").values;   // [2.5, 2.5, 2.5, 2.5]
+
+// DataFrame transform
+const frame = DataFrame.fromColumns({ a: [1,2,3], b: [10,20,30] });
+dataFrameTransform(frame, "cumsum").col("b").values;  // [10, 30, 60]
+  </pre>
+
+  <script type="module">
+    import {
+      Series,
+      DataFrame,
+      seriesTransform,
+      dataFrameTransform,
+    } from "../src/index.ts";
+
+    const out = (msg) => { document.getElementById("output").textContent = msg; };
+
+    window.runCumsum = () => {
+      const s = new Series({ data: [1, 2, 3, 4] });
+      const result = seriesTransform(s, "cumsum");
+      out(`seriesTransform([1,2,3,4], "cumsum"):\n  ${[...result.values]}\n(expected [1, 3, 6, 10])`);
+    };
+
+    window.runBroadcast = () => {
+      const s = new Series({ data: [1, 2, 3, 4] });
+      const result = seriesTransform(s, "sum");
+      out(`seriesTransform([1,2,3,4], "sum"):\n  ${[...result.values]}\n(expected [10, 10, 10, 10])`);
+    };
+
+    window.runMulti = () => {
+      const s = new Series({ data: [1, 2, 3] });
+      const result = seriesTransform(s, ["sum", "cumsum", "mean"]);
+      out(
+        `seriesTransform([1,2,3], ["sum","cumsum","mean"]) → DataFrame:\n` +
+        `  sum:    ${[...result.col("sum").values]}   (expected [6,6,6])\n` +
+        `  cumsum: ${[...result.col("cumsum").values]}   (expected [1,3,6])\n` +
+        `  mean:   ${[...result.col("mean").values]}   (expected [2,2,2])`
+      );
+    };
+
+    window.runRecord = () => {
+      const s = new Series({ data: [1, 2, 3] });
+      const result = seriesTransform(s, { total: "sum", running: "cumsum" });
+      out(
+        `seriesTransform([1,2,3], {total:"sum", running:"cumsum"}) → DataFrame:\n` +
+        `  total:   ${[...result.col("total").values]}   (expected [6,6,6])\n` +
+        `  running: ${[...result.col("running").values]}   (expected [1,3,6])`
+      );
+    };
+
+    window.runDfTransform = () => {
+      const df = DataFrame.fromColumns({ a: [1,2,3], b: [10,20,30] });
+      const result = dataFrameTransform(df, "cumsum");
+      out(
+        `dataFrameTransform({a:[1,2,3], b:[10,20,30]}, "cumsum"):\n` +
+        `  a: ${[...result.col("a").values]}   (expected [1,3,6])\n` +
+        `  b: ${[...result.col("b").values]}  (expected [10,30,60])`
+      );
+    };
+
+    window.runDfPerCol = () => {
+      const df = DataFrame.fromColumns({ a: [1,2,3], b: [4,5,6] });
+      const result = dataFrameTransform(df, { a: "sum", b: "cummin" });
+      out(
+        `dataFrameTransform({a:[1,2,3], b:[4,5,6]}, {a:"sum", b:"cummin"}):\n` +
+        `  a (sum broadcast): ${[...result.col("a").values]}   (expected [6,6,6])\n` +
+        `  b (cummin):        ${[...result.col("b").values]}   (expected [4,4,4])`
+      );
+    };
+  </script>
+</body>
+</html>

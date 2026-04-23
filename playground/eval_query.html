@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — DataFrame.query() and DataFrame.eval()</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 2rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { color: #1a56db; }
+    h2 { color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.4rem; margin-top: 2rem; }
+    pre { background: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.9rem; }
+    code { background: #f3f4f6; padding: 0.15rem 0.35rem; border-radius: 3px; font-size: 0.9em; }
+    .output { background: #ecfdf5; border-left: 4px solid #10b981; padding: 0.75rem 1rem; margin-top: 0.5rem; border-radius: 0 6px 6px 0; font-family: monospace; white-space: pre; font-size: 0.875rem; }
+    .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; text-align: left; }
+    th { background: #f9fafb; font-weight: 600; }
+    a { color: #1a56db; }
+  </style>
+</head>
+<body>
+  <p><a href="index.html">← tsb playground</a></p>
+  <h1>DataFrame.query() and DataFrame.eval()</h1>
+  <p>
+    <strong>queryDataFrame</strong> and <strong>evalDataFrame</strong> let you filter rows or evaluate
+    expressions using a Python-pandas-style expression string. This mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.query.html"
+       target="_blank" rel="noopener"><code>pandas.DataFrame.query()</code></a>
+    and
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.eval.html"
+       target="_blank" rel="noopener"><code>pandas.DataFrame.eval()</code></a>.
+  </p>
+
+  <h2>Import</h2>
+  <pre><code>import { queryDataFrame, evalDataFrame, DataFrame } from "tsb";</code></pre>
+
+  <h2>queryDataFrame(df, expr)</h2>
+  <p>Returns a new DataFrame containing only the rows where <code>expr</code> evaluates to truthy.</p>
+  <pre><code>const df = DataFrame.fromArrays({
+  name:   ["Alice", "Bob", "Carol", "Dave"],
+  age:    [25, 32, 28, 45],
+  score:  [88, 72, 95, 60],
+  active: [true, false, true, true],
+});
+
+// Simple comparison
+queryDataFrame(df, "age > 28");
+// name: ["Bob", "Dave"]  age: [32, 45]  score: [72, 60]
+
+// Combined conditions
+queryDataFrame(df, "age < 35 and score >= 85");
+// name: ["Alice", "Carol"]
+
+// String equality
+queryDataFrame(df, "name == 'Alice'");
+// single row
+
+// 'in' operator
+queryDataFrame(df, "name in ['Alice', 'Carol']");
+
+// 'not in' operator
+queryDataFrame(df, "age not in [25, 45]");
+
+// Backtick-quoted column (for names with spaces)
+const df2 = DataFrame.fromArrays({ "first name": ["Alice", "Bob"] });
+queryDataFrame(df2, "`first name` == 'Alice'");</code></pre>
+
+  <h2>evalDataFrame(df, expr)</h2>
+  <p>Evaluates an arithmetic or logical expression and returns a new <code>Series</code>.</p>
+  <pre><code>const sales = DataFrame.fromArrays({
+  price: [10.0, 25.0, 5.0, 40.0],
+  qty:   [100,   50, 200,   10],
+});
+
+// Arithmetic expression → new Series
+evalDataFrame(sales, "price * qty");
+// Series [1000, 1250, 1000, 400]
+
+// Boolean expression (useful as a mask)
+evalDataFrame(sales, "price > 10");
+// Series [false, true, false, true]
+
+// Function calls
+evalDataFrame(sales, "round(price * qty / 100, 1)");
+// Series [10.0, 12.5, 10.0, 4.0]
+
+// String operations
+const df3 = DataFrame.fromArrays({ tag: ["Foo", "Bar", "Baz"] });
+evalDataFrame(df3, "lower(tag)");
+// Series ["foo", "bar", "baz"]</code></pre>
+
+  <h2>Supported Expression Syntax</h2>
+
+  <h3>Column references</h3>
+  <table>
+    <tr><th>Syntax</th><th>Example</th></tr>
+    <tr><td>Bare identifier</td><td><code>age</code></td></tr>
+    <tr><td>Backtick-quoted (spaces allowed)</td><td><code>`first name`</code></td></tr>
+  </table>
+
+  <h3>Literals</h3>
+  <table>
+    <tr><th>Type</th><th>Examples</th></tr>
+    <tr><td>Number</td><td><code>42</code>, <code>3.14</code>, <code>1e6</code></td></tr>
+    <tr><td>String</td><td><code>"hello"</code>, <code>'world'</code></td></tr>
+    <tr><td>Boolean</td><td><code>True</code>, <code>False</code>, <code>true</code>, <code>false</code></td></tr>
+    <tr><td>Null</td><td><code>None</code>, <code>null</code>, <code>NaN</code></td></tr>
+  </table>
+
+  <h3>Operators</h3>
+  <table>
+    <tr><th>Category</th><th>Operators</th></tr>
+    <tr><td>Arithmetic</td><td><code>+  -  *  /  %  **</code></td></tr>
+    <tr><td>Comparison</td><td><code>==  !=  &lt;  &lt;=  &gt;  &gt;=</code></td></tr>
+    <tr><td>Logical</td><td><code>and  or  not</code></td></tr>
+    <tr><td>Membership</td><td><code>in [...]</code>, <code>not in [...]</code></td></tr>
+  </table>
+
+  <h3>Built-in functions</h3>
+  <table>
+    <tr><th>Function</th><th>Description</th></tr>
+    <tr><td><code>abs(x)</code></td><td>Absolute value</td></tr>
+    <tr><td><code>round(x, d?)</code></td><td>Round to <em>d</em> decimal places (default 0)</td></tr>
+    <tr><td><code>floor(x)</code>, <code>ceil(x)</code></td><td>Floor / ceiling</td></tr>
+    <tr><td><code>sqrt(x)</code>, <code>log(x)</code>, <code>log2(x)</code>, <code>log10(x)</code></td><td>Math functions</td></tr>
+    <tr><td><code>str(x)</code>, <code>len(x)</code></td><td>Convert to string / string length</td></tr>
+    <tr><td><code>lower(x)</code>, <code>upper(x)</code></td><td>String case conversion</td></tr>
+    <tr><td><code>isnull(x)</code> / <code>isna(x)</code></td><td>True if null / NaN</td></tr>
+    <tr><td><code>notnull(x)</code> / <code>notna(x)</code></td><td>True if not null</td></tr>
+  </table>
+
+  <h2>Pandas API comparison</h2>
+  <table>
+    <tr><th>pandas</th><th>tsb</th></tr>
+    <tr><td><code>df.query("col &gt; 5")</code></td><td><code>queryDataFrame(df, "col &gt; 5")</code></td></tr>
+    <tr><td><code>df.eval("a + b")</code></td><td><code>evalDataFrame(df, "a + b")</code></td></tr>
+    <tr><td><code>df.query("col in [1,2,3]")</code></td><td><code>queryDataFrame(df, "col in [1, 2, 3]")</code></td></tr>
+    <tr><td><code>df.query("`col name` == 'x'")</code></td><td><code>queryDataFrame(df, "`col name` == 'x'")</code></td></tr>
+    <tr><td><code>df.eval("func(col)")</code></td><td><code>evalDataFrame(df, "abs(col)")</code> (built-in functions)</td></tr>
+  </table>
+
+  <div class="note">
+    <strong>Note:</strong> Unlike pandas, external variable substitution (<code>@var</code>) is not supported.
+    Use template literals to embed values: <code>queryDataFrame(df, `age &gt; ${minAge}`)</code>.
+  </div>
+
+  <h2>Tips</h2>
+  <ul>
+    <li>Operator precedence follows Python/math conventions: <code>**</code> &gt; unary <code>-</code> &gt; <code>* / %</code> &gt; <code>+ -</code> &gt; comparisons &gt; <code>not</code> &gt; <code>and</code> &gt; <code>or</code>.</li>
+    <li><code>and</code>/<code>or</code> short-circuit: <code>false and f()</code> won't evaluate <code>f()</code>.</li>
+    <li>Null propagation: arithmetic/comparison on null yields null (treated as falsy in logical ops).</li>
+    <li>For null checks, prefer <code>isnull(col)</code> over <code>col == None</code>.</li>
+  </ul>
+</body>
+</html>

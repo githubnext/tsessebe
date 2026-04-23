@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xs — Cross-Section Selection — tsb playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #1a56db; }
+    pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    .output { background: #e8f5e9; padding: 1rem; border-radius: 6px; white-space: pre; font-family: monospace; min-height: 4rem; }
+    button { background: #1a56db; color: white; border: none; padding: 0.5rem 1.2rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
+    button:hover { background: #1345b3; }
+  </style>
+</head>
+<body>
+  <h1>xs — Cross-Section Selection</h1>
+  <p>
+    <code>xsDataFrame(df, key)</code> extracts a row by label as a Series, or
+    a column by name (with <code>axis: 1</code>). Works with both flat and
+    MultiIndex DataFrames.
+  </p>
+
+  <h2>Interactive Demo</h2>
+  <button onclick="runRow()">Row cross-section</button>
+  <button onclick="runCol()">Column cross-section</button>
+  <button onclick="runMulti()">MultiIndex cross-section</button>
+  <div class="output" id="output">Click a button above to run an example.</div>
+
+  <h2>Code Examples</h2>
+  <pre><code>import { DataFrame, xsDataFrame, xsSeries, MultiIndex } from "tsb";
+
+// ── flat index ──────────────────────────────────────────────────────────────
+const df = DataFrame.fromColumns(
+  { a: [1, 2, 3], b: [4, 5, 6] },
+  { index: ["x", "y", "z"] },
+);
+
+// Select row "y" → Series { a: 2, b: 5 }
+xsDataFrame(df, "y");
+
+// Select column "b" → Series { x: 4, y: 5, z: 6 }
+xsDataFrame(df, "b", { axis: 1 });
+
+// ── MultiIndex ─────────────────────────────────────────────────────────────
+const mi = MultiIndex.fromTuples([
+  ["A", 1], ["A", 2],
+  ["B", 1], ["B", 2],
+]);
+const miDf = new DataFrame( ... , mi);
+
+// All "A" rows → DataFrame with 2 rows
+xsDataFrame(miDf, "A");
+
+// ── Series ─────────────────────────────────────────────────────────────────
+const s = new Series({ data: [10, 20, 30], index: ["a", "b", "c"] });
+xsSeries(s, "b"); // → 20
+</code></pre>
+
+  <script type="module">
+    const mod = await import("../src/index.ts").catch(() => null);
+
+    function display(label, text) {
+      document.getElementById("output").textContent = label + "\n\n" + text;
+    }
+
+    window.runRow = function() {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { DataFrame, xsDataFrame } = mod;
+      const df = DataFrame.fromColumns(
+        { a: [1, 2, 3], b: [4, 5, 6], c: [7, 8, 9] },
+        { index: ["x", "y", "z"] },
+      );
+      const row = xsDataFrame(df, "y");
+      display("xsDataFrame(df, 'y')  — row cross-section:", String(row));
+    };
+
+    window.runCol = function() {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { DataFrame, xsDataFrame } = mod;
+      const df = DataFrame.fromColumns(
+        { score: [88, 92, 76], grade: ["B", "A", "C"] },
+        { index: ["Alice", "Bob", "Carol"] },
+      );
+      const col = xsDataFrame(df, "score", { axis: 1 });
+      display("xsDataFrame(df, 'score', { axis: 1 })  — column cross-section:", String(col));
+    };
+
+    window.runMulti = function() {
+      if (!mod) { display("", "(Module unavailable — run via bun)"); return; }
+      const { DataFrame, MultiIndex, Series, Index, xsDataFrame } = mod;
+      const mi = MultiIndex.fromTuples([
+        ["EU", "DE"], ["EU", "FR"], ["EU", "IT"],
+        ["US", "CA"], ["US", "NY"],
+      ]);
+      const df = new DataFrame(
+        new Map([
+          ["gdp", new Series({ data: [3.8, 2.8, 2.0, 3.8, 1.7], index: mi })],
+          ["pop", new Series({ data: [84, 68, 60, 39, 20], index: mi })],
+        ]),
+        mi,
+        ["gdp", "pop"],
+      );
+      const eu = xsDataFrame(df, "EU");
+      display("xsDataFrame(multiDf, 'EU')  — all EU rows:", String(eu));
+    };
+  </script>
+</body>
+</html>

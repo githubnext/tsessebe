@@ -361,7 +361,7 @@ export type {
 export { toDatetime } from "./to_datetime.ts";
 export type { DatetimeUnit, DatetimeErrors, ToDatetimeOptions } from "./to_datetime.ts";
 
-export { toTimedelta, parseFrac, formatTimedelta, Timedelta } from "./to_timedelta.ts";
+export { toTimedelta, parseFrac, formatTimedelta } from "./to_timedelta.ts";
 export type { TimedeltaUnit, TimedeltaErrors, ToTimedeltaOptions } from "./to_timedelta.ts";
 export { dateRange, parseFreq, advanceDate, toDateInput } from "./date_range.ts";
 export type {
@@ -381,3 +381,108 @@ export type { FillDirectionOptions, DataFrameFillOptions } from "./na_ops.ts";
 export { intervalRange } from "./interval.ts";
 export type { ClosedType } from "./interval.ts";
 export { nunique } from "./reduce_ops.ts";
+export { queryDataFrame, evalDataFrame } from "./eval_query.ts";
+export { strFindall, strFindallCount, strFindFirst, strFindallExpand } from "./str_findall.ts";
+export {
+  cutBinsToFrame,
+  cutBinCounts,
+  binEdges,
+} from "./cut_bins_to_frame.ts";
+export type { CutBinsToFrameOptions } from "./cut_bins_to_frame.ts";
+export { xsDataFrame, xsSeries } from "./xs.ts";
+export type { XsDataFrameOptions, XsSeriesOptions } from "./xs.ts";
+export {
+  swapLevelSeries,
+  swapLevelDataFrame,
+  reorderLevelsSeries,
+  reorderLevelsDataFrame,
+} from "./swaplevel.ts";
+export type { SwapLevelDataFrameOptions, ReorderLevelsDataFrameOptions } from "./swaplevel.ts";
+export { truncateSeries, truncateDataFrame } from "./truncate.ts";
+export type { TruncateOptions } from "./truncate.ts";
+export { seriesBetween } from "./between.ts";
+export type { BetweenInclusive, BetweenOptions } from "./between.ts";
+export { seriesUpdate, dataFrameUpdate } from "./update.ts";
+export type { UpdateOptions } from "./update.ts";
+export { filterDataFrame, filterSeries } from "./filter_labels.ts";
+export type { FilterLabelsOptions } from "./filter_labels.ts";
+
+export { combineSeries, combineDataFrame } from "./combine.ts";
+export type { CombineDataFrameOptions } from "./combine.ts";
+export { keepTrue, keepFalse, filterBy } from "./notna_boolean.ts";
+export {
+  squeezeSeries,
+  squeezeDataFrame,
+  itemSeries,
+  boolSeries,
+  boolDataFrame,
+  firstValidIndex,
+  lastValidIndex,
+  dataFrameFirstValidIndex,
+  dataFrameLastValidIndex,
+} from "./scalar_extract.ts";
+export type { SqueezeResult } from "./scalar_extract.ts";
+export { autoCorr, corrWith } from "./corrwith.ts";
+export type { CorrWithOptions } from "./corrwith.ts";
+export {
+  renameSeriesIndex,
+  renameDataFrame,
+  addPrefixDataFrame,
+  addSuffixDataFrame,
+  addPrefixSeries,
+  addSuffixSeries,
+  setAxisSeries,
+  setAxisDataFrame,
+  seriesToFrame,
+} from "./rename_ops.ts";
+export type { LabelMapper, RenameDataFrameOptions } from "./rename_ops.ts";
+export { absSeries, absDataFrame, roundSeries, roundDataFrame } from "./math_ops.ts";
+export type { RoundDataFrameSpec } from "./math_ops.ts";
+export {
+  seriesDotSeries,
+  seriesDotDataFrame,
+  dataFrameDotSeries,
+  dataFrameDotDataFrame,
+} from "./dot_matmul.ts";
+export { seriesTransform, dataFrameTransform } from "./transform_agg.ts";
+export type {
+  TransformFunc,
+  TransformFuncName,
+  DataFrameTransformOptions,
+} from "./transform_agg.ts";
+export { seriesAt, seriesIat, dataFrameAt, dataFrameIat } from "./at_iat.ts";
+export {
+  sortValuesSeries,
+  sortIndexSeries,
+  sortValuesDataFrame,
+  sortIndexDataFrame,
+} from "./sort_ops.ts";
+export type {
+  SortValuesSeriesOptions,
+  SortIndexSeriesOptions,
+  SortValuesDataFrameOptions,
+  SortIndexDataFrameOptions,
+} from "./sort_ops.ts";
+export {
+  inferObjectsSeries,
+  inferObjectsDataFrame,
+  convertDtypesSeries,
+  convertDtypesDataFrame,
+} from "./infer_objects.ts";
+export type {
+  InferObjectsOptions,
+  ConvertDtypesOptions,
+} from "./infer_objects.ts";
+export {
+  resampleSeries,
+  resampleDataFrame,
+  SeriesResampler,
+  DataFrameResampler,
+} from "./resample.ts";
+export type {
+  ResampleFreq,
+  ResampleLabel,
+  ResampleAggName,
+  ResampleAggFn,
+  ResampleOptions,
+} from "./resample.ts";
