@@ -8,7 +8,6 @@
 import { describe, expect, test } from "bun:test";
 import * as fc from "fast-check";
 import { DataFrame, Styler, dataFrameStyle } from "../../src/index.ts";
-import type { Scalar } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -74,9 +73,7 @@ describe("Styler.format", () => {
 
   test("format with string template", () => {
     const df = makeNumericDf();
-    const html = dataFrameStyle(df)
-      .format("{v}%", ["a"])
-      .toHtml();
+    const html = dataFrameStyle(df).format("{v}%", ["a"]).toHtml();
     expect(html).toContain("1%");
   });
 
@@ -121,7 +118,8 @@ describe("Styler.apply", () => {
     const df = makeNumericDf();
     const html = dataFrameStyle(df)
       .apply(
-        (vals) => vals.map((v) => (typeof v === "number" && v < 0 ? "background-color: pink;" : "")),
+        (vals) =>
+          vals.map((v) => (typeof v === "number" && v < 0 ? "background-color: pink;" : "")),
         1,
       )
       .toHtml();
@@ -162,8 +160,12 @@ describe("Styler.applymap / map", () => {
 
   test("map is an alias for applymap", () => {
     const df = makeNumericDf();
-    const h1 = dataFrameStyle(df).applymap((v) => (v === -1 ? "color: red;" : "")).toHtml("x");
-    const h2 = dataFrameStyle(df).map((v) => (v === -1 ? "color: red;" : "")).toHtml("x");
+    const h1 = dataFrameStyle(df)
+      .applymap((v) => (v === -1 ? "color: red;" : ""))
+      .toHtml("x");
+    const h2 = dataFrameStyle(df)
+      .map((v) => (v === -1 ? "color: red;" : ""))
+      .toHtml("x");
     expect(h1).toBe(h2);
   });
 });
@@ -191,7 +193,9 @@ describe("Styler.highlightMax", () => {
 
   test("subset limits columns", () => {
     const df = makeNumericDf();
-    const styles = dataFrameStyle(df).highlightMax({ subset: ["a"] }).exportStyles();
+    const styles = dataFrameStyle(df)
+      .highlightMax({ subset: ["a"] })
+      .exportStyles();
     // All highlighted cells should be in column 0 (a)
     for (const s of styles) {
       if (s.css.includes("background-color: yellow")) {
@@ -292,9 +296,7 @@ describe("Styler.backgroundGradient", () => {
 
   test("vmin/vmax clamp range", () => {
     const df = DataFrame.fromColumns({ a: [0, 50, 100] });
-    const styles = dataFrameStyle(df)
-      .backgroundGradient({ vmin: 50, vmax: 100 })
-      .exportStyles();
+    const styles = dataFrameStyle(df).backgroundGradient({ vmin: 50, vmax: 100 }).exportStyles();
     expect(styles.length).toBe(3); // all cells get a style
   });
 });
@@ -330,17 +332,13 @@ describe("Styler.barChart", () => {
 describe("Styler.setProperties", () => {
   test("sets CSS for all cells", () => {
     const df = makeNumericDf();
-    const html = dataFrameStyle(df)
-      .setProperties({ "font-weight": "bold" })
-      .toHtml();
+    const html = dataFrameStyle(df).setProperties({ "font-weight": "bold" }).toHtml();
     expect(html).toContain("font-weight: bold;");
   });
 
   test("subset limits properties", () => {
     const df = makeNumericDf();
-    const styles = dataFrameStyle(df)
-      .setProperties({ color: "navy" }, ["a"])
-      .exportStyles();
+    const styles = dataFrameStyle(df).setProperties({ color: "navy" }, ["a"]).exportStyles();
     for (const s of styles) {
       expect(s.col).toBe(0);
     }
@@ -362,9 +360,7 @@ describe("Styler.setTableStyles", () => {
   test("props as array of pairs", () => {
     const df = makeNumericDf();
     const html = dataFrameStyle(df)
-      .setTableStyles([
-        { selector: "td", props: [["border", "2px solid black"]] },
-      ])
+      .setTableStyles([{ selector: "td", props: [["border", "2px solid black"]] }])
       .toHtml();
     expect(html).toContain("border: 2px solid black;");
   });
@@ -375,9 +371,7 @@ describe("Styler.setTableStyles", () => {
 describe("Styler.setTableAttributes", () => {
   test("adds HTML attributes to table tag", () => {
     const df = makeNumericDf();
-    const html = dataFrameStyle(df)
-      .setTableAttributes('class="my-table"')
-      .toHtml();
+    const html = dataFrameStyle(df).setTableAttributes('class="my-table"').toHtml();
     expect(html).toContain('class="my-table"');
   });
 });
@@ -545,7 +539,9 @@ describe("property-based tests", () => {
         (vals) => {
           // Make them all unique to avoid ties
           const unique = [...new Set(vals)];
-          if (unique.length < 2) return;
+          if (unique.length < 2) {
+            return;
+          }
           const df = DataFrame.fromColumns({ a: unique });
           const records = dataFrameStyle(df).highlightMax().exportStyles();
           // Should have exactly 1 highlighted cell in column 0

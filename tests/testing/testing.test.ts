@@ -136,7 +136,9 @@ describe("assertSeriesEqual — failures", () => {
     try {
       assertSeriesEqual(a, b);
     } catch (e) {
-      if (e instanceof AssertionError) msg = e.message;
+      if (e instanceof AssertionError) {
+        msg = e.message;
+      }
     }
     expect(msg).toContain("2");
     expect(msg).toContain("99");
@@ -228,7 +230,9 @@ describe("assertFrameEqual — failures", () => {
     try {
       assertFrameEqual(a, b);
     } catch (e) {
-      if (e instanceof AssertionError) msg = e.message;
+      if (e instanceof AssertionError) {
+        msg = e.message;
+      }
     }
     expect(msg).toContain("score");
     expect(msg).toContain("200");

@@ -779,9 +779,7 @@ function isIndexLike(v: unknown): v is Index<Label> {
   }
   const rec = v as Record<string, unknown>;
   return (
-    typeof rec["size"] === "number" &&
-    typeof rec["at"] === "function" &&
-    typeof rec["getLoc"] === "function"
+    typeof rec.size === "number" && typeof rec.at === "function" && typeof rec.getLoc === "function"
   );
 }
 

@@ -47,7 +47,7 @@ export interface TableStyle {
   /** CSS selector, e.g. `"table"`, `"th"`, `"tr:nth-child(even)"`. */
   selector: string;
   /** CSS properties as an object or key-value pairs array. */
-  props: CellProps | ReadonlyArray<[string, string]>;
+  props: CellProps | readonly [string, string][];
 }
 
 /** Per-exported-style record from {@link Styler.exportStyles}. */
@@ -64,7 +64,7 @@ export interface StyleRecord {
 export type ValueFormatter = ((value: Scalar) => string) | string | null;
 
 /** Subset selector for columns — column names or their integer positions. */
-export type ColSubset = ReadonlyArray<string> | ReadonlyArray<number> | null | undefined;
+export type ColSubset = readonly string[] | readonly number[] | null | undefined;
 
 /** Axis-wise style function: receives an array of scalar values, returns CSS strings. */
 export type AxisStyleFn = (values: readonly Scalar[]) => readonly string[];
@@ -178,21 +178,26 @@ interface TableWideApplication {
 /** Parse a hex color string to [r, g, b] (0–255). */
 function hexToRgb(hex: string): [number, number, number] {
   const clean = hex.replace(/^#/, "");
-  const full = clean.length === 3
-    ? clean.split("").map((c) => c + c).join("")
-    : clean;
+  const full =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : clean;
   const n = Number.parseInt(full, 16);
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }
 
 /** Convert [r, g, b] (0–255) to a CSS hex string. */
 function rgbToHex(r: number, g: number, b: number): string {
-  return (
-    "#" +
-    [r, g, b]
-      .map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0"))
-      .join("")
-  );
+  return `#${[r, g, b]
+    .map((v) =>
+      Math.round(Math.max(0, Math.min(255, v)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 }
 
 /** Linearly interpolate two hex colors at fraction t ∈ [0, 1]. */
@@ -203,7 +208,7 @@ function lerpColor(colorA: string, colorB: string, t: number): string {
 }
 
 /** Named colormaps: array of [position, hexColor] stops. */
-const COLORMAPS: Readonly<Record<string, ReadonlyArray<[number, string]>>> = {
+const COLORMAPS: Readonly<Record<string, readonly [number, string][]>> = {
   RdYlGn: [
     [0.0, "#d73027"],
     [0.5, "#ffffbf"],
@@ -252,7 +257,7 @@ function colormapColor(t: number, cmap: string): string {
     const parts = cmap.split(":");
     return lerpColor(parts[0] ?? "#ffffff", parts[1] ?? "#000000", t);
   }
-  const stops = COLORMAPS[cmap] ?? COLORMAPS["Blues"]!;
+  const stops = COLORMAPS[cmap] ?? COLORMAPS.Blues!;
   // Find surrounding stops
   for (let i = 0; i < stops.length - 1; i++) {
     const [p0, c0] = stops[i]!;
@@ -262,14 +267,14 @@ function colormapColor(t: number, cmap: string): string {
       return lerpColor(c0, c1, local);
     }
   }
-  return stops[stops.length - 1]![1];
+  return stops.at(-1)![1];
 }
 
 /** Relative luminance for WCAG contrast check. */
 function luminance(hex: string): number {
   const toLinear = (v: number): number => {
     const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
   };
   const [rv, gv, bv] = hexToRgb(hex);
   return 0.2126 * toLinear(rv) + 0.7152 * toLinear(gv) + 0.0722 * toLinear(bv);
@@ -339,9 +344,9 @@ function escapeHtml(s: string): string {
 }
 
 /** Normalise a CSS properties object or array to a CSS string. */
-function propsToString(props: CellProps | ReadonlyArray<[string, string]>): string {
+function propsToString(props: CellProps | readonly [string, string][]): string {
   if (Array.isArray(props)) {
-    return (props as ReadonlyArray<[string, string]>).map(([k, v]) => `${k}: ${v};`).join(" ");
+    return (props as readonly [string, string][]).map(([k, v]) => `${k}: ${v};`).join(" ");
   }
   return Object.entries(props as CellProps)
     .map(([k, v]) => `${k}: ${v};`)
@@ -362,10 +367,7 @@ function mergeCss(a: string, b: string): string {
 }
 
 /** Resolve column indices from a ColSubset given all column names. */
-function resolveColIndices(
-  colNames: readonly string[],
-  subset: ColSubset,
-): readonly number[] {
+function resolveColIndices(colNames: readonly string[], subset: ColSubset): readonly number[] {
   if (!subset || subset.length === 0) {
     return Array.from({ length: colNames.length }, (_, i) => i);
   }
@@ -486,7 +488,7 @@ export class Styler {
         const vals: Scalar[] = Array.from({ length: nrows }, (_, ri) => col.values[ri] ?? null);
         const styles = fn(vals);
         for (let ri = 0; ri < nrows; ri++) {
-          css[ri]![ci] = mergeCss(css[ri]![ci]!, styles[ri] ?? "");
+          css[ri]![ci] = mergeCss(css[ri]?.[ci]!, styles[ri] ?? "");
         }
       }
     } else {
@@ -500,7 +502,7 @@ export class Styler {
           const ci = colIndices[k];
           const s = styles[k];
           if (ci !== undefined && ci < ncols && s) {
-            css[ri]![ci] = mergeCss(css[ri]![ci]!, s);
+            css[ri]![ci] = mergeCss(css[ri]?.[ci]!, s);
           }
         }
       }
@@ -524,7 +526,7 @@ export class Styler {
         const val = col.values[ri] ?? null;
         const s = fn(val);
         if (s) {
-          css[ri]![ci] = mergeCss(css[ri]![ci]!, s);
+          css[ri]![ci] = mergeCss(css[ri]?.[ci]!, s);
         }
       }
     }
@@ -555,10 +557,14 @@ export class Styler {
       const styleGrid = app.fn(rowsData, app.colIndices);
       for (let ri = 0; ri < nrows; ri++) {
         const styleRow = styleGrid[ri];
-        if (!styleRow) continue;
+        if (!styleRow) {
+          continue;
+        }
         app.colIndices.forEach((ci, k) => {
           const s = styleRow[k] ?? "";
-          if (s) css[ri]![ci] = mergeCss(css[ri]![ci]!, s);
+          if (s) {
+            css[ri]![ci] = mergeCss(css[ri]?.[ci]!, s);
+          }
         });
       }
     }
@@ -600,11 +606,7 @@ export class Styler {
    * style.format("{v}%", ["pct_col"]);
    * ```
    */
-  format(
-    formatter: ValueFormatter,
-    subset: ColSubset = null,
-    naRep?: string,
-  ): this {
+  format(formatter: ValueFormatter, subset: ColSubset = null, naRep?: string): this {
     const colNames = this._colNames;
     const colIndices = resolveColIndices(colNames, subset);
     const effectiveNa = naRep ?? this._naRep;
@@ -686,7 +688,9 @@ export class Styler {
 
     const highlightFn: AxisStyleFn = (vals) => {
       const nums = numericValues(vals);
-      if (nums.length === 0) return vals.map(() => "");
+      if (nums.length === 0) {
+        return vals.map(() => "");
+      }
       const max = Math.max(...nums);
       return vals.map((v) => (v === max ? `background-color: ${color};` : ""));
     };
@@ -698,10 +702,14 @@ export class Styler {
         const allNums: number[] = [];
         for (const row of rowsData) {
           for (const v of row) {
-            if (typeof v === "number" && !Number.isNaN(v)) allNums.push(v);
+            if (typeof v === "number" && !Number.isNaN(v)) {
+              allNums.push(v);
+            }
           }
         }
-        if (allNums.length === 0) return rowsData.map((row) => row.map(() => ""));
+        if (allNums.length === 0) {
+          return rowsData.map((row) => row.map(() => ""));
+        }
         const max = Math.max(...allNums);
         return rowsData.map((row) =>
           row.map((v) => (v === max ? `background-color: ${color};` : "")),
@@ -728,7 +736,9 @@ export class Styler {
 
     const highlightFn: AxisStyleFn = (vals) => {
       const nums = numericValues(vals);
-      if (nums.length === 0) return vals.map(() => "");
+      if (nums.length === 0) {
+        return vals.map(() => "");
+      }
       const min = Math.min(...nums);
       return vals.map((v) => (v === min ? `background-color: ${color};` : ""));
     };
@@ -738,10 +748,14 @@ export class Styler {
         const allNums: number[] = [];
         for (const row of rowsData) {
           for (const v of row) {
-            if (typeof v === "number" && !Number.isNaN(v)) allNums.push(v);
+            if (typeof v === "number" && !Number.isNaN(v)) {
+              allNums.push(v);
+            }
           }
         }
-        if (allNums.length === 0) return rowsData.map((row) => row.map(() => ""));
+        if (allNums.length === 0) {
+          return rowsData.map((row) => row.map(() => ""));
+        }
         const min = Math.min(...allNums);
         return rowsData.map((row) =>
           row.map((v) => (v === min ? `background-color: ${color};` : "")),
@@ -763,8 +777,7 @@ export class Styler {
    */
   highlightNull(nullColor = "red", subset: ColSubset = null): this {
     return this.applymap((v) => {
-      const isNull =
-        v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+      const isNull = v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
       return isNull ? `background-color: ${nullColor};` : "";
     }, subset);
   }
@@ -773,11 +786,18 @@ export class Styler {
    * Highlight values within a numeric range [left, right].
    */
   highlightBetween(options: HighlightBetweenOptions = {}): this {
-    const { left = null, right = null, inclusive = "both", color = "yellow", subset = null } =
-      options;
+    const {
+      left = null,
+      right = null,
+      inclusive = "both",
+      color = "yellow",
+      subset = null,
+    } = options;
 
     return this.applymap((v) => {
-      if (typeof v !== "number" || Number.isNaN(v)) return "";
+      if (typeof v !== "number" || Number.isNaN(v)) {
+        return "";
+      }
       let ok = true;
       if (left !== null) {
         ok = ok && (inclusive === "both" || inclusive === "left" ? v >= left : v > left);
@@ -1031,7 +1051,9 @@ export class Styler {
       const row = css[ri]!;
       for (let ci = 0; ci < row.length; ci++) {
         const s = row[ci]!;
-        if (s) records.push({ row: ri, col: ci, css: s });
+        if (s) {
+          records.push({ row: ri, col: ci, css: s });
+        }
       }
     }
     return records;
@@ -1126,18 +1148,17 @@ export class Styler {
       // Data cells
       for (const ci of visibleCols) {
         const colName = colNames[ci];
-        const val: Scalar = colName !== undefined ? (this._df.col(colName).values[ri] ?? null) : null;
+        const val: Scalar =
+          colName !== undefined ? (this._df.col(colName).values[ri] ?? null) : null;
 
         const formatter = this._formatters.get(ci) ?? null;
         const displayed = applyFormatter(val, formatter, this._naRep, this._precision);
 
-        const cellCss = css[ri]![ci] ?? "";
+        const cellCss = css[ri]?.[ci] ?? "";
         const baseStyle = "border: 1px solid #ddd; padding: 4px;";
         const style = cellCss ? `${baseStyle} ${cellCss}` : baseStyle;
 
-        lines.push(
-          `      <td style="${escapeHtml(style)}">${escapeHtml(displayed)}</td>`,
-        );
+        lines.push(`      <td style="${escapeHtml(style)}">${escapeHtml(displayed)}</td>`);
       }
 
       lines.push("    </tr>");
@@ -1180,7 +1201,7 @@ export class Styler {
     const lines: string[] = [];
 
     if (this._caption !== null) {
-      lines.push(`\\begin{table}`);
+      lines.push("\\begin{table}");
       lines.push(`  \\caption{${this._caption}}`);
     }
 
@@ -1197,7 +1218,7 @@ export class Styler {
     for (const ci of visibleCols) {
       headers.push(String(colNames[ci] ?? "").replace(/_/g, "\\_"));
     }
-    lines.push(headers.join(" & ") + " \\\\");
+    lines.push(`${headers.join(" & ")} \\\\`);
     if (hrules) {
       lines.push("\\midrule");
     }
@@ -1216,7 +1237,7 @@ export class Styler {
         const displayed = applyFormatter(val, formatter, this._naRep, this._precision);
         cells.push(displayed.replace(/_/g, "\\_").replace(/&/g, "\\&").replace(/%/g, "\\%"));
       }
-      lines.push(cells.join(" & ") + " \\\\");
+      lines.push(`${cells.join(" & ")} \\\\`);
     }
 
     if (hrules) {
@@ -1225,7 +1246,7 @@ export class Styler {
     lines.push(`\\end{${environment}}`);
 
     if (this._caption !== null) {
-      lines.push(`\\end{table}`);
+      lines.push("\\end{table}");
     }
 
     return lines.join("\n");
