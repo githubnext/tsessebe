@@ -344,6 +344,19 @@ All three reference each other. For file-based programs, the program issue is au
 
 Each run executes **one iteration for the single selected program**:
 
+### Strategy discovery
+
+Before executing the generic iteration loop below, check whether this program has opted into a specialized strategy:
+
+1. Read `<program-dir>/program.md` and look for a `## Evolution Strategy` section.
+2. If that section points to a strategy file — e.g., "This program uses the **AlphaEvolve** strategy. Read `strategy/alphaevolve.md` at the start of every iteration and follow it literally." — read the referenced file and follow it.
+3. The strategy playbook **supersedes** the generic "Step 2: Analyze" through "Step 5: Accept or Reject" steps below. The other steps (state read, branch management, state file updates, CI gating) still apply.
+4. If `## Evolution Strategy` is absent, contains only prose, or points to a file that does not exist, fall back to the default iteration flow below.
+
+Strategy files live under `<program-dir>/strategy/`. Program-specific prompts (e.g., `strategy/prompts/mutation.md`) are read by the strategy playbook at the appropriate step — do not read them pre-emptively, the playbook will tell you when.
+
+Reusable strategy templates (with `<CUSTOMIZE: …>` markers) live in `.autoloop/strategies/`. To author a new strategy-based program, copy the chosen strategy's files into `<program-dir>/strategy/`, resolve the markers, and add the matching `## Evolution Strategy` pointer block to `program.md` (see the strategy's `CUSTOMIZE.md` for guidance).
+
 ### Step 1: Read State
 
 1. Read the program file to understand the goal, targets, and evaluation method.

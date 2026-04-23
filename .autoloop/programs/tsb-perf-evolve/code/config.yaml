@@ -1,0 +1,22 @@
+# AlphaEvolve tunables — read by strategy/alphaevolve.md every iteration.
+
+# Operator weights. Must sum to 1.0. Defaults bias toward exploitation.
+exploitation_ratio: 0.50
+exploration_ratio: 0.30
+crossover_ratio: 0.15
+migration_ratio: 0.05
+
+# Island count. Should match the number of islands enumerated in
+# strategy/alphaevolve.md's "Pick parent(s)" section.
+num_islands: 5
+
+# MAP-Elites population caps.
+population_size: 40
+archive_size: 10
+
+# Benchmark dataset shape. Both benchmark.ts and benchmark.py read this.
+dataset_size: 100000
+nan_ratio: 0.05
+warmup_iterations: 5
+measured_iterations: 50
+random_seed: 42
