@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T01:37:10Z |
-| Iteration Count | 257 |
+| Last Run | 2026-04-23T03:15:00Z |
+| Iteration Count | 258 |
 | Best Metric | 134 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
+| Recent Statuses | accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## 🎯 Current Priorities
 
-Completed iters 239–257:
+Completed iters 239–258:
 - ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
 - ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
 - ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof, merge_ordered
@@ -44,12 +44,13 @@ Completed iters 239–257:
 - ✅ dataFrameToHtml/dataFrameToMarkdown (iter 256), dataFrameToRecords/fromRecords (iter 256)
 - ✅ dtIsocalendar() (iter 256), periodRange() (iter 256)
 - ✅ getOption/setOption/resetOption/describeOption/listOptions/optionContext (iter 257)
+- ✅ pd.testing: assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError (iter 258)
 
 Next:
 - `df.where(cond, other=df2)` — fill-with-other-dataframe/series variant
 - `DataFrame.style` (basic styling API)
-- `pd.testing.assert_frame_equal` / `pd.testing.assert_series_equal` — testing utilities
 - `pd.util.hash_pandas_object()` — hashing DataFrame/Series
+- `pd.api.types` type-checking utilities (is_numeric_dtype, is_string_dtype, etc.)
 
 ---
 
@@ -78,11 +79,11 @@ Next:
 - `core/str_accessor` — wire `.str.extractall()` via late-binding (inject DataFrame factory)
 - `DataFrame.pipe()` / `Series.pipe()` with arbitrary function composition
 - `df.where(cond, other=df2)` — fill-with-other-dataframe variant
-- `pd.testing` module — `assertFrameEqual`, `assertSeriesEqual`
 
 ---
 
 ## 📊 Iteration History
+### Iter 258 — 2026-04-23 03:15 UTC — ⏳ pending-ci — +pd.testing (assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError). Metric: 134 (+1 from branch base 133). Commit: bb30765. [Run](https://github.com/githubnext/tsessebe/actions/runs/24814455663)
 ### Iter 257 — 2026-04-23 01:37 UTC — ⏳ pending-ci — +options (getOption/setOption/resetOption/describeOption/listOptions/optionContext). Metric: 134 (+1). Commit: e1d8fc3. [Run](https://github.com/githubnext/tsessebe/actions/runs/24811857064)
 ### Iters 253–256 — ⏳ pending-ci — +dataFrameToHtml/Markdown, +dataFrameToRecords/fromRecords, +dtIsocalendar, +periodRange, +str.normalize, +ewmCovMatrix/ewmCorrMatrix. Metrics 134→137.
 ### Iters 246–252 — ✅/⚠️ (metrics 128→133): +resample, +mergeOrdered, +mergeAsof, +join/joinAll/crossJoin, +inferObjects/convertDtypes.
