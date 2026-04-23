@@ -754,23 +754,23 @@ export class Series<T extends Scalar = Scalar> {
     let pos = 0;
     if (naPosition === "first") {
       for (let i = 0; i < nanCount; i++) {
-        const idx = nanBuf[i];
+        const idx = nanBuf[i]!;
         perm[pos] = idx;
         outData[pos++] = vals[idx] as T;
       }
       for (let i = 0; i < finCount; i++) {
-        const idx = finSlice[i];
+        const idx = finSlice[i]!;
         perm[pos] = idx;
         outData[pos++] = vals[idx] as T;
       }
     } else {
       for (let i = 0; i < finCount; i++) {
-        const idx = finSlice[i];
+        const idx = finSlice[i]!;
         perm[pos] = idx;
         outData[pos++] = vals[idx] as T;
       }
       for (let i = 0; i < nanCount; i++) {
-        const idx = nanBuf[i];
+        const idx = nanBuf[i]!;
         perm[pos] = idx;
         outData[pos++] = vals[idx] as T;
       }
