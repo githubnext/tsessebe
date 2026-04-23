@@ -712,11 +712,73 @@ export class Series<T extends Scalar = Scalar> {
 
   /** Return a new Series sorted by values. */
   sortValues(ascending = true, naPosition: "first" | "last" = "last"): Series<T> {
-    const pairs = this._values.map((v, i) => ({ v, i }));
-    pairs.sort((a, b) => compareScalars(a.v, b.v, ascending, naPosition));
+    const n = this._values.length;
+    const vals = this._values;
+
+    // Pre-partition NaN/null/undefined from finite values in one pass.
+    // This removes the NaN check from the comparator's hot path.
+    const finBuf = new Uint32Array(n);
+    const nanBuf = new Uint32Array(n);
+    let finCount = 0;
+    let nanCount = 0;
+    for (let i = 0; i < n; i++) {
+      const v = vals[i];
+      if (v === null || v === undefined || (typeof v === "number" && Number.isNaN(v))) {
+        nanBuf[nanCount++] = i;
+      } else {
+        finBuf[finCount++] = i;
+      }
+    }
+
+    // Sort the finite-index slice in-place using an indirect comparator.
+    // Dispatching to one of two monomorphic comparators avoids a per-call
+    // branch on `ascending` inside the sort's hot loop.
+    const finSlice = finBuf.subarray(0, finCount);
+    if (ascending) {
+      finSlice.sort((a, b) => {
+        const av = vals[a] as number | string | boolean;
+        const bv = vals[b] as number | string | boolean;
+        return av < bv ? -1 : av > bv ? 1 : 0;
+      });
+    } else {
+      finSlice.sort((a, b) => {
+        const av = vals[a] as number | string | boolean;
+        const bv = vals[b] as number | string | boolean;
+        return av > bv ? -1 : av < bv ? 1 : 0;
+      });
+    }
+
+    // Build the output permutation and gather values in a single pass.
+    const perm = new Array<number>(n);
+    const outData = new Array<T>(n);
+    let pos = 0;
+    if (naPosition === "first") {
+      for (let i = 0; i < nanCount; i++) {
+        const idx = nanBuf[i];
+        perm[pos] = idx;
+        outData[pos++] = vals[idx] as T;
+      }
+      for (let i = 0; i < finCount; i++) {
+        const idx = finSlice[i];
+        perm[pos] = idx;
+        outData[pos++] = vals[idx] as T;
+      }
+    } else {
+      for (let i = 0; i < finCount; i++) {
+        const idx = finSlice[i];
+        perm[pos] = idx;
+        outData[pos++] = vals[idx] as T;
+      }
+      for (let i = 0; i < nanCount; i++) {
+        const idx = nanBuf[i];
+        perm[pos] = idx;
+        outData[pos++] = vals[idx] as T;
+      }
+    }
+
     return new Series<T>({
-      data: pairs.map(({ v }) => v),
-      index: this.index.take(pairs.map(({ i }) => i)),
+      data: outData,
+      index: this.index.take(perm),
       dtype: this.dtype,
       name: this.name,
     });
