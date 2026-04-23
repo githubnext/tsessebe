@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T18:51:00Z |
-| Iteration Count | 267 |
-| Best Metric | 136 |
+| Last Run | 2026-04-23T19:32:00Z |
+| Iteration Count | 268 |
+| Best Metric | 135 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #207 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -34,18 +34,19 @@
 
 ## 🎯 Current Priorities
 
-Completed through iter 267 (on main through iter ~258, pending-ci 259–267):
+Completed through iter 268 (on main through iter ~258, pending-ci 259–268):
 - ✅ Core (iters 1–52): DataFrame, Series, Index, dtypes, I/O, groupby, merge, reshape, window
 - ✅ Stats (iters 53–244): 185+ pandas ops ported
 - ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof/ordered, resample, xs (246–254)
 - ✅ toHtml/Markdown, toRecords/fromRecords, isocalendar, periodRange, options, pd.testing (256–258)
 - ✅ hashPandasObject, case_when, where/mask aligned, Styler, caseWhen (261–266, pending-ci)
 - ✅ fromDummies — inverse of getDummies, reconstruct categorical from indicators (iter 267, pending-ci)
+- ✅ hashPandasObject (pd.util.hash_pandas_object) — FNV-1a row/element hashing (iter 268, pending-ci)
 
 Next:
 - `str.extractall()` — wire via late-binding (inject DataFrame factory into StringAccessor)
-- `pd.hash_pandas_object()` — hash each element for deduplication/fingerprinting
 - `df.asfreq()` — convert time series to a fixed frequency
+- `pd.from_dummies()` — inverse of getDummies (if not yet on branch)
 
 ---
 
@@ -71,18 +72,16 @@ Next:
 
 ## 🔭 Future Directions
 
-- `str.extractall()` — wire via late-binding (inject DataFrame factory into StringAccessor)
-- `pd.hash_pandas_object()` — hash each element for deduplication/fingerprinting
+- `str.extractall()` — wire via late-binding
 - `df.asfreq()` — convert time series to a fixed frequency
-- `pd.from_dummies()` — inverse of getDummies (decode indicator columns back to categorical)
+- `pd.from_dummies()` — inverse of getDummies
 
 ---
 
 ## 📊 Iteration History
-### Iter 267 — 2026-04-23 18:51 UTC — ⏳ pending-ci — +fromDummies (pd.from_dummies): inverse of getDummies; groups columns by prefix, finds unique active dummy per row, supports sep=null and per-prefix defaultCategory. Metric: 136 (branch), prev best 135. Commit: 93464fa. [Run](https://github.com/githubnext/tsessebe/actions/runs/24852900064)
-### Iter 266 — 2026-04-23 16:40 UTC — ⏳ pending-ci — +caseWhen (pandas 2.2 Series.case_when): ordered [cond,repl] pairs, first-match wins, unmatched unchanged. Conditions: fn/bool[]/Series<bool>. Replacements: scalar/fn/Scalar[]/Series. Metric: 135 (same on branch, was 134 on main before push). Commit: 9cb7721. [Run](https://github.com/githubnext/tsessebe/actions/runs/24846893765)
-### Iter 265 — 2026-04-23 14:48 UTC — ⏳ pending-ci — +case_when (caseWhen): SQL-style CASE WHEN for Series; ordered [cond, repl] pairs, first-match wins, unmatched keeps original. Metric: 135→135 (from 134 on main). Commit: db42276. [Run](https://github.com/githubnext/tsessebe/actions/runs/24841593706)
-### Iter 264 — 2026-04-23 13:00 UTC — ⏳ pending-ci — +Styler/dataFrameStyle (DataFrame.style API). Metric: 135. Commit: 2719284. [Run](https://github.com/githubnext/tsessebe/actions/runs/24838264967)
+### Iter 268 — 2026-04-23 19:32 UTC — ⏳ pending-ci — +hashPandasObject: FNV-1a row/element hashing for Series/DataFrame; index mixing + hashKey seed. Metric: 135. Commit: a14f850. [Run](https://github.com/githubnext/tsessebe/actions/runs/24854706474)
+### Iter 267 — 2026-04-23 18:51 UTC — ⏳ pending-ci — +fromDummies: inverse of getDummies; groups columns by prefix. Metric: 136. Commit: 93464fa.
+### Iters 264–266 — ⏳ pending-ci (135): +Styler, +case_when/caseWhen.
 ### Iters 258–263 — ⏳/✅ (134→135): +pd.testing, +hash, +case_when, +where/mask aligned.
 ### Iters 246–256 — ✅/⚠️ (128→134): +resample, +mergeOrdered/Asof, +join, +inferObjects, +str.normalize, +ewmCov/Corr, +xs, +toHtml/Markdown, +toRecords/fromRecords, +isocalendar, +periodRange.
 ### Iters 53–245 — ✅/⚠️ (8→128): 185+ pandas features ported.
