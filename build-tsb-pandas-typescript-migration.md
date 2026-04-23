@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T06:50:00Z |
-| Iteration Count | 259 |
+| Last Run | 2026-04-23T08:39:00Z |
+| Iteration Count | 260 |
 | Best Metric | 135 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -47,8 +47,8 @@ Completed iters 239–258:
 - ✅ pd.testing: assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError (iter 258)
 
 Next:
-- ✅ `pd.util.hash_pandas_object()` — hashSeries / hashDataFrame (iter 259)
-- `df.where(cond, other=df2)` — fill-with-other-dataframe/series variant
+- ✅ `pd.util.hash_pandas_object()` — hashSeries / hashDataFrame (iter 260)
+- `df.where(cond, other=df2)` — fill-with-other-dataframe/series variant (new file where_mask_extended.ts)
 - `DataFrame.style` (basic styling API)
 
 ---
@@ -82,6 +82,7 @@ Next:
 ---
 
 ## 📊 Iteration History
+### Iter 260 — 2026-04-23 08:39 UTC — ⏳ pending-ci — +hashSeries/hashDataFrame (pd.util.hash_pandas_object). Metric: 135 (+1 from 134). Commit: 57f3ac1. [Run](https://github.com/githubnext/tsessebe/actions/runs/24825501238)
 ### Iter 259 — 2026-04-23 06:50 UTC — ⏳ pending-ci — +hashSeries/hashDataFrame (pd.util.hash_pandas_object). Metric: 135 (+1 from 134). Commit: cea2db5. [Run](https://github.com/githubnext/tsessebe/actions/runs/24820886444)
 ### Iter 258 — 2026-04-23 03:15 UTC — ⏳ pending-ci — +pd.testing (assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError). Metric: 134 (+1 from branch base 133). Commit: bb30765. [Run](https://github.com/githubnext/tsessebe/actions/runs/24814455663)
 ### Iter 257 — 2026-04-23 01:37 UTC — ⏳ pending-ci — +options (getOption/setOption/resetOption/describeOption/listOptions/optionContext). Metric: 134 (+1). Commit: e1d8fc3. [Run](https://github.com/githubnext/tsessebe/actions/runs/24811857064)
