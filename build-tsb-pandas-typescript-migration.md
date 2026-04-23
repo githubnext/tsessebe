@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T00:00:00Z |
-| Iteration Count | 255 |
-| Best Metric | 136 |
+| Last Run | 2026-04-23T00:35:19Z |
+| Iteration Count | 256 |
+| Best Metric | 137 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -35,20 +35,20 @@
 
 ## 🎯 Current Priorities
 
-Completed iters 239–254:
+Completed iters 239–256:
 - ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
 - ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
-- ✅ join/joinAll/crossJoin (iter 247), infer_objects/convertDtypes (iter 247)
-- ✅ merge_asof (iter 248), merge_ordered (iter 249)
+- ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof, merge_ordered
 - ✅ resample (SeriesResampler/DataFrameResampler, D/H/T/S/W/M/Q/A, agg fns) (iter 251)
-- ✅ str.normalize() (NFC/NFD/NFKC/NFKD) on StringAccessor (iter 254)
-- ✅ ewmCovMatrix/ewmCorrMatrix (pairwise EWM cov/corr matrices) (iter 254)
-- ✅ periodRange() (top-level factory: start+periods, end+periods, start+end) (iter 254)
+- ✅ str.normalize() (NFC/NFD/NFKC/NFKD) on StringAccessor, ewmCovMatrix/ewmCorrMatrix, xs (iter 254)
+- ✅ dataFrameToHtml/dataFrameToMarkdown (iter 256), dataFrameToRecords/fromRecords (iter 256)
+- ✅ dtIsocalendar() (iter 256), periodRange() (iter 256)
 
 Next:
-- `DataFrame.pipe()` / `Series.pipe()` with arbitrary function composition
-- `DataFrame.xs()` with `drop_level=False` support
 - `df.where(cond, other=df2)` — fill-with-other-dataframe variant
+- `DataFrame.style` (basic styling API)
+- `pd.get_option()` / `pd.set_option()` — pandas options system
+- `DataFrame.memory_usage()` — extended (deep=True)
 
 ---
 
@@ -83,6 +83,7 @@ Next:
 ---
 
 ## 📊 Iteration History
+### Iter 256 — 2026-04-23 00:35 UTC — ⏳ pending-ci — +dataFrameToHtml/Markdown, +dataFrameToRecords/fromRecords, +dtIsocalendar, +periodRange. Metric: 137 (+4, beats best 136). Commit: a1e9d1d. [Run](https://github.com/githubnext/tsessebe/actions/runs/24809995651)
 ### Iter 255 — 2026-04-23 00:00 UTC — ⏳ pending-ci — +dataFrameToHtml/dataFrameToMarkdown, +dataFrameToRecords/fromRecords, +dtIsocalendar. Metric: 136 (+3 from baseline 133). Commit: 6ab1ffb. [Run](https://github.com/githubnext/tsessebe/actions/runs/24808537789)
 ### Iter 254 — 2026-04-22 22:58 UTC — ⏳ pending-ci — +str.normalize (NFC/NFD/NFKC/NFKD), +ewmCovMatrix/ewmCorrMatrix, +periodRange. Metric: 135 (+2 from true baseline 133). Commit: e9698f8. [Run](https://github.com/githubnext/tsessebe/actions/runs/24806595120)
 ### Iter 253 — 2026-04-22 21:30 UTC — ⚠️ Lost (pending-ci never resolved) — +period_range. Claimed metric: 134 but commit d0cb0a3 never merged.
