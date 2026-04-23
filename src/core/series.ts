@@ -716,9 +716,8 @@ export class Series<T extends Scalar = Scalar> {
     const vals = this._values;
 
     // Pre-partition NaN/null/undefined from finite values in one pass.
-    // fvals mirrors finBuf: fvals[j] holds the numeric value at finBuf[j]
-    // so the sort comparator reads a typed Float64Array (not a generic T[]),
-    // giving the JIT a monomorphic, unboxed call site.
+    // fvals stores numeric values by original row index so the sort comparator
+    // can read a typed Float64Array (not a generic T[]) at index a/b.
     const finBuf = new Uint32Array(n);
     const nanBuf = new Uint32Array(n);
     const fvals = new Float64Array(n);
@@ -731,7 +730,7 @@ export class Series<T extends Scalar = Scalar> {
         nanBuf[nanCount++] = i;
       } else {
         if (typeof v === "number") {
-          fvals[finCount] = v;
+          fvals[i] = v;
         } else {
           allNumeric = false;
         }
@@ -744,12 +743,11 @@ export class Series<T extends Scalar = Scalar> {
     // monomorphic, branchless, and JIT-specialisable.
     // For mixed/string data fall back to the generic branch comparator.
     const finSlice = finBuf.subarray(0, finCount);
-    const fvSlice = fvals.subarray(0, finCount);
     if (allNumeric) {
       if (ascending) {
-        finSlice.sort((a, b) => fvSlice[a]! - fvSlice[b]!);
+        finSlice.sort((a, b) => fvals[a]! - fvals[b]!);
       } else {
-        finSlice.sort((a, b) => fvSlice[b]! - fvSlice[a]!);
+        finSlice.sort((a, b) => fvals[b]! - fvals[a]!);
       }
     } else if (ascending) {
       finSlice.sort((a, b) => {
