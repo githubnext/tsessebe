@@ -1,6 +1,12 @@
 # Tsessebe
 
+<img src="assets/tsessebe-logo.png" alt="Tsessebe logo — stylized head of a tsessebe antelope" width="180" align="left" style="margin-right: 16px;" />
+
 A TypeScript port of [pandas](https://github.com/pandas-dev/pandas), built from first principles using [Autoloop](https://github.com/githubnext/autoloop) — an automated research and experimentation platform that runs iterative optimization loops on [GitHub Agentic Workflows](https://github.github.com/gh-aw/).
+
+> **Pronounced** *tseh-SEH-bee* · IPA /tsɛˈsɛbi/ — named after the [tsessebe](https://en.wikipedia.org/wiki/Common_tsessebe) (*Damaliscus lunatus*), a southern African antelope. The word is Setswana; it carries the "ts" as one sound, the middle "se" takes the stress, and the final "be" is unstressed.
+
+<br clear="left">
 
 ## Project conventions
 
@@ -18,4 +24,3 @@ A TypeScript port of [pandas](https://github.com/pandas-dev/pandas), built from 
 - **Interactive web playground** — every feature ships with a rich, interactive tutorial, deployed to GitHub Pages. WASM where needed and useful.
 - **Performance** — aggressive optimization throughout. Speed is a first-class concern.
 - **Exhaustive testing** — pandas' own test suite as a baseline, extended with property-based testing, fuzzing, and e2e coverage. Target: 100%.
-
