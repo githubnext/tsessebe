@@ -21,6 +21,7 @@ network:
   allowed:
   - defaults
   - node
+  - releaseassets.githubusercontent.com
 
 safe-outputs:
   push-to-pull-request-branch:

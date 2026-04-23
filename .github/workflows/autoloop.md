@@ -34,6 +34,7 @@ network:
   - rust
   - java
   - dotnet
+  - releaseassets.githubusercontent.com
 
 safe-outputs:
   add-comment:
