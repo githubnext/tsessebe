@@ -2,11 +2,11 @@
 
 <img src="assets/tsessebe-logo.png" alt="Tsessebe logo — stylized head of a tsessebe antelope" width="180" align="left" style="margin-right: 16px;" />
 
+A TypeScript port of [pandas](https://github.com/pandas-dev/pandas), built from first principles using [Autoloop](https://github.com/githubnext/autoloop) — an automated research and experimentation platform that runs iterative optimization loops on [GitHub Agentic Workflows](https://github.github.com/gh-aw/).
+
 > **Pronounced** *tseh-SEH-bee* · IPA /tsɛˈsɛbi/ — named after the [tsessebe](https://en.wikipedia.org/wiki/Common_tsessebe) (*Damaliscus lunatus*), a southern African antelope. The word is Setswana; it carries the "ts" as one sound, the middle "se" takes the stress, and the final "be" is unstressed.
 
 <br clear="left">
-
-A TypeScript port of [pandas](https://github.com/pandas-dev/pandas), built from first principles using [Autoloop](https://github.com/githubnext/autoloop) — an automated research and experimentation platform that runs iterative optimization loops on [GitHub Agentic Workflows](https://github.github.com/gh-aw/).
 
 ## Project conventions
 
