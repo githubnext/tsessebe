@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-22T22:58:00Z |
-| Iteration Count | 254 |
-| Best Metric | 135 |
+| Last Run | 2026-04-23T00:00:00Z |
+| Iteration Count | 255 |
+| Best Metric | 136 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | #174 |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, accepted, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -83,6 +83,7 @@ Next:
 ---
 
 ## 📊 Iteration History
+### Iter 255 — 2026-04-23 00:00 UTC — ⏳ pending-ci — +dataFrameToHtml/dataFrameToMarkdown, +dataFrameToRecords/fromRecords, +dtIsocalendar. Metric: 136 (+3 from baseline 133). Commit: 6ab1ffb. [Run](https://github.com/githubnext/tsessebe/actions/runs/24808537789)
 ### Iter 254 — 2026-04-22 22:58 UTC — ⏳ pending-ci — +str.normalize (NFC/NFD/NFKC/NFKD), +ewmCovMatrix/ewmCorrMatrix, +periodRange. Metric: 135 (+2 from true baseline 133). Commit: e9698f8. [Run](https://github.com/githubnext/tsessebe/actions/runs/24806595120)
 ### Iter 253 — 2026-04-22 21:30 UTC — ⚠️ Lost (pending-ci never resolved) — +period_range. Claimed metric: 134 but commit d0cb0a3 never merged.
 ### Iters 246–252 — ✅/⚠️ (metrics 128→133): +resample, +mergeOrdered, +mergeAsof, +join/joinAll/crossJoin, +inferObjects/convertDtypes. Two iterations lost due to branch sync issues.
