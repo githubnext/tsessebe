@@ -1,4 +1,6 @@
-# AlphaEvolve Strategy — <CUSTOMIZE: program-name>
+# OpenEvolve Strategy — <CUSTOMIZE: program-name>
+
+> **Inspiration.** This strategy is modeled on [OpenEvolve](https://github.com/algorithmicsuperintelligence/openevolve) — an open-source implementation of the evolutionary-code-search approach popularized by DeepMind's AlphaEvolve paper. We've adapted the core ideas (MAP-Elites niching, island model, four operators — exploitation / exploration / crossover / migration) into a playbook the autoloop agent follows at iteration time. Consult the OpenEvolve repo for background on the underlying algorithm and worked examples.
 
 This file is the **runtime playbook** for this program. The autoloop agent reads it at the start of every iteration and follows it literally. It supersedes the generic "Analyze and Propose" / "Accept or Reject" steps in the default autoloop iteration loop — all other steps (state read, branch management, state file updates) still apply.
 
@@ -84,7 +86,7 @@ Append a new entry to the `## 🧬 Population` subsection in the state file usin
 
 ### Step 8. Fold through to the default loop
 
-Continue with the normal autoloop Step 5 (Accept or Reject → commit / discard, update state file's Machine State, Iteration History, Lessons Learned, etc.) as defined in the workflow. The only additional requirements from AlphaEvolve are:
+Continue with the normal autoloop Step 5 (Accept or Reject → commit / discard, update state file's Machine State, Iteration History, Lessons Learned, etc.) as defined in the workflow. The only additional requirements from OpenEvolve are:
 
 - The Iteration History entry must include `operator`, `parent_id(s)`, `island`, and `fitness` fields (in addition to the normal status/change/metric/notes).
 - Lessons Learned additions should be phrased as *transferable heuristics* about the problem space, not as reports of what this iteration did. (E.g. "Hex layouts dominate grid layouts above n=20" — not "Iteration 17 tried a hex layout.")
@@ -107,7 +109,7 @@ The population lives in the state file `{program-name}.md` on the `memory/autolo
 ```markdown
 ## 🧬 Population
 
-> 🤖 *Managed by the AlphaEvolve strategy. One entry per candidate that has been evaluated (accepted or rejected). Newest first.*
+> 🤖 *Managed by the OpenEvolve strategy. One entry per candidate that has been evaluated (accepted or rejected). Newest first.*
 
 ### Candidate <id>  ·  island <n>  ·  fitness <score>  ·  gen <iter>
 

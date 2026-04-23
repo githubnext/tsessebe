@@ -1,6 +1,6 @@
 # Crossover & Migration prompt — tsb-perf-evolve
 
-You are about to apply a **two-parent operator** — either crossover (combine ideas from parents on different islands) or migration (graft a technique that works on one island into a solution on another). This file frames how to reason about that change. Use it together with `strategy/alphaevolve.md`.
+You are about to apply a **two-parent operator** — either crossover (combine ideas from parents on different islands) or migration (graft a technique that works on one island into a solution on another). This file frames how to reason about that change. Use it together with `strategy/openevolve.md`.
 
 ## What these operators are for
 

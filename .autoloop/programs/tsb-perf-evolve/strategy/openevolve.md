@@ -1,4 +1,4 @@
-# AlphaEvolve Strategy — tsb-perf-evolve
+# OpenEvolve Strategy — tsb-perf-evolve
 
 This file is the **runtime playbook** for this program. The autoloop agent reads it at the start of every iteration and follows it literally. It supersedes the generic "Analyze and Propose" / "Accept or Reject" steps in the default autoloop iteration loop — all other steps (state read, branch management, state file updates) still apply.
 
@@ -90,7 +90,7 @@ Append a new entry to the `## 🧬 Population` subsection in the state file usin
 
 ### Step 8. Fold through to the default loop
 
-Continue with the normal autoloop Step 5 (Accept or Reject → commit / discard, update state file's Machine State, Iteration History, Lessons Learned, etc.) as defined in the workflow. The only additional requirements from AlphaEvolve are:
+Continue with the normal autoloop Step 5 (Accept or Reject → commit / discard, update state file's Machine State, Iteration History, Lessons Learned, etc.) as defined in the workflow. The only additional requirements from OpenEvolve are:
 
 - The Iteration History entry must include `operator`, `parent_id(s)`, `island`, and `fitness` fields (in addition to the normal status/change/metric/notes).
 - Lessons Learned additions should be phrased as *transferable heuristics* about the problem space, not as reports of what this iteration did. (E.g. "Indirect sort over `Uint32Array` indices beats object-pair sort above n≈10k" — not "Iteration 17 tried indirect sort.")
@@ -113,7 +113,7 @@ The population lives in the state file `tsb-perf-evolve.md` on the `memory/autol
 ```markdown
 ## 🧬 Population
 
-> 🤖 *Managed by the AlphaEvolve strategy. One entry per candidate that has been evaluated (accepted or rejected). Newest first.*
+> 🤖 *Managed by the OpenEvolve strategy. One entry per candidate that has been evaluated (accepted or rejected). Newest first.*
 
 ### Candidate <id>  ·  island <n>  ·  fitness <score>  ·  gen <iter>
 

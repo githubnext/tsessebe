@@ -1,4 +1,4 @@
-# AlphaEvolve tunables — read by strategy/alphaevolve.md every iteration.
+# OpenEvolve tunables — read by strategy/openevolve.md every iteration.
 
 # Operator weights. Must sum to 1.0. Defaults bias toward exploitation.
 exploitation_ratio: 0.50
@@ -7,7 +7,7 @@ crossover_ratio: 0.15
 migration_ratio: 0.05
 
 # Island count. Should match the number of islands enumerated in
-# strategy/alphaevolve.md's "Pick parent(s)" section.
+# strategy/openevolve.md's "Pick parent(s)" section.
 num_islands: 5
 
 # MAP-Elites population caps.

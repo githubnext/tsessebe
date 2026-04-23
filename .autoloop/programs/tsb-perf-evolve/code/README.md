@@ -4,7 +4,7 @@ This directory holds the **fixed inputs** for the program: the benchmark scripts
 
 ## Files
 
-- `config.yaml` — tunables read by the AlphaEvolve playbook (`exploitation_ratio`, `num_islands`, `population_size`, `archive_size`, dataset size).
+- `config.yaml` — tunables read by the OpenEvolve playbook (`exploitation_ratio`, `num_islands`, `population_size`, `archive_size`, dataset size).
 - `benchmark.ts` — tsb-side benchmark. Builds a Series of `dataset_size` random floats with ~5% NaN, calls `sortValues` in a tight loop, prints `{"function": "Series.sortValues", "mean_ms": …, "iterations": …, "total_ms": …}`.
 - `benchmark.py` — pandas-side benchmark. Builds an equivalent `pd.Series`, calls `.sort_values()` in the same loop structure, prints the same JSON shape.
 

@@ -13,7 +13,7 @@ Test-Driven is the right strategy when **all** of the following are true:
 - Iterations **accumulate**: each iteration pins one more behaviour (or fixes one more bug), and the work product grows monotonically. You're not searching for a single best artifact; you're building up a body of pinned behaviour.
 - There exists a **source of truth** the agent can consult when ambiguity arises (a reference implementation, a spec document, an issue with a reproducer, etc.).
 
-If the program is "make this faster" or "minimize this scalar", **do not use Test-Driven**. Use AlphaEvolve (`.autoloop/strategies/alphaevolve/`).
+If the program is "make this faster" or "minimize this scalar", **do not use Test-Driven**. Use OpenEvolve (`.autoloop/strategies/openevolve/`).
 
 If the program is genuinely "do whatever the agent thinks is best", neither strategy fits — use the default loop.
 
