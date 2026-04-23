@@ -8,47 +8,46 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-23T08:39:00Z |
-| Iteration Count | 260 |
+| Last Run | 2026-04-23T09:45:00Z |
+| Iteration Count | 261 |
 | Best Metric | 135 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | pending-ci |
-| Steering Issue | #107 |
+| Issue | #1 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
 
 ---
 
 ## 📋 Program Info
 
-**Goal**: Build tsb — a complete TypeScript port of pandas, one feature at a time.
+**Goal**: Build tsb — TypeScript port of pandas, one feature at a time.
 **Metric**: pandas_features_ported (higher is better)
-**Branch**: [`autoloop/build-tsb-pandas-typescript-migration`](../../tree/autoloop/build-tsb-pandas-typescript-migration)
-**Pull Request**: #174 | **Steering Issue**: #107 | **Experiment Log**: #3
+**Branch**: `autoloop/build-tsb-pandas-typescript-migration` | **PR**: pending-ci | **Issue**: #1
 
 ---
 
 ## 🎯 Current Priorities
 
-Completed iters 239–258:
-- ✅ swaplevel, truncate, between, update, filter_labels, combine, notna_boolean
-- ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat
-- ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof, merge_ordered
-- ✅ resample (SeriesResampler/DataFrameResampler, D/H/T/S/W/M/Q/A, agg fns) (iter 251)
-- ✅ str.normalize() (NFC/NFD/NFKC/NFKD) on StringAccessor, ewmCovMatrix/ewmCorrMatrix, xs (iter 254)
-- ✅ dataFrameToHtml/dataFrameToMarkdown (iter 256), dataFrameToRecords/fromRecords (iter 256)
-- ✅ dtIsocalendar() (iter 256), periodRange() (iter 256)
-- ✅ getOption/setOption/resetOption/describeOption/listOptions/optionContext (iter 257)
-- ✅ pd.testing: assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError (iter 258)
+Completed through iter 261:
+- ✅ Core (iters 1–52): DataFrame, Series, Index, dtypes, I/O, groupby, merge, reshape, window
+- ✅ Stats (iters 53–238): 185+ pandas ops ported
+- ✅ swaplevel, truncate, between, update, filter_labels, combine (iters 239–244)
+- ✅ rename_ops, math_ops, dot_matmul, transform_agg, map_values, at_iat (iters 239–244)
+- ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof/ordered (iters 246–252)
+- ✅ resample, str.normalize, ewmCovMatrix/ewmCorrMatrix, xs (iters 251–254)
+- ✅ dataFrameToHtml/Markdown, dataFrameToRecords/fromRecords, dtIsocalendar, periodRange (iter 256)
+- ✅ getOption/setOption/resetOption/describeOption/listOptions (iter 257)
+- ✅ pd.testing: assertSeriesEqual/assertFrameEqual/assertIndexEqual (iter 258)
+- ✅ hashPandasObject/hashSeries/hashDataFrame (iter 261)
 
 Next:
-- ✅ `pd.util.hash_pandas_object()` — hashSeries / hashDataFrame (iter 260)
-- `df.where(cond, other=df2)` — fill-with-other-dataframe/series variant (new file where_mask_extended.ts)
+- `df.where(cond, other=df2)` — fill-with-other-dataframe/series variant (where_mask_extended.ts)
 - `DataFrame.style` (basic styling API)
 
 ---
@@ -82,12 +81,7 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iter 260 — 2026-04-23 08:39 UTC — ⏳ pending-ci — +hashSeries/hashDataFrame (pd.util.hash_pandas_object). Metric: 135 (+1 from 134). Commit: 57f3ac1. [Run](https://github.com/githubnext/tsessebe/actions/runs/24825501238)
-### Iter 259 — 2026-04-23 06:50 UTC — ⏳ pending-ci — +hashSeries/hashDataFrame (pd.util.hash_pandas_object). Metric: 135 (+1 from 134). Commit: cea2db5. [Run](https://github.com/githubnext/tsessebe/actions/runs/24820886444)
-### Iter 258 — 2026-04-23 03:15 UTC — ⏳ pending-ci — +pd.testing (assertSeriesEqual/assertFrameEqual/assertIndexEqual/AssertionError). Metric: 134 (+1 from branch base 133). Commit: bb30765. [Run](https://github.com/githubnext/tsessebe/actions/runs/24814455663)
-### Iter 257 — 2026-04-23 01:37 UTC — ⏳ pending-ci — +options (getOption/setOption/resetOption/describeOption/listOptions/optionContext). Metric: 134 (+1). Commit: e1d8fc3. [Run](https://github.com/githubnext/tsessebe/actions/runs/24811857064)
-### Iters 253–256 — ⏳ pending-ci — +dataFrameToHtml/Markdown, +dataFrameToRecords/fromRecords, +dtIsocalendar, +periodRange, +str.normalize, +ewmCovMatrix/ewmCorrMatrix. Metrics 134→137.
-### Iters 246–252 — ✅/⚠️ (metrics 128→133): +resample, +mergeOrdered, +mergeAsof, +join/joinAll/crossJoin, +inferObjects/convertDtypes.
-### Iter 245 — ✅ — +seriesMap +dataFrameAt/dataFrameIat. Metric: 128. Commit: db85e5c.
-### Iters 239–244 — ✅ (117→126): +swapLevel/truncate, +between/Update/filter, +combine, +squeeze/item/bool, +rename_ops/math_ops, +dot_matmul/transform_agg.
-### Iters 53–238 — ✅/⚠️ (8→115): 185+ pandas features ported.
+### Iter 261 — 2026-04-23 09:45 UTC — ✅ pending-ci — +hashPandasObject/hashSeries/hashDataFrame. Metric: 135 (+1). Commit: ca62c37. [Run](https://github.com/githubnext/tsessebe/actions/runs/24827972519)
+### Iters 257–260 — ⏳ pending-ci — +options, +pd.testing, +hash attempts. Metrics 134→135.
+### Iters 246–256 — ✅/⚠️ (128→134): +resample, +mergeOrdered/Asof, +join, +inferObjects, +str.normalize, +ewmCov/Corr, +xs, +toHtml/Markdown, +toRecords/fromRecords, +isocalendar, +periodRange.
+### Iters 53–245 — ✅/⚠️ (8→128): 185+ pandas features ported.
