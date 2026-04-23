@@ -2,6 +2,8 @@
 
 A TypeScript port of [pandas](https://github.com/pandas-dev/pandas), built from first principles using [Autoloop](https://github.com/githubnext/autoloop) — an automated research and experimentation platform that runs iterative optimization loops on [GitHub Agentic Workflows](https://github.github.com/gh-aw/).
 
+🎮 **[Try the interactive playground →](https://githubnext.github.io/tsessebe/)**
+
 ## Project conventions
 
 - **Package name:** `tsb` — all imports and usage use `tsb`, not `tsessebe`. `import { DataFrame } from 'tsb'`
