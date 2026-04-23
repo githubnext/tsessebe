@@ -2,6 +2,7 @@
   "name": "tsb",
   "version": "0.0.1",
   "description": "A TypeScript port of pandas, built from first principles",
+  "license": "BSD-3-Clause",
   "type": "module",
   "main": "./src/index.ts",
   "module": "./src/index.ts",

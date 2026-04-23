@@ -1,0 +1,9 @@
+tsessebe (tsb)
+Copyright (c) 2025-present, GitHub, Inc. and tsessebe (tsb) contributors.
+
+This product is a clean-room TypeScript reimplementation inspired by the
+pandas library (https://github.com/pandas-dev/pandas) and includes
+portions (notably tests) derived from pandas. Those portions are
+redistributed under the terms of the BSD 3-Clause License; see
+THIRD_PARTY_LICENSES.md for the full upstream copyright notice and
+license text.
