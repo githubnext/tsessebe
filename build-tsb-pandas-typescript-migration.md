@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T22:05:00Z |
-| Iteration Count | 278 |
+| Last Run | 2026-04-24T23:35:00Z |
+| Iteration Count | 279 |
 | Best Metric | 137 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -34,17 +34,18 @@
 
 ## 🎯 Current Priorities
 
-Completed through iter 278:
+Completed through iter 279:
 - ✅ Core (iters 1–52): DataFrame, Series, Index, dtypes, I/O, groupby, merge, reshape, window
 - ✅ Stats (iters 53–244): 185+ pandas ops ported
 - ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof/ordered, resample, xs (246–254)
 - ✅ toHtml/Markdown, toRecords/fromRecords, isocalendar, periodRange, options, pd.testing (256–258)
 - ✅ hashPandasObject, caseWhen, fromDummies, strCat, asfreq, at_time, between_time (273–278)
+- ✅ firstRows/lastRows/firstSeries/lastSeries, monthName/dayName (279)
 
 Next:
-- `Series.str.get_dummies` — split strings by delimiter → DataFrame
-- `DataFrame.first` / `DataFrame.last` — select first/last n rows by offset
-- `pd.wide_to_long` — wide format to long format transformation
+- `Series.str.get_dummies` — wire into StringAccessor (circular dep challenge)
+- `DataFrame.swapaxes` — swap row/column axes
+- `pd.lreshape` — wide to long for irregular column groups
 
 ---
 
@@ -77,22 +78,15 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iteration 278 — 2026-04-24 22:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24913417796)
+### Iteration 279 — 2026-04-24 23:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24916244822)
 
 - **Status**: ⏳ pending-ci
-- **Change**: +asfreqSeries/asfreqDataFrame, +atTimeSeries/betweenTimeSeries/atTimeDataFrame/betweenTimeDataFrame, +StringAccessor.extractAll
-- **Metric**: 137 (previous best: 136, delta: +1)
-- **Commit**: ad8bbf3
-- **Notes**: Two new stats modules (asfreq.ts, time_selector.ts) with full test + property-based coverage; str.extractAll wired inline in StringAccessor to avoid circular deps.
+- **Change**: +firstRows/lastRows/firstSeries/lastSeries, +monthName/dayName
+- **Metric**: 137 (previous best: 135 on main, delta: +2)
+- **Commit**: a10a307
+- **Notes**: New src/stats/first_last.ts ports pandas.DataFrame.first/last with D/W/M/Q/Y/H/T/S/L offset aliases; src/stats/datetime_name.ts ports dt.month_name()/day_name() with Intl.DateTimeFormat locale support.
 
-### Iteration 277 — 2026-04-24 20:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24910082527)
-
-- **Status**: ⏳ pending-ci
-- **Change**: +strCat/strCatCollapse + Series.str.cat (pandas str.cat port)
-- **Metric**: 136 (previous best: 135, delta: +1)
-- **Commit**: 247a56f
-- **Notes**: New src/stats/str_cat.ts with element-wise and collapse modes; str.cat() wired inline into StringAccessor to avoid circular deps.
-
+### Iters 277–278 — ⏳ pending-ci (135→137): +strCat/str.cat, +asfreq, +atTime/betweenTime, +extractAll.
 ### Iters 264–276 — ⏳/✅ (134→135): +fromDummies, +hashPandasObject, +caseWhen, +asfreq, +Styler, +strCat.
 ### Iters 258–263 — ⏳/✅ (134→135): +pd.testing, +hash, +case_when, +where/mask aligned.
 ### Iters 246–256 — ✅/⚠️ (128→134): +resample, +mergeOrdered/Asof, +join, +inferObjects, +str.normalize, +ewmCov/Corr, +xs, +toHtml/Markdown, +toRecords/fromRecords, +isocalendar, +periodRange.
