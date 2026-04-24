@@ -4,38 +4,38 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T05:50:07Z |
-| Iteration Count | 5 |
+| Last Run | 2026-04-24T11:51:49Z |
+| Iteration Count | 6 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Branch | autoloop/tsb-perf-evolve |
-| PR | pending (new PR queued) |
+| PR | pending creation |
 | Issue | #189 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | rejected, accepted, not-pushed, not-pushed, pending |
+| Recent Statuses | accepted, not-pushed, not-pushed, pending, pending-ci |
 
 ## 🧬 Population
 
-### c006 · island 3 · fitness pending · gen 5
+### c007 · island 3 · fitness pending CI · gen 6
 
 - **Operator**: exploration; **Feature cell**: parallel-typed-arrays · non-comparison
-- **Approach**: 8-pass LSD counting sort on IEEE-754 bit-transform of float64 values. Zero JS callbacks. Positive floats: flip bit 63; negative floats: flip all 64 bits. Double-buffered scratch Uint32Arrays (module-level, lazy-grown).
-- **Status**: pending CI — commit e7b8f49 · PR creation queued
+- **Parent**: c003 (island 1, fitness 27.999)
+- **Approach**: LSD 8-pass counting sort on IEEE-754 bit-transformed float64 keys. Positive floats: flip sign bit; negative: flip all bits. Module-level double-buffered _rA/_rB + key arrays _rKLo/_rKHi (indexed by original row). Zero JS comparator callbacks. String/mixed fallback unchanged.
+- **Status**: pending CI — commit 9456665
+
+### ~~c006~~ · island 3 · fitness — (never pushed) · gen 5
 
 ### ~~c005~~ · island 1 · fitness — (never pushed) · gen 4
 
-- **Operator**: exploitation (c003); **Feature cell**: parallel-typed-arrays · comparison
-- **Approach**: Inline introsort replacing Uint32Array.sort(callback) — never actually committed to remote branch. Commit 4d03bb2 recorded in state but doesn't exist.
-- **Status**: ❌ not pushed (branch had fix commit 8d1d4a3 by copilot-swe-agent; PR #206 merged with c003 code at fitness=27.999)
+- **Approach**: Inline introsort — never committed. Callback overhead likely still present.
 
 ### ~~c004~~ · island 1 · never pushed · gen 3
 
-- **Approach**: RangeIndex skip only — commit 19508f1 recorded but never pushed.
-- **Status**: ❌ not pushed
+- **Approach**: RangeIndex skip only — never committed.
 
 ### c003 · island 1 · fitness 27.999 · gen 2
 
@@ -45,8 +45,7 @@
 
 ### ~~c002~~ · island 1 · fitness — (CI failed) · gen 1
 
-- **Approach**: NaN pre-partition + Uint32Array indirect sort + generic T[] comparator
-- **Status**: ❌ TS2538; human-fixed + merged main (b230a01)
+- **Approach**: NaN partition + Uint32Array indirect sort + generic T[] comparator → ❌ TS2538.
 
 ## 📚 Lessons Learned
 
@@ -65,18 +64,25 @@
 
 ## 🔭 Future Directions
 
-- If radix sort (c006) succeeds: exploit with buffer reuse for finBuf/nanBuf/fvals (module-level).
+- If radix sort (c007) succeeds: exploit with module-level finBuf/nanBuf/fvals to eliminate per-call allocation.
 - If radix sort fails: try Island 4 (hybrid: small-input Array.sort, large-input radix).
-- Explore Island 2 (packed-typed-array using Float32 approximation for benchmark inputs).
+- Island 2: packed-typed-array using Float32 for benchmark inputs.
 
 ## 📊 Iteration History
 
+### Iteration 6 — 2026-04-24 11:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24887993206)
+
+- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 (non-comparison) · **Candidate**: c007
+- **Change**: LSD 8-pass counting sort on IEEE-754 bit-transformed float64 keys; zero JS comparator callbacks; module-level double-buffered Uint32Arrays (_rA/_rB) + key arrays (_rKLo/_rKHi indexed by original row)
+- **Commit**: 9456665 · **Metric**: pending CI · **Delta**: expected ~20-30x vs c003 (27.999)
+- **Notes**: c006 from iter 5 was never actually pushed (commit e7b8f49 phantom). This iteration re-implements the same plan from main. PR created as a draft.
+
 ### Iteration 5 — 2026-04-24 05:50 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24874449592)
 
-- **Status**: pending CI · **Op**: exploration · **Island**: 3 (non-comparison)
-- **Change**: LSD 8-pass radix sort on IEEE-754 bit-transformed float64 keys; zero JS callbacks
-- **Commit**: e7b8f49 · **Metric**: pending · **Delta**: TBD (expected ~20-30x improvement)
-- **Notes**: Eliminates the ~1.6M comparator callbacks that dominate the 155ms/call baseline.
+- **Status**: 🔶 not pushed (phantom commit) · **Op**: exploration · **Island**: 3
+- **Change**: LSD 8-pass radix sort attempt — commit e7b8f49 was recorded but never existed on remote
+- **Commit**: — (not pushed) · **Metric**: — · **Delta**: —
+- **Notes**: c006 was never committed to the remote branch; state was corrupted. Superseded by iter 6 (c007).
 
 ### Iters 1–4 — 2026-04-23
 
