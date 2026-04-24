@@ -8,19 +8,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T20:22:53Z |
-| Iteration Count | 277 |
-| Best Metric | 136 |
+| Last Run | 2026-04-24T22:05:00Z |
+| Iteration Count | 278 |
+| Best Metric | 137 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | — |
+| PR | pending-ci |
 | Issue | #1 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
+| Recent Statuses | accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -34,17 +34,17 @@
 
 ## 🎯 Current Priorities
 
-Completed through iter 277:
+Completed through iter 278:
 - ✅ Core (iters 1–52): DataFrame, Series, Index, dtypes, I/O, groupby, merge, reshape, window
 - ✅ Stats (iters 53–244): 185+ pandas ops ported
 - ✅ join/joinAll/crossJoin, infer_objects/convertDtypes, merge_asof/ordered, resample, xs (246–254)
 - ✅ toHtml/Markdown, toRecords/fromRecords, isocalendar, periodRange, options, pd.testing (256–258)
-- ✅ hashPandasObject, caseWhen, fromDummies, strCat (273–277)
+- ✅ hashPandasObject, caseWhen, fromDummies, strCat, asfreq, at_time, between_time (273–278)
 
 Next:
-- `str.extractall()` — wire via late-binding (inject DataFrame factory into StringAccessor)
-- `asfreq` — convert DatetimeIndex Series/DataFrame to fixed frequency
 - `Series.str.get_dummies` — split strings by delimiter → DataFrame
+- `DataFrame.first` / `DataFrame.last` — select first/last n rows by offset
+- `pd.wide_to_long` — wide format to long format transformation
 
 ---
 
@@ -77,6 +77,14 @@ Next:
 ---
 
 ## 📊 Iteration History
+### Iteration 278 — 2026-04-24 22:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24913417796)
+
+- **Status**: ⏳ pending-ci
+- **Change**: +asfreqSeries/asfreqDataFrame, +atTimeSeries/betweenTimeSeries/atTimeDataFrame/betweenTimeDataFrame, +StringAccessor.extractAll
+- **Metric**: 137 (previous best: 136, delta: +1)
+- **Commit**: ad8bbf3
+- **Notes**: Two new stats modules (asfreq.ts, time_selector.ts) with full test + property-based coverage; str.extractAll wired inline in StringAccessor to avoid circular deps.
+
 ### Iteration 277 — 2026-04-24 20:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24910082527)
 
 - **Status**: ⏳ pending-ci
