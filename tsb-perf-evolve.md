@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T19:51:00Z |
-| Iteration Count | 8 |
+| Last Run | 2026-04-24T21:24:00Z |
+| Iteration Count | 9 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Branch | autoloop/tsb-perf-evolve |
@@ -16,16 +16,18 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, not-pushed, not-pushed, pending, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | accepted, not-pushed, not-pushed, pending, pending-ci, pending-ci, pending-ci, pending-ci |
 
 ## 🧬 Population
 
-### c009 · island 3 · fitness pending CI · gen 8
+### c010 · island 3 · fitness pending CI · gen 9
 
-- **Operator**: exploration; **Feature cell**: typed-array-view · non-comparison LSD radix
+- **Operator**: exploration; **Feature cell**: parallel-typed-arrays · non-comparison
 - **Parent**: c003 (island 1, fitness 27.999)
-- **Approach**: LSD 8-pass radix sort on IEEE-754 bit-transformed float64 keys. View fvals.buffer as Uint32Array (fvU32[2*row]=lo, fvU32[2*row+1]=hi). Module-level _rxA/_rxB ping-pong + _rxKL/_rxKH keyed by row. Zero JS comparator callbacks. Reverse in-place for descending. String/mixed fallback unchanged.
-- **Status**: pending CI — commit 5d3b5d1
+- **Approach**: LSD 8-pass radix sort on IEEE-754 bit-transformed float64 keys. `new Uint32Array(fvals.buffer)` for raw bits; module-level _rxA/_rxB ping-pong + _rxKL/_rxKH keyed by row. Zero JS comparator callbacks. Reverse in-place for descending. String/mixed fallback unchanged.
+- **Status**: ⏳ pending CI — commit b2c8640
+
+### ~~c009~~ · phantom · gen 8 — same radix design, never actually landed on branch (prior runs failed to push)
 
 ### ~~c008,c007,c006,c005,c004~~ · (phantom: commits written but never pushed) · gens 3-7
 
@@ -55,16 +57,22 @@
 
 ## 🔭 Future Directions
 
-- If radix sort (c009) succeeds: exploit — also make finBuf/nanBuf module-level to eliminate remaining per-call allocations.
+- If radix sort (c010) succeeds: exploit — also make finBuf/nanBuf module-level to eliminate remaining per-call allocations.
 - If radix sort fails: try Island 4 (hybrid: small-input Array.sort, large-input radix).
 
 ## 📊 Iteration History
 
+### Iteration 9 — 2026-04-24 21:24 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24912509276)
+
+- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 · **Candidate**: c010
+- **Change**: LSD 8-pass radix sort; IEEE-754 transform via `new Uint32Array(fvals.buffer)`; module-level _rxA/_rxB/_rxKL/_rxKH; zero JS callbacks; reverse in-place for descending
+- **Commit**: b2c8640 · **Metric**: pending CI
+
 ### Iteration 8 — 2026-04-24 19:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24908806371)
 
-- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 · **Candidate**: c009
-- **Change**: LSD 8-pass radix sort; IEEE-754 transform via `new Uint32Array(fvals.buffer)`; module-level buffers; zero JS callbacks
-- **Commit**: 5d3b5d1 · **Metric**: pending CI
+- **Status**: ❌ phantom (not pushed) · **Op**: exploration · **Island**: 3 · **Candidate**: c009
+- **Change**: LSD radix sort — same design as c010, but never successfully pushed to branch
+- **Commit**: — · **Metric**: n/a
 
 ### Iters 5–7 — 2026-04-24 (phantoms) — exploration island 3; commits written but never pushed
 
