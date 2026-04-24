@@ -4,44 +4,38 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T17:51:00Z |
-| Iteration Count | 7 |
+| Last Run | 2026-04-24T19:51:00Z |
+| Iteration Count | 8 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Branch | autoloop/tsb-perf-evolve |
-| PR | pending creation |
+| PR | pending CI |
 | Issue | #189 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, not-pushed, not-pushed, pending, pending-ci, pending-ci |
+| Recent Statuses | accepted, not-pushed, not-pushed, pending, pending-ci, pending-ci, pending-ci |
 
 ## 🧬 Population
 
-### c008 · island 3 · fitness pending CI · gen 7
+### c009 · island 3 · fitness pending CI · gen 8
 
-- **Operator**: exploration; **Feature cell**: parallel-typed-arrays · non-comparison
+- **Operator**: exploration; **Feature cell**: typed-array-view · non-comparison LSD radix
 - **Parent**: c003 (island 1, fitness 27.999)
-- **Approach**: LSD 8-pass counting sort on IEEE-754 bit-transformed float64 keys. Module-level _rA/_rB ping-pong + _rKLo/_rKHi keyed by original row index. Zero JS comparator callbacks. Reverse in-place for descending. String/mixed fallback unchanged.
-- **Status**: pending CI — commit da443c7
+- **Approach**: LSD 8-pass radix sort on IEEE-754 bit-transformed float64 keys. View fvals.buffer as Uint32Array (fvU32[2*row]=lo, fvU32[2*row+1]=hi). Module-level _rxA/_rxB ping-pong + _rxKL/_rxKH keyed by row. Zero JS comparator callbacks. Reverse in-place for descending. String/mixed fallback unchanged.
+- **Status**: pending CI — commit 5d3b5d1
 
-### ~~c007~~ · (never pushed) · gen 6
-
-### ~~c005~~ · (never pushed) · gen 4
-
-### ~~c004~~ · (never pushed) · gen 3
+### ~~c008,c007,c006,c005,c004~~ · (phantom: commits written but never pushed) · gens 3-7
 
 ### c003 · island 1 · fitness 27.999 · gen 2
 
-- **Operator**: exploration; **Feature cell**: parallel-typed-arrays · comparison
-- **Approach**: NaN pre-partition + Float64Array fvals; `fvals[a]!-fvals[b]!` numeric comparator; fvals indexed by row
+- **Feature cell**: parallel-typed-arrays · comparison
+- **Approach**: NaN pre-partition + Float64Array fvals; `fvals[a]!-fvals[b]!` comparator
 - **Status**: ✅ accepted — CI run 24843983915; tsb=155.63ms / pandas=5.56ms
 
-### ~~c002~~ · island 1 · gen 1
-
-- **Approach**: NaN partition + Uint32Array indirect sort → ❌ TS2538.
+### ~~c002~~ · ❌ TS2538 · gen 1
 
 ## 📚 Lessons Learned
 
@@ -61,30 +55,19 @@
 
 ## 🔭 Future Directions
 
-- If radix sort (c008) succeeds: exploit with module-level finBuf/nanBuf/fvals to eliminate per-call allocation.
+- If radix sort (c009) succeeds: exploit — also make finBuf/nanBuf module-level to eliminate remaining per-call allocations.
 - If radix sort fails: try Island 4 (hybrid: small-input Array.sort, large-input radix).
-- Island 2: packed-typed-array using Float32 for benchmark inputs.
 
 ## 📊 Iteration History
 
-### Iteration 7 — 2026-04-24 17:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24903805265)
+### Iteration 8 — 2026-04-24 19:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24908806371)
 
-- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 (non-comparison) · **Candidate**: c008
-- **Change**: LSD 8-pass counting sort on IEEE-754 bit-transformed float64 keys; zero JS comparator callbacks; module-level _rA/_rB/_rKLo/_rKHi; reverse-in-place for descending
-- **Commit**: da443c7 · **Metric**: pending CI · **Delta**: expected ~20-30x vs c003 (27.999)
-- **Notes**: c007 from iter 6 was another phantom commit (branch only had 8d1d4a3). Re-implemented from main with fixed TypeScript (no `!++` pattern; use read-then-assign for hist increments).
+- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 · **Candidate**: c009
+- **Change**: LSD 8-pass radix sort; IEEE-754 transform via `new Uint32Array(fvals.buffer)`; module-level buffers; zero JS callbacks
+- **Commit**: 5d3b5d1 · **Metric**: pending CI
 
-### Iteration 6 — 2026-04-24 11:51 UTC — phantom (c007 not pushed)
-
-- **Status**: 🔶 not pushed · **Op**: exploration · **Island**: 3
-
-### Iteration 5 — 2026-04-24 05:50 UTC — phantom (c006 not pushed)
-
-- **Status**: 🔶 not pushed · **Op**: exploration · **Island**: 3
+### Iters 5–7 — 2026-04-24 (phantoms) — exploration island 3; commits written but never pushed
 
 ### Iters 1–4 — 2026-04-23
-
-- Iter 4: 🔶 not pushed (c005 commit 4d03bb2 phantom; branch had fix commit 8d1d4a3 at fitness=27.999)
-- Iter 3: 🔶 not pushed (c004 commit 19508f1 phantom)
-- Iter 2: ✅ accepted — c003 fitness=27.999 (tsb=155.63ms, pandas=5.56ms); PR #206 merged
-- Iter 1: ❌ CI failed TS2538; human-fixed → merged main
+- Iter 2: ✅ c003 fitness=27.999 (tsb=155.63ms, pandas=5.56ms); PR #206 merged
+- Iter 1: ❌ TS2538; human-fixed
