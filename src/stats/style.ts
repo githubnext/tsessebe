@@ -353,7 +353,7 @@ function propsToString(props: CellProps | readonly [string, string][]): string {
     .join(" ");
 }
 
-/** Merge two CSS strings (semicolon-separated). Always ends with a semicolon. */
+/** Merge two CSS strings (semicolon-separated). Non-empty result always ends with a semicolon. */
 function mergeCss(a: string, b: string): string {
   const trimA = a.trim().replace(/;$/, "");
   const trimB = b.trim().replace(/;$/, "");
