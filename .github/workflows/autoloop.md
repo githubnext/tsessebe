@@ -12,7 +12,7 @@ description: |
   - Maintains a single GitHub issue per program where all status, iteration logs, and human steering live
 
 on:
-  schedule: every 30m
+  schedule: every 15m
   workflow_dispatch:
     inputs:
       program:
