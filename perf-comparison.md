@@ -44,29 +44,22 @@
 
 ## 📚 Lessons Learned
 
-- **Iter 286**: Fast-forward canonical to main (633) + 9 new pairs (merge_asof, merge_ordered, merge_ordered_fill, resample_agg, resample_ohlc, resample_df, clip_with_bounds, infer_objects, eval_query). Canonical now at 642.
-- **Iter 285**: Fast-forward canonical to main (633) + 5 new pairs (truncate_series, truncate_dataframe, xs_dataframe, update_series, str_findall). Canonical now at 638.
-- **Iter 284**: Fast-forward canonical to main (633) + 5 new pairs (truncate_series, truncate_dataframe, xs_dataframe, update_series, str_findall). Canonical now at 638.
-- **Iter 283**: Re-applied iter 282's changes. Fast-forward canonical branch to main (633) + 4 new option-variant pairs. Canonical at 637.
-- **Key insight**: Iters 277-283 had wrong-branch push issues. Canonical `autoloop/perf-comparison` was at 508 until iter 283 fast-forwarded it to main.
+- **Key insight**: Canonical branch `autoloop/perf-comparison` must be fast-forwarded from main before adding new pairs (old iters 277-283 had wrong-branch push issues). Canonical now at 642.
 - **Import paths**: `../../src/index.ts` not `"tsb"`. Series: `new Series({ data: [...] })`. DF: `DataFrame.fromColumns({...})`.
 - **Standalones**: cummax/cummin/cumprod/cumsum/diff/explode/pct_change/seriesAbs/where/mask/sample/replace/astype/pivot.
 - **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 ## 🚧 Foreclosed Avenues
 
 - **Suffixed branches**: Never commit to `autoloop/perf-comparison-{suffix}` branches. Only `autoloop/perf-comparison` counts.
-- **Sequential run_benchmarks.sh**: Old sequential approach is too slow for 508 pairs. Use parallel Python runner.
-- **SSH push**: SSH to github.com is blocked in this runner environment.
-- **HTTPS push without credentials**: git credential helper not configured; git push hangs waiting for input. Use safeoutputs push_to_pull_request_branch.
+- **Sequential run_benchmarks.sh**: Too slow for 500+ pairs. Use parallel Python runner.
+- **SSH push** and **HTTPS push without credentials**: blocked. Use safeoutputs push_to_pull_request_branch.
 
 ---
 
 ## 🔭 Future Directions
 
-- **Add more benchmarks** (642 pairs on canonical branch):
-  1. Continue adding option-variant benchmarks for axis/limit/method parameters
-  2. Check for any new src/ modules added to the tsb library
-  3. Look at merge_asof direction variants, resample fill variants, etc.
+- Continue adding option-variant benchmarks (axis/limit/method parameters)
+- Check for new src/ modules added to tsb library
 
 ---
 
@@ -74,19 +67,12 @@
 
 ### Iteration 286 — 2026-04-24T00:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24865965316)
 
-- **Status**: ✅ Accepted (PR pending CI)
-- **Change**: Fast-forward canonical branch to main (633) + 9 new pairs (merge_asof, merge_ordered, merge_ordered_fill, resample_agg, resample_ohlc, resample_df, clip_with_bounds, infer_objects, eval_query)
-- **Metric**: 642 (previous best: 638, delta: +4)
-- **Commit**: a7b1055
+- **Status**: ✅ Accepted · **Metric**: 642 (+4) · Fast-forward + 9 new pairs (merge_asof/ordered, resample_*, clip_with_bounds, infer_objects, eval_query)
 
-### Iteration 285 — 2026-04-23T18:26 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24851814286)
+### Iteration 285 — 2026-04-23T18:26 UTC — ✅ · Metric: 638 (+5) · Fast-forward + truncate/xs/update/str_findall pairs
 
-- **Status**: ✅ Accepted (PR pending CI)
-- **Change**: Fast-forward canonical branch to main (633) + 5 new pairs (truncate_series, truncate_dataframe, xs_dataframe, update_series, str_findall)
-- **Metric**: 638 (delta: +5 from main baseline 633)
+### Iters 277–284 — ✅/⚠️ | Metrics 382→638. Iters 277-281 wrong-branch. 282-284 fast-forwarded canonical to main (633) + option-variant pairs.
 
-### Iters 277–284 — ✅/⚠️ mix | metrics 382→638. Iters 277-281 wrong-branch. Iters 282-284 fast-forwarded canonical to main (633) + option-variant pairs.
+### Iters 163–276 — ✅/⚠️ | Metrics 0→637. PR #148 merged 534 to main.
 
-### Iters 163–276 — ✅/⚠️ mix | metrics 0→637 (canonical). PR #148 merged 534 to main. Iters 163-268 mostly wrong-branch.
-
-### Iters 1–162 — all ✅/⚠️ | metrics 0→508. Full baseline benchmarks established.
+### Iters 1–162 — ✅/⚠️ | Metrics 0→508. Full baseline benchmarks established.

@@ -78,11 +78,9 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iter 274 — 2026-04-24 03:20 UTC — ⏳ pending-ci — +caseWhen: SQL CASE WHEN for Series (pandas 2.2), ordered [cond,repl] pairs, pred/array/Series conditions. Metric: 134→135. Commit: 3f4c19a. [Run](https://github.com/githubnext/tsessebe/actions/runs/24870093820)
-### Iter 273 — 2026-04-24 01:37 UTC — ⏳ pending-ci — +hashPandasObject: FNV-1a row/element hashing for Series/DataFrame/Index. Metric: 134→135. Commit: 21f4947. [Run](https://github.com/githubnext/tsessebe/actions/runs/24867722937)
-### Iter 272 — 2026-04-23 23:25 UTC — ⏳ pending-ci — +fromDummies: inverse of getDummies; sep-based grouping, defaultCategory, roundtrip tests. Metric: 136. Commit: f87e6a2. [Run](https://github.com/githubnext/tsessebe/actions/runs/24863690093)
-### Iters 267–271 — ⏳ pending-ci (135): +fromDummies×2, +hashPandasObject, +caseWhen, +asfreq.
-### Iters 264–266 — ⏳ pending-ci (135): +Styler, +case_when/caseWhen.
+### Iter 274 — 2026-04-24 03:20 UTC — ⏳ pending-ci — +caseWhen (SQL CASE WHEN, pandas 2.2). Metric: 135. [Run](https://github.com/githubnext/tsessebe/actions/runs/24870093820)
+### Iter 273 — 2026-04-24 01:37 UTC — ⏳ pending-ci — +hashPandasObject: FNV-1a hashing. Metric: 135. [Run](https://github.com/githubnext/tsessebe/actions/runs/24867722937)
+### Iters 264–272 — ⏳/✅ (134→136): +fromDummies, +hashPandasObject, +caseWhen, +asfreq, +Styler.
 ### Iters 258–263 — ⏳/✅ (134→135): +pd.testing, +hash, +case_when, +where/mask aligned.
 ### Iters 246–256 — ✅/⚠️ (128→134): +resample, +mergeOrdered/Asof, +join, +inferObjects, +str.normalize, +ewmCov/Corr, +xs, +toHtml/Markdown, +toRecords/fromRecords, +isocalendar, +periodRange.
 ### Iters 53–245 — ✅/⚠️ (8→128): 185+ pandas features ported.
