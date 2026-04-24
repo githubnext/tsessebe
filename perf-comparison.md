@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T00:34:31Z |
-| Iteration Count | 286 |
-| Best Metric | 642 |
+| Last Run | 2026-04-24T06:41:58Z |
+| Iteration Count | 287 |
+| Best Metric | 638 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — (pending CI) |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -44,10 +44,12 @@
 
 ## 📚 Lessons Learned
 
-- **Key insight**: Canonical branch `autoloop/perf-comparison` must be fast-forwarded from main before adding new pairs (old iters 277-283 had wrong-branch push issues). Canonical now at 642.
+- **Key insight**: Canonical branch `autoloop/perf-comparison` must be fast-forwarded from main before adding new pairs. Iter 286's 9 pairs (642) were on a lost PR; main is at 633. Best effective baseline for iter 287 is 633 → 638.
 - **Import paths**: `../../src/index.ts` not `"tsb"`. Series: `new Series({ data: [...] })`. DF: `DataFrame.fromColumns({...})`.
 - **Standalones**: cummax/cummin/cumprod/cumsum/diff/explode/pct_change/seriesAbs/where/mask/sample/replace/astype/pivot.
 - **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
+- **merge_asof**: mergeAsof(left, right, { on: "key", direction: "backward"|"forward"|"nearest" }) — both DFs must be sorted by key.
+- **crossJoin**: crossJoin(left, right) — for small DFs only (100×100 = 10k rows is a safe size).
 ## 🚧 Foreclosed Avenues
 
 - **Suffixed branches**: Never commit to `autoloop/perf-comparison-{suffix}` branches. Only `autoloop/perf-comparison` counts.
@@ -64,6 +66,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 287 — 2026-04-24T06:41 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24876099398)
+
+- **Status**: ✅ Accepted (pending CI) · **Metric**: 638 (+5 vs main 633) · Fast-forward from main + 5 new pairs (merge_asof, merge_ordered, join, crossjoin, resample_agg)
 
 ### Iteration 286 — 2026-04-24T00:34 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24865965316)
 
