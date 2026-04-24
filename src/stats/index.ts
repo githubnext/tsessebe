@@ -486,3 +486,17 @@ export type {
   ResampleAggFn,
   ResampleOptions,
 } from "./resample.ts";
+export { Styler, dataFrameStyle } from "./style.ts";
+export type {
+  CellProps,
+  TableStyle,
+  StyleRecord,
+  ValueFormatter,
+  ColSubset,
+  AxisStyleFn,
+  ElementStyleFn,
+  HighlightOptions,
+  HighlightBetweenOptions,
+  GradientOptions,
+  BarOptions,
+} from "./style.ts";

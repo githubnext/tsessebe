@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — DataFrame Styler</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; line-height: 1.6; background: #f8f9fa; color: #212529; }
+      header { background: #0d6efd; color: #fff; padding: 1.5rem 2rem; }
+      header h1 { font-size: 1.8rem; }
+      header p { opacity: 0.85; margin-top: 0.25rem; }
+      main { max-width: 960px; margin: 2rem auto; padding: 0 1.5rem; }
+      section { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 2rem; padding: 1.5rem; }
+      h2 { font-size: 1.25rem; margin-bottom: 1rem; color: #0d6efd; border-bottom: 1px solid #e9ecef; padding-bottom: 0.5rem; }
+      h3 { font-size: 1rem; margin: 1rem 0 0.5rem; color: #495057; }
+      pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; }
+      code { font-family: "Cascadia Code", "Fira Code", monospace; }
+      .output { background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 6px; padding: 1rem; margin-top: 0.75rem; overflow-x: auto; }
+      .note { background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 0.75rem 1rem; font-size: 0.9rem; }
+      table.demo { border-collapse: collapse; font-size: 0.9rem; }
+      table.demo th, table.demo td { border: 1px solid #dee2e6; padding: 0.4rem 0.8rem; }
+      table.demo th { background: #e9ecef; }
+      a { color: #0d6efd; }
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+      @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+      .tag { display: inline-block; background: #0d6efd22; color: #0d6efd; border-radius: 4px; font-size: 0.75rem; padding: 0.1rem 0.4rem; font-family: monospace; }
+      dt { font-weight: 600; font-family: monospace; color: #0d6efd; margin-top: 0.75rem; }
+      dd { margin-left: 1.25rem; font-size: 0.9rem; color: #495057; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>tsb — <code>Styler</code></h1>
+      <p>dataFrameStyle · highlightMax · backgroundGradient · barChart · toHtml · toLatex · mirrors <code>pandas.DataFrame.style</code></p>
+    </header>
+
+    <main>
+
+      <section>
+        <h2>Overview</h2>
+        <p>
+          The <strong>Styler</strong> class provides a fluent API for applying CSS styles to a
+          DataFrame and rendering the result as styled HTML — directly analogous to
+          <code>pandas.DataFrame.style</code> (the <code>pandas.io.formats.style.Styler</code>
+          class).
+        </p>
+        <p style="margin-top:0.75rem">
+          All methods return <code>this</code>, so you can chain them:
+        </p>
+        <pre><code>import { DataFrame, dataFrameStyle } from "tsb";
+
+const df = DataFrame.fromColumns({
+  product: ["Widget A", "Widget B", "Widget C"],
+  sales:   [120, 340, 85],
+  profit:  [30, 95, -10],
+});
+
+const html = dataFrameStyle(df)
+  .highlightMax({ color: "lightgreen", subset: ["sales", "profit"] })
+  .highlightMin({ color: "salmon",     subset: ["sales", "profit"] })
+  .highlightNull("orange")
+  .backgroundGradient({ cmap: "Blues", subset: ["sales"] })
+  .format((v) =&gt; typeof v === "number" ? v.toLocaleString() : String(v))
+  .setCaption("Q3 Product Summary")
+  .setTableStyles([
+    { selector: "th", props: { "background-color": "#343a40", color: "#fff" } },
+  ])
+  .toHtml();</code></pre>
+      </section>
+
+      <section>
+        <h2>Import</h2>
+        <pre><code>import {
+  Styler,
+  dataFrameStyle,
+} from "tsb";
+
+// Type imports
+import type {
+  CellProps,
+  TableStyle,
+  StyleRecord,
+  ValueFormatter,
+  ColSubset,
+  AxisStyleFn,
+  ElementStyleFn,
+  HighlightOptions,
+  HighlightBetweenOptions,
+  GradientOptions,
+  BarOptions,
+} from "tsb";</code></pre>
+      </section>
+
+      <section>
+        <h2>Factory function</h2>
+        <pre><code>const styler = dataFrameStyle(df);
+// Equivalent to: new Styler(df)
+// Equivalent to: df.style  (in pandas)</code></pre>
+        <p>The <code>styler.data</code> property returns the underlying DataFrame.</p>
+      </section>
+
+      <section>
+        <h2>Formatting</h2>
+
+        <h3><code>.format(formatter, subset?, naRep?)</code></h3>
+        <pre><code>// Function formatter
+dataFrameStyle(df).format((v) =&gt; typeof v === "number" ? `$${v.toFixed(2)}` : String(v));
+
+// Template string (replaces {v} with the cell value)
+dataFrameStyle(df).format("{v}%", ["pct_col"]);
+
+// Only format specific columns
+dataFrameStyle(df).format(
+  (v) =&gt; typeof v === "number" ? v.toFixed(1) : String(v),
+  ["a", "b"],   // ColSubset
+);
+
+// null formatter resets to default
+dataFrameStyle(df).format(null);</code></pre>
+
+        <h3><code>.formatIndex(formatter)</code></h3>
+        <pre><code>// Format the row index labels
+dataFrameStyle(df).formatIndex((v) =&gt; `[${String(v)}]`);</code></pre>
+
+        <h3><code>.setPrecision(n)</code></h3>
+        <pre><code>// Show 2 decimal places by default
+dataFrameStyle(df).setPrecision(2);</code></pre>
+
+        <h3><code>.setNaRep(str)</code></h3>
+        <pre><code>// Show "N/A" for missing values
+dataFrameStyle(df).setNaRep("N/A");</code></pre>
+      </section>
+
+      <section>
+        <h2>Custom CSS styles</h2>
+
+        <h3><code>.apply(fn, axis?, subset?)</code></h3>
+        <p>
+          Apply a column-wise (<code>axis=0</code>) or row-wise (<code>axis=1</code>) function.
+          The function receives an array of values and must return an array of CSS strings of the
+          same length.
+        </p>
+        <pre><code>// Highlight values &gt; 100 in each column
+dataFrameStyle(df).apply(
+  (vals) =&gt; vals.map((v) =&gt; typeof v === "number" &amp;&amp; v &gt; 100 ? "color: red;" : ""),
+  0,         // axis=0 (per-column); use 1 for per-row
+  ["sales"], // optional column subset
+);
+
+// String axis aliases
+dataFrameStyle(df).apply(fn, "index");   // same as axis=0
+dataFrameStyle(df).apply(fn, "columns"); // same as axis=1</code></pre>
+
+        <h3><code>.applymap(fn, subset?) / .map(fn, subset?)</code></h3>
+        <p>Apply an element-wise function (pandas ≥ 2.1 renamed <code>applymap</code> → <code>map</code>; both are supported).</p>
+        <pre><code>dataFrameStyle(df).applymap((v) =&gt;
+  typeof v === "number" &amp;&amp; v &lt; 0 ? "color: red; font-weight: bold;" : ""
+);
+
+// .map() is an alias
+dataFrameStyle(df).map((v) =&gt; v === null ? "background-color: #ffeeee;" : "");</code></pre>
+
+        <h3><code>.setProperties(props, subset?)</code></h3>
+        <pre><code>// Apply CSS to all cells (or a subset)
+dataFrameStyle(df).setProperties({ "font-weight": "bold", color: "navy" }, ["important"]);</code></pre>
+      </section>
+
+      <section>
+        <h2>Built-in highlights</h2>
+
+        <div class="grid-2">
+          <div>
+            <h3><code>.highlightMax(options?)</code></h3>
+            <pre><code>dataFrameStyle(df).highlightMax({
+  color: "lightgreen",  // CSS color
+  subset: ["a", "b"],   // columns to consider
+  axis: 0,              // 0=per-col, 1=per-row, null=table-wide
+});</code></pre>
+          </div>
+          <div>
+            <h3><code>.highlightMin(options?)</code></h3>
+            <pre><code>dataFrameStyle(df).highlightMin({
+  color: "salmon",
+  axis: 1,  // highlight min in each row
+});</code></pre>
+          </div>
+        </div>
+
+        <h3><code>.highlightNull(color?, subset?)</code></h3>
+        <pre><code>dataFrameStyle(df).highlightNull("orange");    // default color: "red"</code></pre>
+
+        <h3><code>.highlightBetween(options?)</code></h3>
+        <pre><code>dataFrameStyle(df).highlightBetween({
+  left: 0,       // lower bound (null = no lower bound)
+  right: 100,    // upper bound (null = no upper bound)
+  inclusive: "both",  // "both" | "left" | "right" | "neither"
+  color: "lightyellow",
+  subset: ["score"],
+});</code></pre>
+      </section>
+
+      <section>
+        <h2>Color gradients</h2>
+
+        <h3><code>.backgroundGradient(options?)</code></h3>
+        <pre><code>dataFrameStyle(df).backgroundGradient({
+  cmap: "Blues",    // colormap name or "colorA:colorB" shorthand
+  low: 0,           // clip low fraction  (default: 0)
+  high: 1,          // clip high fraction (default: 1)
+  axis: 0,          // 0=per-col, 1=per-row, null=table-wide
+  subset: ["a"],    // column subset
+  textColor: true,  // auto-choose dark/light text for contrast
+  vmin: null,       // override minimum for normalization
+  vmax: null,       // override maximum
+});</code></pre>
+
+        <p style="margin-top:0.75rem"><strong>Available colormaps:</strong></p>
+        <p style="margin-top:0.25rem; font-size: 0.9rem;">
+          <code>Blues</code> · <code>Greens</code> · <code>Reds</code> · <code>Oranges</code> ·
+          <code>Purples</code> · <code>PuBu</code> · <code>YlOrRd</code> · <code>RdYlGn</code> ·
+          <code>coolwarm</code> · <code>"#hex1:#hex2"</code> (custom)
+        </p>
+
+        <h3><code>.textGradient(options?)</code></h3>
+        <pre><code>// Same as backgroundGradient but applies to text color instead
+dataFrameStyle(df).textGradient({ cmap: "RdYlGn" });</code></pre>
+      </section>
+
+      <section>
+        <h2>Bar charts</h2>
+
+        <h3><code>.barChart(options?)</code></h3>
+        <p>Renders inline bar charts using CSS <code>linear-gradient</code>.</p>
+        <pre><code>dataFrameStyle(df).barChart({
+  color: "#4285f4",            // single color or [negColor, posColor]
+  width: 100,                  // bar cell width %
+  align: "left",               // "left" | "mid" | "zero"
+  subset: ["sales"],           // columns
+  vmin: null, vmax: null,      // normalization bounds
+});</code></pre>
+      </section>
+
+      <section>
+        <h2>Table decoration</h2>
+
+        <h3><code>.setCaption(text)</code></h3>
+        <pre><code>dataFrameStyle(df).setCaption("Q3 Sales Report");</code></pre>
+
+        <h3><code>.setTableStyles(styles)</code></h3>
+        <pre><code>dataFrameStyle(df).setTableStyles([
+  { selector: "table",        props: { border: "2px solid #999" } },
+  { selector: "th",           props: { "background-color": "#343a40", color: "#fff" } },
+  { selector: "tr:hover td",  props: { "background-color": "#f5f5f5" } },
+  // props as array of pairs is also supported:
+  { selector: "td",           props: [["padding", "6px 12px"], ["font-size", "13px"]] },
+]);</code></pre>
+
+        <h3><code>.setTableAttributes(attrs)</code></h3>
+        <pre><code>dataFrameStyle(df).setTableAttributes('class="report-table" id="q3-report"');</code></pre>
+
+        <h3><code>.hide(axis?, subset?)</code></h3>
+        <pre><code>dataFrameStyle(df).hide(0);                // hide row index
+dataFrameStyle(df).hide("index");           // same
+dataFrameStyle(df).hide(1, ["col_a"]);      // hide specific columns
+dataFrameStyle(df).hide("columns", ["b"]); // same</code></pre>
+      </section>
+
+      <section>
+        <h2>Rendering</h2>
+
+        <h3><code>.toHtml(uuid?) / .render(uuid?)</code></h3>
+        <pre><code>const html: string = dataFrameStyle(df)
+  .highlightMax()
+  .toHtml();         // .render() is an alias
+
+// Inject into a page
+document.getElementById("output").innerHTML = html;</code></pre>
+
+        <h3><code>.toLatex(environment?, hrules?)</code></h3>
+        <pre><code>const latex: string = dataFrameStyle(df)
+  .setCaption("Results")
+  .toLatex("tabular", true);  // environment, hrules</code></pre>
+        <p style="margin-top:0.5rem; font-size: 0.9rem;">
+          Note: CSS styles are not translated to LaTeX — only the data and caption are rendered.
+        </p>
+      </section>
+
+      <section>
+        <h2>Utilities</h2>
+
+        <h3><code>.exportStyles()</code></h3>
+        <pre><code>const records: StyleRecord[] = dataFrameStyle(df)
+  .highlightMax()
+  .exportStyles();
+// [{ row: 0, col: 1, css: "background-color: yellow;" }, ...]</code></pre>
+
+        <h3><code>.clearStyles()</code></h3>
+        <pre><code>// Remove all accumulated styles (keeps caption, hide state, precision)
+styler.clearStyles();</code></pre>
+      </section>
+
+      <section>
+        <h2>API reference</h2>
+        <dl>
+          <dt>dataFrameStyle(df)</dt>
+          <dd>Create a new <code>Styler</code> wrapping <code>df</code>. Equivalent to <code>df.style</code> in pandas.</dd>
+
+          <dt>.format(formatter, subset?, naRep?)</dt>
+          <dd>Format cell values with a function or template string.</dd>
+
+          <dt>.formatIndex(formatter)</dt>
+          <dd>Format row index labels.</dd>
+
+          <dt>.setPrecision(n)</dt>
+          <dd>Set default float precision (default: 6).</dd>
+
+          <dt>.setNaRep(str)</dt>
+          <dd>Set representation for null/NaN values (default: <code>""</code>).</dd>
+
+          <dt>.apply(fn, axis?, subset?)</dt>
+          <dd>Column-wise or row-wise CSS function. Returns array of CSS strings.</dd>
+
+          <dt>.applymap(fn, subset?) / .map(fn, subset?)</dt>
+          <dd>Element-wise CSS function. Returns a single CSS string per value.</dd>
+
+          <dt>.setProperties(props, subset?)</dt>
+          <dd>Set CSS properties for all cells or a subset.</dd>
+
+          <dt>.highlightMax(options?)</dt>
+          <dd>Highlight maximum values. Options: <code>color</code>, <code>subset</code>, <code>axis</code>.</dd>
+
+          <dt>.highlightMin(options?)</dt>
+          <dd>Highlight minimum values.</dd>
+
+          <dt>.highlightNull(color?, subset?)</dt>
+          <dd>Highlight null/undefined/NaN values.</dd>
+
+          <dt>.highlightBetween(options?)</dt>
+          <dd>Highlight values in a numeric range. Options: <code>left</code>, <code>right</code>, <code>inclusive</code>, <code>color</code>, <code>subset</code>.</dd>
+
+          <dt>.backgroundGradient(options?)</dt>
+          <dd>Background color gradient. Options: <code>cmap</code>, <code>low</code>, <code>high</code>, <code>axis</code>, <code>subset</code>, <code>textColor</code>, <code>vmin</code>, <code>vmax</code>.</dd>
+
+          <dt>.textGradient(options?)</dt>
+          <dd>Text color gradient (same options as backgroundGradient).</dd>
+
+          <dt>.barChart(options?)</dt>
+          <dd>Inline bar chart. Options: <code>color</code>, <code>width</code>, <code>align</code>, <code>subset</code>, <code>vmin</code>, <code>vmax</code>.</dd>
+
+          <dt>.setCaption(text)</dt>
+          <dd>Set a <code>&lt;caption&gt;</code> on the rendered table.</dd>
+
+          <dt>.setTableStyles(styles)</dt>
+          <dd>Set CSS selector rules via a <code>&lt;style&gt;</code> block prepended to the output.</dd>
+
+          <dt>.setTableAttributes(attrs)</dt>
+          <dd>Set extra HTML attributes on the <code>&lt;table&gt;</code> tag.</dd>
+
+          <dt>.hide(axis?, subset?)</dt>
+          <dd>Hide the index (<code>axis=0</code>) or specific columns (<code>axis=1, subset</code>).</dd>
+
+          <dt>.clearStyles()</dt>
+          <dd>Reset all style applications, formatters, and table styles.</dd>
+
+          <dt>.exportStyles()</dt>
+          <dd>Return the accumulated per-cell styles as <code>StyleRecord[]</code>.</dd>
+
+          <dt>.toHtml(uuid?) / .render(uuid?)</dt>
+          <dd>Render the styled DataFrame as an HTML string.</dd>
+
+          <dt>.toLatex(environment?, hrules?)</dt>
+          <dd>Render as a LaTeX <code>tabular</code> environment.</dd>
+        </dl>
+      </section>
+
+      <section>
+        <h2>Pandas equivalence table</h2>
+        <table class="demo">
+          <thead>
+            <tr>
+              <th>tsb</th>
+              <th>pandas equivalent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>dataFrameStyle(df)</code></td><td><code>df.style</code></td></tr>
+            <tr><td><code>.format(fn)</code></td><td><code>.format(fn)</code></td></tr>
+            <tr><td><code>.formatIndex(fn)</code></td><td><code>.format_index(fn)</code></td></tr>
+            <tr><td><code>.apply(fn, axis)</code></td><td><code>.apply(fn, axis=0)</code></td></tr>
+            <tr><td><code>.applymap(fn)</code></td><td><code>.applymap(fn)</code> / <code>.map(fn)</code></td></tr>
+            <tr><td><code>.map(fn)</code></td><td><code>.map(fn)</code> (≥ pandas 2.1)</td></tr>
+            <tr><td><code>.highlightMax(opts)</code></td><td><code>.highlight_max()</code></td></tr>
+            <tr><td><code>.highlightMin(opts)</code></td><td><code>.highlight_min()</code></td></tr>
+            <tr><td><code>.highlightNull(color)</code></td><td><code>.highlight_null()</code></td></tr>
+            <tr><td><code>.highlightBetween(opts)</code></td><td><code>.highlight_between()</code></td></tr>
+            <tr><td><code>.backgroundGradient(opts)</code></td><td><code>.background_gradient()</code></td></tr>
+            <tr><td><code>.textGradient(opts)</code></td><td><code>.text_gradient()</code></td></tr>
+            <tr><td><code>.barChart(opts)</code></td><td><code>.bar()</code></td></tr>
+            <tr><td><code>.setCaption(text)</code></td><td><code>.set_caption(text)</code></td></tr>
+            <tr><td><code>.setProperties(props)</code></td><td><code>.set_properties(**kwargs)</code></td></tr>
+            <tr><td><code>.setTableStyles(styles)</code></td><td><code>.set_table_styles(styles)</code></td></tr>
+            <tr><td><code>.setTableAttributes(attrs)</code></td><td><code>.set_table_attributes(attrs)</code></td></tr>
+            <tr><td><code>.hide(0)</code></td><td><code>.hide(axis="index")</code></td></tr>
+            <tr><td><code>.hide(1, subset)</code></td><td><code>.hide(subset, axis="columns")</code></td></tr>
+            <tr><td><code>.exportStyles()</code></td><td><code>.export()</code></td></tr>
+            <tr><td><code>.clearStyles()</code></td><td><code>.clear()</code></td></tr>
+            <tr><td><code>.toHtml()</code> / <code>.render()</code></td><td><code>.to_html()</code> / <code>.render()</code></td></tr>
+            <tr><td><code>.toLatex()</code></td><td><code>.to_latex()</code></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+  </body>
+</html>

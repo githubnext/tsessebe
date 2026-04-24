@@ -108,7 +108,9 @@ function isMissing(v: Scalar): boolean {
 // ─── helpers: date coercion ────────────────────────────────────────────────────
 
 function toDate(v: Label): Date | null {
-  if (v instanceof Date) return v;
+  if (v instanceof Date) {
+    return v;
+  }
   if (typeof v === "string" || typeof v === "number") {
     const d = new Date(v as string | number);
     return Number.isNaN(d.getTime()) ? null : d;
@@ -246,7 +248,9 @@ function nextGroupKey(ts: number, freq: string): number {
  */
 function keyToLabel(key: number, freq: string, label: ResampleLabel): number {
   const dflt = freqDefaultLabel(freq);
-  if (label === dflt) return key;
+  if (label === dflt) {
+    return key;
+  }
 
   if (label === "right") {
     // User wants right label on a left-default freq → next bin start
@@ -254,7 +258,9 @@ function keyToLabel(key: number, freq: string, label: ResampleLabel): number {
   }
 
   // User wants left label on a right-default freq (W*, ME, QE, YE/AE)
-  if (freq.startsWith("W")) return key - 6 * MS_D; // anchor → Mon/+1
+  if (freq.startsWith("W")) {
+    return key - 6 * MS_D; // anchor → Mon/+1
+  }
   if (freq === "ME") {
     const d = new Date(key);
     return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
@@ -283,7 +289,9 @@ function buildGroups(index: Index<Label>, freq: string): Groups {
   for (let i = 0; i < index.size; i++) {
     const label = index.at(i) as Label;
     const d = toDate(label);
-    if (d === null) continue;
+    if (d === null) {
+      continue;
+    }
     const key = binGroupKey(d, freq);
     let arr = map.get(key);
     if (arr === undefined) {
@@ -317,25 +325,33 @@ function aggNums(vals: readonly Scalar[]): number[] {
 
 function aggSum(vals: readonly Scalar[]): Scalar {
   const ns = aggNums(vals);
-  if (ns.length === 0) return Number.NaN;
+  if (ns.length === 0) {
+    return Number.NaN;
+  }
   return ns.reduce((a, b) => a + b, 0);
 }
 
 function aggMean(vals: readonly Scalar[]): Scalar {
   const ns = aggNums(vals);
-  if (ns.length === 0) return Number.NaN;
+  if (ns.length === 0) {
+    return Number.NaN;
+  }
   return ns.reduce((a, b) => a + b, 0) / ns.length;
 }
 
 function aggMin(vals: readonly Scalar[]): Scalar {
   const c = vals.filter((v): v is Exclude<Scalar, null | undefined> => !isMissing(v));
-  if (c.length === 0) return Number.NaN;
+  if (c.length === 0) {
+    return Number.NaN;
+  }
   return c.reduce((a, b) => (a < b ? a : b));
 }
 
 function aggMax(vals: readonly Scalar[]): Scalar {
   const c = vals.filter((v): v is Exclude<Scalar, null | undefined> => !isMissing(v));
-  if (c.length === 0) return Number.NaN;
+  if (c.length === 0) {
+    return Number.NaN;
+  }
   return c.reduce((a, b) => (a > b ? a : b));
 }
 
@@ -344,28 +360,38 @@ function aggCount(vals: readonly Scalar[]): Scalar {
 }
 
 function aggFirst(vals: readonly Scalar[]): Scalar {
-  for (const v of vals) if (!isMissing(v)) return v;
+  for (const v of vals) {
+    if (!isMissing(v)) {
+      return v;
+    }
+  }
   return Number.NaN;
 }
 
 function aggLast(vals: readonly Scalar[]): Scalar {
   for (let i = vals.length - 1; i >= 0; i--) {
     const v = vals[i]!;
-    if (!isMissing(v)) return v;
+    if (!isMissing(v)) {
+      return v;
+    }
   }
   return Number.NaN;
 }
 
 function aggStd(vals: readonly Scalar[]): Scalar {
   const ns = aggNums(vals);
-  if (ns.length < 2) return Number.NaN;
+  if (ns.length < 2) {
+    return Number.NaN;
+  }
   const m = ns.reduce((a, b) => a + b, 0) / ns.length;
   return Math.sqrt(ns.reduce((s, v) => s + (v - m) ** 2, 0) / (ns.length - 1));
 }
 
 function aggVar(vals: readonly Scalar[]): Scalar {
   const ns = aggNums(vals);
-  if (ns.length < 2) return Number.NaN;
+  if (ns.length < 2) {
+    return Number.NaN;
+  }
   const m = ns.reduce((a, b) => a + b, 0) / ns.length;
   return ns.reduce((s, v) => s + (v - m) ** 2, 0) / (ns.length - 1);
 }
@@ -384,9 +410,13 @@ const BUILTIN: Readonly<Record<ResampleAggName, AggFn>> = {
 };
 
 function resolveAgg(spec: ResampleAggName | ResampleAggFn): AggFn {
-  if (typeof spec === "function") return spec;
+  if (typeof spec === "function") {
+    return spec;
+  }
   const fn = BUILTIN[spec];
-  if (!fn) throw new Error(`Unknown resample aggregation: "${spec}"`);
+  if (!fn) {
+    throw new Error(`Unknown resample aggregation: "${spec}"`);
+  }
   return fn;
 }
 
@@ -447,7 +477,7 @@ export class SeriesResampler {
       return new Series<Scalar>({ data: [], index: new Index<Label>([]), name: this._s.name });
     }
     const vals = this._s.values;
-    const binKeys = allKeys(keys[0]!, keys[keys.length - 1]!, this._freq);
+    const binKeys = allKeys(keys[0]!, keys.at(-1)!, this._freq);
     const data: Scalar[] = binKeys.map((k) => {
       const positions = map.get(k) ?? [];
       return fn(positions.map((p) => vals[p] as Scalar));
@@ -521,7 +551,7 @@ export class SeriesResampler {
       return DataFrame.fromColumns({ open: [], high: [], low: [], close: [] });
     }
     const vals = this._s.values;
-    const binKeys = allKeys(keys[0]!, keys[keys.length - 1]!, this._freq);
+    const binKeys = allKeys(keys[0]!, keys.at(-1)!, this._freq);
 
     const open: Scalar[] = [];
     const high: Scalar[] = [];
@@ -596,11 +626,13 @@ export class DataFrameResampler {
 
     if (keys.length === 0) {
       const emptyCols: Record<string, readonly Scalar[]> = {};
-      for (const c of colNames) emptyCols[c] = [];
+      for (const c of colNames) {
+        emptyCols[c] = [];
+      }
       return DataFrame.fromColumns(emptyCols);
     }
 
-    const binKeys = allKeys(keys[0]!, keys[keys.length - 1]!, this._freq);
+    const binKeys = allKeys(keys[0]!, keys.at(-1)!, this._freq);
     const idx = buildDateIndex(binKeys, this._freq, this._label);
     const colData: Record<string, Scalar[]> = {};
 
@@ -676,7 +708,7 @@ export class DataFrameResampler {
     if (keys.length === 0) {
       return new Series<Scalar>({ data: [], index: new Index<Label>([]) });
     }
-    const binKeys = allKeys(keys[0]!, keys[keys.length - 1]!, this._freq);
+    const binKeys = allKeys(keys[0]!, keys.at(-1)!, this._freq);
     const data: Scalar[] = binKeys.map((k) => (map.get(k) ?? []).length);
     return new Series<Scalar>({ data, index: buildDateIndex(binKeys, this._freq, this._label) });
   }

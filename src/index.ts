@@ -668,3 +668,17 @@ export type {
   AssertFrameEqualOptions,
   AssertIndexEqualOptions,
 } from "./testing/index.ts";
+export { Styler, dataFrameStyle } from "./stats/index.ts";
+export type {
+  CellProps,
+  TableStyle,
+  StyleRecord,
+  ValueFormatter,
+  ColSubset,
+  AxisStyleFn,
+  ElementStyleFn,
+  HighlightOptions,
+  HighlightBetweenOptions,
+  GradientOptions,
+  BarOptions,
+} from "./stats/index.ts";
