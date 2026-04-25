@@ -165,9 +165,7 @@ describe("strGetDummies — pandas parity", () => {
   });
 
   test("multi-label tags scenario", () => {
-    const df = strGetDummies(
-      s(["python|pandas", "python|numpy", "pandas|numpy|scipy"]),
-    );
+    const df = strGetDummies(s(["python|pandas", "python|numpy", "pandas|numpy|scipy"]));
     expect([...df.columns.values]).toEqual(["numpy", "pandas", "python", "scipy"]);
     expect([...df.col("python").values]).toEqual([1, 1, 0]);
     expect([...df.col("scipy").values]).toEqual([0, 0, 1]);
@@ -231,9 +229,7 @@ describe("strGetDummies — property-based", () => {
           const df = strGetDummies(ser);
           const origIdx = [...ser.index.values];
           const dfIdx = [...df.index.values];
-          return (
-            origIdx.length === dfIdx.length && origIdx.every((v, i) => v === dfIdx[i])
-          );
+          return origIdx.length === dfIdx.length && origIdx.every((v, i) => v === dfIdx[i]);
         },
       ),
     );
@@ -284,9 +280,7 @@ describe("strGetDummies — property-based", () => {
           for (let i = 0; i < arr.length; i++) {
             const v = arr[i];
             const isMissing =
-              v === null ||
-              v === undefined ||
-              (typeof v === "number" && Number.isNaN(v));
+              v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
             if (!isMissing) {
               continue;
             }
