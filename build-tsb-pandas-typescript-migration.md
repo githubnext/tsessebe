@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-25T05:05:00Z |
-| Iteration Count | 281 |
-| Best Metric | 135 |
+| Last Run | 2026-04-25T06:22:00Z |
+| Iteration Count | 282 |
+| Best Metric | 136 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | pending-ci |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci |
 
 ---
 
@@ -44,10 +44,11 @@ Completed through iter 279:
 
 - ✅ lreshape (280)
 - ✅ strGetDummies / str.get_dummies (281)
+- ✅ swapaxes / DataFrame.swapaxes / Series.swapaxes (282)
 
 Next:
-- `DataFrame.swapaxes` — swap row/column axes (transpose variant)
 - `str.extractall()` — wire via late-binding (returns MultiIndex DataFrame)
+- `str.wrap` / `str.center` / `str.ljust` / `str.rjust` — str accessor methods
 
 ---
 
@@ -80,20 +81,12 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iteration 281 — 2026-04-25 05:05 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24923038245)
+### Iteration 282 — 2026-04-25 06:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24924429290)
 
 - **Status**: ⏳ pending-ci
-- **Change**: +strGetDummies (Series.str.get_dummies port)
-- **Metric**: 135 (previous confirmed: 134, delta: +1)
-- **Commit**: 6855cb2
-- **Notes**: New src/stats/str_get_dummies.ts; splits string Series by sep, returns binary indicator DataFrame. Avoided circular dep by using standalone function pattern. Sorted columns, null→zero-row.
+- **Change**: +swapaxes (DataFrame.swapaxes / Series.swapaxes port)
+- **Metric**: 136 (previous best: 135, delta: +1)
+- **Commit**: cbcd887
+- **Notes**: New src/stats/swapaxes.ts; transpose on axis 0↔1, copy on same axis, Series always copy.
 
-### Iteration 280 — 2026-04-25 02:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24920662939)
-
-- **Status**: ⏳ pending-ci
-- **Change**: +pd.lreshape (wide-to-long with explicit column groups)
-- **Metric**: 138 (previous best: 137, delta: +1)
-- **Commit**: f9bd379
-- **Notes**: New src/reshape/lreshape.ts ports pandas.lreshape; maps new column names to ordered lists of source columns, with dropna support. Tests include property-based checks.
-
-### Iters 277–279 — ⏳ pending-ci (135→137): +strCat/str.cat, +asfreq, +atTime/betweenTime, +extractAll, +firstRows/lastRows, +monthName/dayName.
+### Iters 277–281 — ⏳ pending-ci (135): +strCat, +asfreq, +atTime/betweenTime, +extractAll, +firstRows/lastRows, +monthName/dayName, +lreshape, +strGetDummies.
