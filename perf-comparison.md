@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-25T01:41:00Z |
-| Iteration Count | 290 |
-| Best Metric | 643 |
+| Last Run | 2026-04-25T08:11:00Z |
+| Iteration Count | 291 |
+| Best Metric | 648 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — (pending CI) |
-| Issue | — |
+| Issue | — (created this run) |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, error, error, accepted, accepted, error, error, accepted, accepted |
+| Recent Statuses | accepted, error, error, accepted, accepted, error, error, accepted, accepted, accepted |
 
 ---
 
@@ -68,6 +68,14 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 291 — 2026-04-25T08:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24926433071)
+
+- **Status**: ✅ Accepted (pending CI)
+- **Change**: Add 5 benchmark pairs: str_findall, truncate, update, filter_labels, window_extended
+- **Metric**: 648 (previous best: 643, delta: +5)
+- **Commit**: 9f0cdd0
+- **Notes**: Filled gaps in regex string ops, series/df truncation, in-place update, label-based filtering, and extended rolling stats.
 
 ### Iteration 290 — 2026-04-25T01:41 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24919519451)
 
