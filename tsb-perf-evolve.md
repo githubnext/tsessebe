@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-25T05:47:00Z |
-| Iteration Count | 13 |
+| Last Run | 2026-04-25T06:58:00Z |
+| Iteration Count | 14 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Branch | autoloop/tsb-perf-evolve |
@@ -16,16 +16,18 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, not-pushed, not-pushed, pending, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, not-pushed, not-pushed, pending, pending-ci, pending-ci, pending-ci, pending-ci |
 
 ## 🧬 Population
 
-### c014 · island 3 · fitness pending CI · gen 13
+### c015 · island 3 · fitness pending CI · gen 14
 
 - **Operator**: exploration; **Feature cell**: parallel-typed-arrays · non-comparison
 - **Parent**: c003 (island 1, fitness 27.999)
-- **Approach**: LSD 8-pass radix sort on IEEE-754 bit-transformed uint32 key pairs. Module-level _rxSrc/_rxDst/_rxKeyHi/_rxKeyLo ping-pong buffers; _rxCnt 256-bucket histogram. Uint32Array overlay on fvals.buffer for raw bits. Zero JS comparator callbacks. Descending by reverse-iterate. String/mixed fallback unchanged. Commit 5440d62.
-- **Status**: ⏳ pending CI — commit 5440d62
+- **Approach**: LSD 8-pass radix sort on IEEE-754 bit-transformed uint64 keys (per-call keyHi/keyLo/pA/pB/cnt allocation, no module-level buffers). Uint32Array overlay on fvals.buffer. Stable scatter. Reverse-in-place for descending. Commit 1f7c9a4.
+- **Status**: ⏳ pending CI — commit 1f7c9a4
+
+### ~~c014~~ · phantom · gen 13 — same radix design (module-level buffers); commit 5440d62 not found in remote after fast-forward
 
 ### ~~c013~~ · phantom · gen 12 — same radix design; commit 1affdf2 not found in remote (previous phantom)
 
@@ -66,12 +68,14 @@
 
 ## 📊 Iteration History
 
-### Iteration 13 — 2026-04-25 05:47 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24923827970)
+### Iteration 14 — 2026-04-25 06:58 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24925038970)
 
-- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 · **Candidate**: c014
-- **Change**: LSD 8-pass radix sort; Uint32Array key pairs from fvals.buffer; module-level ping-pong buffers; no comparator callbacks; fast-forwarded branch to main before commit to fix patch size
-- **Commit**: 5440d62 · **Metric**: pending CI
-- **Notes**: Branch fast-forwarded to origin/main first; diff vs main = sortValues only (150 lines).
+- **Status**: ⏳ pending CI · **Op**: exploration · **Island**: 3 · **Candidate**: c015
+- **Change**: LSD 8-pass radix sort on IEEE-754 bit-transformed uint64 keys; per-call keyHi/keyLo/pA/pB allocations; no module-level buffers; stable scatter; reverse for descending
+- **Commit**: 1f7c9a4 · **Metric**: pending CI
+- **Notes**: Branch fast-forwarded to origin/main (ahead=0, behind=33); PR created fresh. Previous c014 phantom resolved.
+
+### ~~Iteration 13~~ — 2026-04-25 05:47 UTC — phantom (commit 5440d62 never reached remote)
 
 ### Iters 9–12 — 2026-04-24–25 — ❌ phantoms — island 3 LSD radix; same radix design re-tried, commits never reached remote
 
