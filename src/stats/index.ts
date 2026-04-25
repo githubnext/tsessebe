@@ -203,7 +203,6 @@ export { fillna, countna, countValid } from "./notna_isna.ts";
 export type { IsnaInput, FillnaOptions, DropnaOptions } from "./notna_isna.ts";
 export {
   strNormalize,
-  strGetDummies,
   strExtractAll,
   strRemovePrefix,
   strRemoveSuffix,
@@ -212,6 +211,8 @@ export {
   strByteLength,
 } from "./string_ops.ts";
 export type { NormalizeForm, StrInput, ExtractAllOptions } from "./string_ops.ts";
+export { strGetDummies } from "./str_get_dummies.ts";
+export type { StrGetDummiesOptions } from "./str_get_dummies.ts";
 export {
   strSplitExpand,
   strExtractGroups,

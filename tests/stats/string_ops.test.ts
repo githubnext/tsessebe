@@ -1,6 +1,6 @@
 /**
  * Tests for src/stats/string_ops.ts
- * — strNormalize, strGetDummies, strExtractAll, strRemovePrefix,
+ * — strNormalize, strExtractAll, strRemovePrefix,
  *   strRemoveSuffix, strTranslate, strCharWidth, strByteLength
  */
 import { describe, expect, it } from "bun:test";
@@ -11,7 +11,6 @@ import {
   strByteLength,
   strCharWidth,
   strExtractAll,
-  strGetDummies,
   strNormalize,
   strRemovePrefix,
   strRemoveSuffix,
@@ -75,68 +74,6 @@ describe("strNormalize", () => {
   it("NFKD decomposes and also applies compatibility mappings", () => {
     // ℌ (U+210C, script H) → NFKD → H
     expect(strNormalize("\u210C", "NFKD")).toBe("H");
-  });
-});
-
-// ─── strGetDummies ────────────────────────────────────────────────────────────
-
-describe("strGetDummies", () => {
-  it("basic | separator", () => {
-    const df = strGetDummies(s(["a|b", "b|c", "a"]));
-    expect(df.shape[0]).toBe(3);
-    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
-    expect(df.col("a").values[0]).toBe(1);
-    expect(df.col("a").values[1]).toBe(0);
-    expect(df.col("a").values[2]).toBe(1);
-    expect(df.col("b").values[0]).toBe(1);
-    expect(df.col("b").values[1]).toBe(1);
-    expect(df.col("b").values[2]).toBe(0);
-    expect(df.col("c").values[0]).toBe(0);
-    expect(df.col("c").values[1]).toBe(1);
-    expect(df.col("c").values[2]).toBe(0);
-  });
-
-  it("custom separator", () => {
-    const df = strGetDummies(s(["a,b", "b,c"]), { sep: "," });
-    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
-  });
-
-  it("prefix option", () => {
-    const df = strGetDummies(s(["x|y"]), { prefix: "tag", prefixSep: "-" });
-    expect([...df.columns.values].sort()).toEqual(["tag-x", "tag-y"]);
-  });
-
-  it("empty string element maps to no tokens", () => {
-    const df = strGetDummies(s(["a|b", ""]));
-    expect(df.col("a").values[1]).toBe(0);
-    expect(df.col("b").values[1]).toBe(0);
-  });
-
-  it("single-token element", () => {
-    const df = strGetDummies(s(["a", "b", "a"]));
-    expect(df.shape[0]).toBe(3);
-    expect(df.col("a").values[0]).toBe(1);
-    expect(df.col("a").values[1]).toBe(0);
-    expect(df.col("a").values[2]).toBe(1);
-  });
-
-  it("all same token → single column of ones", () => {
-    const df = strGetDummies(s(["x", "x", "x"]));
-    expect(df.shape[1]).toBe(1);
-    expect([...df.col("x").values]).toEqual([1, 1, 1]);
-  });
-
-  it("preserves Series index in output rows", () => {
-    const ser = new Series({ data: ["a|b", "b"] as Scalar[], index: [10, 20] });
-    const df = strGetDummies(ser);
-    expect(df.index.values[0]).toBe(10);
-    expect(df.index.values[1]).toBe(20);
-  });
-
-  it("array input (not Series)", () => {
-    const df = strGetDummies(["a|b", "c"]);
-    expect(df.shape[0]).toBe(2);
-    expect([...df.columns.values].sort()).toEqual(["a", "b", "c"]);
   });
 });
 
