@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-25T16:49:49Z |
-| Iteration Count | 289 |
+| Last Run | 2026-04-25T18:29:00Z |
+| Iteration Count | 290 |
 | Best Metric | 136 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -34,9 +34,9 @@
 
 ## 🎯 Current Priorities
 
-- ✅ Core (iters 1–52), Stats (53–244), various ops (246–288)
-- ✅ Through iter 288: itertuples added. 136 features on branch.
-- Next: itertuples on DataFrame, DataFrame.Flags, pd.api.types extensions
+- ✅ Core (iters 1–52), Stats (53–244), various ops (246–290)
+- ✅ Through iter 290: itertuples + Flags added. 136 features on branch.
+- Next: DataFrame.toHtml/Series.toHtml standalone, pd.api.types extensions, str.extractall wiring
 
 ---
 
@@ -63,15 +63,22 @@
 
 ## 🔭 Future Directions
 
-- `convert_dtypes()` — convert to best-fit dtypes
-- `DataFrame.toHtml()` / `Series.toHtml()` — standalone HTML rendering
-- `pd.Flags` — DataFrame.flags attribute
-- `pd.api.types` — type-checking utilities
+- `DataFrame.toHtml()` / `Series.toHtml()` — standalone HTML rendering (Styler.toHtml exists, need standalone)
+- `pd.api.types` extensions — more type predicates
 - `str.extractall()` — wire via late-binding
+- `DataFrame.convert_dtypes()` — already exported, check if more refinement needed
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 290 — 2026-04-25 18:29 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24937530889)
+
+- **Status**: ⏳ pending-ci
+- **Change**: +DataFrame.itertuples() + Flags class (df.flags attribute)
+- **Metric**: 136 (delta: +1 new file from main baseline 135)
+- **Commit**: 78189c0
+- **Notes**: Added itertuples generator method to DataFrame and new Flags class with allows_duplicate_labels property.
 
 ### Iteration 289 — 2026-04-25 16:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24935744381)
 
