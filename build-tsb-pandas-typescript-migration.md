@@ -8,9 +8,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-24T23:35:00Z |
-| Iteration Count | 279 |
-| Best Metric | 137 |
+| Last Run | 2026-04-25T02:48:00Z |
+| Iteration Count | 280 |
+| Best Metric | 138 |
 | Target Metric | — |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | pending-ci |
@@ -20,7 +20,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, accepted, pending-ci |
 
 ---
 
@@ -42,10 +42,11 @@ Completed through iter 279:
 - ✅ hashPandasObject, caseWhen, fromDummies, strCat, asfreq, at_time, between_time (273–278)
 - ✅ firstRows/lastRows/firstSeries/lastSeries, monthName/dayName (279)
 
+- ✅ lreshape (280)
+
 Next:
 - `Series.str.get_dummies` — wire into StringAccessor (circular dep challenge)
 - `DataFrame.swapaxes` — swap row/column axes
-- `pd.lreshape` — wide to long for irregular column groups
 
 ---
 
@@ -78,16 +79,12 @@ Next:
 ---
 
 ## 📊 Iteration History
-### Iteration 279 — 2026-04-24 23:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24916244822)
+### Iteration 280 — 2026-04-25 02:48 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24920662939)
 
 - **Status**: ⏳ pending-ci
-- **Change**: +firstRows/lastRows/firstSeries/lastSeries, +monthName/dayName
-- **Metric**: 137 (previous best: 135 on main, delta: +2)
-- **Commit**: a10a307
-- **Notes**: New src/stats/first_last.ts ports pandas.DataFrame.first/last with D/W/M/Q/Y/H/T/S/L offset aliases; src/stats/datetime_name.ts ports dt.month_name()/day_name() with Intl.DateTimeFormat locale support.
+- **Change**: +pd.lreshape (wide-to-long with explicit column groups)
+- **Metric**: 138 (previous best: 137, delta: +1)
+- **Commit**: f9bd379
+- **Notes**: New src/reshape/lreshape.ts ports pandas.lreshape; maps new column names to ordered lists of source columns, with dropna support. Tests include property-based checks.
 
-### Iters 277–278 — ⏳ pending-ci (135→137): +strCat/str.cat, +asfreq, +atTime/betweenTime, +extractAll.
-### Iters 264–276 — ⏳/✅ (134→135): +fromDummies, +hashPandasObject, +caseWhen, +asfreq, +Styler, +strCat.
-### Iters 258–263 — ⏳/✅ (134→135): +pd.testing, +hash, +case_when, +where/mask aligned.
-### Iters 246–256 — ✅/⚠️ (128→134): +resample, +mergeOrdered/Asof, +join, +inferObjects, +str.normalize, +ewmCov/Corr, +xs, +toHtml/Markdown, +toRecords/fromRecords, +isocalendar, +periodRange.
-### Iters 53–245 — ✅/⚠️ (8→128): 185+ pandas features ported.
+### Iters 277–279 — ⏳ pending-ci (135→137): +strCat/str.cat, +asfreq, +atTime/betweenTime, +extractAll, +firstRows/lastRows, +monthName/dayName.
