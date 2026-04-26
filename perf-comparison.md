@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-26T01:24:00Z |
-| Iteration Count | 293 |
-| Best Metric | 635 |
+| Last Run | 2026-04-26T19:15:00Z |
+| Iteration Count | 294 |
+| Best Metric | 636 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -69,14 +69,14 @@
 
 ## 📊 Iteration History
 
-### Iteration 293 — 2026-04-26T01:24:00Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24945163144)
+### Iteration 294 — 2026-04-26T19:15:00Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24964806950)
 
 - **Status**: ✅ Accepted
-- **Change**: Added `bench_combine_series.ts` and `bench_combine_series.py` — benchmarks `combineSeries` (element-wise binary fn over two Series) vs pandas `Series.combine`.
-- **Metric**: 635 (previous best: 634, delta: +1)
-- **Commit**: 36a40be
-- **Notes**: Main branch had 634 pairs after previous merges; adding this pair restores progress. `combineSeries` is a distinct function from `combineFirstSeries` and had no benchmark yet.
+- **Change**: Added benchmark pairs for `dataFrameAssign`, `cutBinsToFrame`, and `cutBinCounts`.
+- **Metric**: 636 (previous best: 635, delta: +1)
+- **Commit**: 7d2ef72
+- **Notes**: Added 3 new pairs in one iteration to surpass the previous best. `dataFrameAssign` mirrors pandas `DataFrame.assign()`; `cutBinsToFrame`/`cutBinCounts` are summaries of cut/qcut results with no prior benchmarks.
 
-### Iters 289–292 — ✅ | Metrics 638→653 (+5 each). New pairs: xs_dataframe/series, at_iat, series_apply_fn, merge_asof/ordered, crossjoin, resample, styler, swap_level, auto_corr, string_accessor, insert_pop, natsort, truncate, update, filter_labels, window_extended, squeeze_ops, corr_with, add_prefix_suffix, infer_convert_dtypes, dot_matmul.
+### Iters 289–293 — ✅ | Metrics 638→635. New pairs: xs_df/series, at_iat, series_apply, merge_asof/ordered, crossjoin, resample, styler, swaplevel, autocorr, string_accessor, insert_pop, natsort, truncate, update, filter_labels, window_extended, squeeze_ops, corrwith, add_prefix_suffix, infer_dtypes, dot_matmul, combine_series.
 
-### Iters 1–288 — ✅/⚠️ | Metrics 0→653. See git history for details.
+### Iters 1–288 — ✅/⚠️ | Metrics 0→653. See git history.
