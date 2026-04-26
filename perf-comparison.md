@@ -10,19 +10,19 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-25T14:32:00Z |
-| Iteration Count | 292 |
-| Best Metric | 653 |
+| Last Run | 2026-04-26T01:24:00Z |
+| Iteration Count | 293 |
+| Best Metric | 635 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | — (pending CI) |
+| PR | — |
 | Issue | #221 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, error, accepted, accepted, error, error, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -68,6 +68,14 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 293 — 2026-04-26T01:24:00Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24945163144)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `bench_combine_series.ts` and `bench_combine_series.py` — benchmarks `combineSeries` (element-wise binary fn over two Series) vs pandas `Series.combine`.
+- **Metric**: 635 (previous best: 634, delta: +1)
+- **Commit**: 36a40be
+- **Notes**: Main branch had 634 pairs after previous merges; adding this pair restores progress. `combineSeries` is a distinct function from `combineFirstSeries` and had no benchmark yet.
 
 ### Iters 289–292 — ✅ | Metrics 638→653 (+5 each). New pairs: xs_dataframe/series, at_iat, series_apply_fn, merge_asof/ordered, crossjoin, resample, styler, swap_level, auto_corr, string_accessor, insert_pop, natsort, truncate, update, filter_labels, window_extended, squeeze_ops, corr_with, add_prefix_suffix, infer_convert_dtypes, dot_matmul.
 
