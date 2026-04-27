@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-26T19:15:00Z |
-| Iteration Count | 294 |
-| Best Metric | 636 |
+| Last Run | 2026-04-27T13:23:54Z |
+| Iteration Count | 295 |
+| Best Metric | 634 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -68,6 +68,14 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 295 — 2026-04-27T13:23:54Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24997568696)
+
+- **Status**: ✅ Accepted
+- **Change**: Added benchmark pair for `eval_query` — `queryDataFrame` and `evalDataFrame` vs pandas `DataFrame.query()` and `DataFrame.eval()`.
+- **Metric**: 634 (previous best: 633, delta: +1)
+- **Commit**: 6030182
+- **Notes**: `eval_query` module was unbenchmarked. Both query (filter rows by boolean expression) and eval (evaluate arithmetic expression) are benchmarked together. Best metric corrected from stale 636 to actual 633→634.
 
 ### Iteration 294 — 2026-04-26T19:15:00Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24964806950)
 
