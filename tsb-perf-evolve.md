@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-27T01:24:00Z |
-| Iteration Count | 23 |
+| Last Run | 2026-04-27T19:22:00Z |
+| Iteration Count | 24 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -17,21 +17,19 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, not-pushed |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci |
 
 ## 🧬 Population
 
-### c023 · island 3 · fitness pending CI · gen 23
+### c024 · island 3 · fitness pending CI · gen 24
 
 - **Op**: exploitation (c022/main as parent); **Cell**: parallel-typed-arrays · non-comparison; **Parent**: c022
-- **Approach**: Same LSD 8-pass radix as c022 (now in main) but also make `finBuf` (400KB), `nanBuf` (400KB), `fvals` (800KB), and `fvalsU32` (view) module-level grow-on-demand buffers. Eliminates 1.6MB of TypedArray GC per sort call (80MB total across 50 bench iterations). Commit 1b603f1.
+- **Approach**: Make `finBuf` (400KB), `nanBuf` (400KB), `fvals` (800KB), and `fvalsU32` (view) module-level grow-on-demand buffers. Eliminates 1.6MB TypedArray GC per sort call. Commit 4a642db.
 - **Status**: ⏳ pending CI
 
-### c022 · island 3 · fitness unknown (merged via PR #226) · gen 21
+### ~~c023~~ (evicted — lost to branch reset; superseded by c024)
 
-- **Op**: exploration; **Cell**: parallel-typed-arrays · non-comparison; **Parent**: c003
-- **Approach**: LSD 8-pass radix sort. All rx buffers module-level. Merged to main.
-- **Status**: ✅ merged
+### ~~c022~~ (merged via PR #226 — LSD 8-pass radix, all rx module-level)
 
 ### c003 · island 1 · fitness 27.999 · gen 2
 
@@ -62,21 +60,12 @@
 
 ## 📊 Iteration History
 
-### Iteration 23 — 2026-04-27 01:24 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24972180827)
+### Iteration 24 — 2026-04-27 19:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25014795941)
 
-- **Status**: ⏳ pending CI · **Op**: exploitation · **Island**: 3 · c023
-- **Change**: Make finBuf/nanBuf/fvals/fvalsU32 module-level grow-on-demand (was per-call). Eliminates 1.6MB TypedArray GC per call (80MB for 50 bench iters). Branch ff'd to origin/main + 1 commit 1b603f1.
+- **Status**: ⏳ pending CI · **Op**: exploitation · **Island**: 3 · c024
+- **Change**: Make finBuf/nanBuf/fvals/fvalsU32 module-level grow-on-demand (was per-call). Eliminates 1.6MB TypedArray GC per call (80MB for 50 bench iters). Branch ff'd to origin/main + commit 4a642db.
 - **Metric**: pending CI (sandbox bun unavailable)
 
-### Iteration 22 — 2026-04-26 07:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24951061682)
+### Iters 3–23 — 2026-04-23–27 — multiple pending-ci radix attempts (c003–c023). c003 ✅ fitness=27.999 (tsb=155.63ms, pandas=5.56ms). c022 ✅ merged via PR #226 (LSD 8-pass radix, all rx buffers module-level). Others ⚠️ lost to branch resets.
 
-- **Status**: ⏳ pending CI (stale; c022 merged via PR #226; branch reset)
-- **Change**: Same c023 attempt; lost to branch reset between runs.
-
-### Iteration 21 — 2026-04-25 17:57 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24936876897)
-
-- **Status**: ⏳ pending CI · c022 LSD radix with all rx module-level buffers. Now merged to main via PR #226.
-
-### Iters 3–20 — 2026-04-23–25 — all phantom/pending-ci radix attempts (c017–c021) lost to branch resets or pending CI.
-
-### Iters 1–2 — 2026-04-23 — ✅ c003 fitness=27.999 (tsb=155.63ms, pandas=5.56ms); iter 1 ❌ TS2538
+### Iters 1–2 — 2026-04-23 — ✅ c003 fitness=27.999; iter 1 ❌ TS2538
