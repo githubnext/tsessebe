@@ -10,7 +10,6 @@
  * the accessor or better expressed as pure standalone utilities:
  *
  * - `strNormalize`  — Unicode normalization (NFC / NFD / NFKC / NFKD)
- * - `strGetDummies` — split strings by delimiter → one-hot DataFrame
  * - `strExtractAll` — extract ALL regex matches per element
  * - `strRemovePrefix` — remove a leading prefix
  * - `strRemoveSuffix` — remove a trailing suffix
@@ -21,7 +20,7 @@
  * @module
  */
 
-import { DataFrame, Series } from "../core/index.ts";
+import { Series } from "../core/index.ts";
 import type { Scalar } from "../types.ts";
 
 // ─── public types ─────────────────────────────────────────────────────────────
@@ -31,27 +30,6 @@ export type NormalizeForm = "NFC" | "NFD" | "NFKC" | "NFKD";
 
 /** Input accepted by all string-op functions. */
 export type StrInput = Series<Scalar> | readonly Scalar[] | readonly string[] | string;
-
-/** Options for {@link strGetDummies}. */
-export interface StrGetDummiesOptions {
-  /**
-   * The delimiter used to split each element into tokens.
-   * @default "|"
-   */
-  readonly sep?: string;
-
-  /**
-   * Prefix prepended to every column name in the output DataFrame.
-   * @default ""
-   */
-  readonly prefix?: string;
-
-  /**
-   * Separator between the prefix and the token name.
-   * @default "_"
-   */
-  readonly prefixSep?: string;
-}
 
 /** Options for {@link strExtractAll}. */
 export interface ExtractAllOptions {
@@ -136,70 +114,6 @@ export function strNormalize(
   const strs = toStringArray(input);
   const data: Scalar[] = strs.map((s) => s.normalize(form));
   return buildSeries(data, input);
-}
-
-// ─── strGetDummies ────────────────────────────────────────────────────────────
-
-/**
- * Encode each string element as a row in a one-hot DataFrame by splitting on a
- * delimiter.
- *
- * Mirrors `pandas.Series.str.get_dummies(sep)`.
- *
- * @param input   - Series or string array.
- * @param options - `sep` (default `"|"`), `prefix` and `prefixSep` for column names.
- * @returns A `DataFrame` of 0/1 integer values, one column per unique token.
- *
- * @example
- * ```ts
- * const s = new Series({ data: ["a|b", "b|c", "a"] });
- * strGetDummies(s);
- * // DataFrame
- * //    a  b  c
- * // 0  1  1  0
- * // 1  0  1  1
- * // 2  1  0  0
- * ```
- */
-export function strGetDummies(
-  input: readonly string[] | Series<Scalar>,
-  options: StrGetDummiesOptions = {},
-): DataFrame {
-  const sep = options.sep ?? "|";
-  const prefix = options.prefix ?? "";
-  const prefixSep = options.prefixSep ?? "_";
-
-  const strs = toStringArray(input);
-
-  // 1. Collect all unique tokens in first-seen order.
-  const seen = new Set<string>();
-  const tokenRows: string[][] = strs.map((s) => {
-    const tokens = s === "" ? [] : s.split(sep);
-    for (const t of tokens) {
-      seen.add(t);
-    }
-    return tokens;
-  });
-
-  const allTokens = [...seen].sort(); // stable alphabetical order
-
-  // 2. Build column name with optional prefix.
-  const colName = (token: string): string =>
-    prefix === "" ? token : `${prefix}${prefixSep}${token}`;
-
-  // 3. Build one Scalar[] per column.
-  const columns: Record<string, Scalar[]> = {};
-  for (const token of allTokens) {
-    const name = colName(token);
-    columns[name] = tokenRows.map((row) => (row.includes(token) ? 1 : 0));
-  }
-
-  // 4. Preserve the row index from a Series input.
-  if (input instanceof Series) {
-    const rowIndex = input.index;
-    return DataFrame.fromColumns(columns, { index: rowIndex });
-  }
-  return DataFrame.fromColumns(columns);
 }
 
 // ─── strExtractAll ────────────────────────────────────────────────────────────

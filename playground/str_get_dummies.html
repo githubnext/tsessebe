@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — str.get_dummies: multi-label string encoding</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 2rem; }
+      h1 { color: #58a6ff; font-size: 1.8rem; margin-bottom: .5rem; }
+      h2 { color: #79c0ff; font-size: 1.2rem; margin: 2rem 0 .75rem; }
+      p  { color: #8b949e; margin-bottom: 1rem; max-width: 800px; }
+      code { background: #161b22; padding: .1rem .4rem; border-radius: 4px; font-family: monospace; font-size: .9em; color: #a5d6ff; }
+      .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; max-width: 900px; }
+      textarea { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-family: monospace; font-size: .85rem; padding: .75rem; resize: vertical; min-height: 140px; }
+      button { background: #238636; color: #fff; border: none; border-radius: 6px; padding: .5rem 1.25rem; cursor: pointer; font-size: .9rem; margin-top: .75rem; }
+      button:hover { background: #2ea043; }
+      pre { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; margin-top: 0.5rem; color: #7ee787; font-family: monospace; }
+      a { color: #58a6ff; }
+    </style>
+  </head>
+  <body>
+    <h1>str.get_dummies — multi-label string encoding</h1>
+    <p>
+      Port of <code>pandas.Series.str.get_dummies(sep)</code>.  Splits each
+      string by a separator (default <code>"|"</code>) and returns a
+      <code>DataFrame</code> of binary indicator columns — one per unique token,
+      sorted lexicographically.  <code>null</code> / <code>undefined</code> /
+      <code>NaN</code> values produce a row of all zeros.
+    </p>
+    <p><a href="./index.html">← back to index</a></p>
+
+    <div class="card">
+      <h2>Example 1 — basic split on <code>|</code></h2>
+      <textarea id="ex1-code">
+const { Series, strGetDummies } = tsb;
+const s = new Series({ data: ["a|b", "b|c", "a"], name: "tags" });
+const df = strGetDummies(s);
+console.log(JSON.stringify(df.toRecords(), null, 2));
+console.log("columns =", df.columns.values.join(", "));
+</textarea>
+      <button onclick="run('ex1')">Run</button>
+      <pre id="ex1-out">(click Run)</pre>
+    </div>
+
+    <div class="card">
+      <h2>Example 2 — custom separator</h2>
+      <textarea id="ex2-code">
+const { Series, strGetDummies } = tsb;
+const s = new Series({ data: ["red,green", "green,blue", "red"] });
+const df = strGetDummies(s, { sep: "," });
+console.log(JSON.stringify(df.toRecords(), null, 2));
+</textarea>
+      <button onclick="run('ex2')">Run</button>
+      <pre id="ex2-out">(click Run)</pre>
+    </div>
+
+    <div class="card">
+      <h2>Example 3 — null / undefined / NaN → all-zero rows</h2>
+      <textarea id="ex3-code">
+const { Series, strGetDummies } = tsb;
+const s = new Series({ data: ["a|b", null, undefined, NaN, "b"] });
+const df = strGetDummies(s);
+console.log(JSON.stringify(df.toRecords(), null, 2));
+</textarea>
+      <button onclick="run('ex3')">Run</button>
+      <pre id="ex3-out">(click Run)</pre>
+    </div>
+
+    <div class="card">
+      <h2>Example 4 — preserved Series index</h2>
+      <textarea id="ex4-code">
+const { Series, strGetDummies } = tsb;
+const s = new Series({ data: ["python|pandas", "python|numpy", "pandas|numpy|scipy"], index: ["row-1", "row-2", "row-3"] });
+const df = strGetDummies(s);
+console.log("index =", df.index.values.join(", "));
+console.log(JSON.stringify(df.toRecords(), null, 2));
+</textarea>
+      <button onclick="run('ex4')">Run</button>
+      <pre id="ex4-out">(click Run)</pre>
+    </div>
+
+    <script type="module">
+      let tsb;
+      try {
+        tsb = await import("../src/index.ts");
+      } catch {
+        tsb = await import("https://esm.sh/tsb@latest");
+      }
+      window.tsb = tsb;
+
+      window.run = function run(id) {
+        const code = document.getElementById(`${id}-code`).value;
+        const out = document.getElementById(`${id}-out`);
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.map(String).join(" "));
+        try {
+          new Function("tsb", code)(tsb);
+          out.textContent = logs.join("\n") || "(no output)";
+        } catch (e) {
+          out.textContent = "Error: " + e.message;
+        } finally {
+          console.log = origLog;
+        }
+      };
+    </script>
+  </body>
+</html>

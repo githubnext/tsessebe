@@ -386,7 +386,6 @@ export {
 } from "./core/index.ts";
 export {
   strNormalize,
-  strGetDummies,
   strExtractAll,
   strRemovePrefix,
   strRemoveSuffix,
@@ -401,6 +400,8 @@ export {
   strIndent,
   strDedent,
 } from "./stats/index.ts";
+export { strGetDummies } from "./stats/index.ts";
+export type { StrGetDummiesOptions } from "./stats/index.ts";
 export type {
   NormalizeForm,
   StrInput,
