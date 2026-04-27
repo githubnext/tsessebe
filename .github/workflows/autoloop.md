@@ -36,6 +36,7 @@ network:
 
 safe-outputs:
   max-patch-size: 10240
+  max-patch-files: 500
   add-comment:
     max: 7
     target: "*"
