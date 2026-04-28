@@ -1,6 +1,6 @@
 # Autoloop: build-tsb-pandas-typescript-migration
 
-🤖 *This file is maintained by the Autoloop agent.*
+🤖 *This file is maintained by the Autoloop agent. Maintainers may freely edit any section.*
 
 ---
 
@@ -8,10 +8,11 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-27T07:55:00Z |
-| Iteration Count | 292 |
-| Best Metric | 136 |
+| Last Run | 2026-04-28T01:07:00Z |
+| Iteration Count | 293 |
+| Best Metric | 137 |
 | Target Metric | — |
+| Metric Direction | higher |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
 | PR | pending-ci |
 | Issue | #1 |
@@ -20,7 +21,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci, pending-ci |
 
 ---
 
@@ -34,9 +35,8 @@
 
 ## 🎯 Current Priorities
 
-- ✅ Core (iters 1–52), Stats (53–244), various ops (246–292)
-- ✅ Through iter 292: +DataFrame.info()/seriesInfo() added. 136 features on branch.
-- Next: pd.util.hash_pandas_object, DataFrame.bool(), pd.Grouper, more string ops
+- ✅ Core + Stats + IO + Merge + Reshape + Window + GroupBy complete (iters 1–293)
+- ✅ 137 features on branch. Next: DataFrame.bool(), pd.Grouper, pd.api.types extensions, str ops
 
 ---
 
@@ -44,16 +44,14 @@
 
 - **CI type errors**: `Index<Label>.size`. `Series<Scalar>`. Non-null `arr[i]!` for noUncheckedIndexedAccess.
 - **Biome**: `useBlockStatements`. `Number.NaN`. Default import fc. `import type` for unused imports.
-- **Label includes Date**: Fix 8d2e375.
-- **Imports**: `src/stats/*.ts` imports from `../core`, `../types.ts`, or siblings. Tests from `../../src/index.ts`.
+- **Imports**: `src/stats/*.ts` from `../core`, `../types.ts`. Tests from `../../src/index.ts`.
 - **TypeScript**: `as Scalar`/`as number` for noUncheckedIndexedAccess. `df.columns.values`.
 - **MultiIndex**: `mi as unknown as Index<Label>`. `mi.at(i)` returns `readonly Label[]`.
 - **Circular deps**: `string_accessor.ts` cannot import `DataFrame`.
-- **CI action_required**: Means human approval needed, not test failure.
-- **git stash**: Does NOT stash untracked files (untracked files persist through stash).
+- **CI action_required**: Human approval needed, not test failure.
 - **to_html**: Use df.col(col).at(i) for cell values; df.index.at(i) for index labels.
-- **Baseline metric**: Always check `main` baseline. Branch fast-forwarded to main when ahead=0.
-- **info.ts**: Use `df.col(col) as Series<Scalar>` + `series.values as readonly Scalar[]` + `series.dtype.name`. `df.shape[0]` for nRows, `df.shape[1]` for nCols.
+- **Baseline metric**: Always check `main` baseline. Branch fast-forwarded when ahead=0.
+- **hash_pandas_object**: Use `s.iat(i)` + `s.index.at(i)`. Result: `new Series(hashes, { index: s.index, dtype: "float64" })`.
 
 ---
 
@@ -65,32 +63,26 @@
 
 ## 🔭 Future Directions
 
-- `pd.util.hash_pandas_object()` — hash each row/element
-- `DataFrame.bool()` — evaluate DataFrame as boolean
 - `pd.Grouper` class — groupby helper
 - `pd.api.types` extensions — more type predicates
 - More string ops, `str.extractall()` late-binding
+- `pd.util.hash_array()` — hash an array of values
+- `DataFrame.items()` / `Series.items()` — iterate as (label, value) pairs
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 292 — 2026-04-27 07:55 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24982683414)
+### Iteration 293 — 2026-04-28 01:07 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25028166257)
 
 - **Status**: ⏳ pending-ci
-- **Change**: +dataFrameInfo()/seriesInfo() — mirrors pandas.DataFrame.info()
-- **Metric**: 136 (previous best: 135, delta: +1)
-- **Commit**: 3e7c2dc
-- **Notes**: New file src/stats/info.ts. Returns structured DataFrameInfoResult with text, nRows, nCols, columns (name/nonNull/dtype). Includes memoryUsage option and verbose mode.
-
-### Iteration 291 — 2026-04-26 13:25 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/24957618908)
-
-- **Status**: ⏳ pending-ci
-- **Change**: +to_html (dataFrameToHtml/seriesToHtml) + Flags class (dataFrameFlags/seriesFlags)
+- **Change**: +hashPandasObject — FNV-1a 64-bit hash per element/row
 - **Metric**: 137 (previous best: 136, delta: +1)
-- **Commit**: 8955089
-- **Notes**: Two new files: src/stats/to_html.ts and src/core/flags.ts. Main was already at 135; branch brings it to 137. Main had merged previous pending-ci iterations, so baseline was 135.
+- **Commit**: 256f16d
+- **Notes**: src/stats/hash_pandas_object.ts. Hashes Series elements or DataFrame rows via FNV-1a 64-bit. index=false excludes index from hash.
 
-### Iters 273–290 — pending-ci/accepted (130→136): +lreshape, +strCenter/strLjust/strRjust/strZfill/strWrap, +strGetDummies, +swapaxes, +readFwf, +unionCategoricals, +strCat, +asfreq, +atTime/betweenTime, +extractAll, +firstRows/lastRows, +monthName/dayName, +to_html, +itertuples, +dropLevel, +flags.
+### Iters 285–292 — pending-ci/accepted (133→136): +info, +extractAll, +firstRows/lastRows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html.
+
+### Iters 273–284 — pending-ci/accepted (130→133): +lreshape, +strCenter/Ljust/Rjust/Zfill/Wrap, +strGetDummies, +swapaxes, +readFwf, +unionCategoricals.
 
 ### Iters 1–272 — accepted (0→130): full pandas core + stats + io + merge + reshape + window + groupby.
