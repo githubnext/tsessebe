@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-27T19:22:00Z |
-| Iteration Count | 24 |
+| Last Run | 2026-04-28T12:54:00Z |
+| Iteration Count | 25 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -18,6 +18,51 @@
 | Completed Reason | — |
 | Consecutive Errors | 0 |
 | Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci |
+
+## 🧬 Population
+
+### c025 · island 3 · fitness pending CI · gen 25
+
+- **Op**: exploitation; **Cell**: parallel-typed-arrays · non-comparison; **Parent**: c022/main
+- **Approach**: Make `_finBuf`, `_nanBuf`, `_fvals`, `_fvalsU32` module-level grow-on-demand. Eliminates ~1.6MB TypedArray GC per sort call. Commit e51416e.
+- **Status**: ⏳ pending CI
+
+### ~~c022~~ (merged via PR #226 — LSD 8-pass radix, all rx module-level)
+
+### c003 · island 1 · fitness 27.999 · gen 2
+
+- **Cell**: parallel-typed-arrays · comparison; tsb=155.63ms / pandas=5.56ms
+- **Status**: ✅ accepted CI 24843983915
+
+## 📚 Lessons Learned
+
+- LSD radix (8-pass, IEEE-754 transform) eliminates all comparator callbacks; the bottleneck at n=100k.
+- Module-level TypedArray buffers eliminate GC pressure; grow lazily, never shrink.
+- `noUncheckedIndexedAccess`: use `!` on TypedArray[i]. `arr[i]!++` invalid; use `const v=arr[i]!; arr[i]=v+1`.
+- Fast-forward branch to origin/main before committing to prevent phantom commits.
+- Keys indexed by ROW simplifies scatter: `curB[cv] = r`. Even pass count → result in srcIdx after 8 passes.
+
+## 🚧 Foreclosed Avenues
+
+- Island 0 (boxed {v,i}): high GC at n=100k.
+- BigInt64 packed sort: ~5-10x slower.
+
+## 🔭 Future Directions
+
+- 4-pass 16-bit radix (half passes, 64KB histogram, cache effects unknown).
+- Interleaved key layout: [lo0, hi0, lo1, hi1, ...] for better spatial locality.
+- Island 4 (hybrid): Array.prototype.sort for n < 1000, radix for n ≥ 1000.
+
+## 📊 Iteration History
+
+### Iteration 25 — 2026-04-28 12:54 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25053867836)
+
+- **Status**: ⏳ pending CI · **Op**: exploitation · **Island**: 3 · c025
+- **Change**: _finBuf/_nanBuf/_fvals/_fvalsU32 → module-level (was per-call). Commit e51416e.
+- **Metric**: pending CI
+
+### Iters 1–24 — 2026-04-23–28 — c003 ✅ fitness=27.999 (tsb=155.63ms, pandas=5.56ms). c022 ✅ merged PR #226 (LSD 8-pass radix). Others pending-ci or lost to branch resets.
+
 
 ## 🧬 Population
 

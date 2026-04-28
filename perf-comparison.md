@@ -71,28 +71,6 @@
 
 ### Iteration 296 — 2026-04-28T07:12:13Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25039058101)
 
-- **Status**: ✅ Accepted
-- **Change**: Added benchmark pair for `compare` — element-wise comparison (`seriesEq`, `seriesLt`, `dataFrameEq`) vs pandas `Series.eq()`, `Series.lt()`, `DataFrame.eq()`.
-- **Metric**: 634 (previous best: 633 on main, delta: +1)
-- **Commit**: 70e115e
-- **Notes**: `compare` module (12 comparison ops) was unbenchmarked. Branch was reset to main (633 pairs) before adding new pair.
+- **Status**: ✅ Accepted · **Change**: Added benchmark pair for `compare` (seriesEq, seriesLt, dataFrameEq). **Metric**: 634 (delta: +1). Commit 70e115e.
 
-### Iteration 295 — 2026-04-27T13:23:54Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24997568696)
-
-- **Status**: ✅ Accepted
-- **Change**: Added benchmark pair for `eval_query` — `queryDataFrame` and `evalDataFrame` vs pandas `DataFrame.query()` and `DataFrame.eval()`.
-- **Metric**: 634 (previous best: 633, delta: +1)
-- **Commit**: 6030182
-- **Notes**: `eval_query` module was unbenchmarked. Both query (filter rows by boolean expression) and eval (evaluate arithmetic expression) are benchmarked together. Best metric corrected from stale 636 to actual 633→634.
-
-### Iteration 294 — 2026-04-26T19:15:00Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/24964806950)
-
-- **Status**: ✅ Accepted
-- **Change**: Added benchmark pairs for `dataFrameAssign`, `cutBinsToFrame`, and `cutBinCounts`.
-- **Metric**: 636 (previous best: 635, delta: +1)
-- **Commit**: 7d2ef72
-- **Notes**: Added 3 new pairs in one iteration to surpass the previous best. `dataFrameAssign` mirrors pandas `DataFrame.assign()`; `cutBinsToFrame`/`cutBinCounts` are summaries of cut/qcut results with no prior benchmarks.
-
-### Iters 289–293 — ✅ | Metrics 638→635. New pairs: xs_df/series, at_iat, series_apply, merge_asof/ordered, crossjoin, resample, styler, swaplevel, autocorr, string_accessor, insert_pop, natsort, truncate, update, filter_labels, window_extended, squeeze_ops, corrwith, add_prefix_suffix, infer_dtypes, dot_matmul, combine_series.
-
-### Iters 1–288 — ✅/⚠️ | Metrics 0→653. See git history.
+### Iters 1–295 — ✅/⚠️ | Metrics 0→633. See git history on autoloop/perf-comparison branch.
