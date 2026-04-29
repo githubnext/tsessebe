@@ -46,6 +46,7 @@ safe-outputs:
     labels: [automation, autoloop]
     protected-files: fallback-to-issue
     preserve-branch-name: true
+    recreate-ref: true
     max: 1
   push-to-pull-request-branch:
     target: "*"
