@@ -143,6 +143,13 @@ let _rxA_hi: Uint32Array = new Uint32Array(0);
 let _rxB_hi: Uint32Array = new Uint32Array(0);
 /** 256-bucket histogram reused every pass (never reallocated). */
 const _rxCnt: Uint32Array = new Uint32Array(256);
+/** Pre-partition index buffers (grow lazily, never shrink). */
+let _finBuf: Uint32Array = new Uint32Array(0);
+let _nanBuf: Uint32Array = new Uint32Array(0);
+/** Sparse float values buffer; index = original row index (grow lazily). */
+let _fvals: Float64Array = new Float64Array(0);
+/** Uint32 view of _fvals.buffer; updated whenever _fvals is reallocated. */
+let _fvalsU32: Uint32Array = new Uint32Array(0);
 
 // ─── SeriesOptions ────────────────────────────────────────────────────────────
 
@@ -731,9 +738,15 @@ export class Series<T extends Scalar = Scalar> {
 
     // Pre-partition NaN/null/undefined from finite values in one pass.
     // fvals stores numeric values by original row index (sparse: fvals[origIdx]).
-    const finBuf = new Uint32Array(n);
-    const nanBuf = new Uint32Array(n);
-    const fvals = new Float64Array(n);
+    if (_finBuf.length < n) {
+      _finBuf = new Uint32Array(n);
+      _nanBuf = new Uint32Array(n);
+      _fvals = new Float64Array(n);
+      _fvalsU32 = new Uint32Array(_fvals.buffer);
+    }
+    const finBuf = _finBuf;
+    const nanBuf = _nanBuf;
+    const fvals = _fvals;
     let finCount = 0;
     let nanCount = 0;
     let allNumeric = true;
@@ -771,7 +784,7 @@ export class Series<T extends Scalar = Scalar> {
 
       // fvals is a Float64Array; reinterpret its buffer as Uint32 to read raw bits.
       // On little-endian (x86/ARM): u32[2i] = lo 32 bits, u32[2i+1] = hi 32 bits.
-      const fvalsU32 = new Uint32Array(fvals.buffer);
+      const fvalsU32 = _fvalsU32;
 
       // Initialise ping arrays with identity indices and IEEE-754 sort keys.
       // Transform: positive floats → XOR sign bit; negative → XOR all bits.
