@@ -683,3 +683,5 @@ export type {
   GradientOptions,
   BarOptions,
 } from "./stats/index.ts";
+export { hashPandasObject } from "./stats/index.ts";
+export type { HashPandasObjectOptions } from "./stats/index.ts";
