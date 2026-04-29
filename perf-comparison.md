@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-28T07:12:13Z |
-| Iteration Count | 296 |
-| Best Metric | 634 |
+| Last Run | 2026-04-29T07:38:52Z |
+| Iteration Count | 297 |
+| Best Metric | 635 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -68,6 +68,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 297 — 2026-04-29T07:38:52Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25096656047)
+
+- **Status**: ✅ Accepted · **Change**: Added benchmark pairs for `corrwith` (DataFrame.corrwith vs Series) and `autocorr` (lag-1 autocorrelation). **Metric**: 635 (previous best: 634, delta: +1). Commit a7f95b0.
 
 ### Iteration 296 — 2026-04-28T07:12:13Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25039058101)
 
