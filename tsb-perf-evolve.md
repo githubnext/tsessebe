@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-29T13:23:57Z |
-| Iteration Count | 26 |
+| Last Run | 2026-04-29T22:51:44Z |
+| Iteration Count | 27 |
 | Best Metric | 27.999 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -21,11 +21,13 @@
 
 ## 🧬 Population
 
-### c026 · island 3 · fitness pending CI · gen 26
+### c027 · island 3 · fitness pending CI · gen 27
 
 - **Op**: exploitation; **Cell**: parallel-typed-arrays · non-comparison; **Parent**: c022/main
-- **Approach**: Make `_finBuf`, `_nanBuf`, `_fvals`, `_fvalsU32` module-level grow-on-demand. Eliminates 1.6MB TypedArray GC per call (80MB for 50 bench iters). Commit 18b2b79.
+- **Approach**: Make `_finBuf`, `_nanBuf`, `_fvals`, `_fvalsU32` module-level grow-on-demand. Eliminates 1.6MB TypedArray GC per call (80MB for 50 bench iters). Commit 7f42e5a.
 - **Status**: ⏳ pending CI
+
+### ~~c026~~ (lost — branch was reset to main; same idea re-applied as c027)
 
 ### ~~c022~~ (merged via PR #226 — LSD 8-pass radix, all rx module-level)
 
@@ -56,6 +58,12 @@
 - Island 4 (hybrid): Array.prototype.sort for n < 1000, radix for n ≥ 1000.
 
 ## 📊 Iteration History
+
+### Iteration 27 — 2026-04-29 22:51 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25137904374)
+
+- **Status**: ⏳ pending CI · **Op**: exploitation · **Island**: 3 · c027
+- **Change**: _finBuf/_nanBuf/_fvals/_fvalsU32 → module-level grow-on-demand (was per-call). Eliminates 1.6MB TypedArray GC per call. Commit 7f42e5a.
+- **Metric**: pending CI (sandbox has no bun)
 
 ### Iteration 26 — 2026-04-29 13:23 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25111403382)
 
