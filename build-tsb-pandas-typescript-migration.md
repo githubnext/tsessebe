@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-28T01:07:00Z |
-| Iteration Count | 293 |
+| Last Run | 2026-04-29T04:44:00Z |
+| Iteration Count | 294 |
 | Best Metric | 137 |
 | Target Metric | — |
 | Metric Direction | higher |
@@ -21,7 +21,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci, pending-ci, pending-ci |
 
 ---
 
@@ -35,8 +35,8 @@
 
 ## 🎯 Current Priorities
 
-- ✅ Core + Stats + IO + Merge + Reshape + Window + GroupBy complete (iters 1–293)
-- ✅ 137 features on branch. Next: DataFrame.bool(), pd.Grouper, pd.api.types extensions, str ops
+- ✅ Core + Stats + IO + Merge + Reshape + Window + GroupBy complete (iters 1–294)
+- ✅ 137 features on branch. Next: pd.Grouper, pd.api.types extensions, pd.util.hash_array()
 
 ---
 
@@ -73,15 +73,15 @@
 
 ## 📊 Iteration History
 
-### Iteration 293 — 2026-04-28 01:07 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25028166257)
+### Iteration 294 — 2026-04-29 04:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25091308179)
 
 - **Status**: ⏳ pending-ci
 - **Change**: +hashPandasObject — FNV-1a 64-bit hash per element/row
 - **Metric**: 137 (previous best: 136, delta: +1)
-- **Commit**: 256f16d
+- **Commit**: d8a133d
 - **Notes**: src/stats/hash_pandas_object.ts. Hashes Series elements or DataFrame rows via FNV-1a 64-bit. index=false excludes index from hash.
 
-### Iters 285–292 — pending-ci/accepted (133→136): +info, +extractAll, +firstRows/lastRows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html.
+### Iters 285–293 — pending-ci/accepted (133→136): +info, +extractAll, +firstRows/lastRows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html, +hashPandasObject(prev attempt).
 
 ### Iters 273–284 — pending-ci/accepted (130→133): +lreshape, +strCenter/Ljust/Rjust/Zfill/Wrap, +strGetDummies, +swapaxes, +readFwf, +unionCategoricals.
 
