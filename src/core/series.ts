@@ -132,15 +132,14 @@ function pearsonCorrFromArrays(
 
 // ─── LSD radix sort buffers (module-level, grown lazily) ─────────────────────
 
-/** Ping-pong index buffers for the 8-pass LSD radix sort numeric fast path. */
-let _rxA_idx: Uint32Array = new Uint32Array(0);
-let _rxB_idx: Uint32Array = new Uint32Array(0);
-/** Low 32 bits of each element's IEEE-754 sortable key (ping-pong). */
-let _rxA_lo: Uint32Array = new Uint32Array(0);
-let _rxB_lo: Uint32Array = new Uint32Array(0);
-/** High 32 bits of each element's IEEE-754 sortable key (ping-pong). */
-let _rxA_hi: Uint32Array = new Uint32Array(0);
-let _rxB_hi: Uint32Array = new Uint32Array(0);
+/**
+ * AoS ping-pong buffers for the 8-pass LSD radix sort.
+ * Each element occupies 3 consecutive uint32 words: [origRowIdx, loKey, hiKey].
+ * AoS layout ensures all three scatter writes per element hit a single cache line
+ * instead of three separate cache lines (vs the previous SoA layout).
+ */
+let _rxA: Uint32Array = new Uint32Array(0);
+let _rxB: Uint32Array = new Uint32Array(0);
 /** 256-bucket histogram reused every pass (never reallocated). */
 const _rxCnt: Uint32Array = new Uint32Array(256);
 /** Pre-partition index buffers (grow lazily, never shrink). */
@@ -737,20 +736,19 @@ export class Series<T extends Scalar = Scalar> {
     const vals = this._values;
 
     // Grow module-level buffers before the main loop so the partition loop can
-    // directly initialise the radix ping arrays, saving a separate O(n) pass.
+    // directly initialise the radix AoS buffer, saving a separate O(n) pass.
     if (_finBuf.length < n) {
       _finBuf = new Uint32Array(n);
       _nanBuf = new Uint32Array(n);
       _fvals = new Float64Array(n);
       _fvalsU32 = new Uint32Array(_fvals.buffer);
     }
-    if (_rxA_idx.length < n) {
-      _rxA_idx = new Uint32Array(n);
-      _rxB_idx = new Uint32Array(n);
-      _rxA_lo = new Uint32Array(n);
-      _rxB_lo = new Uint32Array(n);
-      _rxA_hi = new Uint32Array(n);
-      _rxB_hi = new Uint32Array(n);
+    // AoS buffers: each element uses 3 uint32 words [origRowIdx, loKey, hiKey].
+    // AoS packs all three fields into one cache line per scatter destination,
+    // reducing random-write cache pressure 3× vs the previous SoA layout.
+    if (_rxA.length < n * 3) {
+      _rxA = new Uint32Array(n * 3);
+      _rxB = new Uint32Array(n * 3);
     }
 
     const finBuf = _finBuf;
@@ -761,7 +759,7 @@ export class Series<T extends Scalar = Scalar> {
     let nanCount = 0;
     let allNumeric = true;
 
-    // Single pass: partition NaN/null and initialise radix keys for finite numerics.
+    // Single pass: partition NaN/null and initialise AoS radix entries for finite numerics.
     // fvals is indexed by compact slot (finCount) so reads and writes are sequential.
     for (let i = 0; i < n; i++) {
       const v = vals[i];
@@ -784,9 +782,10 @@ export class Series<T extends Scalar = Scalar> {
           } else {
             hi = (hi ^ 0x80000000) >>> 0;
           }
-          _rxA_idx[j] = i;
-          _rxA_lo[j] = lo;
-          _rxA_hi[j] = hi;
+          const base = j * 3;
+          _rxA[base] = i;
+          _rxA[base + 1] = lo;
+          _rxA[base + 2] = hi;
         } else {
           allNumeric = false;
         }
@@ -797,26 +796,25 @@ export class Series<T extends Scalar = Scalar> {
     // finSlice is only used by the string fallback path below.
     const finSlice = finBuf.subarray(0, finCount);
 
-    // srcIdx/srcLo/srcHi — used by the numeric path after the sort.
-    let srcIdx = _rxA_idx;
+    // srcBuf — used by the numeric path after the sort; points to the AoS buffer
+    // whose [i*3] entries hold sorted original row indices.
+    let srcBuf = _rxA;
 
     if (allNumeric && finCount > 0) {
       // ── LSD radix sort: 8 passes × 8 bits over IEEE-754 transformed keys ──
-      // rxA arrays are already initialised by the merged loop above.
+      // _rxA is already initialised by the merged loop above.
+      // AoS layout: srcBuf[i*3]=origIdx, srcBuf[i*3+1]=loKey, srcBuf[i*3+2]=hiKey.
 
-      let dstIdx = _rxB_idx;
-      let srcLo = _rxA_lo;
-      let dstLo = _rxB_lo;
-      let srcHi = _rxA_hi;
-      let dstHi = _rxB_hi;
+      let dstBuf = _rxB;
 
       for (let pass = 0; pass < 8; pass++) {
         _rxCnt.fill(0);
-        const useHi = pass >= 4;
+        // keyOff: offset within the AoS triple for the key word this pass reads.
+        // pass 0-3 use lo (offset 1); pass 4-7 use hi (offset 2).
+        const keyOff = pass < 4 ? 1 : 2;
         const shift = (pass % 4) * 8;
         for (let i = 0; i < finCount; i++) {
-          const word = useHi ? srcHi[i]! : srcLo[i]!;
-          const bucket = (word >>> shift) & 0xff;
+          const bucket = (srcBuf[i * 3 + keyOff]! >>> shift) & 0xff;
           const c = _rxCnt[bucket]!;
           _rxCnt[bucket] = c + 1;
         }
@@ -827,25 +825,21 @@ export class Series<T extends Scalar = Scalar> {
           total = total + c;
         }
         for (let i = 0; i < finCount; i++) {
-          const word = useHi ? srcHi[i]! : srcLo[i]!;
-          const bucket = (word >>> shift) & 0xff;
+          const si = i * 3;
+          const bucket = (srcBuf[si + keyOff]! >>> shift) & 0xff;
           const p = _rxCnt[bucket]!;
           _rxCnt[bucket] = p + 1;
-          dstIdx[p] = srcIdx[i]!;
-          dstLo[p] = srcLo[i]!;
-          dstHi[p] = srcHi[i]!;
+          // All three writes land on the same cache line (3 × 4 = 12 bytes).
+          const di = p * 3;
+          dstBuf[di] = srcBuf[si]!;
+          dstBuf[di + 1] = srcBuf[si + 1]!;
+          dstBuf[di + 2] = srcBuf[si + 2]!;
         }
-        const ti = srcIdx;
-        srcIdx = dstIdx;
-        dstIdx = ti;
-        const tl = srcLo;
-        srcLo = dstLo;
-        dstLo = tl;
-        const th = srcHi;
-        srcHi = dstHi;
-        dstHi = th;
+        const t = srcBuf;
+        srcBuf = dstBuf;
+        dstBuf = t;
       }
-      // After 8 passes (even), srcIdx holds ascending sorted original indices.
+      // After 8 passes (even), srcBuf[i*3] holds ascending sorted original indices.
     } else if (!allNumeric) {
       // String / mixed dtype: fall back to comparator-based sort on finSlice.
       if (ascending) {
@@ -865,7 +859,7 @@ export class Series<T extends Scalar = Scalar> {
     // else: allNumeric && finCount === 0 — nothing to sort.
 
     // Build the output permutation and gather values.
-    // For the numeric path, read sorted row indices directly from srcIdx (no
+    // For the numeric path, read sorted row indices directly from srcBuf[i*3] (no
     // intermediate copy to finSlice), saving one O(finCount) loop.
     const perm = new Array<number>(n);
     const outData = new Array<T>(n);
@@ -880,14 +874,14 @@ export class Series<T extends Scalar = Scalar> {
       if (allNumeric) {
         if (ascending) {
           for (let i = 0; i < finCount; i++) {
-            const idx = srcIdx[i]!;
+            const idx = srcBuf[i * 3]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
           }
         } else {
           for (let i = finCount - 1; i >= 0; i--) {
-            const idx = srcIdx[i]!;
+            const idx = srcBuf[i * 3]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
@@ -905,14 +899,14 @@ export class Series<T extends Scalar = Scalar> {
       if (allNumeric) {
         if (ascending) {
           for (let i = 0; i < finCount; i++) {
-            const idx = srcIdx[i]!;
+            const idx = srcBuf[i * 3]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
           }
         } else {
           for (let i = finCount - 1; i >= 0; i--) {
-            const idx = srcIdx[i]!;
+            const idx = srcBuf[i * 3]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
