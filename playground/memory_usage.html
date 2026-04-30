@@ -167,8 +167,8 @@
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 3, 4], dtype: Dtype.int32 });
 // int32 → 4 bytes/element × 4 = 16 bytes of data
 // RangeIndex → 3 × 8 = 24 bytes (only start/stop/step stored)
-seriesMemoryUsage(s);             // 40  (data + index)
-seriesMemoryUsage(s, { index: false }); // 16 (data only)</textarea>
+console.log(seriesMemoryUsage(s));             // 40  (data + index)
+console.log(seriesMemoryUsage(s, { index: false })); // 16 (data only)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -186,9 +186,9 @@ seriesMemoryUsage(s, { index: false }); // 16 (data only)</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: ["hello", "world", "tsb"], dtype: Dtype.string });
 // shallow: 3 × 8 bytes (one pointer per element)
-seriesMemoryUsage(s, { index: false });           // 24
+console.log(seriesMemoryUsage(s, { index: false }));           // 24
 // deep: actual char data — each string = length*2 + 56 bytes overhead
-seriesMemoryUsage(s, { index: false, deep: true }); // "hello"=66, "world"=66, "tsb"=62 → 194</textarea>
+console.log(seriesMemoryUsage(s, { index: false, deep: true })); // "hello"=66, "world"=66, "tsb"=62 → 194</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -214,7 +214,8 @@ const mu = dataFrameMemoryUsage(df);
 // Index (RangeIndex) → 24 bytes
 // id    (int32 × 3)  → 12 bytes
 // score (float64 × 3)→ 24 bytes
-// name  (string × 3, shallow) → 24 bytes</textarea>
+// name  (string × 3, shallow) → 24 bytes
+console.log(mu);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -235,7 +236,8 @@ const mu = dataFrameMemoryUsage(df);
 });
 dataFrameMemoryUsage(df, { deep: true, index: false })
 // "short"                  → 5*2+56 = 66
-// "a slightly longer string" → 24*2+56 = 104</textarea>
+// "a slightly longer string" → 24*2+56 = 104
+console.log(df);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -256,7 +258,7 @@ dataFrameMemoryUsage(df, { deep: true, index: false })
   b: new Series({ data: Array.from({length: 1000}, (_,i) =&gt; i * 0.1), dtype: Dtype.float64 }),
 });
 const mu = dataFrameMemoryUsage(df, { index: false });
-mu.sum(); // 1000*8 + 1000*8 = 16000 bytes</textarea>
+console.log(mu.sum()); // 1000*8 + 1000*8 = 16000 bytes</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

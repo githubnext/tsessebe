@@ -175,7 +175,7 @@ const salaries = DataFrame.fromColumns(
   { index: ["alice", "charlie"] },
 );
 
-join(employees, salaries);
+console.log(join(employees, salaries));
 // dept          salary
 // alice    Engineering  90000
 // bob      Marketing    null    ← no salary for bob
@@ -195,13 +195,13 @@ join(employees, salaries);
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">join(employees, salaries, { how: "inner" });
+      <textarea class="playground-editor" spellcheck="false">console.log(join(employees, salaries, { how: "inner" }));
 // Only alice and charlie (keys in BOTH DataFrames)
 
-join(employees, salaries, { how: "outer" });
+console.log(join(employees, salaries, { how: "outer" }));
 // All keys from either DataFrame (nulls where absent)
 
-join(employees, salaries, { how: "right" });
+console.log(join(employees, salaries, { how: "right" }));
 // All keys from salaries: alice and charlie</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -224,7 +224,7 @@ const b = DataFrame.fromColumns({ score: [15, 25] }, { index: ["x", "y"] });
 // This would throw — 'score' exists in both without suffix disambiguation:
 // join(a, b);
 
-join(a, b, { lsuffix: "_a", rsuffix: "_b" });
+console.log(join(a, b, { lsuffix: "_a", rsuffix: "_b" }));
 // score_a  score_b
 // x  10    15
 // y  20    25</textarea>
@@ -253,7 +253,7 @@ const customers = DataFrame.fromColumns(
 );
 
 // Join orders.customerId against customers index
-join(orders, customers, { on: "customerId", how: "left" });
+console.log(join(orders, customers, { on: "customerId", how: "left" }));
 // customerId  amount  name
 // C1          100     Alice
 // C2          200     Bob
@@ -279,7 +279,7 @@ const base = DataFrame.fromColumns({ A: [1,2,3] }, { index: ["K0","K1","K2"] });
 const b1   = DataFrame.fromColumns({ B: [10,20,30] }, { index: ["K0","K1","K2"] });
 const b2   = DataFrame.fromColumns({ C: [100,200,300] }, { index: ["K0","K1","K2"] });
 
-joinAll(base, [b1, b2]);
+console.log(joinAll(base, [b1, b2]));
 // A  B   C
 // 1  10  100
 // 2  20  200
@@ -304,7 +304,7 @@ joinAll(base, [b1, b2]);
 const colors = DataFrame.fromColumns({ color: ["red", "blue"] });
 const sizes  = DataFrame.fromColumns({ size:  ["S", "M", "L"] });
 
-crossJoin(colors, sizes);
+console.log(crossJoin(colors, sizes));
 // color  size
 // red    S
 // red    M

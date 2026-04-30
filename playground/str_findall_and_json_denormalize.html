@@ -183,8 +183,8 @@ const allPrices = strFindall(prices, /\$[\d.]+/);
 // ]
 
 // Parse the JSON to get actual arrays:
-JSON.parse(allPrices.values[0]); // ["$10.99", "$5.00"]
-JSON.parse(allPrices.values[1]); // []</textarea>
+console.log(JSON.parse(allPrices.values[0])); // ["$10.99", "$5.00"]
+console.log(JSON.parse(allPrices.values[1])); // []</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -205,7 +205,8 @@ const s = new Series({ data: ['name: Alice', 'name: Bob', 'unknown'] });
 const names = strFindall(s, /name: (\w+)/);
 // Series ['["Alice"]', '["Bob"]', '[]']
 
-// First capture group is extracted (pandas behaviour)</textarea>
+// First capture group is extracted (pandas behaviour)
+console.log(names);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -224,7 +225,8 @@ const names = strFindall(s, /name: (\w+)/);
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: ['hello', null, NaN, 'world'] });
 const result = strFindall(s, /\w+/);
 // Series ['["hello"]', null, null, '["world"]']
-// Null/NaN elements return null (not []) — matches pandas</textarea>
+// Null/NaN elements return null (not []) — matches pandas
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -248,7 +250,7 @@ const counts = strFindallCount(words, /\b\w+\b/);
 
 // Count vowels per word
 const vowels = new Series({ data: ['beautiful', 'rhythm', 'aeiou'] });
-strFindallCount(vowels, /[aeiou]/i);
+console.log(strFindallCount(vowels, /[aeiou]/i));
 // Series [5, 0, 5]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -278,7 +280,8 @@ const dates = strFindFirst(logs, /\d{4}-\d{2}-\d{2}/);
 
 // Extract just the year (first capture group)
 const years = strFindFirst(logs, /(\d{4})-\d{2}-\d{2}/);
-// Series ['2024', '2024', null]</textarea>
+// Series ['2024', '2024', null]
+console.log(years);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -311,7 +314,8 @@ const df2 = strFindallExpand(people, /(\w+)\s+(\d+)/);
 //    0     1
 // 0  John  30
 // 1  Jane  25
-// 2  null  null</textarea>
+// 2  null  null
+console.log(df2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -354,7 +358,8 @@ const original = [
 ];
 const df = jsonNormalize(original);
 const recovered = toJsonDenormalize(df);
-// recovered ≈ original (with the same structure)</textarea>
+// recovered ≈ original (with the same structure)
+console.log(recovered);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -375,7 +380,7 @@ const df2 = DataFrame.fromColumns({
   'user__name': ['Alice'],
   'user__city': ['NYC'],
 });
-toJsonDenormalize(df2, { sep: '__' });
+console.log(toJsonDenormalize(df2, { sep: '__' }));
 // [{ user: { name: 'Alice', city: 'NYC' } }]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -393,7 +398,7 @@ toJsonDenormalize(df2, { sep: '__' });
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const df3 = DataFrame.fromColumns({ a: [1, null], b: [null, 2] });
-toJsonDenormalize(df3, { dropNull: true });
+console.log(toJsonDenormalize(df3, { dropNull: true }));
 // [{ a: 1 }, { b: 2 }]  ← null fields are omitted</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -412,7 +417,7 @@ toJsonDenormalize(df3, { dropNull: true });
       </div>
       <textarea class="playground-editor" spellcheck="false">import { toJsonRecords } from 'tsb';
 const df = DataFrame.fromColumns({ a: [1, 2], b: ['x', 'y'] });
-toJsonRecords(df);
+console.log(toJsonRecords(df));
 // [{ a: 1, b: 'x' }, { a: 2, b: 'y' }]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -430,10 +435,10 @@ toJsonRecords(df);
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { toJsonSplit } from 'tsb';
-toJsonSplit(df);
+console.log(toJsonSplit(df));
 // { columns: ['a', 'b'], index: [0, 1], data: [[1, 'x'], [2, 'y']] }
 
-toJsonSplit(df, { includeIndex: false });
+console.log(toJsonSplit(df, { includeIndex: false }));
 // { columns: ['a', 'b'], data: [[1, 'x'], [2, 'y']] }</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -451,7 +456,7 @@ toJsonSplit(df, { includeIndex: false });
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { toJsonIndex } from 'tsb';
-toJsonIndex(df);
+console.log(toJsonIndex(df));
 // { '0': { a: 1, b: 'x' }, '1': { a: 2, b: 'y' } }
 
 // With custom string index
@@ -459,7 +464,7 @@ const df2 = DataFrame.fromColumns(
   { v: [10, 20] },
   { index: ['alice', 'bob'] }
 );
-toJsonIndex(df2);
+console.log(toJsonIndex(df2));
 // { alice: { v: 10 }, bob: { v: 20 } }</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

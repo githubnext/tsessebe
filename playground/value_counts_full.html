@@ -193,7 +193,8 @@ import { Series, valueCountsBinned } from "tsb";
 const s = new Series({ data: [1, 2, 3, 4, 5] });
 const vc = valueCountsBinned(s, 2);
 // Index: ["(0.995, 3.0]", "(3.0, 5.005]"]
-// Values: [3, 2]  ← sorted by count (default)</textarea>
+// Values: [3, 2]  ← sorted by count (default)
+console.log(vc);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -212,7 +213,8 @@ const vc = valueCountsBinned(s, 2);
       <textarea class="playground-editor" spellcheck="false">
 const vc2 = valueCountsBinned(s, 2, { sort: false });
 // Index: ["(0.995, 3.0]", "(3.0, 5.005]"]
-// Values: [3, 2]  ← in interval order</textarea>
+// Values: [3, 2]  ← in interval order
+console.log(vc2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -231,7 +233,8 @@ const vc2 = valueCountsBinned(s, 2, { sort: false });
       <textarea class="playground-editor" spellcheck="false">
 const vc3 = valueCountsBinned(s, 2, { normalize: true });
 // Index: ["(0.995, 3.0]", "(3.0, 5.005]"]
-// Values: [0.6, 0.4]</textarea>
+// Values: [0.6, 0.4]
+console.log(vc3);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -250,7 +253,8 @@ const vc3 = valueCountsBinned(s, 2, { normalize: true });
       <textarea class="playground-editor" spellcheck="false">
 const s2 = new Series({ data: [1, null, 2, NaN, 3, 4, 5] });
 const vc4 = valueCountsBinned(s2, 2);
-// NaN and null values are excluded.  Total = 5.</textarea>
+// NaN and null values are excluded.  Total = 5.
+console.log(vc4);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

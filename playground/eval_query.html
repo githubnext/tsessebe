@@ -186,26 +186,26 @@
 });
 
 // Simple comparison
-queryDataFrame(df, "age &gt; 28");
+console.log(queryDataFrame(df, "age &gt; 28"));
 // name: ["Bob", "Dave"]  age: [32, 45]  score: [72, 60]
 
 // Combined conditions
-queryDataFrame(df, "age &lt; 35 and score &gt;= 85");
+console.log(queryDataFrame(df, "age &lt; 35 and score &gt;= 85"));
 // name: ["Alice", "Carol"]
 
 // String equality
-queryDataFrame(df, "name == 'Alice'");
+console.log(queryDataFrame(df, "name == 'Alice'"));
 // single row
 
 // 'in' operator
-queryDataFrame(df, "name in ['Alice', 'Carol']");
+console.log(queryDataFrame(df, "name in ['Alice', 'Carol']"));
 
 // 'not in' operator
-queryDataFrame(df, "age not in [25, 45]");
+console.log(queryDataFrame(df, "age not in [25, 45]"));
 
 // Backtick-quoted column (for names with spaces)
 const df2 = DataFrame.fromArrays({ "first name": ["Alice", "Bob"] });
-queryDataFrame(df2, "`first name` == 'Alice'");</textarea>
+console.log(queryDataFrame(df2, "`first name` == 'Alice'"));</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -228,20 +228,20 @@ queryDataFrame(df2, "`first name` == 'Alice'");</textarea>
 });
 
 // Arithmetic expression → new Series
-evalDataFrame(sales, "price * qty");
+console.log(evalDataFrame(sales, "price * qty"));
 // Series [1000, 1250, 1000, 400]
 
 // Boolean expression (useful as a mask)
-evalDataFrame(sales, "price &gt; 10");
+console.log(evalDataFrame(sales, "price &gt; 10"));
 // Series [false, true, false, true]
 
 // Function calls
-evalDataFrame(sales, "round(price * qty / 100, 1)");
+console.log(evalDataFrame(sales, "round(price * qty / 100, 1)"));
 // Series [10.0, 12.5, 10.0, 4.0]
 
 // String operations
 const df3 = DataFrame.fromArrays({ tag: ["Foo", "Bar", "Baz"] });
-evalDataFrame(df3, "lower(tag)");
+console.log(evalDataFrame(df3, "lower(tag)"));
 // Series ["foo", "bar", "baz"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

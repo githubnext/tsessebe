@@ -177,37 +177,37 @@
 const s = new Series({ data: [1, 2, 3], index: ["a", "b", "c"] });
 
 // Record mapping — only matched labels are changed
-renameSeriesIndex(s, { a: "x", c: "z" }).index.values;  // ["x", "b", "z"]
+console.log(renameSeriesIndex(s, { a: "x", c: "z" }).index.values);  // ["x", "b", "z"]
 
 // Function mapper — called for every index label
-renameSeriesIndex(s, l =&gt; l.toUpperCase()).index.values; // ["A", "B", "C"]
+console.log(renameSeriesIndex(s, l =&gt; l.toUpperCase()).index.values); // ["A", "B", "C"]
 
 // ── renameDataFrame ──────────────────────────────────────────────────────────
 const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] },
                                   { index: ["r0", "r1"] });
 
 // Rename columns
-renameDataFrame(df, { columns: { a: "x", b: "y" } }).columns.values; // ["x","y"]
+console.log(renameDataFrame(df, { columns: { a: "x", b: "y" } }).columns.values); // ["x","y"]
 
 // Rename row index
-renameDataFrame(df, { index: { r0: "row0", r1: "row1" } }).index.values;
+console.log(renameDataFrame(df, { index: { r0: "row0", r1: "row1" } }).index.values);
 
 // ── add_prefix / add_suffix ──────────────────────────────────────────────────
-addPrefixDataFrame(df, "col_").columns.values;         // ["col_a","col_b"]
-addSuffixDataFrame(df, "_v1").columns.values;          // ["a_v1","b_v1"]
+console.log(addPrefixDataFrame(df, "col_").columns.values);         // ["col_a","col_b"]
+console.log(addSuffixDataFrame(df, "_v1").columns.values);          // ["a_v1","b_v1"]
 
-addPrefixSeries(s, "idx_").index.values;               // ["idx_a","idx_b","idx_c"]
-addSuffixSeries(s, "_end").index.values;               // ["a_end","b_end","c_end"]
+console.log(addPrefixSeries(s, "idx_").index.values);               // ["idx_a","idx_b","idx_c"]
+console.log(addSuffixSeries(s, "_end").index.values);               // ["a_end","b_end","c_end"]
 
 // ── set_axis ─────────────────────────────────────────────────────────────────
-setAxisSeries(s, ["x", "y", "z"]).index.values;         // ["x","y","z"]
-setAxisDataFrame(df, ["col1","col2"], 1).columns.values; // ["col1","col2"]
-setAxisDataFrame(df, ["rowA","rowB"], 0).index.values;   // ["rowA","rowB"]
+console.log(setAxisSeries(s, ["x", "y", "z"]).index.values);         // ["x","y","z"]
+console.log(setAxisDataFrame(df, ["col1","col2"], 1).columns.values); // ["col1","col2"]
+console.log(setAxisDataFrame(df, ["rowA","rowB"], 0).index.values);   // ["rowA","rowB"]
 
 // ── to_frame ─────────────────────────────────────────────────────────────────
 const score = new Series({ data: [90, 80, 70], name: "score" });
-seriesToFrame(score).columns.values;          // ["score"]
-seriesToFrame(score, "points").columns.values; // ["points"]</textarea>
+console.log(seriesToFrame(score).columns.values);          // ["score"]
+console.log(seriesToFrame(score, "points").columns.values); // ["points"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

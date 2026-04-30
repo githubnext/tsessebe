@@ -163,18 +163,18 @@
       </div>
       <textarea class="playground-editor" spellcheck="false">import { isna, notna } from "tsb";
 
-isna(null);       // true
-isna(undefined);  // true
-isna(NaN);        // true
+console.log(isna(null));       // true
+console.log(isna(undefined));  // true
+console.log(isna(NaN));        // true
 
-isna(0);          // false  — zero is not missing
-isna("");         // false  — empty string is not missing
-isna(false);      // false  — false is not missing
-isna(42);         // false
-isna("hello");    // false
+console.log(isna(0));          // false  — zero is not missing
+console.log(isna(""));         // false  — empty string is not missing
+console.log(isna(false));      // false  — false is not missing
+console.log(isna(42));         // false
+console.log(isna("hello"));    // false
 
-notna(null);      // false
-notna(42);        // true</textarea>
+console.log(notna(null));      // false
+console.log(notna(42));        // true</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -193,10 +193,10 @@ notna(42);        // true</textarea>
       <textarea class="playground-editor" spellcheck="false">import { isna, notna } from "tsb";
 
 const arr = [1, null, NaN, "x", undefined, false];
-isna(arr);
+console.log(isna(arr));
 // [false, true, true, false, true, false]
 
-notna(arr);
+console.log(notna(arr));
 // [true, false, false, true, false, true]
 
 // Count missing values
@@ -220,10 +220,10 @@ const missing = isna(arr).filter(Boolean).length;  // 3</textarea>
 
 const s = new Series({ data: [10, null, NaN, 40], name: "sales" });
 
-isna(s).values;
+console.log(isna(s).values);
 // [false, true, true, false]
 
-notna(s).values;
+console.log(notna(s).values);
 // [true, false, false, true]
 
 // Filter to non-missing values
@@ -251,7 +251,7 @@ const df = DataFrame.fromColumns({
   active: [true,    false,   null   ],
 });
 
-isna(df).toRecords();
+console.log(isna(df).toRecords());
 // [
 //   { name: false, score: false, active: false },
 //   { name: true,  score: true,  active: false },
@@ -284,8 +284,8 @@ for (const col of df.columns) {
 
 // isnull is an alias for isna
 // notnull is an alias for notna
-isnull(null);     // true
-notnull("hello"); // true</textarea>
+console.log(isnull(null));     // true
+console.log(notnull("hello")); // true</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

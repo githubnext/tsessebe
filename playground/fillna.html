@@ -167,11 +167,11 @@
       <textarea class="playground-editor" spellcheck="false">import { Series, fillnaSeries } from "tsb";
 
 const s = new Series({ data: [1, null, null, 4] });
-fillnaSeries(s, { value: 0 }).values;
+console.log(fillnaSeries(s, { value: 0 }).values);
 // → [1, 0, 0, 4]
 
 const t = new Series({ data: [NaN, 2, NaN] });
-fillnaSeries(t, { value: 99 }).values;
+console.log(fillnaSeries(t, { value: 99 }).values);
 // → [99, 2, 99]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -194,12 +194,12 @@ fillnaSeries(t, { value: 99 }).values;
       <textarea class="playground-editor" spellcheck="false">import { Series, fillnaSeries } from "tsb";
 
 const s = new Series({ data: [null, 1, null, null, 4] });
-fillnaSeries(s, { method: "ffill" }).values;
+console.log(fillnaSeries(s, { method: "ffill" }).values);
 // → [null, 1, 1, 1, 4]
 
 // Trailing nulls are filled too
 const t = new Series({ data: [1, null, null] });
-fillnaSeries(t, { method: "ffill" }).values;
+console.log(fillnaSeries(t, { method: "ffill" }).values);
 // → [1, 1, 1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -222,12 +222,12 @@ fillnaSeries(t, { method: "ffill" }).values;
       <textarea class="playground-editor" spellcheck="false">import { Series, fillnaSeries } from "tsb";
 
 const s = new Series({ data: [null, null, 3, null, 5] });
-fillnaSeries(s, { method: "bfill" }).values;
+console.log(fillnaSeries(s, { method: "bfill" }).values);
 // → [3, 3, 3, 5, 5]
 
 // Leading nulls are filled from the first known value
 const t = new Series({ data: [null, null, 10] });
-fillnaSeries(t, { method: "bfill" }).values;
+console.log(fillnaSeries(t, { method: "bfill" }).values);
 // → [10, 10, 10]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -250,11 +250,11 @@ fillnaSeries(t, { method: "bfill" }).values;
 
 // Only fill up to 1 consecutive missing value
 const s = new Series({ data: [1, null, null, null, 5] });
-fillnaSeries(s, { method: "ffill", limit: 1 }).values;
+console.log(fillnaSeries(s, { method: "ffill", limit: 1 }).values);
 // → [1, 1, null, null, 5]
 
 // bfill with limit=2
-fillnaSeries(s, { method: "bfill", limit: 2 }).values;
+console.log(fillnaSeries(s, { method: "bfill", limit: 2 }).values);
 // → [null, null, 5, 5, 5]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -281,8 +281,8 @@ const df = DataFrame.fromColumns({
 });
 
 const result = fillnaDataFrame(df, { value: 0 });
-result.col("a").values; // [1, 0, 3]
-result.col("b").values; // [0, 2, 0]</textarea>
+console.log(result.col("a").values); // [1, 0, 3]
+console.log(result.col("b").values); // [0, 2, 0]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -309,9 +309,9 @@ const df = DataFrame.fromColumns({
 });
 
 const result = fillnaDataFrame(df, { value: { a: -1, b: 99 } });
-result.col("a").values; // [-1, 2, -1]
-result.col("b").values; // [1, 99, 3]
-result.col("c").values; // [null, null, null]  ← untouched</textarea>
+console.log(result.col("a").values); // [-1, 2, -1]
+console.log(result.col("b").values); // [1, 99, 3]
+console.log(result.col("c").values); // [null, null, null]  ← untouched</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -340,9 +340,9 @@ const df = DataFrame.fromColumns({
 
 // axis=0 (default): ffill down each column
 const byCol = fillnaDataFrame(df, { method: "ffill" });
-byCol.col("a").values; // [1, 1, 1]
-byCol.col("b").values; // [null, 2, 2]
-byCol.col("c").values; // [null, null, 3]
+console.log(byCol.col("a").values); // [1, 1, 1]
+console.log(byCol.col("b").values); // [null, 2, 2]
+console.log(byCol.col("c").values); // [null, null, 3]
 
 // axis=1: bfill across each row
 const byRow = fillnaDataFrame(df, { method: "bfill", axis: 1 });
@@ -381,8 +381,8 @@ const fills = new Series({
 });
 
 const result = fillnaDataFrame(df, { value: fills });
-result.col("price").values;  // [10, 0, 30]
-result.col("volume").values; // [0, 200, 0]</textarea>
+console.log(result.col("price").values);  // [10, 0, 30]
+console.log(result.col("volume").values); // [0, 200, 0]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

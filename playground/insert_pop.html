@@ -175,7 +175,8 @@ const df2 = insertColumn(df, 1, "city", ["NY", "LA", "SF"]);
 // df2.col("city").values → ["NY", "LA", "SF"]
 
 // Original is unchanged
-// df.columns.values → ["name", "age"]</textarea>
+// df.columns.values → ["name", "age"]
+console.log(df2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -197,7 +198,8 @@ const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
 const salary = new Series({ data: [100_000, 90_000, 120_000], name: "salary" });
 
 const df2 = insertColumn(df, 0, "salary", salary);
-// df2.columns.values → ["salary", "a", "b"]</textarea>
+// df2.columns.values → ["salary", "a", "b"]
+console.log(df2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -225,7 +227,8 @@ const df = DataFrame.fromColumns({
 const { series: ageSeries, df: df2 } = popColumn(df, "age");
 // ageSeries.values       → [30, 25, 35]
 // df2.columns.values     → ["id", "name"]
-// df.columns.values      → ["id", "name", "age"]  ← original unchanged</textarea>
+// df.columns.values      → ["id", "name", "age"]  ← original unchanged
+console.log(df);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -251,7 +254,8 @@ const df2 = reorderColumns(df, ["d", "c", "b", "a"]);
 
 // Select a subset (drops columns not listed)
 const df3 = reorderColumns(df, ["a", "c"]);
-// df3.columns.values → ["a", "c"]   (b and d are dropped)</textarea>
+// df3.columns.values → ["a", "c"]   (b and d are dropped)
+console.log(df3);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -278,7 +282,8 @@ const df = DataFrame.fromColumns({
 
 // Move "label" to the front
 const df2 = moveColumn(df, "label", 0);
-// df2.columns.values → ["label", "year", "value"]</textarea>
+// df2.columns.values → ["label", "year", "value"]
+console.log(df2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -295,19 +300,19 @@ const df2 = moveColumn(df, "label", 0);
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">// Duplicate column name (default: not allowed)
-insertColumn(df, 1, "a", [1, 2, 3]);
+console.log(insertColumn(df, 1, "a", [1, 2, 3]));
 // → RangeError: Column "a" already exists. Use allowDuplicates=true to permit...
 
 // Out-of-range loc
-insertColumn(df, 99, "x", [1, 2, 3]);
+console.log(insertColumn(df, 99, "x", [1, 2, 3]));
 // → RangeError: loc=99 is out of range [0, 2].
 
 // Wrong number of values
-insertColumn(df, 0, "x", [1]);  // df has 3 rows
+console.log(insertColumn(df, 0, "x", [1]));  // df has 3 rows
 // → RangeError: values length 1 does not match DataFrame row count 3.
 
 // Column not found
-popColumn(df, "missing");
+console.log(popColumn(df, "missing"));
 // → RangeError: Column "missing" not found in DataFrame.</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

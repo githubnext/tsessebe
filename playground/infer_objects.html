@@ -166,19 +166,19 @@
 
 // Object series holding integers
 const s = new Series({ data: [1, 2, 3], dtype: Dtype.object });
-s.dtype.kind;  // "object"
+console.log(s.dtype.kind);  // "object"
 
 const better = inferObjectsSeries(s);
-better.dtype.kind; // "int"
-better.values;     // [1, 2, 3]
+console.log(better.dtype.kind); // "int"
+console.log(better.values);     // [1, 2, 3]
 
 // Mixed types — cannot infer, returns original
 const mixed = new Series({ data: [1, "a", true], dtype: Dtype.object });
-inferObjectsSeries(mixed).dtype.kind; // "object"
+console.log(inferObjectsSeries(mixed).dtype.kind); // "object"
 
 // All null — no inference possible
 const nulls = new Series({ data: [null, null], dtype: Dtype.object });
-inferObjectsSeries(nulls).dtype.kind; // "object"</textarea>
+console.log(inferObjectsSeries(nulls).dtype.kind); // "object"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -204,10 +204,10 @@ const df = DataFrame.fromColumns({
 });
 
 const inferred = inferObjectsDataFrame(df);
-inferred.col("ints").dtype.kind;   // "int"
-inferred.col("floats").dtype.kind; // "float"
-inferred.col("strs").dtype.kind;   // "string"
-inferred.col("bools").dtype.kind;  // "bool"</textarea>
+console.log(inferred.col("ints").dtype.kind);   // "int"
+console.log(inferred.col("floats").dtype.kind); // "float"
+console.log(inferred.col("strs").dtype.kind);   // "string"
+console.log(inferred.col("bools").dtype.kind);  // "bool"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -228,21 +228,21 @@ inferred.col("bools").dtype.kind;  // "bool"</textarea>
 // String values that look like integers
 const ints = new Series({ data: ["1", "2", "3"] });
 const result = convertDtypesSeries(ints);
-result.dtype.kind; // "int"
-result.values;     // [1, 2, 3]
+console.log(result.dtype.kind); // "int"
+console.log(result.values);     // [1, 2, 3]
 
 // String values that look like floats
 const floats = new Series({ data: ["1.5", "2.5", "3.5"] });
-convertDtypesSeries(floats).dtype.kind; // "float"
+console.log(convertDtypesSeries(floats).dtype.kind); // "float"
 
 // Non-numeric strings: unchanged
 const text = new Series({ data: ["apple", "banana"] });
-convertDtypesSeries(text);  // same Series, dtype "string"
+console.log(convertDtypesSeries(text));  // same Series, dtype "string"
 
 // Int series with nulls → can convert to float for NA safety
 import { Dtype } from "tsb";
 const withNull = new Series({ data: [1, null, 3], dtype: Dtype.int64 });
-convertDtypesSeries(withNull, { convertIntegerToFloat: true }).dtype.kind;
+console.log(convertDtypesSeries(withNull, { convertIntegerToFloat: true }).dtype.kind);
 // "float"  (null becomes NaN-compatible)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -269,9 +269,9 @@ const raw = DataFrame.fromColumns({
 });
 
 const typed = convertDtypesDataFrame(raw);
-typed.col("age").dtype.kind;   // "int"
-typed.col("score").dtype.kind; // "float"
-typed.col("name").dtype.kind;  // "string" (unchanged — not numeric)</textarea>
+console.log(typed.col("age").dtype.kind);   // "int"
+console.log(typed.col("score").dtype.kind); // "float"
+console.log(typed.col("name").dtype.kind);  // "string" (unchanged — not numeric)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

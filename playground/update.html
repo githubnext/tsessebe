@@ -191,7 +191,7 @@ print(s.tolist())
 
 const s = new Series({ data: [1, null, 3], index: [0, 1, 2] });
 const other = new Series({ data: [null, 20, null], index: [0, 1, 2] });
-seriesUpdate(s, other).values;
+console.log(seriesUpdate(s, other).values);
 // [1, 20, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -237,7 +237,7 @@ print(s.tolist())
 
 const s = new Series({ data: [1, null, 3] });
 const other = new Series({ data: [10, 20, 30] });
-seriesUpdate(s, other, { overwrite: false }).values;
+console.log(seriesUpdate(s, other, { overwrite: false }).values);
 // [1, 20, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -287,8 +287,8 @@ print(df)
 const df = DataFrame.fromColumns({ a: [1, null, 3], b: [10, 20, 30] });
 const other = DataFrame.fromColumns({ a: [null, 99, null] });
 const result = dataFrameUpdate(df, other);
-result.col("a").values; // [1, 99, 3]
-result.col("b").values; // [10, 20, 30]</textarea>
+console.log(result.col("a").values); // [1, 99, 3]
+console.log(result.col("b").values); // [10, 20, 30]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -310,7 +310,7 @@ result.col("b").values; // [10, 20, 30]</textarea>
 const s = new Series({ data: [1, 2, 3], index: [0, 1, 2] });
 // other only has label 1 — other labels unchanged
 const other = new Series({ data: [99], index: [1] });
-seriesUpdate(s, other).values;
+console.log(seriesUpdate(s, other).values);
 // [1, 99, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

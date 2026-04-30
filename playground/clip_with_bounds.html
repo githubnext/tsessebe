@@ -165,7 +165,7 @@
 
 const s = new Series({ data: [-5, 1, 7, 12] });
 
-clipSeriesWithBounds(s, { lower: 0, upper: 8 }).values;
+console.log(clipSeriesWithBounds(s, { lower: 0, upper: 8 }).values);
 // [0, 1, 7, 8]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -196,7 +196,7 @@ const floors = new Series({
   index: new Index(["AAPL", "MSFT", "GOOG"]),
 });
 
-clipSeriesWithBounds(prices, { lower: floors }).values;
+console.log(clipSeriesWithBounds(prices, { lower: floors }).values);
 // AAPL: max(90, 95)=95  GOOG: max(110, 100)=110  MSFT: max(85, 80)=85  AMZN: 120 (no bound)
 // [95, 110, 85, 120]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
@@ -227,7 +227,8 @@ const hi = new Series({ data: [10, 9], index: new Index(["a", "b"]) });
 
 const result = clipDataFrameWithBounds(df, { lower: lo, upper: hi, axis: 1 });
 // col "a": [1, 5, 10]  (lower=1, upper=10)
-// col "b": [4, 8,  9]  (lower=4, upper=9)</textarea>
+// col "b": [4, 8,  9]  (lower=4, upper=9)
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -255,7 +256,8 @@ const lowerBound = new Series({ data: [0, 0, 0, 0] });   // never below 0
 const upperBound = new Series({ data: [12, 12, 20, 20] }); // row-specific caps
 
 const result = clipDataFrameWithBounds(df, { lower: lowerBound, upper: upperBound, axis: 0 });
-// min_temp: [0, 0, 1, 4]   max_temp: [10, 12, 18, 20]</textarea>
+// min_temp: [0, 0, 1, 4]   max_temp: [10, 12, 18, 20]
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -278,7 +280,8 @@ const lo = DataFrame.fromColumns({ a: [3, 3, 3], b: [0, 9, 0] });
 const hi = DataFrame.fromColumns({ a: [8, 8, 8], b: [5, 5, 5] });
 
 const result = clipDataFrameWithBounds(df, { lower: lo, upper: hi });
-// col "a": [3, 5, 8]  col "b": [2, 5, 3]</textarea>
+// col "a": [3, 5, 8]  col "b": [2, 5, 3]
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -297,7 +300,7 @@ const result = clipDataFrameWithBounds(df, { lower: lo, upper: hi });
       <textarea class="playground-editor" spellcheck="false">import { Series, clipSeriesWithBounds } from "tsb";
 
 const s = new Series({ data: [null, -5, NaN, 10] });
-clipSeriesWithBounds(s, { lower: 0, upper: 8 }).values;
+console.log(clipSeriesWithBounds(s, { lower: 0, upper: 8 }).values);
 // [null, 0, NaN, 8]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

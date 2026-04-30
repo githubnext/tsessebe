@@ -179,7 +179,8 @@ const result = mergeAsof(trades, quotes, { on: "time" });
 // time | price | bid
 //    1 |   100 | null   ← no quote ≤ 1
 //    5 |   200 |   98   ← most recent quote ≤ 5 is at time=2
-//   10 |   300 |  195   ← most recent quote ≤ 10 is at time=6</textarea>
+//   10 |   300 |  195   ← most recent quote ≤ 10 is at time=6
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -203,7 +204,8 @@ const result = mergeAsof(events, schedule, {
   on: "t",
   direction: "forward",
 });
-// t=1 → t=2 (w=20), t=3 → t=6 (w=60), t=7 → t=10 (w=100)</textarea>
+// t=1 → t=2 (w=20), t=3 → t=6 (w=60), t=7 → t=10 (w=100)
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -223,7 +225,8 @@ const result = mergeAsof(events, schedule, {
   on: "time",
   direction: "nearest",
 });
-// Picks the quote with the smallest absolute time difference.</textarea>
+// Picks the quote with the smallest absolute time difference.
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -251,7 +254,7 @@ const quotes = DataFrame.fromColumns({
   bid:    [99,   198,    109,   208],
 });
 
-mergeAsof(trades, quotes, { on: "time", by: "ticker" });</textarea>
+console.log(mergeAsof(trades, quotes, { on: "time", by: "ticker" }));</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -268,7 +271,7 @@ mergeAsof(trades, quotes, { on: "time", by: "ticker" });</textarea>
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">// Only match if the key distance is ≤ 2
-mergeAsof(left, right, { on: "t", tolerance: 2 });</textarea>
+console.log(mergeAsof(left, right, { on: "t", tolerance: 2 }));</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

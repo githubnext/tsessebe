@@ -163,14 +163,14 @@
       </div>
       <textarea class="playground-editor" spellcheck="false">import { inferDtype } from "tsb";
 
-inferDtype([1, 2, 3]);           // "integer"
-inferDtype([1.1, 2.2, 3.3]);     // "floating"
-inferDtype([1, 2.5, 3]);         // "mixed-integer-float"
-inferDtype([true, false, true]);  // "boolean"
-inferDtype(["a", "b", "c"]);     // "string"
-inferDtype([]);                  // "empty"
-inferDtype([null, null]);        // "empty"  (skipna=true by default)
-inferDtype([null, null], { skipna: false }); // "mixed"</textarea>
+console.log(inferDtype([1, 2, 3]));           // "integer"
+console.log(inferDtype([1.1, 2.2, 3.3]));     // "floating"
+console.log(inferDtype([1, 2.5, 3]));         // "mixed-integer-float"
+console.log(inferDtype([true, false, true]));  // "boolean"
+console.log(inferDtype(["a", "b", "c"]));     // "string"
+console.log(inferDtype([]));                  // "empty"
+console.log(inferDtype([null, null]));        // "empty"  (skipna=true by default)
+console.log(inferDtype([null, null], { skipna: false })); // "mixed"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -189,13 +189,13 @@ inferDtype([null, null], { skipna: false }); // "mixed"</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, inferDtype } from "tsb";
 
 const s1 = new Series({ data: [10, 20, 30] });
-inferDtype(s1);   // "integer"
+console.log(inferDtype(s1));   // "integer"
 
 const s2 = new Series({ data: ["hello", "world"] });
-inferDtype(s2);   // "string"
+console.log(inferDtype(s2));   // "string"
 
 const s3 = new Series({ data: [1, null, 2, null, 3] });
-inferDtype(s3);   // "integer"  (nulls skipped by default)</textarea>
+console.log(inferDtype(s3));   // "integer"  (nulls skipped by default)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -213,16 +213,16 @@ inferDtype(s3);   // "integer"  (nulls skipped by default)</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { inferDtype, Timestamp, Timedelta, Period, Interval } from "tsb";
 
-inferDtype([Timestamp.fromtimestamp(0), Timestamp.fromtimestamp(1)]);
+console.log(inferDtype([Timestamp.fromtimestamp(0), Timestamp.fromtimestamp(1)]));
 // "datetime"
 
-inferDtype([Timedelta.fromComponents({ days: 1 }), Timedelta.fromComponents({ hours: 2 })]);
+console.log(inferDtype([Timedelta.fromComponents({ days: 1 }), Timedelta.fromComponents({ hours: 2 })]));
 // "timedelta"
 
-inferDtype([Period.fromDate(new Date("2024-01-01T00:00:00Z"), "M")]);
+console.log(inferDtype([Period.fromDate(new Date("2024-01-01T00:00:00Z"), "M")]));
 // "period"
 
-inferDtype([new Interval(0, 1), new Interval(1, 2)]);
+console.log(inferDtype([new Interval(0, 1), new Interval(1, 2)]));
 // "interval"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -241,11 +241,11 @@ inferDtype([new Interval(0, 1), new Interval(1, 2)]);
       </div>
       <textarea class="playground-editor" spellcheck="false">import { inferDtype } from "tsb";
 
-inferDtype([1, "a", 2]);         // "mixed-integer" (int + non-numeric non-float)
-inferDtype(["a", true, null]);   // "mixed"         (string + bool)
-inferDtype([1n, 2n, 3n]);        // "integer"       (bigint only)
-inferDtype([1n, 2]);             // "decimal"       (bigint + integer)
-inferDtype([1n, 2.5]);           // "mixed-integer-float"</textarea>
+console.log(inferDtype([1, "a", 2]));         // "mixed-integer" (int + non-numeric non-float)
+console.log(inferDtype(["a", true, null]));   // "mixed"         (string + bool)
+console.log(inferDtype([1n, 2n, 3n]));        // "integer"       (bigint only)
+console.log(inferDtype([1n, 2]));             // "decimal"       (bigint + integer)
+console.log(inferDtype([1n, 2.5]));           // "mixed-integer-float"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

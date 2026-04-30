@@ -180,7 +180,8 @@ const n = pipe(
   (x) =&gt; x * x,   // 16
   (x) =&gt; x - 1,   // 15
 );
-// n === 15</textarea>
+// n === 15
+console.log(n);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -214,7 +215,8 @@ const withPos = seriesApply(
   new Series({ data: [10, 20, 30] }),
   (v, _label, pos) =&gt; (v as number) + pos * 100,
 );
-// [10, 120, 230]</textarea>
+// [10, 120, 230]
+console.log(withPos);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -249,7 +251,8 @@ const weightedScore = dataFrameApply(
   (row) =&gt; (row.at("score") as number) * (row.at("weight") as number),
   1,
 );
-// [85, 110.4, 62.4, 142.5]</textarea>
+// [85, 110.4, 62.4, 142.5]
+console.log(weightedScore);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -283,7 +286,8 @@ const clipped = dataFrameApplyMap(df, (v) =&gt; {
 // fn receives full context: (value, rowLabel, colName)
 const tagged = dataFrameApplyMap(df, (v, row, col) =&gt; `${col}[${row}]=${v}`);
 // a: ["a[0]=1", "a[1]=-2", "a[2]=3"]
-// b: ["b[0]=-4", "b[1]=5", "b[2]=-6"]</textarea>
+// b: ["b[0]=-4", "b[1]=5", "b[2]=-6"]
+console.log(tagged);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -328,7 +332,8 @@ const binned = dataFrameTransform(df, (col) =&gt; {
     if (n &lt;= q3) return "Q3";
     return "Q4";
   });
-});</textarea>
+});
+console.log(binned);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -367,7 +372,8 @@ const withFull = dataFrameTransformRows(df, (row) =&gt; ({
   last:  row["last"],
   score: row["score"],
   full:  `${row["first"]} ${row["last"]}`,
-}));</textarea>
+}));
+console.log(withFull);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -408,7 +414,8 @@ const clean = pipe(
       typeof v === "number" ? Math.round(v * 100) / 100 : v
     )
   ),
-);</textarea>
+);
+console.log(clean);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

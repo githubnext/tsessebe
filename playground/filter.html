@@ -187,7 +187,7 @@ print(df.filter(items=["one", "three"]).columns.tolist())
       <textarea class="playground-editor" spellcheck="false">import { DataFrame, filterDataFrame } from "tsb";
 
 const df = DataFrame.fromColumns({ one: [1, 2], two: [3, 4], three: [5, 6] });
-filterDataFrame(df, { items: ["one", "three"] }).columns.values;
+console.log(filterDataFrame(df, { items: ["one", "three"] }).columns.values);
 // ["one", "three"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -229,7 +229,7 @@ print(df.filter(like="ap").columns.tolist())
       <textarea class="playground-editor" spellcheck="false">import { DataFrame, filterDataFrame } from "tsb";
 
 const df = DataFrame.fromColumns({ apple: [1], apricot: [2], banana: [3] });
-filterDataFrame(df, { like: "ap" }).columns.values;
+console.log(filterDataFrame(df, { like: "ap" }).columns.values);
 // ["apple", "apricot"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -271,7 +271,7 @@ print(df.filter(regex="^a").columns.tolist())
       <textarea class="playground-editor" spellcheck="false">import { DataFrame, filterDataFrame } from "tsb";
 
 const df = DataFrame.fromColumns({ a1: [1], a2: [2], b1: [3], b2: [4] });
-filterDataFrame(df, { regex: "^a" }).columns.values;
+console.log(filterDataFrame(df, { regex: "^a" }).columns.values);
 // ["a1", "a2"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -316,7 +316,7 @@ print(df.filter(like="ba", axis=0).index.tolist())
       <textarea class="playground-editor" spellcheck="false">import { DataFrame, filterDataFrame } from "tsb";
 
 const df = DataFrame.fromColumns({ x: [10, 20, 30] }, { index: ["foo", "bar", "baz"] });
-filterDataFrame(df, { like: "ba", axis: 0 }).index.values;
+console.log(filterDataFrame(df, { like: "ba", axis: 0 }).index.values);
 // ["bar", "baz"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -358,7 +358,7 @@ print(s.filter(like="al").index.tolist())
       <textarea class="playground-editor" spellcheck="false">import { Series, filterSeries } from "tsb";
 
 const s = new Series({ data: [1, 2, 3, 4], index: ["alpha", "beta", "gamma", "aleph"] });
-filterSeries(s, { like: "al" }).index.values;
+console.log(filterSeries(s, { like: "al" }).index.values);
 // ["alpha", "aleph"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

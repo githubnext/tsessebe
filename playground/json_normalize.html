@@ -172,7 +172,8 @@ const data = [
 const df = jsonNormalize(data);
 // id  info.name  info.city
 // 1   Alice      NY
-// 2   Bob        LA</textarea>
+// 2   Bob        LA
+console.log(df);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -200,7 +201,8 @@ const df = jsonNormalize(orders, {
 // sku  qty  orderId  customer
 // X    2    A1       Alice
 // Y    1    A1       Alice
-// Z    5    B2       Bob</textarea>
+// Z    5    B2       Bob
+console.log(df);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -218,7 +220,7 @@ const df = jsonNormalize(orders, {
       </div>
       <textarea class="playground-editor" spellcheck="false">const data = [{ a: { b: { c: { d: 99 } } } }];
 
-jsonNormalize(data, { maxLevel: 1 });
+console.log(jsonNormalize(data, { maxLevel: 1 }));
 // a.b  →  {"c":{"d":99}}   (depth 2 is not expanded)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

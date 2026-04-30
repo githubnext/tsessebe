@@ -172,7 +172,7 @@ const s = new Series({ data: [1, null, null, 4] });
 //                           0  1    2    3
 
 const filled = interpolateSeries(s);
-filled.values;
+console.log(filled.values);
 // → [1, 2, 3, 4]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -194,7 +194,7 @@ filled.values;
       </div>
       <textarea class="playground-editor" spellcheck="false">const t = new Series({ data: [null, 1, null, 3, null] });
 
-interpolateSeries(t).values;
+console.log(interpolateSeries(t).values);
 // → [null, 1, 2, 3, null]
 //    ^^^^              ^^^^
 //    leading          trailing
@@ -220,7 +220,7 @@ interpolateSeries(t).values;
 
 const s = new Series({ data: [1, null, null, 4, null] });
 
-interpolateSeries(s, { method: "ffill" }).values;
+console.log(interpolateSeries(s, { method: "ffill" }).values);
 // → [1, 1, 1, 4, 4]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -243,7 +243,7 @@ interpolateSeries(s, { method: "ffill" }).values;
 
 const s = new Series({ data: [null, 2, null, null, 5] });
 
-interpolateSeries(s, { method: "bfill" }).values;
+console.log(interpolateSeries(s, { method: "bfill" }).values);
 // → [2, 2, 5, 5, 5]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -270,7 +270,7 @@ interpolateSeries(s, { method: "bfill" }).values;
 // pos 2: dist-left=2, dist-right=1  → right wins → 4
 const s = new Series({ data: [1, null, null, 4] });
 
-interpolateSeries(s, { method: "nearest" }).values;
+console.log(interpolateSeries(s, { method: "nearest" }).values);
 // → [1, 1, 4, 4]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -292,7 +292,7 @@ interpolateSeries(s, { method: "nearest" }).values;
       </div>
       <textarea class="playground-editor" spellcheck="false">// Tie at equidistance: right wins
 const t = new Series({ data: [10, null, 30] });
-interpolateSeries(t, { method: "nearest" }).values;
+console.log(interpolateSeries(t, { method: "nearest" }).values);
 // → [10, 30, 30]   (pos 1 equidistant; right value 30 chosen)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -318,15 +318,15 @@ interpolateSeries(t, { method: "nearest" }).values;
 const s = new Series({ data: [0, null, null, null, 4] });
 
 // limit=1, forward: fill only the first NaN from the left
-interpolateSeries(s, { limit: 1 }).values;
+console.log(interpolateSeries(s, { limit: 1 }).values);
 // → [0, 1, null, null, 4]
 
 // limit=1, backward: fill only the last NaN from the right
-interpolateSeries(s, { limit: 1, limitDirection: "backward" }).values;
+console.log(interpolateSeries(s, { limit: 1, limitDirection: "backward" }).values);
 // → [0, null, null, 3, 4]
 
 // limit=1, both: fill one from each end
-interpolateSeries(s, { limit: 1, limitDirection: "both" }).values;
+console.log(interpolateSeries(s, { limit: 1, limitDirection: "both" }).values);
 // → [0, 1, null, 3, 4]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -353,8 +353,8 @@ const df = DataFrame.fromColumns({
 });
 
 const filled = dataFrameInterpolate(df);
-filled.col("temperature").values; // [20, 21, 22, 23]
-filled.col("humidity").values;    // [60, 65, 70, null]  ← trailing not filled</textarea>
+console.log(filled.col("temperature").values); // [20, 21, 22, 23]
+console.log(filled.col("humidity").values);    // [60, 65, 70, null]  ← trailing not filled</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -384,8 +384,8 @@ const df = DataFrame.fromColumns({
 // Row 0 interpolates 0 → 6  (linear, 4 steps)
 // Row 1 interpolates 10 → 22
 const filled = dataFrameInterpolate(df, { axis: 1 });
-filled.col("t1").values; // [2, 14]
-filled.col("t2").values; // [4, 18]</textarea>
+console.log(filled.col("t1").values); // [2, 14]
+console.log(filled.col("t2").values); // [4, 18]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

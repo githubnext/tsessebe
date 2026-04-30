@@ -166,8 +166,8 @@
 const s = new Series({ data: [1, null, NaN, 4, undefined, 6] });
 const clean = dropna(s);
 
-clean.values;  // [1, 4, 6]
-clean.size;    // 3</textarea>
+console.log(clean.values);  // [1, 4, 6]
+console.log(clean.size);    // 3</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -193,7 +193,7 @@ const df = DataFrame.fromColumns({
 
 // Drop any row that has at least one null
 const clean = dropna(df);
-clean.shape;   // [1, 3]  — only "Alice" row survives (score=95, grade="A")</textarea>
+console.log(clean.shape);   // [1, 3]  — only "Alice" row survives (score=95, grade="A")</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -219,7 +219,7 @@ const df = DataFrame.fromColumns({
 // Row 1: both null → dropped
 // Row 0 and Row 2: at least one non-null → kept
 const clean = dropna(df, { how: "all" });
-clean.shape;   // [2, 2]</textarea>
+console.log(clean.shape);   // [2, 2]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -248,7 +248,7 @@ const df = DataFrame.fromColumns({
 // Row 1: 0 present → drop
 // Row 2: 2 present → keep
 const clean = dropna(df, { thresh: 2 });
-clean.shape;   // [2, 3]</textarea>
+console.log(clean.shape);   // [2, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -275,7 +275,7 @@ const df = DataFrame.fromColumns({
 // Only check the "score" column for nulls — ignore "notes"
 const clean = dropna(df, { subset: ["score"] });
 // Row 1 (score=null) is dropped; Row 2 (notes=null but score=88) is kept.
-clean.shape;   // [2, 3]</textarea>
+console.log(clean.shape);   // [2, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -300,8 +300,8 @@ const df = DataFrame.fromColumns({
 });
 
 const clean = dropna(df, { axis: 1 });
-clean.columns.toArray();  // ["b"]
-clean.shape;              // [3, 1]</textarea>
+console.log(clean.columns.toArray());  // ["b"]
+console.log(clean.shape);              // [3, 1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -326,7 +326,7 @@ const df = DataFrame.fromColumns({
 });
 
 const clean = dropna(df, { axis: 1, how: "all" });
-clean.columns.toArray();  // ["b", "c"]</textarea>
+console.log(clean.columns.toArray());  // ["b", "c"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

@@ -162,7 +162,7 @@
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 3, 4, 5] });
-skewSeries(s);
+console.log(skewSeries(s));
 // → 0</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -180,7 +180,7 @@ skewSeries(s);
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 3, 4, 100] });
-skewSeries(s);
+console.log(skewSeries(s));
 // → large positive value</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -198,7 +198,7 @@ skewSeries(s);
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] });
-kurtSeries(s);
+console.log(kurtSeries(s));
 // → negative (flatter than normal)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -215,8 +215,8 @@ kurtSeries(s);
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">skewSeries(new Series({ data: [1, 2] }));  // NaN — need ≥ 3
-kurtSeries(new Series({ data: [1, 2, 3] })); // NaN — need ≥ 4</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(skewSeries(new Series({ data: [1, 2] })));  // NaN — need ≥ 3
+console.log(kurtSeries(new Series({ data: [1, 2, 3] }))); // NaN — need ≥ 4</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -236,7 +236,7 @@ kurtSeries(new Series({ data: [1, 2, 3] })); // NaN — need ≥ 4</textarea>
   symmetric: [1, 2, 3, 4, 5],
   right_skew: [1, 2, 3, 4, 100],
 });
-skewDataFrame(df).values;</textarea>
+console.log(skewDataFrame(df).values);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -255,7 +255,7 @@ skewDataFrame(df).values;</textarea>
       <textarea class="playground-editor" spellcheck="false">const df = DataFrame.fromColumns({
   a: [1, 10], b: [2, 10], c: [3, 10], d: [4, 10], e: [100, 10], f: [5, 10],
 });
-kurtDataFrame(df, { axis: 1 }).values;</textarea>
+console.log(kurtDataFrame(df, { axis: 1 }).values);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

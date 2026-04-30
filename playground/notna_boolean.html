@@ -167,10 +167,10 @@
 const s = new Series({ data: [10, 20, 30, 40], index: ["a", "b", "c", "d"] });
 
 // Keep elements where mask is true
-keepTrue(s, [true, false, true, false]).values;  // [10, 30]
+console.log(keepTrue(s, [true, false, true, false]).values);  // [10, 30]
 
 // Keep elements where mask is false (complement)
-keepFalse(s, [true, false, true, false]).values; // [20, 40]
+console.log(keepFalse(s, [true, false, true, false]).values); // [20, 40]
 
 // Filter DataFrame rows
 const df = DataFrame.fromColumns(
@@ -178,11 +178,11 @@ const df = DataFrame.fromColumns(
   { index: ["alice", "bob", "carol", "dave"] },
 );
 const highScore = df.col("score").values.map((v) =&gt; (v as number) &gt;= 80);
-filterBy(df, highScore).col("age").values; // [25, 35]
+console.log(filterBy(df, highScore).col("age").values); // [25, 35]
 
 // Use a Series as a mask
 const mask = new Series({ data: [true, null, true, false], index: ["a", "b", "c", "d"] });
-keepTrue(s, mask).values; // [10, 30]  (null treated as false)</textarea>
+console.log(keepTrue(s, mask).values); // [10, 30]  (null treated as false)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

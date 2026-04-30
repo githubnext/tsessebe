@@ -172,7 +172,8 @@ const df2 = dataFrameAssign(df, {
 
 // df2.columns.values  →  ["a", "b", "c", "d"]
 // df2.col("c").values →  [7, 8, 9]
-// df2.col("d").values →  [4, 5, 6]</textarea>
+// df2.col("d").values →  [4, 5, 6]
+console.log(df2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -198,7 +199,8 @@ const df2 = dataFrameAssign(df, {
 });
 
 // df3.col("total").values  →  [11, 22, 33]
-// df3.col("tax").values    →  [1.1, 2.2, 3.3]</textarea>
+// df3.col("tax").values    →  [1.1, 2.2, 3.3]
+console.log(df3);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -218,7 +220,8 @@ const df2 = dataFrameAssign(df, {
 const df4 = df.assign({
   squared_a: (d: DataFrame) =&gt; d.col("a").values.map((v) =&gt; (v as number) ** 2),
 });
-// df4.col("squared_a").values  →  [1, 4, 9]</textarea>
+// df4.col("squared_a").values  →  [1, 4, 9]
+console.log(df4);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -238,7 +241,8 @@ const df4 = df.assign({
 const df5 = dataFrameAssign(df, { b: [100, 200, 300] });
 
 // df5.columns.values   →  ["a", "b"]  (order unchanged)
-// df5.col("b").values  →  [100, 200, 300]</textarea>
+// df5.col("b").values  →  [100, 200, 300]
+console.log(df5);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

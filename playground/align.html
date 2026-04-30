@@ -168,8 +168,8 @@ const b = new Series({ data: [10, 20],  index: new Index(["b", "c"]) });
 
 // Default join="outer" → union of indices
 const [la, ra] = alignSeries(a, b);
-la.toArray();  // → [1, 2, 3]     (index: a, b, c)
-ra.toArray();  // → [null, 10, 20] (index: a, b, c)</textarea>
+console.log(la.toArray());  // → [1, 2, 3]     (index: a, b, c)
+console.log(ra.toArray());  // → [null, 10, 20] (index: a, b, c)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -186,8 +186,8 @@ ra.toArray();  // → [null, 10, 20] (index: a, b, c)</textarea>
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const [li, ri] = alignSeries(a, b, { join: "inner" });
-li.toArray();  // → [2, 3]   (only shared labels: b, c)
-ri.toArray();  // → [10, 20]</textarea>
+console.log(li.toArray());  // → [2, 3]   (only shared labels: b, c)
+console.log(ri.toArray());  // → [10, 20]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -208,13 +208,13 @@ const y = new Series({ data: [10, 30],   index: new Index(["b", "d"]) });
 
 // join="left": result index = x's index
 const [ll, rl] = alignSeries(x, y, { join: "left", fillValue: 0 });
-ll.toArray();  // → [1, 2, 3]
-rl.toArray();  // → [0, 10, 0]  ("d" is outside x's index → dropped)
+console.log(ll.toArray());  // → [1, 2, 3]
+console.log(rl.toArray());  // → [0, 10, 0]  ("d" is outside x's index → dropped)
 
 // join="right": result index = y's index
 const [lr, rr] = alignSeries(x, y, { join: "right", fillValue: 0 });
-lr.toArray();  // → [2, 0]      ("b" matches, "d" is new)
-rr.toArray();  // → [10, 30]</textarea>
+console.log(lr.toArray());  // → [2, 0]      ("b" matches, "d" is new)
+console.log(rr.toArray());  // → [10, 30]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -247,13 +247,13 @@ const [la, ra] = alignDataFrame(a, b);
 // la  →  shape [2, 3]  columns: x, y, z
 //        row r0: x=1, y=3, z=null
 //        row r1: x=2, y=4, z=null
-la.col("z").toArray();  // → [null, null]
+console.log(la.col("z").toArray());  // → [null, null]
 
 // ra  →  shape [2, 3]  columns: x, y, z
 //        row r0: x=null, y=null, z=null
 //        row r1: x=null, y=10,   z=20
-ra.col("x").toArray();  // → [null, null]
-ra.col("y").toArray();  // → [null, 10]</textarea>
+console.log(ra.col("x").toArray());  // → [null, null]
+console.log(ra.col("y").toArray());  // → [null, 10]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -271,10 +271,10 @@ ra.col("y").toArray();  // → [null, 10]</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">// axis=0 aligns rows but leaves columns untouched
 const [la5, ra5] = alignDataFrame(a, b, { axis: 0 });
-la5.columns.toArray();  // → ["x", "y"]   (unchanged)
-ra5.columns.toArray();  // → ["y", "z"]   (unchanged)
-la5.index.toArray();    // → ["r0", "r1"] (outer union)
-ra5.index.toArray();    // → ["r0", "r1"] (outer union)</textarea>
+console.log(la5.columns.toArray());  // → ["x", "y"]   (unchanged)
+console.log(ra5.columns.toArray());  // → ["y", "z"]   (unchanged)
+console.log(la5.index.toArray());    // → ["r0", "r1"] (outer union)
+console.log(ra5.index.toArray());    // → ["r0", "r1"] (outer union)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -292,10 +292,10 @@ ra5.index.toArray();    // → ["r0", "r1"] (outer union)</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">// axis=1 aligns columns but leaves rows untouched
 const [la6, ra6] = alignDataFrame(a, b, { axis: 1 });
-la6.index.toArray();    // → ["r0", "r1"]  (unchanged)
-ra6.index.toArray();    // → ["r1"]        (unchanged)
-la6.columns.toArray().sort();  // → ["x", "y", "z"]
-ra6.columns.toArray().sort();  // → ["x", "y", "z"]</textarea>
+console.log(la6.index.toArray());    // → ["r0", "r1"]  (unchanged)
+console.log(ra6.index.toArray());    // → ["r1"]        (unchanged)
+console.log(la6.columns.toArray().sort());  // → ["x", "y", "z"]
+console.log(ra6.columns.toArray().sort());  // → ["x", "y", "z"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -318,8 +318,8 @@ const q = new Series({ data: [1, 2],           index: new Index(["b", "c"]) });
 const [ap, aq] = alignSeries(p, q, { fillValue: 0 });
 // Now same shape — do element-wise addition
 const sum = ap.add(aq);
-sum.toArray();   // → [100, 201, 302]
-sum.index.toArray();  // → ["a", "b", "c"]</textarea>
+console.log(sum.toArray());   // → [100, 201, 302]
+console.log(sum.index.toArray());  // → ["a", "b", "c"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

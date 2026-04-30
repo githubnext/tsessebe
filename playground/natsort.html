@@ -194,11 +194,11 @@ copy.sort(natCompare);
       </div>
       <textarea class="playground-editor" spellcheck="false">// ignoreCase — text tokens are folded to lower-case
 const words = ["Banana", "apple", "Cherry"];
-natSorted(words, { ignoreCase: true });
+console.log(natSorted(words, { ignoreCase: true }));
 // → ["apple", "Banana", "Cherry"]
 
 // reverse — descending natural order
-natSorted(["file1", "file10", "file2"], { reverse: true });
+console.log(natSorted(["file1", "file10", "file2"], { reverse: true }));
 // → ["file10", "file2", "file1"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -224,7 +224,7 @@ natSorted(["file1", "file10", "file2"], { reverse: true });
 // key extracts the string to sort by
 import { natSorted } from "tsb";
 const sorted = natSorted(rows, { key: r =&gt; r.path });
-sorted.map(r =&gt; r.path);
+console.log(sorted.map(r =&gt; r.path));
 // → ["img/photo1.jpg", "img/photo2.jpg", "img/photo10.jpg"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -243,13 +243,13 @@ sorted.map(r =&gt; r.path);
       </div>
       <textarea class="playground-editor" spellcheck="false">import { natSortKey } from "tsb";
 
-natSortKey("file10.txt");   // → ["file", 10, ".txt"]
-natSortKey("007bonds");     // → [7, "bonds"]  (leading zeros stripped)
-natSortKey("abc");          // → ["abc"]
-natSortKey("42");           // → [42]
+console.log(natSortKey("file10.txt"));   // → ["file", 10, ".txt"]
+console.log(natSortKey("007bonds"));     // → [7, "bonds"]  (leading zeros stripped)
+console.log(natSortKey("abc"));          // → ["abc"]
+console.log(natSortKey("42"));           // → [42]
 
 // ignoreCase folds text tokens
-natSortKey("File10.TXT", { ignoreCase: true });
+console.log(natSortKey("File10.TXT", { ignoreCase: true }));
 // → ["file", 10, ".txt"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -272,7 +272,7 @@ const arr = ["file10", "file2", "file1"];
 const idx = natArgSort(arr);
 // → [2, 1, 0]   (indices of "file1", "file2", "file10")
 
-idx.map(i =&gt; arr[i]);
+console.log(idx.map(i =&gt; arr[i]));
 // → ["file1", "file2", "file10"]
 
 // Use with a tsb Index to sort labels naturally:
@@ -300,7 +300,7 @@ idx.map(i =&gt; arr[i]);
 // → ["item1", "item12", "item2", "item20", "item3"]  ← wrong
 
 // Natural sort
-natSorted(data);
+console.log(natSorted(data));
 // → ["item1", "item2", "item3", "item12", "item20"]  ← correct</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

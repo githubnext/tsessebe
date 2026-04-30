@@ -168,10 +168,10 @@ import { nansum, nanmean, nanmedian, nanstd } from "tsb";
 
 const data = [1, 2, NaN, null, 3, 5];
 
-nansum(data);     // 11
-nanmean(data);    // 2.75
-nanmedian(data);  // 2.5
-nanstd(data);     // 1.708...</textarea>
+console.log(nansum(data));     // 11
+console.log(nanmean(data));    // 2.75
+console.log(nanmedian(data));  // 2.5
+console.log(nanstd(data));     // 1.708...</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -192,9 +192,9 @@ import { Series, nansum, nanmean, nancount } from "tsb";
 
 const s = new Series({ data: [10, null, 30, NaN, 50] });
 
-nancount(s);  // 3
-nansum(s);    // 90
-nanmean(s);   // 30</textarea>
+console.log(nancount(s));  // 3
+console.log(nansum(s));    // 90
+console.log(nanmean(s));   // 30</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -216,12 +216,12 @@ import { nanvar, nanstd } from "tsb";
 const xs = [2, 4, 4, 4, 5, 5, 7, 9];
 
 // Sample (ddof=1, default)
-nanvar(xs);           // ≈ 4.571
-nanstd(xs);           // ≈ 2.138
+console.log(nanvar(xs));           // ≈ 4.571
+console.log(nanstd(xs));           // ≈ 2.138
 
 // Population (ddof=0)
-nanvar(xs, { ddof: 0 });  // 4.0
-nanstd(xs, { ddof: 0 });  // 2.0</textarea>
+console.log(nanvar(xs, { ddof: 0 }));  // 4.0
+console.log(nanstd(xs, { ddof: 0 }));  // 2.0</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

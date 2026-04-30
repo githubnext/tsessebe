@@ -253,7 +253,8 @@ const df = DataFrame.fromColumns({
   z: ["a", "b", "c"],
 });
 const result = selectDtypes(df, { include: "number" });
-return result.columns.toArray().join(", ");</textarea>
+return result.columns.toArray().join(", ");
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

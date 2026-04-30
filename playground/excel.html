@@ -221,9 +221,9 @@ const df2 = readExcel(buffer, { skipRows: 2, nrows: 100 });
 const df3 = readExcel(buffer, { naValues: ["N/A", "MISSING", "-"] });
 
 // DataFrame operations work immediately
-df.describe();
-df.col("revenue").sum();
-df.groupby("region").mean();</textarea>
+console.log(df.describe());
+console.log(df.col("revenue").sum());
+console.log(df.groupby("region").mean());</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

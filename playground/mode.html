@@ -162,7 +162,7 @@
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 2, 3] });
-modeSeries(s).values;
+console.log(modeSeries(s).values);
 // → [2]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -180,7 +180,7 @@ modeSeries(s).values;
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 1, 2, 2, 3] });
-modeSeries(s).values;
+console.log(modeSeries(s).values);
 // → [1, 2]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -198,7 +198,7 @@ modeSeries(s).values;
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: ["cat", "dog", "dog", "bird"] });
-modeSeries(s).values;
+console.log(modeSeries(s).values);
 // → ["dog"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -216,7 +216,7 @@ modeSeries(s).values;
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [null, 1, 1, null, null] });
-modeSeries(s).values;
+console.log(modeSeries(s).values);
 // → [1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -234,7 +234,7 @@ modeSeries(s).values;
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const df = DataFrame.fromColumns({ a: [1, 1, 2, 2], b: [5, 5, 5, 6] });
-modeDataFrame(df);
+console.log(modeDataFrame(df));
 // a: [1, 2], b: [5, null]  (null-padded)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -252,7 +252,7 @@ modeDataFrame(df);
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const df = DataFrame.fromColumns({ a: [1, 2], b: [1, 3], c: [2, 3] });
-modeDataFrame(df, { axis: 1 });
+console.log(modeDataFrame(df, { axis: 1 }));
 // row 0: mode=1, row 1: mode=3</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

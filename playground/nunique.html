@@ -165,8 +165,8 @@
 
 const s = new Series({ data: [1, 2, 2, 3, 3, 3, null] });
 
-nuniqueSeries(s);                 // 3 (null excluded by default)
-nuniqueSeries(s, { dropna: false }); // 4 (null counted as a distinct value)</textarea>
+console.log(nuniqueSeries(s));                 // 3 (null excluded by default)
+console.log(nuniqueSeries(s, { dropna: false })); // 4 (null counted as a distinct value)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -187,12 +187,12 @@ nuniqueSeries(s, { dropna: false }); // 4 (null counted as a distinct value)</te
 const allZero = new Series({ data: [0, 0, 0] });
 const hasOne  = new Series({ data: [0, 0, 1] });
 
-anySeries(allZero); // false
-anySeries(hasOne);  // true
+console.log(anySeries(allZero)); // false
+console.log(anySeries(hasOne));  // true
 
 // With nulls (skipna=true by default)
 const withNull = new Series({ data: [null, 0, null] });
-anySeries(withNull); // false — null skipped, 0 is falsy</textarea>
+console.log(anySeries(withNull)); // false — null skipped, 0 is falsy</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -213,12 +213,12 @@ anySeries(withNull); // false — null skipped, 0 is falsy</textarea>
 const allTrue = new Series({ data: [1, 2, 3] });
 const hasFalsy = new Series({ data: [1, 0, 3] });
 
-allSeries(allTrue);  // true
-allSeries(hasFalsy); // false
+console.log(allSeries(allTrue));  // true
+console.log(allSeries(hasFalsy)); // false
 
 // Empty or all-null series vacuously returns true
-allSeries(new Series({ data: [] }));              // true
-allSeries(new Series({ data: [null, null] }));    // true</textarea>
+console.log(allSeries(new Series({ data: [] })));              // true
+console.log(allSeries(new Series({ data: [null, null] })));    // true</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -241,8 +241,8 @@ const df = DataFrame.fromColumns({
   value:    [1,   2,   1,   3  ],
 });
 
-nuniqueDataFrame(df);          // per-column: category→3, value→3
-nuniqueDataFrame(df, { axis: 1 }); // per-row: how many distinct values in each row</textarea>
+console.log(nuniqueDataFrame(df));          // per-column: category→3, value→3
+console.log(nuniqueDataFrame(df, { axis: 1 })); // per-row: how many distinct values in each row</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -265,12 +265,12 @@ const df2 = DataFrame.fromColumns({
   b: [1, 1, 1],
 });
 
-anyDataFrame(df2); // a: true, b: true  (each col has at least one truthy)
-allDataFrame(df2); // a: false, b: true (col a has a 0)
+console.log(anyDataFrame(df2)); // a: true, b: true  (each col has at least one truthy)
+console.log(allDataFrame(df2)); // a: false, b: true (col a has a 0)
 
 // axis=1: reduce across columns per row
-anyDataFrame(df2, { axis: 1 }); // row0: true, row1: true, row2: true
-allDataFrame(df2, { axis: 1 }); // row0: false, row1: false, row2: true</textarea>
+console.log(anyDataFrame(df2, { axis: 1 })); // row0: true, row1: true, row2: true
+console.log(allDataFrame(df2, { axis: 1 })); // row0: false, row1: false, row2: true</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

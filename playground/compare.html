@@ -170,7 +170,8 @@ const result = seriesEq(s, 2);
 // → [false, true, false, true, false]
 
 // Use this as a boolean mask for filtering:
-// s.values.filter((_, i) =&gt; result.values[i]) → [2, 2]</textarea>
+// s.values.filter((_, i) =&gt; result.values[i]) → [2, 2]
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -191,7 +192,7 @@ const result = seriesEq(s, 2);
 
 const s = new Series({ data: ["apple", "banana", "apple", "cherry"] });
 
-seriesNe(s, "apple").values;
+console.log(seriesNe(s, "apple").values);
 // → [false, true, false, true]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -213,8 +214,8 @@ seriesNe(s, "apple").values;
 
 const scores = new Series({ data: [45, 72, 88, 60, 95] });
 
-seriesLt(scores, 60).values;  // [true, false, false, false, false]
-seriesGe(scores, 60).values;  // [false, true, true, true, true]
+console.log(seriesLt(scores, 60).values);  // [true, false, false, false, false]
+console.log(seriesGe(scores, 60).values);  // [false, true, true, true, true]
 
 // lt and ge are always complementary for finite, non-null values:
 // lt[i] !== ge[i]  for every i</textarea>
@@ -239,8 +240,8 @@ seriesGe(scores, 60).values;  // [false, true, true, true, true]
 const actual   = new Series({ data: [1, 2, 3, 4] });
 const expected = new Series({ data: [1, 3, 3, 2] });
 
-seriesEq(actual, expected).values;  // [true, false, true, false]
-seriesLt(actual, expected).values;  // [false, true, false, false]
+console.log(seriesEq(actual, expected).values);  // [true, false, true, false]
+console.log(seriesLt(actual, expected).values);  // [false, true, false, false]
 
 // Throws RangeError if lengths differ</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
@@ -264,12 +265,12 @@ seriesLt(actual, expected).values;  // [false, true, false, false]
 
 const s = new Series({ data: [1, null, NaN, 3] });
 
-seriesEq(s, 1).values;    // [true,  false, false, false]
-seriesNe(s, 1).values;    // [false, false, false, true ]
-seriesLt(s, 2).values;    // [true,  false, false, false]
+console.log(seriesEq(s, 1).values);    // [true,  false, false, false]
+console.log(seriesNe(s, 1).values);    // [false, false, false, true ]
+console.log(seriesLt(s, 2).values);    // [true,  false, false, false]
 
 // null eq null → false (NaN != NaN convention)
-seriesEq(s, null).values;  // [false, false, false, false]</textarea>
+console.log(seriesEq(s, null).values);  // [false, false, false, false]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -293,10 +294,10 @@ const df = DataFrame.fromColumns({
   science: [60, 45, 91],
 });
 
-dataFrameGt(df, 60).col("math").values;
+console.log(dataFrameGt(df, 60).col("math").values);
 // → [false, true, true]
 
-dataFrameLe(df, 60).col("science").values;
+console.log(dataFrameLe(df, 60).col("science").values);
 // → [true, true, false]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -319,8 +320,8 @@ dataFrameLe(df, 60).col("science").values;
 const df1 = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
 const df2 = DataFrame.fromColumns({ a: [1, 0], b: [3, 5] });
 
-dataFrameEq(df1, df2).col("a").values;  // [true, false]
-dataFrameEq(df1, df2).col("b").values;  // [true, false]</textarea>
+console.log(dataFrameEq(df1, df2).col("a").values);  // [true, false]
+console.log(dataFrameEq(df1, df2).col("b").values);  // [true, false]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -345,7 +346,7 @@ const temps = new Series({ data: [18, 22, 30, 15, 27] });
 const isWarm = seriesGe(temps, 20);  // [false, true, true, false, true]
 const warmOnly = whereSeries(temps, isWarm);
 
-warmOnly.values;  // [null, 22, 30, null, 27]</textarea>
+console.log(warmOnly.values);  // [null, 22, 30, null, 27]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

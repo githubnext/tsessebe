@@ -190,8 +190,8 @@ print(s2.squeeze())   # Series unchanged</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { Series, squeezeSeries } from "tsb";
 
-squeezeSeries(new Series({ data: [42] }));     // 42
-squeezeSeries(new Series({ data: [1, 2, 3] })); // Series([1, 2, 3])</textarea>
+console.log(squeezeSeries(new Series({ data: [42] })));     // 42
+console.log(squeezeSeries(new Series({ data: [1, 2, 3] }))); // Series([1, 2, 3])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -238,16 +238,16 @@ print(dfNx1.squeeze(axis=1))    # same as above</textarea>
       <textarea class="playground-editor" spellcheck="false">import { DataFrame, squeezeDataFrame } from "tsb";
 
 // 1×1 → scalar
-squeezeDataFrame(DataFrame.fromColumns({ A: [10] }));          // 10
+console.log(squeezeDataFrame(DataFrame.fromColumns({ A: [10] })));          // 10
 
 // 1 row, N cols → Series over columns
-squeezeDataFrame(DataFrame.fromColumns({ A: [1], B: [2] }));   // Series([1, 2])
+console.log(squeezeDataFrame(DataFrame.fromColumns({ A: [1], B: [2] })));   // Series([1, 2])
 
 // N rows, 1 col → Series over rows
-squeezeDataFrame(DataFrame.fromColumns({ A: [1, 2, 3] }));     // Series([1, 2, 3])
+console.log(squeezeDataFrame(DataFrame.fromColumns({ A: [1, 2, 3] })));     // Series([1, 2, 3])
 
 // axis=1: force squeeze along columns axis
-squeezeDataFrame(DataFrame.fromColumns({ A: [1, 2, 3] }), 1);  // Series([1, 2, 3])</textarea>
+console.log(squeezeDataFrame(DataFrame.fromColumns({ A: [1, 2, 3] }), 1));  // Series([1, 2, 3])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -289,8 +289,8 @@ s2.item()  # ValueError</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { Series, itemSeries } from "tsb";
 
-itemSeries(new Series({ data: [7] }));       // 7
-itemSeries(new Series({ data: [1, 2] }));    // throws RangeError</textarea>
+console.log(itemSeries(new Series({ data: [7] })));       // 7
+console.log(itemSeries(new Series({ data: [1, 2] })));    // throws RangeError</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -330,10 +330,10 @@ pd.DataFrame({"A": [1]}).bool()  # True</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { Series, DataFrame, boolSeries, boolDataFrame } from "tsb";
 
-boolSeries(new Series({ data: [1] }));               // true
-boolSeries(new Series({ data: [0] }));               // false
-boolDataFrame(DataFrame.fromColumns({ A: [1] }));    // true
-boolDataFrame(DataFrame.fromColumns({ A: [false] })); // false</textarea>
+console.log(boolSeries(new Series({ data: [1] })));               // true
+console.log(boolSeries(new Series({ data: [0] })));               // false
+console.log(boolDataFrame(DataFrame.fromColumns({ A: [1] })));    // true
+console.log(boolDataFrame(DataFrame.fromColumns({ A: [false] }))); // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -378,11 +378,11 @@ print(s_all_na.first_valid_index())  # None</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, firstValidIndex, lastValidIndex } from "tsb";
 
 const s = new Series({ data: [null, NaN, 3, 4], index: ["a", "b", "c", "d"] });
-firstValidIndex(s);   // "c"
-lastValidIndex(s);    // "d"
+console.log(firstValidIndex(s));   // "c"
+console.log(lastValidIndex(s));    // "d"
 
 const allNA = new Series({ data: [null, null] });
-firstValidIndex(allNA);  // null</textarea>
+console.log(firstValidIndex(allNA));  // null</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -427,8 +427,8 @@ const df = DataFrame.fromColumns({
   A: [null, null, 1],
   B: [null, 2, 3],
 });
-dataFrameFirstValidIndex(df);  // 1
-dataFrameLastValidIndex(df);   // 2</textarea>
+console.log(dataFrameFirstValidIndex(df));  // 1
+console.log(dataFrameLastValidIndex(df));   // 2</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

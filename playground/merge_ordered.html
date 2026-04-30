@@ -181,7 +181,8 @@ const result = mergeOrdered(left, right, { on: "date" });
 //    2 |  null |    200
 //    3 |    30 |    300
 //    5 |    50 |   null
-//    6 |  null |    600</textarea>
+//    6 |  null |    600
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -206,7 +207,8 @@ const result = mergeOrdered(left, right, { on: "date" });
 //    2 |    10 |    200   ← price carried forward from date=1
 //    3 |    30 |    300
 //    5 |    50 |    300   ← volume carried forward from date=3
-//    6 |    50 |    600</textarea>
+//    6 |    50 |    600
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -223,7 +225,7 @@ const result = mergeOrdered(left, right, { on: "date" });
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">// Only rows where both DataFrames have a key
-mergeOrdered(left, right, { on: "date", how: "inner" });
+console.log(mergeOrdered(left, right, { on: "date", how: "inner" }));
 // date | price | volume
 //    3 |    30 |    300</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
@@ -244,7 +246,7 @@ mergeOrdered(left, right, { on: "date", how: "inner" });
       <textarea class="playground-editor" spellcheck="false">const left2 = DataFrame.fromColumns({ t_left:  [1, 3, 5], a: [10, 30, 50] });
 const right2 = DataFrame.fromColumns({ t_right: [2, 3, 6], b: [200, 300, 600] });
 
-mergeOrdered(left2, right2, { left_on: "t_left", right_on: "t_right" });
+console.log(mergeOrdered(left2, right2, { left_on: "t_left", right_on: "t_right" }));
 // t_left | a    | b
 //      1 |   10 | null
 //      2 | null |  200
@@ -289,7 +291,8 @@ mergeOrdered(left3, right3, {
 //   A | 3 |   30 |   30
 //   B | 1 |  100 | null
 //   B | 2 | null |  200
-//   B | 3 |  300 |  300</textarea>
+//   B | 3 |  300 |  300
+console.log(right3);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -308,7 +311,7 @@ mergeOrdered(left3, right3, {
       <textarea class="playground-editor" spellcheck="false">const left4 = DataFrame.fromColumns({ k: [1, 2, 3], val: [10, 20, 30] });
 const right4 = DataFrame.fromColumns({ k: [2, 3, 4], val: [200, 300, 400] });
 
-mergeOrdered(left4, right4, { on: "k", suffixes: ["_L", "_R"] });
+console.log(mergeOrdered(left4, right4, { on: "k", suffixes: ["_L", "_R"] }));
 // k | val_L | val_R
 // 1 |    10 |  null
 // 2 |    20 |   200
