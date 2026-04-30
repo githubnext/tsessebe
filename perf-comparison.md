@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-29T19:22:43Z |
-| Iteration Count | 298 |
-| Best Metric | 636 |
+| Last Run | 2026-04-30T07:09:31Z |
+| Iteration Count | 299 |
+| Best Metric | 637 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -68,6 +68,10 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 299 — 2026-04-30T07:09:31Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25152235433)
+
+- **Status**: ✅ Accepted · **Change**: Added 4 benchmark pairs: `truncate` (Series.truncate by index bounds), `filter_labels` (DataFrame.filter by items), `assign` (dataFrameAssign with callable), `transform_agg` (seriesTransform "mean"). **Metric**: 637 (previous best: 636, delta: +1). Commit 5f069ec.
 
 ### Iteration 298 — 2026-04-29T19:22:43Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25129063173)
 
