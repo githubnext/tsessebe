@@ -168,23 +168,23 @@
 
 // ── absSeries ────────────────────────────────────────────────────────────────
 const s = new Series({ data: [-1, 2, -3, null] });
-absSeries(s).values;   // [1, 2, 3, null]
+console.log(absSeries(s).values);   // [1, 2, 3, null]
 
 // ── absDataFrame ─────────────────────────────────────────────────────────────
 const df = DataFrame.fromColumns({ a: [-1, 2], b: [3, -4] });
-absDataFrame(df).col("a").values;  // [1, 2]
-absDataFrame(df).col("b").values;  // [3, 4]
+console.log(absDataFrame(df).col("a").values);  // [1, 2]
+console.log(absDataFrame(df).col("b").values);  // [3, 4]
 
 // ── roundSeries ──────────────────────────────────────────────────────────────
 const prices = new Series({ data: [1.234, 5.678, null] });
-roundSeries(prices, 2).values;    // [1.23, 5.68, null]
-roundSeries(prices, 0).values;    // [1, 6, null]
-roundSeries(prices, -1).values;   // nearest 10: [0, 10, null]
+console.log(roundSeries(prices, 2).values);    // [1.23, 5.68, null]
+console.log(roundSeries(prices, 0).values);    // [1, 6, null]
+console.log(roundSeries(prices, -1).values);   // nearest 10: [0, 10, null]
 
 // ── roundDataFrame ────────────────────────────────────────────────────────────
 const data = DataFrame.fromColumns({ price: [1.111, 2.222], qty: [3.7, 4.4] });
-roundDataFrame(data, 2).col("price").values;        // [1.11, 2.22]
-roundDataFrame(data, { price: 1, qty: 0 }).col("qty").values; // [4, 4]</textarea>
+console.log(roundDataFrame(data, 2).col("price").values);        // [1.11, 2.22]
+console.log(roundDataFrame(data, { price: 1, qty: 0 }).col("qty").values); // [4, 4]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

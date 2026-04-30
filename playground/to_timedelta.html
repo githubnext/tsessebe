@@ -164,34 +164,34 @@
       <textarea class="playground-editor" spellcheck="false">import { toTimedelta, Timedelta, formatTimedelta, Series } from "tsb";
 
 // Scalar — various string formats
-toTimedelta("1 days 02:03:04");       // Timedelta(93_784_000 ms)
-toTimedelta("01:30:00");              // Timedelta(5_400_000 ms)
-toTimedelta("P1DT2H3M4S");            // ISO 8601
-toTimedelta("1h 30m 20s 500ms");      // human-readable
+console.log(toTimedelta("1 days 02:03:04"));       // Timedelta(93_784_000 ms)
+console.log(toTimedelta("01:30:00"));              // Timedelta(5_400_000 ms)
+console.log(toTimedelta("P1DT2H3M4S"));            // ISO 8601
+console.log(toTimedelta("1h 30m 20s 500ms"));      // human-readable
 
 // Scalar — numeric
-toTimedelta(1_000_000_000);           // default unit "ns" → 1000 ms
-toTimedelta(5000, { unit: "ms" });    // 5000 ms
-toTimedelta(2, { unit: "D" });        // 2 days
+console.log(toTimedelta(1_000_000_000));           // default unit "ns" → 1000 ms
+console.log(toTimedelta(5000, { unit: "ms" }));    // 5000 ms
+console.log(toTimedelta(2, { unit: "D" }));        // 2 days
 
 // Missing values
-toTimedelta(null);                    // null
-toTimedelta("nope", { errors: "coerce" }); // null
-toTimedelta("nope", { errors: "ignore" }); // "nope" (unchanged)
+console.log(toTimedelta(null));                    // null
+console.log(toTimedelta("nope", { errors: "coerce" })); // null
+console.log(toTimedelta("nope", { errors: "ignore" })); // "nope" (unchanged)
 
 // Timedelta arithmetic
 const a = toTimedelta("1h") as Timedelta;
 const b = toTimedelta("30m") as Timedelta;
-a.add(b).toString();          // "0 days 01:30:00"
-a.subtract(b).totalMs;        // 1_800_000
+console.log(a.add(b).toString());          // "0 days 01:30:00"
+console.log(a.subtract(b).totalMs);        // 1_800_000
 
 // Array
-toTimedelta(["1h", "30m", null]);
+console.log(toTimedelta(["1h", "30m", null]));
 // =&gt; [Timedelta(3_600_000), Timedelta(1_800_000), null]
 
 // Series
 const s = new Series({ data: ["1h", "30m", null] });
-toTimedelta(s);
+console.log(toTimedelta(s));
 // =&gt; Series&lt;Timedelta | null&gt; with dtype=timedelta
 
 // formatTimedelta

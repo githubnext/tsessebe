@@ -179,7 +179,7 @@ const prices = new Series({ data: [10, 12, 11, 15, 14, 16], name: "price" });
 // Custom: range (max - min) over each 3-day window
 const range = (w) =&gt; Math.max(...w) - Math.min(...w);
 
-rollingApply(prices, 3, range).toArray();
+console.log(rollingApply(prices, 3, range).toArray());
 // [null, null, 2, 4, 4, 5]
 //  ↑↑ insufficient data (need 3 observations)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
@@ -198,11 +198,11 @@ rollingApply(prices, 3, range).toArray();
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">// minPeriods=1 → start computing from the very first position
-rollingApply(prices, 3, range, { minPeriods: 1 }).toArray();
+console.log(rollingApply(prices, 3, range, { minPeriods: 1 }).toArray());
 // [0, 2, 2, 4, 4, 5]
 
 // center=true → symmetric window around each point
-rollingApply(prices, 3, range, { center: true }).toArray();
+console.log(rollingApply(prices, 3, range, { center: true }).toArray());
 // [null, 2, 4, 4, 5, null]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -235,7 +235,8 @@ const result = rollingAgg(s, 3, {
 
 // result is a DataFrame with columns: "mean", "max", "min", "range"
 // result.col("mean").toArray() → [null, null, 2, 3, 4, 5, 6, 7]
-// result.col("range").toArray() → [null, null, 2, 2, 2, 2, 2, 2]</textarea>
+// result.col("range").toArray() → [null, null, 2, 2, 2, 2, 2, 2]
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -263,7 +264,7 @@ const df = DataFrame.fromColumns({
 // Pairwise range within each 2-step window per column
 const range = (w) =&gt; Math.max(...w) - Math.min(...w);
 
-dataFrameRollingApply(df, 2, range);
+console.log(dataFrameRollingApply(df, 2, range));
 //   open  close
 // 0 null  null
 // 1    2     2
@@ -304,7 +305,8 @@ const out = dataFrameRollingAgg(df, 3, {
 // A_sum:  [null, null, 6, 9, 12]
 // A_mean: [null, null, 2, 3,  4]
 // B_sum:  [null, null, 60, 90, 120]
-// B_mean: [null, null, 20, 30,  40]</textarea>
+// B_mean: [null, null, 20, 30,  40]
+console.log(out);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -342,7 +344,8 @@ const bw = stats.col("std").toArray().map((std, i) =&gt; {
   const mean = stats.col("mean").toArray()[i];
   if (std === null || mean === null || mean === 0) return null;
   return (4 * (std as number)) / (mean as number);
-});</textarea>
+});
+console.log(bw);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

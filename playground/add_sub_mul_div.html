@@ -192,7 +192,7 @@ console.log([...result.values]); // [11, 12, null, 14]</textarea>
 
 const a = new Series({ data: [1, 2, 3] });
 const b = new Series({ data: [4, 5, 6] });
-seriesAdd(a, b).values;  // [5, 7, 9]</textarea>
+console.log(seriesAdd(a, b).values);  // [5, 7, 9]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -213,8 +213,8 @@ seriesAdd(a, b).values;  // [5, 7, 9]</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesSub, seriesRsub } from "tsb";
 
 const s = new Series({ data: [10, 20, 30] });
-seriesSub(s, 5).values;    // [5, 15, 25]
-seriesRsub(s, 100).values; // [90, 80, 70]</textarea>
+console.log(seriesSub(s, 5).values);    // [5, 15, 25]
+console.log(seriesRsub(s, 100).values); // [90, 80, 70]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -235,10 +235,10 @@ seriesRsub(s, 100).values; // [90, 80, 70]</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesMul } from "tsb";
 
 const s = new Series({ data: [1, 2, 3, null] });
-seriesMul(s, 3).values;  // [3, 6, 9, null]
+console.log(seriesMul(s, 3).values);  // [3, 6, 9, null]
 
 const weights = new Series({ data: [0.5, 1, 2, 1] });
-seriesMul(s, weights).values;  // [0.5, 2, 6, null]</textarea>
+console.log(seriesMul(s, weights).values);  // [0.5, 2, 6, null]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -261,8 +261,8 @@ seriesMul(s, weights).values;  // [0.5, 2, 6, null]</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesDiv, seriesRdiv } from "tsb";
 
 const s = new Series({ data: [4, 9, 0, null] });
-seriesDiv(s, 2).values;    // [2, 4.5, Infinity, null]
-seriesRdiv(s, 36).values;  // [9, 4, Infinity, null]</textarea>
+console.log(seriesDiv(s, 2).values);    // [2, 4.5, Infinity, null]
+console.log(seriesRdiv(s, 36).values);  // [9, 4, Infinity, null]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -285,13 +285,13 @@ seriesRdiv(s, 36).values;  // [9, 4, Infinity, null]</textarea>
 const df = DataFrame.fromColumns({ price: [10, 20, 30], qty: [3, 5, 2] });
 
 // Add a discount
-dataFrameAdd(df, 5).col("price").values;   // [15, 25, 35]
+console.log(dataFrameAdd(df, 5).col("price").values);   // [15, 25, 35]
 
 // Scale everything by 2
-dataFrameMul(df, 2).col("qty").values;     // [6, 10, 4]
+console.log(dataFrameMul(df, 2).col("qty").values);     // [6, 10, 4]
 
 // Revenue per item / some constant
-dataFrameDiv(df, 10).col("price").values;  // [1, 2, 3]</textarea>
+console.log(dataFrameDiv(df, 10).col("price").values);  // [1, 2, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -312,9 +312,9 @@ dataFrameDiv(df, 10).col("price").values;  // [1, 2, 3]</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesAdd, seriesMul, seriesDiv } from "tsb";
 
 const s = new Series({ data: [1, null, NaN, 4] });
-seriesAdd(s, 10).values;  // [11, null, NaN, 14]
-seriesMul(s, 2).values;   // [2, null, NaN, 8]
-seriesDiv(s, 2).values;   // [0.5, null, NaN, 2]</textarea>
+console.log(seriesAdd(s, 10).values);  // [11, null, NaN, 14]
+console.log(seriesMul(s, 2).values);   // [2, null, NaN, 8]
+console.log(seriesDiv(s, 2).values);   // [0.5, null, NaN, 2]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

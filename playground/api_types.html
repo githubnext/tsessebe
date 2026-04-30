@@ -167,12 +167,12 @@
       </div>
       <textarea class="playground-editor" spellcheck="false">import { isScalar } from "tsb";
 
-isScalar(42);            // true
-isScalar("hello");       // true
-isScalar(null);          // true
-isScalar(new Date());    // true
-isScalar([1, 2]);        // false
-isScalar({ a: 1 });      // false</textarea>
+console.log(isScalar(42));            // true
+console.log(isScalar("hello"));       // true
+console.log(isScalar(null));          // true
+console.log(isScalar(new Date()));    // true
+console.log(isScalar([1, 2]));        // false
+console.log(isScalar({ a: 1 }));      // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -189,10 +189,10 @@ isScalar({ a: 1 });      // false</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">isListLike([1, 2, 3]);      // true
-isListLike(new Set([1]));   // true
-isListLike("abc");          // false
-isListLike(42);             // false</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(isListLike([1, 2, 3]));      // true
+console.log(isListLike(new Set([1])));   // true
+console.log(isListLike("abc"));          // false
+console.log(isListLike(42));             // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -209,9 +209,9 @@ isListLike(42);             // false</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">isArrayLike([1, 2]);      // true
-isArrayLike("hello");     // true
-isArrayLike(42);          // false</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(isArrayLike([1, 2]));      // true
+console.log(isArrayLike("hello"));     // true
+console.log(isArrayLike(42));          // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -228,9 +228,9 @@ isArrayLike(42);          // false</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">isDictLike({ a: 1 });   // true
-isDictLike(new Map());  // true
-isDictLike([]);         // false</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(isDictLike({ a: 1 }));   // true
+console.log(isDictLike(new Map()));  // true
+console.log(isDictLike([]));         // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -246,14 +246,14 @@ isDictLike([]);         // false</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">isNumber(3.14);      // true
-isNumber(NaN);       // true  (typeof NaN === "number")
-isBool(true);        // true
-isStringValue("hi"); // true
-isFloat(3.14);       // true
-isFloat(3.0);        // false  (integer value)
-isInteger(42);       // true
-isInteger(3.14);     // false</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(isNumber(3.14));      // true
+console.log(isNumber(NaN));       // true  (typeof NaN === "number")
+console.log(isBool(true));        // true
+console.log(isStringValue("hi")); // true
+console.log(isFloat(3.14));       // true
+console.log(isFloat(3.0));        // false  (integer value)
+console.log(isInteger(42));       // true
+console.log(isInteger(3.14));     // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -270,10 +270,10 @@ isInteger(3.14);     // false</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">isMissing(null);       // true
-isMissing(undefined);  // true
-isMissing(NaN);        // true
-isMissing(0);          // false</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(isMissing(null));       // true
+console.log(isMissing(undefined));  // true
+console.log(isMissing(NaN));        // true
+console.log(isMissing(0));          // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -290,9 +290,9 @@ isMissing(0);          // false</textarea>
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">isHashable("key");  // true
-isHashable(42);     // true
-isHashable({});     // false</textarea>
+      <textarea class="playground-editor" spellcheck="false">console.log(isHashable("key"));  // true
+console.log(isHashable(42));     // true
+console.log(isHashable({}));     // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -312,20 +312,20 @@ isHashable({});     // false</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Dtype, isNumericDtype, isFloatDtype, isIntegerDtype,
          isStringDtype, isDatetimeDtype, isCategoricalDtype } from "tsb";
 
-isNumericDtype(Dtype.float64);    // true
-isNumericDtype("int32");          // true
-isNumericDtype("string");         // false
+console.log(isNumericDtype(Dtype.float64));    // true
+console.log(isNumericDtype("int32"));          // true
+console.log(isNumericDtype("string"));         // false
 
-isFloatDtype("float32");          // true
-isIntegerDtype("int64");          // true
-isUnsignedIntegerDtype("uint8");  // true
-isSignedIntegerDtype("int8");     // true
-isStringDtype("string");          // true
-isDatetimeDtype("datetime");      // true
-isCategoricalDtype("category");   // true
-isObjectDtype("object");          // true
-isExtensionArrayDtype("category"); // true
-isExtensionArrayDtype("int32");    // false</textarea>
+console.log(isFloatDtype("float32"));          // true
+console.log(isIntegerDtype("int64"));          // true
+console.log(isUnsignedIntegerDtype("uint8"));  // true
+console.log(isSignedIntegerDtype("int8"));     // true
+console.log(isStringDtype("string"));          // true
+console.log(isDatetimeDtype("datetime"));      // true
+console.log(isCategoricalDtype("category"));   // true
+console.log(isObjectDtype("object"));          // true
+console.log(isExtensionArrayDtype("category")); // true
+console.log(isExtensionArrayDtype("int32"));    // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

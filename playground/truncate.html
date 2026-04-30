@@ -203,9 +203,9 @@ print(s.truncate(after=2))
 
 const s = new Series({ data: [10, 20, 30, 40, 50], index: [0, 1, 2, 3, 4] });
 
-truncateSeries(s, 1, 3).values;    // [20, 30, 40]
-truncateSeries(s, 2).values;       // [30, 40, 50]
-truncateSeries(s, undefined, 2).values; // [10, 20, 30]</textarea>
+console.log(truncateSeries(s, 1, 3).values);    // [20, 30, 40]
+console.log(truncateSeries(s, 2).values);       // [30, 40, 50]
+console.log(truncateSeries(s, undefined, 2).values); // [10, 20, 30]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -258,8 +258,8 @@ const df = DataFrame.fromColumns(
 );
 
 const result = truncateDataFrame(df, 1, 3);
-result.col("a").values; // [20, 30, 40]
-result.index.values;    // [1, 2, 3]</textarea>
+console.log(result.col("a").values); // [20, 30, 40]
+console.log(result.index.values);    // [1, 2, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -305,7 +305,7 @@ print(df.truncate(before="a", after="b", axis=1))
 const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4], c: [5, 6] });
 
 const result = truncateDataFrame(df, "a", "b", { axis: 1 });
-result.columns.values; // ["a", "b"]</textarea>
+console.log(result.columns.values); // ["a", "b"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -356,7 +356,7 @@ const s = new Series({
   index: ["apple", "banana", "cherry", "date", "elderberry"],
 });
 
-truncateSeries(s, "banana", "date").values; // [2, 3, 4]</textarea>
+console.log(truncateSeries(s, "banana", "date").values); // [2, 3, 4]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

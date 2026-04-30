@@ -205,7 +205,8 @@ toNumericScalar("bad", { errors: "ignore" })  // "bad"</textarea>
   index: ["a", "b", "c"]
 });
 toNumericSeries(prices, { errors: "coerce" })
-// Series [10.5, NaN, 22] name="price"</textarea>
+// Series [10.5, NaN, 22] name="price"
+console.log(prices);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -246,7 +247,8 @@ toNumericScalar(42, { downcast: "integer" })  // 42</textarea>
       <textarea class="playground-editor" spellcheck="false">// Try it yourself!
 const s = new Series(["100", "200.5", "NaN", null, "abc"]);
 const result = toNumericSeries(s, { errors: "coerce" });
-return JSON.stringify(result.values);</textarea>
+return JSON.stringify(result.values);
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

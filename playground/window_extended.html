@@ -191,7 +191,8 @@
 
 const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9], name: "x" });
 const sem3 = rollingSem(s, 3);
-// [null, null, 0.667, 0, 0.577, 0.577, 1.155, 2.082]</textarea>
+// [null, null, 0.667, 0, 0.577, 0.577, 1.155, 2.082]
+console.log(sem3);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -232,7 +233,7 @@ const sem3 = rollingSem(s, 3);
       <textarea class="playground-editor" spellcheck="false">import { rollingSkew, Series } from "tsb";
 
 const s = new Series({ data: [1, 2, 3, 4, 5] });
-rollingSkew(s, 3);
+console.log(rollingSkew(s, 3));
 // [null, null, 0, 0, 0]   ← symmetric windows → zero skew</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -274,7 +275,7 @@ rollingSkew(s, 3);
       <textarea class="playground-editor" spellcheck="false">import { rollingKurt, Series } from "tsb";
 
 const s = new Series({ data: [1, 2, 3, 4] });
-rollingKurt(s, 4);
+console.log(rollingKurt(s, 4));
 // [null, null, null, -1.2]   ← uniform distribution has kurt = -1.2</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -298,9 +299,9 @@ rollingKurt(s, 4);
 
 const s = new Series({ data: [1, 2, 3, 4, 5] });
 
-rollingQuantile(s, 0.5, 3);  // rolling median: [null, null, 2, 3, 4]
-rollingQuantile(s, 0.25, 3); // [null, null, 1.5, 2.5, 3.5]
-rollingQuantile(s, 0.75, 3); // [null, null, 2.5, 3.5, 4.5]</textarea>
+console.log(rollingQuantile(s, 0.5, 3));  // rolling median: [null, null, 2, 3, 4]
+console.log(rollingQuantile(s, 0.25, 3)); // [null, null, 1.5, 2.5, 3.5]
+console.log(rollingQuantile(s, 0.75, 3)); // [null, null, 2.5, 3.5, 4.5]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

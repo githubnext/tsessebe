@@ -186,8 +186,8 @@ s.at["b"]   # 20</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesAt } from "tsb";
 
 const s = new Series({ data: [10, 20, 30], index: ["a", "b", "c"] });
-seriesAt(s, "b");   // 20
-seriesAt(s, "a");   // 10</textarea>
+console.log(seriesAt(s, "b"));   // 20
+console.log(seriesAt(s, "a"));   // 10</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -224,8 +224,8 @@ s.iat[-1]  # 30  (negative indexing)</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { seriesIat } from "tsb";
 
-seriesIat(s, 2);   // 30
-seriesIat(s, -1);  // 30</textarea>
+console.log(seriesIat(s, 2));   // 30
+console.log(seriesIat(s, -1));  // 30</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -266,8 +266,8 @@ const df = DataFrame.fromColumns(
   { x: [1, 2], y: [3, 4] },
   { index: ["r0", "r1"] },
 );
-dataFrameAt(df, "r1", "x");   // 2
-dataFrameAt(df, "r0", "y");   // 3</textarea>
+console.log(dataFrameAt(df, "r1", "x"));   // 2
+console.log(dataFrameAt(df, "r0", "y"));   // 3</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -304,8 +304,8 @@ df.iat[1, -1]  # 4  (last col)</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">import { dataFrameIat } from "tsb";
 
-dataFrameIat(df, 0, 1);   // 3  (row 0, column index 1 = "y")
-dataFrameIat(df, 1, -1);  // 4  (last column, row 1)</textarea>
+console.log(dataFrameIat(df, 0, 1));   // 3  (row 0, column index 1 = "y")
+console.log(dataFrameIat(df, 1, -1));  // 4  (last column, row 1)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

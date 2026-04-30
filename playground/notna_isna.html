@@ -166,49 +166,49 @@ import { isna, notna, isnull, notnull, fillna, dropna, countna, countValid } fro
 import { Series, DataFrame } from "tsb";
 
 // ── scalar ──────────────────────────────────────────────────
-isna(null);          // true
-isna(undefined);     // true
-isna(NaN);           // true
-isna(0);             // false  — zero is not missing
-isna(false);         // false  — false is not missing
-isna("");            // false  — empty string is not missing
+console.log(isna(null));          // true
+console.log(isna(undefined));     // true
+console.log(isna(NaN));           // true
+console.log(isna(0));             // false  — zero is not missing
+console.log(isna(false));         // false  — false is not missing
+console.log(isna(""));            // false  — empty string is not missing
 
 // ── array ───────────────────────────────────────────────────
-isna([1, null, NaN, 3]);     // [false, true, true, false]
-notna([1, null, NaN, 3]);    // [true, false, false, true]
+console.log(isna([1, null, NaN, 3]));     // [false, true, true, false]
+console.log(notna([1, null, NaN, 3]));    // [true, false, false, true]
 
 // ── Series ──────────────────────────────────────────────────
 const s = new Series({ data: [1, null, NaN, 4] });
-isna(s).values;   // [false, true, true, false]
-notna(s).values;  // [true, false, false, true]
+console.log(isna(s).values);   // [false, true, true, false]
+console.log(notna(s).values);  // [true, false, false, true]
 
 // ── DataFrame ───────────────────────────────────────────────
 const df = new DataFrame(new Map([
   ["a", new Series({ data: [1, null, 3] })],
   ["b", new Series({ data: [NaN, 5, 6] })],
 ]));
-isna(df).col("a").values;  // [false, true, false]
-isna(df).col("b").values;  // [true, false, false]
+console.log(isna(df).col("a").values);  // [false, true, false]
+console.log(isna(df).col("b").values);  // [true, false, false]
 
 // ── aliases ─────────────────────────────────────────────────
-isnull(null);   // true  (same as isna)
-notnull(42);    // true  (same as notna)
+console.log(isnull(null));   // true  (same as isna)
+console.log(notnull(42));    // true  (same as notna)
 
 // ── fillna ──────────────────────────────────────────────────
-fillna([1, null, NaN, 4], { value: 0 });   // [1, 0, 0, 4]
-fillna(s, { value: -1 }).values;           // [1, -1, -1, 4]
-fillna(df, { value: 0 }).col("b").values;  // [0, 5, 6]
+console.log(fillna([1, null, NaN, 4], { value: 0 }));   // [1, 0, 0, 4]
+console.log(fillna(s, { value: -1 }).values);           // [1, -1, -1, 4]
+console.log(fillna(df, { value: 0 }).col("b").values);  // [0, 5, 6]
 
 // ── dropna ──────────────────────────────────────────────────
-dropna([1, null, NaN, 3]);   // [1, 3]
-dropna(s).values;            // [1, 4]
-dropna(df).shape;            // [2, 2]  (row 0 dropped because b[0]=NaN, row 1 dropped because a[1]=null)
-dropna(df, { how: "all" }).shape;         // drops only rows where ALL values are missing
-dropna(df, { axis: 1 }).columns.values;  // drops columns that contain any missing value
+console.log(dropna([1, null, NaN, 3]));   // [1, 3]
+console.log(dropna(s).values);            // [1, 4]
+console.log(dropna(df).shape);            // [2, 2]  (row 0 dropped because b[0]=NaN, row 1 dropped because a[1]=null)
+console.log(dropna(df, { how: "all" }).shape);         // drops only rows where ALL values are missing
+console.log(dropna(df, { axis: 1 }).columns.values);  // drops columns that contain any missing value
 
 // ── countna / countValid ─────────────────────────────────────
-countna([1, null, NaN, 3]);    // 2
-countValid([1, null, NaN, 3]); // 2</textarea>
+console.log(countna([1, null, NaN, 3]));    // 2
+console.log(countValid([1, null, NaN, 3])); // 2</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

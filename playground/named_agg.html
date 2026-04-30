@@ -182,7 +182,8 @@ const result = df.groupby("dept").aggNamed({
 // result:
 //         | total_salary | avg_salary | employees | avg_score
 // eng     | 330          | 110        | 3         | 4.167
-// hr      | 170          | 85         | 2         | 3.5</textarea>
+// hr      | 170          | 85         | 2         | 3.5
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -227,7 +228,8 @@ const result = df.groupby("dept").aggNamed({
 
 df.groupby("dept").aggNamed({
   salary_range: namedAgg("salary", salaryRange),
-});</textarea>
+});
+console.log(salaryRange);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

@@ -172,10 +172,10 @@ const df = DataFrame.fromColumns(
 );
 
 // Select row "y" → Series { a: 2, b: 5 }
-xsDataFrame(df, "y");
+console.log(xsDataFrame(df, "y"));
 
 // Select column "b" → Series { x: 4, y: 5, z: 6 }
-xsDataFrame(df, "b", { axis: 1 });
+console.log(xsDataFrame(df, "b", { axis: 1 }));
 
 // ── MultiIndex ─────────────────────────────────────────────────────────────
 const mi = MultiIndex.fromTuples([
@@ -185,11 +185,11 @@ const mi = MultiIndex.fromTuples([
 const miDf = new DataFrame( ... , mi);
 
 // All "A" rows → DataFrame with 2 rows
-xsDataFrame(miDf, "A");
+console.log(xsDataFrame(miDf, "A"));
 
 // ── Series ─────────────────────────────────────────────────────────────────
 const s = new Series({ data: [10, 20, 30], index: ["a", "b", "c"] });
-xsSeries(s, "b"); // → 20</textarea>
+console.log(xsSeries(s, "b")); // → 20</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

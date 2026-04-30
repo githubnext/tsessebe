@@ -194,9 +194,9 @@ s.sort_values(ascending=False)
 
 const s = new Series({ data: [3, 1, 2], index: ["b", "a", "c"] });
 
-sortValuesSeries(s);                      // [1, 2, 3] index: ["a","c","b"]
-sortValuesSeries(s, { ascending: false }); // [3, 2, 1] index: ["b","c","a"]
-sortValuesSeries(s, { ignoreIndex: true }); // resets index to [0, 1, 2]</textarea>
+console.log(sortValuesSeries(s));                      // [1, 2, 3] index: ["a","c","b"]
+console.log(sortValuesSeries(s, { ascending: false })); // [3, 2, 1] index: ["b","c","a"]
+console.log(sortValuesSeries(s, { ignoreIndex: true })); // resets index to [0, 1, 2]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -233,8 +233,8 @@ s.sort_values(na_position="first")  # NaN, 1, 3</textarea>
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s2 = new Series({ data: [3, null, 1] });
-sortValuesSeries(s2);                           // [1, 3, null]
-sortValuesSeries(s2, { naPosition: "first" }); // [null, 1, 3]</textarea>
+console.log(sortValuesSeries(s2));                           // [1, 3, null]
+console.log(sortValuesSeries(s2, { naPosition: "first" })); // [null, 1, 3]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -271,7 +271,7 @@ sortValuesSeries(s2, { naPosition: "first" }); // [null, 1, 3]</textarea>
       <textarea class="playground-editor" spellcheck="false">import { sortIndexSeries } from "tsb";
 
 const s = new Series({ data: [3, 1, 2], index: ["b", "a", "c"] });
-sortIndexSeries(s);
+console.log(sortIndexSeries(s));
 // values: [1, 3, 2], index: ["a", "b", "c"]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -317,10 +317,10 @@ df.sort_values(["a", "b"], ascending=[True, False])</textarea>
 
 const df = DataFrame.fromColumns({ a: [3, 1, 2], b: [10, 30, 20] });
 
-sortValuesDataFrame(df, "a");
+console.log(sortValuesDataFrame(df, "a"));
 // col a: [1, 2, 3]  col b: [30, 20, 10]
 
-sortValuesDataFrame(df, ["a", "b"], { ascending: [true, false] });
+console.log(sortValuesDataFrame(df, ["a", "b"], { ascending: [true, false] }));
 // compound sort: by a ascending, then b descending</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -359,11 +359,11 @@ df.sort_index(axis=1)    # sort columns alphabetically</textarea>
       <textarea class="playground-editor" spellcheck="false">import { sortIndexDataFrame } from "tsb";
 
 const df2 = DataFrame.fromColumns({ z: [1], a: [2], m: [3] });
-sortIndexDataFrame(df2, { axis: 1 });
+console.log(sortIndexDataFrame(df2, { axis: 1 }));
 // columns in alphabetical order: "a", "m", "z"
 
 const df3 = DataFrame.fromColumns({ v: [1, 2, 3] }, { index: ["c", "a", "b"] });
-sortIndexDataFrame(df3);
+console.log(sortIndexDataFrame(df3));
 // rows in index order: "a" (2), "b" (3), "c" (1)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

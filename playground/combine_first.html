@@ -173,7 +173,8 @@ const result = combineFirstSeries(a, b);
 // - "x": a has 1 (non-null) → keeps 1
 // - "y": a has null → filled from b → 20
 // - "z": a has 3 (non-null) → keeps 3
-// - "w": a has no entry → comes from b → 40</textarea>
+// - "w": a has no entry → comes from b → 40
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -212,7 +213,8 @@ const result = combineFirstDataFrame(a, b);
 // result["r2"]["y"] = null (no r2 in a, no y in b)
 // result["r0"]["z"] = 30  (b only)
 // result["r1"]["z"] = null (b has no r1)
-// result["r2"]["z"] = 40  (b only)</textarea>
+// result["r2"]["z"] = 40  (b only)
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -243,7 +245,8 @@ const sensor2 = new Series({
 
 const merged = combineFirstSeries(sensor1, sensor2);
 // values: [21.0, 22.5, 23.1, 24.0]
-// Gaps in sensor1 filled from sensor2</textarea>
+// Gaps in sensor1 filled from sensor2
+console.log(merged);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -275,7 +278,8 @@ const backup = new Series({
 
 const complete = combineFirstSeries(primary, backup);
 // index:  2024-01, 2024-02, 2024-03, 2024-04, 2024-05, 2024-06
-// values: 100,     101,     102,     103,     104,     106</textarea>
+// values: 100,     101,     102,     103,     104,     106
+console.log(complete);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

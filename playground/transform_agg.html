@@ -167,19 +167,19 @@
 import { seriesTransform, dataFrameTransform } from "tsb";
 
 // single function or built-in name → Series
-seriesTransform(s, "cumsum");
-seriesTransform(s, (x) =&gt; x);
+console.log(seriesTransform(s, "cumsum"));
+console.log(seriesTransform(s, (x) =&gt; x));
 
 // array → DataFrame (one column per function)
-seriesTransform(s, ["sum", "cumsum", "mean"]);
+console.log(seriesTransform(s, ["sum", "cumsum", "mean"]));
 
 // Record → DataFrame with named columns
-seriesTransform(s, { total: "sum", running: "cumsum" });
+console.log(seriesTransform(s, { total: "sum", running: "cumsum" }));
 
 // DataFrame transform (column-wise by default)
-dataFrameTransform(df, "cumsum");
-dataFrameTransform(df, { a: "sum", b: "cummin" });  // per-column
-dataFrameTransform(df, "cumsum", { axis: 1 });       // row-wise</textarea>
+console.log(dataFrameTransform(df, "cumsum"));
+console.log(dataFrameTransform(df, { a: "sum", b: "cummin" }));  // per-column
+console.log(dataFrameTransform(df, "cumsum", { axis: 1 }));       // row-wise</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -220,20 +220,20 @@ import { Series, DataFrame, seriesTransform, dataFrameTransform } from "tsb";
 const s = new Series({ data: [1, 2, 3, 4] });
 
 // cumulative sum
-seriesTransform(s, "cumsum").values;       // [1, 3, 6, 10]
+console.log(seriesTransform(s, "cumsum").values);       // [1, 3, 6, 10]
 
 // broadcast aggregate
-seriesTransform(s, "sum").values;          // [10, 10, 10, 10]
+console.log(seriesTransform(s, "sum").values);          // [10, 10, 10, 10]
 
 // multiple functions
 const df = seriesTransform(s, ["sum", "cumsum", "mean"]);
-df.col("sum").values;    // [10, 10, 10, 10]
-df.col("cumsum").values; // [1, 3, 6, 10]
-df.col("mean").values;   // [2.5, 2.5, 2.5, 2.5]
+console.log(df.col("sum").values);    // [10, 10, 10, 10]
+console.log(df.col("cumsum").values); // [1, 3, 6, 10]
+console.log(df.col("mean").values);   // [2.5, 2.5, 2.5, 2.5]
 
 // DataFrame transform
 const frame = DataFrame.fromColumns({ a: [1,2,3], b: [10,20,30] });
-dataFrameTransform(frame, "cumsum").col("b").values;  // [10, 30, 60]</textarea>
+console.log(dataFrameTransform(frame, "cumsum").col("b").values);  // [10, 30, 60]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

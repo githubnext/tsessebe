@@ -173,7 +173,8 @@ new Day(-1).apply(d).toISOString();         // "2023-12-31T00:00:00.000Z"
 new Hour(2).apply(d).toISOString();         // "2024-01-01T02:00:00.000Z"
 new Minute(90).apply(d).toISOString();      // "2024-01-01T01:30:00.000Z"
 new Second(30).apply(d).toISOString();      // "2024-01-01T00:00:30.000Z"
-new Milli(500).apply(d).getTime() - d.getTime();  // 500</textarea>
+new Milli(500).apply(d).getTime() - d.getTime();  // 500
+console.log(d);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -202,16 +203,16 @@ new Week(2).apply(wed).toISOString().slice(0, 10);     // "2024-01-31"
 
 // Weekday-aligned (weekday=0 → Monday)
 const wk = new Week(1, { weekday: 0 });
-wk.apply(wed).toISOString().slice(0, 10);    // "2024-01-22" (next Mon)
-wk.apply(mon).toISOString().slice(0, 10);    // "2024-01-22" (Mon → next Mon)
+console.log(wk.apply(wed).toISOString().slice(0, 10));    // "2024-01-22" (next Mon)
+console.log(wk.apply(mon).toISOString().slice(0, 10));    // "2024-01-22" (Mon → next Mon)
 
 // Rollforward / rollback
-wk.rollforward(wed).toISOString().slice(0, 10);  // "2024-01-22"
-wk.rollback(wed).toISOString().slice(0, 10);     // "2024-01-15"
+console.log(wk.rollforward(wed).toISOString().slice(0, 10));  // "2024-01-22"
+console.log(wk.rollback(wed).toISOString().slice(0, 10));     // "2024-01-15"
 
 // onOffset
-wk.onOffset(mon);   // true
-wk.onOffset(wed);   // false</textarea>
+console.log(wk.onOffset(mon));   // true
+console.log(wk.onOffset(wed));   // false</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -248,7 +249,8 @@ new MonthBegin(1).apply(mid).toISOString().slice(0, 10);  // "2024-02-01"
 new MonthBegin(-1).apply(mid).toISOString().slice(0, 10); // "2024-01-01"
 
 new MonthBegin(0).rollforward(mid).toISOString().slice(0, 10); // "2024-02-01"
-new MonthBegin(0).rollback(mid).toISOString().slice(0, 10);    // "2024-01-01"</textarea>
+new MonthBegin(0).rollback(mid).toISOString().slice(0, 10);    // "2024-01-01"
+console.log(end);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -279,7 +281,8 @@ new YearBegin(-1).apply(d).toISOString().slice(0, 10); // "2024-01-01"
 
 const yr2024 = new Date(Date.UTC(2024, 11, 31));
 new YearEnd(0).rollforward(yr2024).toISOString().slice(0, 10);  // "2024-12-31"
-new YearEnd(0).rollback(d).toISOString().slice(0, 10);          // "2023-12-31"</textarea>
+new YearEnd(0).rollback(d).toISOString().slice(0, 10);          // "2023-12-31"
+console.log(yr2024);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -316,7 +319,8 @@ new BusinessDay(0).rollforward(sat).toISOString().slice(0, 10); // "2024-01-15"
 new BusinessDay(0).rollback(sat).toISOString().slice(0, 10);    // "2024-01-12"
 
 new BusinessDay(0).onOffset(fri);   // true
-new BusinessDay(0).onOffset(sat);   // false</textarea>
+new BusinessDay(0).onOffset(sat);   // false
+console.log(sat);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -344,7 +348,7 @@ new BusinessDay(5).multiply(2).n;  // 10
 const bday = new BusinessDay(3);
 const fri = new Date(Date.UTC(2024, 0, 12));
 
-bday.negate().apply(bday.apply(fri)).toISOString().slice(0, 10); // "2024-01-12"</textarea>
+console.log(bday.negate().apply(bday.apply(fri)).toISOString().slice(0, 10)); // "2024-01-12"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -365,10 +369,10 @@ bday.negate().apply(bday.apply(fri)).toISOString().slice(0, 10); // "2024-01-12"
 
 const d = new Date(Date.UTC(2024, 0, 15));
 
-Day.of(5).apply(d).toISOString().slice(0, 10);          // "2024-01-20"
-MonthEnd.of(1).apply(d).toISOString().slice(0, 10);     // "2024-01-31"
-Week.of(1, { weekday: 0 }).apply(d).toISOString().slice(0, 10); // "2024-01-22"
-BusinessDay.of(2).apply(d).toISOString().slice(0, 10);  // "2024-01-17"</textarea>
+console.log(Day.of(5).apply(d).toISOString().slice(0, 10));          // "2024-01-20"
+console.log(MonthEnd.of(1).apply(d).toISOString().slice(0, 10));     // "2024-01-31"
+console.log(Week.of(1, { weekday: 0 }).apply(d).toISOString().slice(0, 10)); // "2024-01-22"
+console.log(BusinessDay.of(2).apply(d).toISOString().slice(0, 10));  // "2024-01-17"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

@@ -192,7 +192,7 @@ print(s.between(2, 4))
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesBetween } from "tsb";
 
 const s = new Series({ data: [1, 2, 3, 4, 5] });
-seriesBetween(s, 2, 4).values;
+console.log(seriesBetween(s, 2, 4).values);
 // [false, true, true, true, false]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -242,13 +242,13 @@ s.between(2, 4, inclusive="neither").tolist()
 
 const s = new Series({ data: [1, 2, 3, 4, 5] });
 
-seriesBetween(s, 2, 4, { inclusive: "left" }).values;
+console.log(seriesBetween(s, 2, 4, { inclusive: "left" }).values);
 // [false, true, true, false, false]
 
-seriesBetween(s, 2, 4, { inclusive: "right" }).values;
+console.log(seriesBetween(s, 2, 4, { inclusive: "right" }).values);
 // [false, false, true, true, false]
 
-seriesBetween(s, 2, 4, { inclusive: "neither" }).values;
+console.log(seriesBetween(s, 2, 4, { inclusive: "neither" }).values);
 // [false, false, true, false, false]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -291,7 +291,7 @@ s.between(0, 5).tolist()
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesBetween } from "tsb";
 
 const s = new Series({ data: [1, null, NaN, 4] });
-seriesBetween(s, 0, 5).values;
+console.log(seriesBetween(s, 0, 5).values);
 // [true, false, false, true]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -333,7 +333,7 @@ s.between("banana", "cherry").tolist()
       <textarea class="playground-editor" spellcheck="false">import { Series, seriesBetween } from "tsb";
 
 const s = new Series({ data: ["apple", "banana", "cherry", "date"] });
-seriesBetween(s, "banana", "cherry").values;
+console.log(seriesBetween(s, "banana", "cherry").values);
 // [false, true, true, false]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

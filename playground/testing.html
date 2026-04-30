@@ -186,7 +186,7 @@
 
 const a = new Series({ data: [1, 2, 3], name: "x" });
 const b = new Series({ data: [1, 2, 3], name: "x" });
-assertSeriesEqual(a, b);
+console.log(assertSeriesEqual(a, b));
 // ✅ no exception thrown</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -204,7 +204,7 @@ assertSeriesEqual(a, b);
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const c = new Series({ data: [1, 2, 99], name: "x" });
-assertSeriesEqual(a, c);
+console.log(assertSeriesEqual(a, c));
 // ❌ AssertionError: Series: values differ at index 2 (position 2).
 //    left=3, right=99</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
@@ -224,9 +224,9 @@ assertSeriesEqual(a, c);
       </div>
       <textarea class="playground-editor" spellcheck="false">const p = new Series({ data: [1.0, 2.0] });
 const q = new Series({ data: [1.0 + 1e-9, 2.0] });  // tiny rounding error
-assertSeriesEqual(p, q);                              // ✅ passes (within default atol=1e-8)
+console.log(assertSeriesEqual(p, q));                              // ✅ passes (within default atol=1e-8)
 
-assertSeriesEqual(p, q, { checkExact: true });        // ❌ exact comparison fails</textarea>
+console.log(assertSeriesEqual(p, q, { checkExact: true }));        // ❌ exact comparison fails</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -246,7 +246,7 @@ assertSeriesEqual(p, q, { checkExact: true });        // ❌ exact comparison fa
 
 const a = DataFrame.fromColumns({ x: [1, 2], y: [3, 4] });
 const b = DataFrame.fromColumns({ x: [1, 2], y: [3, 4] });
-assertFrameEqual(a, b); // ✅</textarea>
+console.log(assertFrameEqual(a, b)); // ✅</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -263,7 +263,7 @@ assertFrameEqual(a, b); // ✅</textarea>
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const c = DataFrame.fromColumns({ y: [3, 4], x: [1, 2] }); // columns reversed
-assertFrameEqual(a, c, { checkLike: true }); // ✅ order ignored</textarea>
+console.log(assertFrameEqual(a, c, { checkLike: true })); // ✅ order ignored</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -284,10 +284,10 @@ assertFrameEqual(a, c, { checkLike: true }); // ✅ order ignored</textarea>
 
 const a = new Index(["a", "b", "c"]);
 const b = new Index(["a", "b", "c"]);
-assertIndexEqual(a, b); // ✅
+console.log(assertIndexEqual(a, b)); // ✅
 
 const c = new Index(["a", "b", "z"]);
-assertIndexEqual(a, c);
+console.log(assertIndexEqual(a, c));
 // ❌ AssertionError: Index: Index values differ at position 2. left=c, right=z</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

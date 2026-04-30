@@ -167,16 +167,16 @@
 import { seriesDotSeries, seriesDotDataFrame, dataFrameDotSeries, dataFrameDotDataFrame } from "tsb";
 
 // Series · Series → scalar
-seriesDotSeries(a, b);
+console.log(seriesDotSeries(a, b));
 
 // Series · DataFrame → Series
-seriesDotDataFrame(s, df);
+console.log(seriesDotDataFrame(s, df));
 
 // DataFrame · Series → Series
-dataFrameDotSeries(df, s);
+console.log(dataFrameDotSeries(df, s));
 
 // DataFrame · DataFrame → DataFrame
-dataFrameDotDataFrame(A, B);</textarea>
+console.log(dataFrameDotDataFrame(A, B));</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -196,17 +196,17 @@ dataFrameDotDataFrame(A, B);</textarea>
 // Series dot product
 const a = new Series({ data: [1, 2, 3], index: ["x","y","z"] });
 const b = new Series({ data: [4, 5, 6], index: ["x","y","z"] });
-seriesDotSeries(a, b); // 1*4 + 2*5 + 3*6 = 32
+console.log(seriesDotSeries(a, b)); // 1*4 + 2*5 + 3*6 = 32
 
 // DataFrame · vector
 const df = DataFrame.fromColumns({ a: [1, 2], b: [3, 4] });
 const v  = new Series({ data: [1, 1], index: ["a", "b"] });
-dataFrameDotSeries(df, v).values; // [4, 6]  (row sums)
+console.log(dataFrameDotSeries(df, v).values); // [4, 6]  (row sums)
 
 // Matrix multiply
 const A = DataFrame.fromColumns({ k: [1, 2] });     // 2×1
 // ... B with row index ["k"] ...
-dataFrameDotDataFrame(A, B).col("r").values;         // [3, 6]</textarea>
+console.log(dataFrameDotDataFrame(A, B).col("r").values);         // [3, 6]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

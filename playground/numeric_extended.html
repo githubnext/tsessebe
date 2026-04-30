@@ -179,7 +179,7 @@ const bins = digitize(scores, edges);
 
 // Series version — preserves index
 const s = new Series({ data: [15, 45, 70], index: ["Alice","Bob","Carol"] });
-seriesDigitize(s, [33, 66, 100]);
+console.log(seriesDigitize(s, [33, 66, 100]));
 // Series: Alice→-1, Bob→1, Carol→2</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -208,7 +208,7 @@ const { counts, binEdges } = histogram(data);
 const { counts: d, binEdges: e } = histogram(data, { bins: 5, density: true });
 
 // Explicit edges
-histogram(data, { binEdges: [1, 4, 7, 10] });
+console.log(histogram(data, { binEdges: [1, 4, 7, 10] }));
 // counts: [ 3, 3, 4 ]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -229,19 +229,19 @@ histogram(data, { binEdges: [1, 4, 7, 10] });
       <textarea class="playground-editor" spellcheck="false">import { linspace, arange } from "tsb";
 
 // 5 values from 0 to 1 (inclusive)
-linspace(0, 1, 5);
+console.log(linspace(0, 1, 5));
 // → [0, 0.25, 0.5, 0.75, 1]
 
 // 0..4
-arange(5);
+console.log(arange(5));
 // → [0, 1, 2, 3, 4]
 
 // From 2 to 10, step 2
-arange(2, 10, 2);
+console.log(arange(2, 10, 2));
 // → [2, 4, 6, 8]
 
 // Descending
-arange(5, 0, -1);
+console.log(arange(5, 0, -1));
 // → [5, 4, 3, 2, 1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -265,9 +265,9 @@ arange(5, 0, -1);
 const grades = [55, 60, 70, 75, 80, 85, 90, 95];
 
 // What percentile is a score of 75?
-percentileOfScore(grades, 75);            // 50 (rank — default)
-percentileOfScore(grades, 75, "weak");    // 50 (≤ 75: 4/8 = 50%)
-percentileOfScore(grades, 75, "strict");  // 37.5 (&lt; 75: 3/8 = 37.5%)</textarea>
+console.log(percentileOfScore(grades, 75));            // 50 (rank — default)
+console.log(percentileOfScore(grades, 75, "weak"));    // 50 (≤ 75: 4/8 = 50%)
+console.log(percentileOfScore(grades, 75, "strict"));  // 37.5 (&lt; 75: 3/8 = 37.5%)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -293,7 +293,8 @@ const z = zscore(s);
 // z.values ≈ [-1.5, -0.5, -0.5, -0.5, 0, 0, 1, 2]
 
 // With population std (ddof=0)
-const zPop = zscore(s, { ddof: 0 });</textarea>
+const zPop = zscore(s, { ddof: 0 });
+console.log(zPop);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -314,11 +315,11 @@ const zPop = zscore(s, { ddof: 0 });</textarea>
       <textarea class="playground-editor" spellcheck="false">import { minMaxNormalize, Series } from "tsb";
 
 const s = new Series({ data: [0, 25, 50, 75, 100] });
-minMaxNormalize(s).values;
+console.log(minMaxNormalize(s).values);
 // → [0, 0.25, 0.5, 0.75, 1]
 
 // Scale to [-1, 1]
-minMaxNormalize(s, { featureRangeMin: -1, featureRangeMax: 1 }).values;
+console.log(minMaxNormalize(s, { featureRangeMin: -1, featureRangeMax: 1 }).values);
 // → [-1, -0.5, 0, 0.5, 1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -340,13 +341,13 @@ minMaxNormalize(s, { featureRangeMin: -1, featureRangeMax: 1 }).values;
       <textarea class="playground-editor" spellcheck="false">import { coefficientOfVariation, Series } from "tsb";
 
 // Dataset A: [10, 20, 30]  mean=20, std=10  → CV=0.5
-coefficientOfVariation(new Series({ data: [10, 20, 30] }));
+console.log(coefficientOfVariation(new Series({ data: [10, 20, 30] })));
 
 // Dataset B: [100, 200, 300]  same shape, higher scale  → CV=0.5
-coefficientOfVariation(new Series({ data: [100, 200, 300] }));
+console.log(coefficientOfVariation(new Series({ data: [100, 200, 300] })));
 
 // CV with population std
-coefficientOfVariation(new Series({ data: [1, 2, 3, 4, 5] }), { ddof: 0 });</textarea>
+console.log(coefficientOfVariation(new Series({ data: [1, 2, 3, 4, 5] }), { ddof: 0 }));</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

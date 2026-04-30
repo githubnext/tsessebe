@@ -166,19 +166,19 @@
 const s = new Series({ data: [10, 20, 30], index: new Index(["a", "b", "c"]) });
 
 // Reorder labels
-reindexSeries(s, ["c", "a", "b"]).toArray();
+console.log(reindexSeries(s, ["c", "a", "b"]).toArray());
 // → [30, 10, 20]
 
 // Extend with new labels → null by default
-reindexSeries(s, ["a", "b", "c", "d"]).toArray();
+console.log(reindexSeries(s, ["a", "b", "c", "d"]).toArray());
 // → [10, 20, 30, null]
 
 // Extend with custom fill value
-reindexSeries(s, ["a", "b", "c", "d"], { fillValue: 0 }).toArray();
+console.log(reindexSeries(s, ["a", "b", "c", "d"], { fillValue: 0 }).toArray());
 // → [10, 20, 30, 0]
 
 // Drop labels
-reindexSeries(s, ["a", "c"]).toArray();
+console.log(reindexSeries(s, ["a", "c"]).toArray());
 // → [10, 30]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -203,21 +203,21 @@ const temps = new Series({
 });
 
 // Forward fill — carry last known value forward
-reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "ffill" }).toArray();
+console.log(reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "ffill" }).toArray());
 // → [15, 15, 18, 18, 18, 22]
 //       ^^       ^^ ^^      ← filled from left
 
 // Backward fill — carry next known value backward
-reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "bfill" }).toArray();
+console.log(reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "bfill" }).toArray());
 // → [15, 18, 18, 22, 22, 22]
 //       ^^       ^^  ^^  ← filled from right
 
 // Nearest — use closest value (prefer right on tie)
-reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "nearest" }).toArray();
+console.log(reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "nearest" }).toArray());
 // → [15, 15, 18, 18, 22, 22]
 
 // Limit — cap consecutive fills
-reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "ffill", limit: 1 }).toArray();
+console.log(reindexSeries(temps, [0, 1, 2, 3, 4, 5], { method: "ffill", limit: 1 }).toArray());
 // → [15, 15, 18, null, null, 22]
 //       ^^       ^^ only 1 consecutive fill</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
@@ -244,11 +244,11 @@ const df = DataFrame.fromColumns({
 // shape [3, 2], RangeIndex [0, 1, 2]
 
 // Extend to 5 rows — new rows filled with null
-reindexDataFrame(df, { index: [0, 1, 2, 3, 4] }).col("open").toArray();
+console.log(reindexDataFrame(df, { index: [0, 1, 2, 3, 4] }).col("open").toArray());
 // → [100, 102, 105, null, null]
 
 // Forward-fill new rows
-reindexDataFrame(df, { index: [0, 1, 2, 3, 4], method: "ffill" }).col("open").toArray();
+console.log(reindexDataFrame(df, { index: [0, 1, 2, 3, 4], method: "ffill" }).col("open").toArray());
 // → [100, 102, 105, 105, 105]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -270,12 +270,12 @@ reindexDataFrame(df, { index: [0, 1, 2, 3, 4], method: "ffill" }).col("open").to
 const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
 
 // Reorder columns
-reindexDataFrame(df, { columns: ["b", "a"] }).columns.toArray();
+console.log(reindexDataFrame(df, { columns: ["b", "a"] }).columns.toArray());
 // → ["b", "a"]
 
 // Add a new column filled with 0
 const r = reindexDataFrame(df, { columns: ["a", "b", "c"], fillValue: 0 });
-r.col("c").toArray();
+console.log(r.col("c").toArray());
 // → [0, 0, 0]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -305,8 +305,8 @@ const r = reindexDataFrame(df, {
   fillValue: -1,
 });
 // shape [4, 3]
-r.col("z").toArray();  // → [-1, -1, -1, -1]
-r.col("x").toArray();  // → [1, 2, 3, -1]</textarea>
+console.log(r.col("z").toArray());  // → [-1, -1, -1, -1]
+console.log(r.col("x").toArray());  // → [1, 2, 3, -1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

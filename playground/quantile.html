@@ -162,9 +162,9 @@
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 3, 4, 5] });
-quantileSeries(s);          // default q=0.5 → 3
-quantileSeries(s, { q: 0.25 }); // → 2
-quantileSeries(s, { q: 0.75 }); // → 4</textarea>
+console.log(quantileSeries(s));          // default q=0.5 → 3
+console.log(quantileSeries(s, { q: 0.25 })); // → 2
+console.log(quantileSeries(s, { q: 0.75 })); // → 4</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -182,7 +182,8 @@ quantileSeries(s, { q: 0.75 }); // → 4</textarea>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, 2, 3, 4, 5] });
 const q = quantileSeries(s, { q: [0.25, 0.5, 0.75] });
-// Series indexed by q-values: { 0.25: 2, 0.5: 3, 0.75: 4 }</textarea>
+// Series indexed by q-values: { 0.25: 2, 0.5: 3, 0.75: 4 }
+console.log(q);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -200,11 +201,11 @@ const q = quantileSeries(s, { q: [0.25, 0.5, 0.75] });
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [0, 10] });
 // q=0.5 → position 0.5 between indices 0 and 1
-quantileSeries(s, { q: 0.5, interpolation: "linear" });   // 5
-quantileSeries(s, { q: 0.5, interpolation: "lower" });    // 0
-quantileSeries(s, { q: 0.5, interpolation: "higher" });   // 10
-quantileSeries(s, { q: 0.5, interpolation: "midpoint" }); // 5
-quantileSeries(s, { q: 0.5, interpolation: "nearest" });  // 0</textarea>
+console.log(quantileSeries(s, { q: 0.5, interpolation: "linear" }));   // 5
+console.log(quantileSeries(s, { q: 0.5, interpolation: "lower" }));    // 0
+console.log(quantileSeries(s, { q: 0.5, interpolation: "higher" }));   // 10
+console.log(quantileSeries(s, { q: 0.5, interpolation: "midpoint" })); // 5
+console.log(quantileSeries(s, { q: 0.5, interpolation: "nearest" }));  // 0</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -221,8 +222,8 @@ quantileSeries(s, { q: 0.5, interpolation: "nearest" });  // 0</textarea>
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const s = new Series({ data: [1, null, 3, NaN, 5] });
-quantileSeries(s, { q: 0.5 });             // ignores null/NaN → 3
-quantileSeries(s, { q: 0.5, skipna: false }); // NaN propagates → NaN</textarea>
+console.log(quantileSeries(s, { q: 0.5 }));             // ignores null/NaN → 3
+console.log(quantileSeries(s, { q: 0.5, skipna: false })); // NaN propagates → NaN</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -239,10 +240,10 @@ quantileSeries(s, { q: 0.5, skipna: false }); // NaN propagates → NaN</textare
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const df = DataFrame.fromColumns({ a: [1, 2, 3, 4], b: [10, 20, 30, 40] });
-quantileDataFrame(df, { q: 0.5 });
+console.log(quantileDataFrame(df, { q: 0.5 }));
 // Series { a: 2.5, b: 25 }
 
-quantileDataFrame(df, { q: [0.25, 0.5, 0.75] });
+console.log(quantileDataFrame(df, { q: [0.25, 0.5, 0.75] }));
 // DataFrame 3×2: rows=[0.25, 0.5, 0.75], cols=[a, b]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -260,7 +261,7 @@ quantileDataFrame(df, { q: [0.25, 0.5, 0.75] });
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const df = DataFrame.fromColumns({ a: [1, 2, 3], b: [3, 4, 5], c: [5, 6, 7] });
-quantileDataFrame(df, { axis: 1, q: 0.5 });
+console.log(quantileDataFrame(df, { axis: 1, q: 0.5 }));
 // Series — median of each row: [3, 4, 5]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -278,7 +279,7 @@ quantileDataFrame(df, { axis: 1, q: 0.5 });
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">const df = DataFrame.fromColumns({ score: [55, 70, 80, 88, 92, 95, 99] });
-quantileDataFrame(df, { q: [0, 0.25, 0.5, 0.75, 1] });
+console.log(quantileDataFrame(df, { q: [0, 0.25, 0.5, 0.75, 1] }));
 // → summary statistics table</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

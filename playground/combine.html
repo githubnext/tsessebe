@@ -172,12 +172,12 @@ const a = new Series({ data: [1, 5, 3], index: [0, 1, 2] });
 const b = new Series({ data: [10, 2, 30], index: [0, 1, 2] });
 
 // Element-wise max
-combineSeries(a, b, (x, y) =&gt; Math.max(x, y)).values; // [10, 5, 30]
+console.log(combineSeries(a, b, (x, y) =&gt; Math.max(x, y)).values); // [10, 5, 30]
 
 // Union index with fillValue=0
 const c = new Series({ data: [1, 2], index: ["x", "y"] });
 const d = new Series({ data: [10, 30], index: ["x", "z"] });
-combineSeries(c, d, (x, y) =&gt; (x ?? 0) + (y ?? 0), 0).values;
+console.log(combineSeries(c, d, (x, y) =&gt; (x ?? 0) + (y ?? 0), 0).values);
 // x:11, y:2, z:30
 
 // ── DataFrame ───────────────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ const df1 = DataFrame.fromColumns({ a: [1, 5], b: [100, 200] });
 const df2 = DataFrame.fromColumns({ a: [10, 2], c: [1000, 2000] });
 
 // Shared column "a": element-wise min; unshared columns processed with fillValue
-combineDataFrame(df1, df2, (p, q) =&gt; Math.min(p ?? Infinity, q ?? Infinity));
+console.log(combineDataFrame(df1, df2, (p, q) =&gt; Math.min(p ?? Infinity, q ?? Infinity)));
 
 // overwrite: false — unshared columns preserved as-is
 combineDataFrame(df1, df2, (p, q) =&gt; Math.min(p ?? Infinity, q ?? Infinity),

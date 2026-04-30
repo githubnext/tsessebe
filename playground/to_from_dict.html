@@ -170,27 +170,27 @@ const df = DataFrame.fromColumns(
 );
 
 // "dict" / "columns"
-toDictOriented(df, "dict");
+console.log(toDictOriented(df, "dict"));
 // { name: { r0: "Alice", r1: "Bob" }, score: { r0: 92, r1: 85 } }
 
 // "list"
-toDictOriented(df, "list");
+console.log(toDictOriented(df, "list"));
 // { name: ["Alice", "Bob"], score: [92, 85] }
 
 // "records"
-toDictOriented(df, "records");
+console.log(toDictOriented(df, "records"));
 // [ { name: "Alice", score: 92 }, { name: "Bob", score: 85 } ]
 
 // "split"
-toDictOriented(df, "split");
+console.log(toDictOriented(df, "split"));
 // { index: ["r0", "r1"], columns: ["name", "score"], data: [["Alice", 92], ["Bob", 85]] }
 
 // "index"
-toDictOriented(df, "index");
+console.log(toDictOriented(df, "index"));
 // { r0: { name: "Alice", score: 92 }, r1: { name: "Bob", score: 85 } }
 
 // fromDictOriented — columns (default)
-fromDictOriented({ name: ["Alice", "Bob"], score: [92, 85] });
+console.log(fromDictOriented({ name: ["Alice", "Bob"], score: [92, 85] }));
 
 // fromDictOriented — index
 fromDictOriented(

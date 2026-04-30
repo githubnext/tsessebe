@@ -198,7 +198,8 @@ const s = new Series({ data: [10, 20, 30], index: mi as unknown as Index&lt;Labe
 
 const swapped = swapLevelSeries(s, 0, 1);
 // index tuples: [(1,"a"), (2,"a"), (1,"b")]
-// values: [10, 20, 30]</textarea>
+// values: [10, 20, 30]
+console.log(swapped);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -249,7 +250,8 @@ const df = DataFrame.fromColumns(
 );
 
 const swapped = swapLevelDataFrame(df, "letter", "number");
-// row index tuples: [(1,"a"), (2,"b")]</textarea>
+// row index tuples: [(1,"a"), (2,"b")]
+console.log(swapped);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -297,7 +299,8 @@ const mi = MultiIndex.fromArrays([["a", "b"], [1, 2], ["x", "y"]]);
 const s = new Series({ data: [10, 20], index: mi as unknown as Index&lt;Label&gt; });
 
 const reordered = reorderLevelsSeries(s, [2, 0, 1]);
-// index tuples: [("x","a",1), ("y","b",2)]</textarea>
+// index tuples: [("x","a",1), ("y","b",2)]
+console.log(reordered);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -348,7 +351,8 @@ const df = DataFrame.fromColumns(
 );
 
 const reordered = reorderLevelsDataFrame(df, [1, 0]);
-// row index tuples: [(1,"a"), (2,"b")]</textarea>
+// row index tuples: [(1,"a"), (2,"b")]
+console.log(reordered);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

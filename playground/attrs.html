@@ -180,14 +180,14 @@ setAttrs(df, {
   notes: "Morning readings",
 });
 
-getAttrs(df);
+console.log(getAttrs(df));
 // → { source: "weather_station_42", unit: "Celsius", notes: "Morning readings" }
 
-getAttr(df, "unit");     // → "Celsius"
-getAttr(df, "missing");  // → undefined
-attrsCount(df);          // → 3
-attrsKeys(df);           // → ["source", "unit", "notes"]
-hasAttrs(df);            // → true</textarea>
+console.log(getAttr(df, "unit"));     // → "Celsius"
+console.log(getAttr(df, "missing"));  // → undefined
+console.log(attrsCount(df));          // → 3
+console.log(attrsKeys(df));           // → ["source", "unit", "notes"]
+console.log(hasAttrs(df));            // → true</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -204,14 +204,14 @@ hasAttrs(df);            // → true</textarea>
         </div>
       </div>
       <textarea class="playground-editor" spellcheck="false">// updateAttrs merges new keys, preserves existing
-updateAttrs(df, { version: 2, notes: "Updated notes" });
-getAttrs(df);
+console.log(updateAttrs(df, { version: 2, notes: "Updated notes" }));
+console.log(getAttrs(df));
 // → { source: "weather_station_42", unit: "Celsius", notes: "Updated notes", version: 2 }
 
 // setAttr / deleteAttr for single keys
-setAttr(df, "sensor_id", "WS-042");
-deleteAttr(df, "notes");
-getAttrs(df);
+console.log(setAttr(df, "sensor_id", "WS-042"));
+console.log(deleteAttr(df, "notes"));
+console.log(getAttrs(df));
 // → { source: "weather_station_42", unit: "Celsius", version: 2, sensor_id: "WS-042" }</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -230,17 +230,17 @@ getAttrs(df);
       </div>
       <textarea class="playground-editor" spellcheck="false">// copyAttrs: copy all attrs from one object to another
 const s = new Series({ data: [22.1, 23.5, 21.8], name: "temperature" });
-setAttrs(s, { unit: "Celsius", source: "sensor_A" });
+console.log(setAttrs(s, { unit: "Celsius", source: "sensor_A" }));
 
 const derived = new Series({ data: [71.8, 74.3, 71.2], name: "fahrenheit" });
-copyAttrs(s, derived);
-getAttrs(derived);
+console.log(copyAttrs(s, derived));
+console.log(getAttrs(derived));
 // → { unit: "Celsius", source: "sensor_A" }
 
 // Then update the copy
-setAttr(derived, "unit", "Fahrenheit");
-getAttrs(derived);  // → { unit: "Fahrenheit", source: "sensor_A" }
-getAttrs(s);        // → { unit: "Celsius", source: "sensor_A" }  ← unchanged</textarea>
+console.log(setAttr(derived, "unit", "Fahrenheit"));
+console.log(getAttrs(derived));  // → { unit: "Fahrenheit", source: "sensor_A" }
+console.log(getAttrs(s));        // → { unit: "Celsius", source: "sensor_A" }  ← unchanged</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -264,7 +264,7 @@ const annotated = withAttrs(
 );
 
 annotated === annotated;  // true — same reference, not a copy
-getAttrs(annotated);
+console.log(getAttrs(annotated));
 // → { source: "lab_experiment", date: "2026-04-09" }</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -284,13 +284,13 @@ getAttrs(annotated);
       <textarea class="playground-editor" spellcheck="false">// mergeAttrs: combine attrs from multiple objects into a target
 const s1 = new Series({ data: [1, 2, 3], name: "a" });
 const s2 = new Series({ data: [4, 5, 6], name: "b" });
-setAttrs(s1, { source: "sensor_A", unit: "kg" });
-setAttrs(s2, { source: "sensor_B", scale: 2.5 });
+console.log(setAttrs(s1, { source: "sensor_A", unit: "kg" }));
+console.log(setAttrs(s2, { source: "sensor_B", scale: 2.5 }));
 
 const combined = DataFrame.fromColumns({ a: [1, 2, 3], b: [4, 5, 6] });
-mergeAttrs([s1, s2], combined);
+console.log(mergeAttrs([s1, s2], combined));
 // Later sources win on conflicts: source="sensor_B"
-getAttrs(combined);
+console.log(getAttrs(combined));
 // → { source: "sensor_B", unit: "kg", scale: 2.5 }</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -307,13 +307,13 @@ getAttrs(combined);
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">setAttrs(df, { x: 1, y: 2 });
-hasAttrs(df);   // → true
-attrsCount(df); // → 2
+      <textarea class="playground-editor" spellcheck="false">console.log(setAttrs(df, { x: 1, y: 2 }));
+console.log(hasAttrs(df));   // → true
+console.log(attrsCount(df)); // → 2
 
-clearAttrs(df);
-hasAttrs(df);   // → false
-getAttrs(df);   // → {}</textarea>
+console.log(clearAttrs(df));
+console.log(hasAttrs(df));   // → false
+console.log(getAttrs(df));   // → {}</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

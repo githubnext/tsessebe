@@ -173,9 +173,9 @@ const fmtFloat   = makeFloatFormatter(3);      // (v) =&gt; formatFloat(v, 3)
 const fmtPct     = makePercentFormatter(1);     // (v) =&gt; formatPercent(v, 1)
 const fmtDollar  = makeCurrencyFormatter("$");  // (v) =&gt; formatCurrency(v, "$", 2)
 
-fmtFloat(3.14159);   // "3.142"
-fmtPct(0.0825);      // "8.3%"
-fmtDollar(9999.99);  // "$9,999.99"</textarea>
+console.log(fmtFloat(3.14159));   // "3.142"
+console.log(fmtPct(0.0825));      // "8.3%"
+console.log(fmtDollar(9999.99));  // "$9,999.99"</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -196,7 +196,8 @@ fmtDollar(9999.99);  // "$9,999.99"</textarea>
 const returns = new Series({ data: [0.05, -0.02, 0.134, 0.007], name: "returns" });
 
 const formatted = applySeriesFormatter(returns, makePercentFormatter(1));
-// Series&lt;string&gt; ["5.0%", "-2.0%", "13.4%", "0.7%"]</textarea>
+// Series&lt;string&gt; ["5.0%", "-2.0%", "13.4%", "0.7%"]
+console.log(formatted);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -229,7 +230,8 @@ const formatted = applyDataFrameFormatter(df, {
 //   price:  ["$1,299.99", "$899.50", "$45.00"],
 //   change: ["2.50%", "-3.10%", "10.20%"],
 //   volume: ["15000", "8200", "230000"],      // no formatter → String(v)
-// }</textarea>
+// }
+console.log(formatted);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

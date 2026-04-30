@@ -165,7 +165,8 @@
 
 const s = new Series({ data: [2, 4, 4, 4, 5, 5, 7, 9] });
 varSeries(s);           // 4.0  (sample variance, ddof=1)
-varSeries(s, { ddof: 0 }); // 3.5  (population variance, ddof=0)</textarea>
+varSeries(s, { ddof: 0 }); // 3.5  (population variance, ddof=0)
+console.log(s);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -184,7 +185,7 @@ varSeries(s, { ddof: 0 }); // 3.5  (population variance, ddof=0)</textarea>
       <textarea class="playground-editor" spellcheck="false">import { semSeries } from "tsb";
 
 // SEM = sqrt(var / n)
-semSeries(s); // sqrt(4 / 8) ≈ 0.7071</textarea>
+console.log(semSeries(s)); // sqrt(4 / 8) ≈ 0.7071</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -204,7 +205,8 @@ semSeries(s); // sqrt(4 / 8) ≈ 0.7071</textarea>
 
 varSeries(s2);                 // skipna=true (default): ignores null
 varSeries(s2, { skipna: false }); // propagates NaN when null present
-varSeries(s2, { minCount: 5 });   // NaN: need 5 valid values but only 4</textarea>
+varSeries(s2, { minCount: 5 });   // NaN: need 5 valid values but only 4
+console.log(s2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -228,7 +230,7 @@ const df = DataFrame.fromColumns({
 });
 
 varDataFrame(df);          // Series { a: 1, b: 100 }
-semDataFrame(df);          // Series { a: sqrt(1/3), b: sqrt(100/3) }
+console.log(semDataFrame(df));          // Series { a: sqrt(1/3), b: sqrt(100/3) }
 varDataFrame(df, { axis: 1 }); // row-wise variance</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -251,7 +253,8 @@ varDataFrame(df, { axis: 1 }); // row-wise variance</textarea>
 });
 
 varDataFrame(df2, { numericOnly: true });
-// Only includes "score", excludes "label"</textarea>
+// Only includes "score", excludes "label"
+console.log(df2);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>

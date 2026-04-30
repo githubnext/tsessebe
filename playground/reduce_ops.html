@@ -169,8 +169,8 @@
       <textarea class="playground-editor" spellcheck="false">import { Series, nuniqueSeries } from "tsb";
 
 const s = new Series([1, 2, 2, null, 3]);
-nuniqueSeries(s);                    // 3   (null excluded by default)
-nuniqueSeries(s, { dropna: false }); // 4   (null counted as a distinct value)</textarea>
+console.log(nuniqueSeries(s));                    // 3   (null excluded by default)
+console.log(nuniqueSeries(s, { dropna: false })); // 4   (null counted as a distinct value)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -193,7 +193,7 @@ const df = DataFrame.fromColumns({
   rating: [5, 3, 5, 4],
   flag:   [true, false, true, null],
 });
-nunique(df);
+console.log(nunique(df));
 // Series { brand: 3, rating: 3, flag: 2 }</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -210,7 +210,7 @@ nunique(df);
           <button class="playground-reset">↺ Reset</button>
         </div>
       </div>
-      <textarea class="playground-editor" spellcheck="false">nunique(df, { axis: 1 });
+      <textarea class="playground-editor" spellcheck="false">console.log(nunique(df, { axis: 1 }));
 // Series [3, 3, 3, 3]  — each row has 3 distinct values</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -230,16 +230,16 @@ nunique(df);
       <textarea class="playground-editor" spellcheck="false">import { Series, anySeries, allSeries } from "tsb";
 
 const flags = new Series([false, false, true]);
-anySeries(flags);  // true  — at least one truthy
-allSeries(flags);  // false — not all truthy
+console.log(anySeries(flags));  // true  — at least one truthy
+console.log(allSeries(flags));  // false — not all truthy
 
 const ones = new Series([1, 2, 3]);
-allSeries(ones);   // true  — all truthy
+console.log(allSeries(ones));   // true  — all truthy
 
 // skipna option
 const withNull = new Series([1, null, 2]);
-allSeries(withNull);                   // true  (null skipped)
-allSeries(withNull, { skipna: false }); // false (null is falsy)</textarea>
+console.log(allSeries(withNull));                   // true  (null skipped)
+console.log(allSeries(withNull, { skipna: false })); // false (null is falsy)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -263,14 +263,14 @@ const df2 = DataFrame.fromColumns({
   c: [0, 0, 0],
 });
 
-anyDataFrame(df2);
+console.log(anyDataFrame(df2));
 // Series { a: true, b: true, c: false }
 
-allDataFrame(df2);
+console.log(allDataFrame(df2));
 // Series { a: false, b: true, c: false }
 
 // axis=1: reduce across columns → one boolean per row
-anyDataFrame(df2, { axis: 1 });
+console.log(anyDataFrame(df2, { axis: 1 }));
 // Series [true, true, true]  (row 0: 0,1,0 → any=true via b)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
@@ -293,7 +293,7 @@ anyDataFrame(df2, { axis: 1 });
 });
 
 // Only consider boolean columns
-anyDataFrame(mixed, { boolOnly: true });
+console.log(anyDataFrame(mixed, { boolOnly: true }));
 // Series { flag: true }   — 'nums' column excluded</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

@@ -164,20 +164,20 @@
       <textarea class="playground-editor" spellcheck="false">import { toDatetime, Series } from "tsb";
 
 // Scalar
-toDatetime("2024-03-15");         // Date: Mar 15 2024
-toDatetime(1710460800000);        // Date from Unix ms
-toDatetime(1710460800, { unit: "s" }); // Date from Unix seconds
-toDatetime(null);                 // null
-toDatetime("nope", { errors: "coerce" }); // null
-toDatetime("nope", { errors: "ignore" }); // "nope"
+console.log(toDatetime("2024-03-15"));         // Date: Mar 15 2024
+console.log(toDatetime(1710460800000));        // Date from Unix ms
+console.log(toDatetime(1710460800, { unit: "s" })); // Date from Unix seconds
+console.log(toDatetime(null));                 // null
+console.log(toDatetime("nope", { errors: "coerce" })); // null
+console.log(toDatetime("nope", { errors: "ignore" })); // "nope"
 
 // Array
-toDatetime(["2024-01-01", null, "2024-06-15"]);
+console.log(toDatetime(["2024-01-01", null, "2024-06-15"]));
 // =&gt; [Date, null, Date]
 
 // Series
 const s = new Series({ data: ["2024-01-01", "2024-06-15", null] });
-toDatetime(s);
+console.log(toDatetime(s));
 // =&gt; Series&lt;Date | null&gt; with dtype=datetime</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>

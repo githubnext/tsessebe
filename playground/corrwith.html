@@ -197,15 +197,15 @@ print(s3.autocorr(lag=1))  # NaN</textarea>
       <textarea class="playground-editor" spellcheck="false">import { Series, autoCorr } from "tsb";
 
 const s = new Series({ data: [1, 2, 3, 4, 5] });
-autoCorr(s);          // lag=1 → 1.0
-autoCorr(s, 0);       // lag=0 → 1.0  (always)
-autoCorr(s, 2);       // lag=2 → 1.0
+console.log(autoCorr(s));          // lag=1 → 1.0
+console.log(autoCorr(s, 0));       // lag=0 → 1.0  (always)
+console.log(autoCorr(s, 2));       // lag=2 → 1.0
 
 const alt = new Series({ data: [1, -1, 1, -1, 1, -1] });
-autoCorr(alt, 1);     // -1.0
+console.log(autoCorr(alt, 1));     // -1.0
 
 const flat = new Series({ data: [5, 5, 5, 5] });
-autoCorr(flat, 1);    // NaN</textarea>
+console.log(autoCorr(flat, 1));    // NaN</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -258,7 +258,8 @@ const df = DataFrame.fromColumns({
 const s = new Series({ data: [1, 2, 3, 4, 5] });
 
 const result = corrWith(df, s);
-// Series(A=1.0, B=-1.0) indexed by column names</textarea>
+// Series(A=1.0, B=-1.0) indexed by column names
+console.log(result);</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -316,11 +317,11 @@ print(df1.corrwith(df3, drop=True))
 const df1 = DataFrame.fromColumns({ A: [1, 2, 3], B: [4, 5, 6] });
 const df2 = DataFrame.fromColumns({ A: [1, 2, 3], B: [6, 5, 4] });
 
-corrWith(df1, df2);                         // A=1.0, B=-1.0
+console.log(corrWith(df1, df2));                         // A=1.0, B=-1.0
 
 const df3 = DataFrame.fromColumns({ A: [1, 2, 3], C: [7, 8, 9] });
-corrWith(df1, df3);                         // A=1.0, B=NaN, C=NaN
-corrWith(df1, df3, { drop: true });         // A=1.0</textarea>
+console.log(corrWith(df1, df3));                         // A=1.0, B=NaN, C=NaN
+console.log(corrWith(df1, df3, { drop: true }));         // A=1.0</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
     </div>
@@ -371,7 +372,7 @@ print(df.corrwith(s, axis=1))
 const df = DataFrame.fromColumns({ A: [1, 2], B: [2, 4], C: [3, 6] });
 const s = new Series({ data: [1, 2, 3] });
 
-corrWith(df, s, { axis: 1 });
+console.log(corrWith(df, s, { axis: 1 }));
 // Series([1.0, 1.0]) indexed by row labels [0, 1]</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
       <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
