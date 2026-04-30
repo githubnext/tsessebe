@@ -106,18 +106,21 @@ describe("hashPandasObject — Series", () => {
 
   it("property: deterministic — same input same hash", () => {
     fc.assert(
-      fc.property(fc.array(fc.oneof(fc.integer(), fc.string(), fc.boolean()), { maxLength: 20 }), (arr) => {
-        const s1 = new Series({ data: arr });
-        const s2 = new Series({ data: arr });
-        const h1 = hashPandasObject(s1, { index: false });
-        const h2 = hashPandasObject(s2, { index: false });
-        for (let i = 0; i < arr.length; i++) {
-          if (h1.iat(i) !== h2.iat(i)) {
-            return false;
+      fc.property(
+        fc.array(fc.oneof(fc.integer(), fc.string(), fc.boolean()), { maxLength: 20 }),
+        (arr) => {
+          const s1 = new Series({ data: arr });
+          const s2 = new Series({ data: arr });
+          const h1 = hashPandasObject(s1, { index: false });
+          const h2 = hashPandasObject(s2, { index: false });
+          for (let i = 0; i < arr.length; i++) {
+            if (h1.iat(i) !== h2.iat(i)) {
+              return false;
+            }
           }
-        }
-        return true;
-      }),
+          return true;
+        },
+      ),
     );
   });
 });

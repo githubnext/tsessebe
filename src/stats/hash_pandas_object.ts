@@ -28,10 +28,10 @@
  * @module
  */
 
-import type { Scalar } from "../types.ts";
-import { DataFrame } from "../core/frame.ts";
-import { Series } from "../core/series.ts";
 import { Dtype } from "../core/dtype.ts";
+import type { DataFrame } from "../core/frame.ts";
+import { Series } from "../core/series.ts";
+import type { Scalar } from "../types.ts";
 
 // ─── FNV-1a 64-bit constants ──────────────────────────────────────────────────
 
@@ -46,21 +46,22 @@ function fnvByte(hash: bigint, byte: number): bigint {
 
 /** Hash an arbitrary string (UTF-8 bytes) into the FNV state. */
 function fnvString(hash: bigint, s: string): bigint {
+  let h = hash;
   for (let i = 0; i < s.length; i++) {
-    let code = s.charCodeAt(i);
+    const code = s.charCodeAt(i);
     // Encode as UTF-8 bytes
     if (code < 0x80) {
-      hash = fnvByte(hash, code);
+      h = fnvByte(h, code);
     } else if (code < 0x800) {
-      hash = fnvByte(hash, 0xc0 | (code >> 6));
-      hash = fnvByte(hash, 0x80 | (code & 0x3f));
+      h = fnvByte(h, 0xc0 | (code >> 6));
+      h = fnvByte(h, 0x80 | (code & 0x3f));
     } else {
-      hash = fnvByte(hash, 0xe0 | (code >> 12));
-      hash = fnvByte(hash, 0x80 | ((code >> 6) & 0x3f));
-      hash = fnvByte(hash, 0x80 | (code & 0x3f));
+      h = fnvByte(h, 0xe0 | (code >> 12));
+      h = fnvByte(h, 0x80 | ((code >> 6) & 0x3f));
+      h = fnvByte(h, 0x80 | (code & 0x3f));
     }
   }
-  return hash;
+  return h;
 }
 
 /** Hash a single scalar value into the FNV state. */
@@ -80,10 +81,11 @@ function fnvScalar(hash: bigint, val: Scalar): bigint {
     const buf = new ArrayBuffer(8);
     new DataView(buf).setFloat64(0, val, true);
     const bytes = new Uint8Array(buf);
+    let h = hash;
     for (let i = 0; i < 8; i++) {
-      hash = fnvByte(hash, bytes[i]!);
+      h = fnvByte(h, bytes[i] ?? 0);
     }
-    return hash;
+    return h;
   }
   if (typeof val === "bigint") {
     return fnvString(hash, val.toString());
@@ -128,10 +130,7 @@ export interface HashPandasObjectOptions {
  * h.iat(0) !== h.iat(1); // true  (with overwhelming probability)
  * ```
  */
-export function hashPandasObject(
-  obj: Series,
-  options?: HashPandasObjectOptions,
-): Series<number>;
+export function hashPandasObject(obj: Series, options?: HashPandasObjectOptions): Series<number>;
 
 /**
  * Return a `Series<number>` of FNV-1a 64-bit row-hashes for each row of `df`.
@@ -150,10 +149,7 @@ export function hashPandasObject(
  * // h.iat(0) is the hash of row 0; h.iat(1) is the hash of row 1
  * ```
  */
-export function hashPandasObject(
-  obj: DataFrame,
-  options?: HashPandasObjectOptions,
-): Series<number>;
+export function hashPandasObject(obj: DataFrame, options?: HashPandasObjectOptions): Series<number>;
 
 export function hashPandasObject(
   obj: Series | DataFrame,
