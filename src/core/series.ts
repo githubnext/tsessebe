@@ -736,76 +736,74 @@ export class Series<T extends Scalar = Scalar> {
     const n = this._values.length;
     const vals = this._values;
 
-    // Pre-partition NaN/null/undefined from finite values in one pass.
-    // fvals stores numeric values by original row index (sparse: fvals[origIdx]).
+    // Grow module-level buffers before the main loop so the partition loop can
+    // directly initialise the radix ping arrays, saving a separate O(n) pass.
     if (_finBuf.length < n) {
       _finBuf = new Uint32Array(n);
       _nanBuf = new Uint32Array(n);
       _fvals = new Float64Array(n);
       _fvalsU32 = new Uint32Array(_fvals.buffer);
     }
+    if (_rxA_idx.length < n) {
+      _rxA_idx = new Uint32Array(n);
+      _rxB_idx = new Uint32Array(n);
+      _rxA_lo = new Uint32Array(n);
+      _rxB_lo = new Uint32Array(n);
+      _rxA_hi = new Uint32Array(n);
+      _rxB_hi = new Uint32Array(n);
+    }
+
     const finBuf = _finBuf;
     const nanBuf = _nanBuf;
     const fvals = _fvals;
+    const fvalsU32 = _fvalsU32;
     let finCount = 0;
     let nanCount = 0;
     let allNumeric = true;
+
+    // Single pass: partition NaN/null and initialise radix keys for finite numerics.
+    // fvals is indexed by compact slot (finCount) so reads and writes are sequential.
     for (let i = 0; i < n; i++) {
       const v = vals[i];
       if (v === null || v === undefined || (typeof v === "number" && Number.isNaN(v))) {
         nanBuf[nanCount] = i;
         nanCount = nanCount + 1;
       } else {
+        const j = finCount;
+        finBuf[j] = i;
         if (typeof v === "number") {
-          fvals[i] = v;
+          fvals[j] = v;
+          // Read the IEEE-754 bits via the shared Uint32 view (same buffer, no copy).
+          let lo = fvalsU32[j * 2]!;
+          let hi = fvalsU32[j * 2 + 1]!;
+          // Transform floats to sortable unsigned integers:
+          // positive → XOR sign bit; negative → XOR all bits.
+          if (hi & 0x80000000) {
+            lo = ~lo >>> 0;
+            hi = ~hi >>> 0;
+          } else {
+            hi = (hi ^ 0x80000000) >>> 0;
+          }
+          _rxA_idx[j] = i;
+          _rxA_lo[j] = lo;
+          _rxA_hi[j] = hi;
         } else {
           allNumeric = false;
         }
-        finBuf[finCount] = i;
         finCount = finCount + 1;
       }
     }
 
+    // finSlice is only used by the string fallback path below.
     const finSlice = finBuf.subarray(0, finCount);
+
+    // srcIdx/srcLo/srcHi — used by the numeric path after the sort.
+    let srcIdx = _rxA_idx;
 
     if (allNumeric && finCount > 0) {
       // ── LSD radix sort: 8 passes × 8 bits over IEEE-754 transformed keys ──
-      // Eliminates all JS comparator callbacks (the bottleneck at n≥10k).
+      // rxA arrays are already initialised by the merged loop above.
 
-      // Grow module-level ping-pong buffers if needed.
-      if (_rxA_idx.length < finCount) {
-        _rxA_idx = new Uint32Array(finCount);
-        _rxB_idx = new Uint32Array(finCount);
-        _rxA_lo = new Uint32Array(finCount);
-        _rxB_lo = new Uint32Array(finCount);
-        _rxA_hi = new Uint32Array(finCount);
-        _rxB_hi = new Uint32Array(finCount);
-      }
-
-      // fvals is a Float64Array; reinterpret its buffer as Uint32 to read raw bits.
-      // On little-endian (x86/ARM): u32[2i] = lo 32 bits, u32[2i+1] = hi 32 bits.
-      const fvalsU32 = _fvalsU32;
-
-      // Initialise ping arrays with identity indices and IEEE-754 sort keys.
-      // Transform: positive floats → XOR sign bit; negative → XOR all bits.
-      // This maps floats to an unsigned integer order that matches numeric order.
-      for (let i = 0; i < finCount; i++) {
-        const origIdx = finSlice[i]!;
-        _rxA_idx[i] = origIdx;
-        let lo = fvalsU32[origIdx * 2]!;
-        let hi = fvalsU32[origIdx * 2 + 1]!;
-        if (hi & 0x80000000) {
-          lo = ~lo >>> 0;
-          hi = ~hi >>> 0;
-        } else {
-          hi = (hi ^ 0x80000000) >>> 0;
-        }
-        _rxA_lo[i] = lo;
-        _rxA_hi[i] = hi;
-      }
-
-      // 8-pass LSD: passes 0–3 over lo word, passes 4–7 over hi word.
-      let srcIdx = _rxA_idx;
       let dstIdx = _rxB_idx;
       let srcLo = _rxA_lo;
       let dstLo = _rxB_lo;
@@ -813,7 +811,6 @@ export class Series<T extends Scalar = Scalar> {
       let dstHi = _rxB_hi;
 
       for (let pass = 0; pass < 8; pass++) {
-        // Build histogram for this byte.
         _rxCnt.fill(0);
         const useHi = pass >= 4;
         const shift = (pass % 4) * 8;
@@ -823,14 +820,12 @@ export class Series<T extends Scalar = Scalar> {
           const c = _rxCnt[bucket]!;
           _rxCnt[bucket] = c + 1;
         }
-        // Prefix sum → scatter offsets.
         let total = 0;
         for (let b = 0; b < 256; b++) {
           const c = _rxCnt[b]!;
           _rxCnt[b] = total;
           total = total + c;
         }
-        // Scatter elements into destination.
         for (let i = 0; i < finCount; i++) {
           const word = useHi ? srcHi[i]! : srcLo[i]!;
           const bucket = (word >>> shift) & 0xff;
@@ -840,7 +835,6 @@ export class Series<T extends Scalar = Scalar> {
           dstLo[p] = srcLo[i]!;
           dstHi[p] = srcHi[i]!;
         }
-        // Swap ping-pong references.
         const ti = srcIdx;
         srcIdx = dstIdx;
         dstIdx = ti;
@@ -851,19 +845,9 @@ export class Series<T extends Scalar = Scalar> {
         srcHi = dstHi;
         dstHi = th;
       }
-
-      // After 8 passes (even number), srcIdx holds ascending sorted original indices.
-      if (ascending) {
-        for (let i = 0; i < finCount; i++) {
-          finSlice[i] = srcIdx[i]!;
-        }
-      } else {
-        for (let i = 0, j = finCount - 1; i < finCount; i = i + 1, j = j - 1) {
-          finSlice[i] = srcIdx[j]!;
-        }
-      }
+      // After 8 passes (even), srcIdx holds ascending sorted original indices.
     } else if (!allNumeric) {
-      // String / mixed dtype: fall back to comparator-based sort.
+      // String / mixed dtype: fall back to comparator-based sort on finSlice.
       if (ascending) {
         finSlice.sort((a, b) => {
           const av = vals[a] as number | string | boolean;
@@ -880,7 +864,9 @@ export class Series<T extends Scalar = Scalar> {
     }
     // else: allNumeric && finCount === 0 — nothing to sort.
 
-    // Build the output permutation and gather values in a single pass.
+    // Build the output permutation and gather values.
+    // For the numeric path, read sorted row indices directly from srcIdx (no
+    // intermediate copy to finSlice), saving one O(finCount) loop.
     const perm = new Array<number>(n);
     const outData = new Array<T>(n);
     let pos = 0;
@@ -891,18 +877,54 @@ export class Series<T extends Scalar = Scalar> {
         outData[pos] = vals[idx] as T;
         pos = pos + 1;
       }
-      for (let i = 0; i < finCount; i++) {
-        const idx = finSlice[i]!;
-        perm[pos] = idx;
-        outData[pos] = vals[idx] as T;
-        pos = pos + 1;
+      if (allNumeric) {
+        if (ascending) {
+          for (let i = 0; i < finCount; i++) {
+            const idx = srcIdx[i]!;
+            perm[pos] = idx;
+            outData[pos] = vals[idx] as T;
+            pos = pos + 1;
+          }
+        } else {
+          for (let i = finCount - 1; i >= 0; i--) {
+            const idx = srcIdx[i]!;
+            perm[pos] = idx;
+            outData[pos] = vals[idx] as T;
+            pos = pos + 1;
+          }
+        }
+      } else {
+        for (let i = 0; i < finCount; i++) {
+          const idx = finSlice[i]!;
+          perm[pos] = idx;
+          outData[pos] = vals[idx] as T;
+          pos = pos + 1;
+        }
       }
     } else {
-      for (let i = 0; i < finCount; i++) {
-        const idx = finSlice[i]!;
-        perm[pos] = idx;
-        outData[pos] = vals[idx] as T;
-        pos = pos + 1;
+      if (allNumeric) {
+        if (ascending) {
+          for (let i = 0; i < finCount; i++) {
+            const idx = srcIdx[i]!;
+            perm[pos] = idx;
+            outData[pos] = vals[idx] as T;
+            pos = pos + 1;
+          }
+        } else {
+          for (let i = finCount - 1; i >= 0; i--) {
+            const idx = srcIdx[i]!;
+            perm[pos] = idx;
+            outData[pos] = vals[idx] as T;
+            pos = pos + 1;
+          }
+        }
+      } else {
+        for (let i = 0; i < finCount; i++) {
+          const idx = finSlice[i]!;
+          perm[pos] = idx;
+          outData[pos] = vals[idx] as T;
+          pos = pos + 1;
+        }
       }
       for (let i = 0; i < nanCount; i++) {
         const idx = nanBuf[i]!;
