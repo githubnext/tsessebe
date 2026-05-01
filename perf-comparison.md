@@ -10,8 +10,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-30T07:09:31Z |
-| Iteration Count | 299 |
+| Last Run | 2026-05-01T01:23:46Z |
+| Iteration Count | 300 |
 | Best Metric | 637 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -21,8 +21,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
+| Consecutive Errors | 1 |
+| Recent Statuses | error, accepted, accepted, error, accepted, error, error, accepted, accepted, accepted |
 
 ---
 
@@ -69,6 +69,12 @@
 
 ## 📊 Iteration History
 
+### Iteration 300 — 2026-05-01T01:23:46Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25197381384)
+
+- **Status**: ⚠️ Error
+- **Change**: Attempted to add `xsDataFrame`, `seriesUpdate`, `dataFrameDotDataFrame` benchmark pairs.
+- **Notes**: `bun` not available in sandbox (not in PATH, GitHub asset hosts blocked). Evaluation returned null; files discarded. Next run should succeed when bun is available.
+
 ### Iteration 299 — 2026-04-30T07:09:31Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25152235433)
 
 - **Status**: ✅ Accepted · **Change**: Added 4 benchmark pairs: `truncate` (Series.truncate by index bounds), `filter_labels` (DataFrame.filter by items), `assign` (dataFrameAssign with callable), `transform_agg` (seriesTransform "mean"). **Metric**: 637 (previous best: 636, delta: +1). Commit 5f069ec.
@@ -80,9 +86,5 @@
 ### Iteration 297 — 2026-04-29T07:38:52Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25096656047)
 
 - **Status**: ✅ Accepted · **Change**: Added benchmark pairs for `corrwith` (DataFrame.corrwith vs Series) and `autocorr` (lag-1 autocorrelation). **Metric**: 635 (previous best: 634, delta: +1). Commit a7f95b0.
-
-### Iteration 296 — 2026-04-28T07:12:13Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25039058101)
-
-- **Status**: ✅ Accepted · **Change**: Added benchmark pair for `compare` (seriesEq, seriesLt, dataFrameEq). **Metric**: 634 (delta: +1). Commit 70e115e.
 
 ### Iters 1–295 — ✅/⚠️ | Metrics 0→633. See git history on autoloop/perf-comparison branch.
