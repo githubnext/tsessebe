@@ -31,6 +31,7 @@
 import type { Scalar } from "../types.ts";
 import { DataFrame } from "../core/frame.ts";
 import { Series } from "../core/series.ts";
+import { Dtype } from "../core/dtype.ts";
 
 // ─── FNV-1a 64-bit constants ──────────────────────────────────────────────────
 
@@ -183,7 +184,7 @@ function _hashSeries(s: Series, includeIndex: boolean): Series<number> {
     hashes.push(Number(h));
   }
 
-  return new Series<number>({ data: hashes, index: s.index, dtype: "float64" });
+  return new Series<number>({ data: hashes, index: s.index, dtype: Dtype.float64 });
 }
 
 function _hashDataFrame(df: DataFrame, includeIndex: boolean): Series<number> {
@@ -205,5 +206,5 @@ function _hashDataFrame(df: DataFrame, includeIndex: boolean): Series<number> {
     hashes.push(Number(h));
   }
 
-  return new Series<number>({ data: hashes, index: df.index, dtype: "float64" });
+  return new Series<number>({ data: hashes, index: df.index, dtype: Dtype.float64 });
 }
