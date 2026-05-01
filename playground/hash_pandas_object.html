@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb · hashPandasObject</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; border-bottom: 1px solid #ddd; padding-bottom: 0.4rem; }
+      pre { background: #f4f4f4; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+      code { font-family: "Fira Code", monospace; font-size: 0.9rem; }
+      .output { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 0.8rem 1rem; border-radius: 4px; }
+      .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 0.8rem 1rem; border-radius: 4px; margin-top: 1rem; }
+      a { color: #0066cc; }
+    </style>
+  </head>
+  <body>
+    <h1>📦 <code>hashPandasObject</code></h1>
+    <p>
+      Compute FNV-1a 64-bit hash values for each element of a
+      <code>Series</code> or each row of a <code>DataFrame</code>.
+      Mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.util.hash_pandas_object.html"
+        ><code>pandas.util.hash_pandas_object</code></a>.
+    </p>
+
+    <h2>Series hashing</h2>
+    <pre><code>import { Series, hashPandasObject } from "tsb";
+
+const s = new Series({ data: ["apple", "banana", "apple"], index: [0, 1, 2] });
+const h = hashPandasObject(s, { index: false });
+
+// Same value → same hash
+console.log(h.iat(0) === h.iat(2)); // true  (both "apple")
+console.log(h.iat(0) === h.iat(1)); // false ("apple" ≠ "banana")
+</code></pre>
+
+    <h2>DataFrame row hashing</h2>
+    <pre><code>import { DataFrame, hashPandasObject } from "tsb";
+
+const df = new DataFrame({
+  id:   [1, 2, 3],
+  name: ["Alice", "Bob", "Alice"],
+  age:  [30, 25, 30],
+});
+
+const rowHashes = hashPandasObject(df, { index: false });
+// Rows 0 and 2 are identical → same hash
+console.log(rowHashes.iat(0) === rowHashes.iat(2)); // true
+console.log(rowHashes.iat(0) === rowHashes.iat(1)); // false
+</code></pre>
+
+    <h2>Deduplication with hashes</h2>
+    <pre><code>import { DataFrame, hashPandasObject } from "tsb";
+
+const df = new DataFrame({
+  a: [1, 2, 1, 3],
+  b: ["x", "y", "x", "z"],
+});
+
+const hashes = hashPandasObject(df, { index: false });
+const seen = new Set&lt;number&gt;();
+const uniqueRows: number[] = [];
+
+for (let i = 0; i &lt; df.shape[0]; i++) {
+  const h = hashes.iat(i);
+  if (!seen.has(h)) {
+    seen.add(h);
+    uniqueRows.push(i);
+  }
+}
+// uniqueRows = [0, 1, 3]  — row 2 is a duplicate of row 0
+console.log(uniqueRows);
+</code></pre>
+
+    <h2>Controlling index inclusion</h2>
+    <pre><code>import { Series, hashPandasObject } from "tsb";
+
+const s = new Series({ data: [42, 42], index: ["a", "b"] });
+
+// index=true (default): different index → different hash
+const withIdx = hashPandasObject(s, { index: true });
+console.log(withIdx.iat(0) === withIdx.iat(1)); // false
+
+// index=false: only values matter
+const noIdx = hashPandasObject(s, { index: false });
+console.log(noIdx.iat(0) === noIdx.iat(1)); // true
+</code></pre>
+
+    <div class="note">
+      <strong>Algorithm:</strong> FNV-1a 64-bit (Fowler–Noll–Vo), a fast non-cryptographic hash
+      chosen for its excellent avalanche properties on short inputs.  Results are stored as
+      <code>float64</code> numbers (the 64-bit bit-pattern cast via <code>Number(BigInt)</code>).
+    </div>
+
+    <p><a href="index.html">← Back to tsb playground</a></p>
+  </body>
+</html>
