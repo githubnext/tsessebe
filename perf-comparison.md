@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-01T01:23:46Z |
-| Iteration Count | 300 |
-| Best Metric | 637 |
+| Last Run | 2026-05-01T18:38:13Z |
+| Iteration Count | 301 |
+| Best Metric | 640 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -21,8 +21,8 @@
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
-| Consecutive Errors | 1 |
-| Recent Statuses | error, accepted, accepted, error, accepted, error, error, accepted, accepted, accepted |
+| Consecutive Errors | 0 |
+| Recent Statuses | accepted, error, accepted, accepted, error, accepted, error, error, accepted, accepted |
 
 ---
 
@@ -69,22 +69,12 @@
 
 ## 📊 Iteration History
 
-### Iteration 300 — 2026-05-01T01:23:46Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25197381384)
+### Iteration 301 — 2026-05-01T18:38:13Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25227439051)
 
-- **Status**: ⚠️ Error
-- **Change**: Attempted to add `xsDataFrame`, `seriesUpdate`, `dataFrameDotDataFrame` benchmark pairs.
-- **Notes**: `bun` not available in sandbox (not in PATH, GitHub asset hosts blocked). Evaluation returned null; files discarded. Next run should succeed when bun is available.
+- **Status**: ✅ Accepted
+- **Change**: Added 3 benchmark pairs: `xs` (xsDataFrame row cross-section), `update` (seriesUpdate NaN-aware overwrite), `compare` (seriesEq/seriesLt/seriesGe scalar comparisons).
+- **Metric**: 640 (previous best: 637, delta: +3) · **Commit**: ec8f186
 
-### Iteration 299 — 2026-04-30T07:09:31Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25152235433)
-
-- **Status**: ✅ Accepted · **Change**: Added 4 benchmark pairs: `truncate` (Series.truncate by index bounds), `filter_labels` (DataFrame.filter by items), `assign` (dataFrameAssign with callable), `transform_agg` (seriesTransform "mean"). **Metric**: 637 (previous best: 636, delta: +1). Commit 5f069ec.
-
-### Iteration 298 — 2026-04-29T19:22:43Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25129063173)
-
-- **Status**: ✅ Accepted · **Change**: Added benchmark pairs for `assign` (dataFrameAssign with callables), `pipe_apply` (pipe + seriesApply + dataFrameApplyMap), and `to_from_dict` (toDictOriented/fromDictOriented round-trip). **Metric**: 636 (previous best: 635, delta: +1). Commit db58c02.
-
-### Iteration 297 — 2026-04-29T07:38:52Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25096656047)
-
-- **Status**: ✅ Accepted · **Change**: Added benchmark pairs for `corrwith` (DataFrame.corrwith vs Series) and `autocorr` (lag-1 autocorrelation). **Metric**: 635 (previous best: 634, delta: +1). Commit a7f95b0.
+### Iters 295–300 — ✅/⚠️ | Metrics 634→637: truncate, filter_labels, assign, transform_agg, corrwith, autocorr, pipe_apply, to_from_dict added; one error run (bun unavailable).
 
 ### Iters 1–295 — ✅/⚠️ | Metrics 0→633. See git history on autoloop/perf-comparison branch.
