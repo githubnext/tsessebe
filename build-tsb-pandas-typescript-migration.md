@@ -8,8 +8,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-04-30T12:49:53Z |
-| Iteration Count | 297 |
+| Last Run | 2026-05-01T07:10:56Z |
+| Iteration Count | 298 |
 | Best Metric | 138 |
 | Target Metric | — |
 | Metric Direction | higher |
@@ -21,7 +21,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, accepted, accepted |
 
 ---
 
@@ -37,8 +37,8 @@
 
 - ✅ Core + Stats + IO + Merge + Reshape + Window + GroupBy complete (iters 1–295)
 - ✅ hashPandasObject added (iter 296)
-- ✅ hashArray + Series.items()/iteritems() added (iter 297)
-- Next: `pd.Grouper`, more `pd.api.types` predicates, `pd.util.hash_array` (done), `DataFrame.pipe` enhancements
+- ✅ hashArray + Series.items()/iteritems() added (iters 297–298)
+- Next: `pd.Grouper`, `pd.util.hash_biject_array()`, `DataFrame.itertuples()`, more `pd.api.types` predicates
 
 ---
 
@@ -74,18 +74,15 @@
 
 ## 📊 Iteration History
 
-### Iteration 297 — 2026-04-30 12:49 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25166165879)
+### Iteration 298 — 2026-05-01 07:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25206042458)
 
 - **Status**: ⏳ pending-ci
-- **Change**: +hashArray + Series.items()/iteritems()
-- **Metric**: 138 (previous best: 137, delta: +1)
-- **Commit**: ea33b44
+- **Change**: +hashArray (element-wise FNV-1a hashing) + Series.items()/iteritems()
+- **Metric**: 138 (previous best: 138, delta: +1)
+- **Commit**: 0d3f073
+- **Notes**: hashArray mirrors pd.util.hash_array; Series.items/iteritems yield (label, value) pairs.
 
-### Iteration 296 — 2026-04-29 23:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25139337654)
-
-- **Status**: ⏳ pending-ci
-- **Change**: +hashPandasObject — FNV-1a 64-bit hashing for Series/DataFrame
-- **Metric**: 137 (delta: +1) | **Commit**: 2838571
+### Iters 296–297 — pending-ci (137→138): +hashPandasObject (FNV-1a 64-bit hashing), +hashArray + Series.items()/iteritems() (pending CI, same metric as 298).
 
 ### Iters 273–295 — pending-ci/accepted (130→137): +Grouper, +lreshape, +strCenter/Ljust/Rjust/Zfill/Wrap, +strGetDummies, +swapaxes, +readFwf, +unionCategoricals, +info, +extractAll, +firstRows/lastRows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html.
 
