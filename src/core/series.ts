@@ -140,8 +140,13 @@ function pearsonCorrFromArrays(
  */
 let _rxA: Uint32Array = new Uint32Array(0);
 let _rxB: Uint32Array = new Uint32Array(0);
-/** 256-bucket histogram reused every pass (never reallocated). */
-const _rxCnt: Uint32Array = new Uint32Array(256);
+/**
+ * Pre-computed histogram for all 8 radix passes (8 × 256 buckets).
+ * Layout: histo[pass * 256 + byte] = count of elements with that byte in that pass.
+ * A single O(n) scan fills all 8 histograms before any scatter pass runs,
+ * eliminating 7 redundant count loops vs the previous per-pass approach.
+ */
+const _rxHisto: Uint32Array = new Uint32Array(8 * 256);
 /** Pre-partition index buffers (grow lazily, never shrink). */
 let _finBuf: Uint32Array = new Uint32Array(0);
 let _nanBuf: Uint32Array = new Uint32Array(0);
@@ -805,30 +810,48 @@ export class Series<T extends Scalar = Scalar> {
       // _rxA is already initialised by the merged loop above.
       // AoS layout: srcBuf[i*3]=origIdx, srcBuf[i*3+1]=loKey, srcBuf[i*3+2]=hiKey.
 
+      // Pre-compute all 8 histograms in a single O(n) scan, saving 7 redundant
+      // count loops. _rxHisto[pass*256 + byte] = count of elements with that byte.
+      _rxHisto.fill(0);
+      for (let i = 0; i < finCount; i++) {
+        const si = i * 3;
+        const lo = srcBuf[si + 1]!;
+        const hi = srcBuf[si + 2]!;
+        let idx: number;
+        idx = 0 * 256 + (lo & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 1 * 256 + ((lo >>> 8) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 2 * 256 + ((lo >>> 16) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 3 * 256 + ((lo >>> 24) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 4 * 256 + (hi & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 5 * 256 + ((hi >>> 8) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 6 * 256 + ((hi >>> 16) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 7 * 256 + ((hi >>> 24) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+      }
+
+      // Convert each histogram to an exclusive prefix sum (cumulative offsets).
+      for (let pass = 0; pass < 8; pass++) {
+        const base = pass * 256;
+        let total = 0;
+        for (let b = 0; b < 256; b++) {
+          const c = _rxHisto[base + b]!;
+          _rxHisto[base + b] = total;
+          total = total + c;
+        }
+      }
+
       let dstBuf = _rxB;
 
       for (let pass = 0; pass < 8; pass++) {
-        _rxCnt.fill(0);
         // keyOff: offset within the AoS triple for the key word this pass reads.
         // pass 0-3 use lo (offset 1); pass 4-7 use hi (offset 2).
         const keyOff = pass < 4 ? 1 : 2;
         const shift = (pass % 4) * 8;
-        for (let i = 0; i < finCount; i++) {
-          const bucket = (srcBuf[i * 3 + keyOff]! >>> shift) & 0xff;
-          const c = _rxCnt[bucket]!;
-          _rxCnt[bucket] = c + 1;
-        }
-        let total = 0;
-        for (let b = 0; b < 256; b++) {
-          const c = _rxCnt[b]!;
-          _rxCnt[b] = total;
-          total = total + c;
-        }
+        const histoBase = pass * 256;
         for (let i = 0; i < finCount; i++) {
           const si = i * 3;
           const bucket = (srcBuf[si + keyOff]! >>> shift) & 0xff;
-          const p = _rxCnt[bucket]!;
-          _rxCnt[bucket] = p + 1;
+          const p = _rxHisto[histoBase + bucket]!;
+          _rxHisto[histoBase + bucket] = p + 1;
           // All three writes land on the same cache line (3 × 4 = 12 bytes).
           const di = p * 3;
           dstBuf[di] = srcBuf[si]!;
