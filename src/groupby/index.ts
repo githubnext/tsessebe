@@ -8,3 +8,5 @@ export { DataFrameGroupBy, SeriesGroupBy } from "./groupby.ts";
 export type { AggFn, AggName, AggSpec } from "./groupby.ts";
 export { NamedAgg, namedAgg, isNamedAggSpec } from "./named_agg.ts";
 export type { NamedAggSpec } from "./named_agg.ts";
+export { Grouper, isGrouper } from "./grouper.ts";
+export type { GrouperOptions } from "./grouper.ts";

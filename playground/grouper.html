@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tsb — Grouper</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.3rem; }
+      pre { background: #f5f5f5; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+      code { background: #f0f0f0; padding: 0.1em 0.3em; border-radius: 3px; }
+      .note { background: #fff3cd; border-left: 4px solid #ffc107; padding: 0.75rem 1rem; margin: 1rem 0; }
+      a { color: #0366d6; }
+    </style>
+  </head>
+  <body>
+    <p><a href="index.html">← tsb playground</a></p>
+    <h1>pd.Grouper</h1>
+
+    <p>
+      <code>Grouper</code> is a specification object that encapsulates groupby parameters so they
+      can be passed as a reusable spec to <code>groupby()</code>. It mirrors
+      <a href="https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html"><code>pandas.Grouper</code></a>.
+    </p>
+
+    <h2>Key vs Level grouping</h2>
+    <pre><code>import { Grouper, isGrouper, DataFrame } from "tsb";
+
+// Group by a column key
+const byDept = new Grouper({ key: "dept" });
+console.log(byDept.isKeyGrouper()); // true
+
+// Group by an index level
+const byLevel = new Grouper({ level: 0 });
+console.log(byLevel.isLevelGrouper()); // true
+
+// Frequency-based (time) grouping
+const byMonth = new Grouper({ key: "date", freq: "ME" });
+console.log(byMonth.isFreqGrouper()); // true
+</code></pre>
+
+    <h2>Options</h2>
+    <pre><code>const g = new Grouper({
+  key: "date",
+  freq: "QS",       // quarter-start frequency
+  sort: true,       // sort group keys
+  dropna: false,    // keep NaN group keys
+  closed: "left",   // left-closed bins
+  label: "left",    // label bins with left edge
+});
+
+console.log(g.toString());
+// Grouper(key="date", freq="QS", sort=true, dropna=false)
+</code></pre>
+
+    <h2>isGrouper helper</h2>
+    <pre><code>isGrouper(new Grouper({ key: "dept" })); // true
+isGrouper("dept");                        // false
+isGrouper({ key: "dept" });              // false
+</code></pre>
+
+    <h2>Usage with groupby</h2>
+    <div class="note">
+      <strong>Note:</strong> Full integration of <code>Grouper</code> with <code>DataFrame.groupby()</code>
+      for freq-based and level-based grouping is a future iteration. Currently <code>Grouper</code>
+      serves as the spec object — you can use <code>groupby(g.key!)</code> with a key-based grouper.
+    </div>
+    <pre><code>const df = DataFrame.fromColumns({
+  dept: ["Engineering", "Engineering", "Marketing"],
+  salary: [100_000, 120_000, 80_000],
+});
+
+const g = new Grouper({ key: "dept", sort: true });
+// When groupby supports Grouper natively:
+// df.groupby(g).mean()
+//
+// For now, use the key directly:
+df.groupby(g.key!).mean();
+// DataFrame { dept: ["Engineering","Marketing"], salary: [110000, 80000] }
+</code></pre>
+
+    <h2>Python pandas equivalent</h2>
+    <pre><code>import pandas as pd
+
+df = pd.DataFrame({
+    "dept": ["Engineering", "Engineering", "Marketing"],
+    "salary": [100_000, 120_000, 80_000],
+})
+
+g = pd.Grouper(key="dept", sort=True)
+df.groupby(g)["salary"].mean()
+# dept
+# Engineering    110000.0
+# Marketing       80000.0
+</code></pre>
+  </body>
+</html>
