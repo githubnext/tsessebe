@@ -6,10 +6,12 @@
 
 ## ⚙️ Machine State
 
+> 🤖 *Updated automatically after each iteration. The pre-step scheduler reads this table — keep it accurate.*
+
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-01T07:10:56Z |
-| Iteration Count | 298 |
+| Last Run | 2026-05-02T01:11:02Z |
+| Iteration Count | 299 |
 | Best Metric | 138 |
 | Target Metric | — |
 | Metric Direction | higher |
@@ -37,8 +39,8 @@
 
 - ✅ Core + Stats + IO + Merge + Reshape + Window + GroupBy complete (iters 1–295)
 - ✅ hashPandasObject added (iter 296)
-- ✅ hashArray + Series.items()/iteritems() added (iters 297–298)
-- Next: `pd.Grouper`, `pd.util.hash_biject_array()`, `DataFrame.itertuples()`, more `pd.api.types` predicates
+- ✅ hashArray + Series.items()/iteritems() + DataFrame.itertuples() added (iter 299)
+- Next: `pd.Grouper`, `pd.util.hash_biject_array()`, more `pd.api.types` predicates (is_float_dtype, is_integer_dtype, etc.)
 
 ---
 
@@ -54,6 +56,8 @@
 - **to_html**: Use df.col(col).at(i) for cell values; df.index.at(i) for index labels.
 - **Baseline metric**: Always check `main` baseline. Branch fast-forwarded when ahead=0.
 - **DataFrame construction in tests**: Use `DataFrame.fromColumns({...})` not `new DataFrame({...})`. Use default `fc` import, not `* as fc`.
+- **fast-check not installed in sandbox**: Don't use fast-check in new tests unless confirmed installed. Node_modules may not be present in CI sandbox.
+- **DataFrame.fromColumns index option**: Second argument is `DataFrameOptions` with `{ index: [...] }`, not a plain array.
 
 ---
 
@@ -66,23 +70,24 @@
 ## 🔭 Future Directions
 
 - `pd.Grouper` — spec object for groupby/resample
-- More `pd.api.types` predicates (is_float_dtype, is_integer_dtype, etc.)
+- More `pd.api.types` predicates (is_float_dtype, is_integer_dtype, is_numeric_dtype, etc.)
 - `pd.util.hash_biject_array()` — hash bijection for deduplicated categorical arrays
-- `DataFrame.itertuples()` — iterate rows as named tuples
+- `DataFrame.xs()` improvements (multi-level key lookup)
+- `Series.map()` with dict/Series as mapper
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 298 — 2026-05-01 07:10 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25206042458)
+### Iteration 299 — 2026-05-02 01:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25239808128)
 
-- **Status**: ⏳ pending-ci
-- **Change**: +hashArray (element-wise FNV-1a hashing) + Series.items()/iteritems()
-- **Metric**: 138 (previous best: 138, delta: +1)
-- **Commit**: 0d3f073
-- **Notes**: hashArray mirrors pd.util.hash_array; Series.items/iteritems yield (label, value) pairs.
+- **Status**: ✅ Accepted
+- **Change**: +hashArray (element-wise FNV-1a hashing) + Series.items()/iteritems() + DataFrame.itertuples()
+- **Metric**: 138 (previous best: 137, delta: +1)
+- **Commit**: 738c2e4
+- **Notes**: hashArray mirrors pd.util.hash_array; Series.items/iteritems yield (label, value) pairs; DataFrame.itertuples yields row objects with Index field. All 18 new tests pass; typecheck clean.
 
-### Iters 296–297 — pending-ci (137→138): +hashPandasObject (FNV-1a 64-bit hashing), +hashArray + Series.items()/iteritems() (pending CI, same metric as 298).
+### Iters 296–298 — pending-ci (137→138): +hashPandasObject, +hashArray attempts (merged into iter 299).
 
 ### Iters 273–295 — pending-ci/accepted (130→137): +Grouper, +lreshape, +strCenter/Ljust/Rjust/Zfill/Wrap, +strGetDummies, +swapaxes, +readFwf, +unionCategoricals, +info, +extractAll, +firstRows/lastRows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html.
 
