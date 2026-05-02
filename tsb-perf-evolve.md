@@ -4,59 +4,47 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-01T12:36:06Z |
-| Iteration Count | 30 |
+| Last Run | 2026-05-02T06:53:50Z |
+| Iteration Count | 31 |
 | Best Metric | 21.048 |
 | Target Metric | — |
 | Metric Direction | lower |
 | Branch | autoloop/tsb-perf-evolve |
-| PR | pending CI |
+| PR | #262 |
 | Issue | #189 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, rejected, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, rejected, pending-ci, pending-ci, pending-ci |
 
 ## 🧬 Population
 
-### c030 · island 3 · fitness pending CI · gen 30
+### c031 · island 3 · fitness pending CI · gen 31
 
-- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c029
-- **Approach**: Pre-compute all 8 radix histograms in a single O(n) scan before scatter. Saves 7×n reads. Commit cb1eada.
+- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c030
+- **Approach**: Merged histogram into init loop + RangeIndex fast path for take(perm). Commit e99cc8d.
 - **Status**: ⏳ pending CI
+
+### ~~c030~~ (CI action_required; changes rolled into c031) · gen 30
 
 ### c029 · island 3 · fitness 21.048 · gen 29
 
-- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c028
-- **Approach**: SoA→AoS scatter layout; all 3 writes/element on same cache line. Commit 150c0be.
-- **Status**: ✅ accepted CI 25183916807 — tsb=112.50ms / pandas=5.34ms / fitness=21.048
+- **Approach**: AoS scatter; all 3 writes/element on same cache line. Commit 150c0be.
+- **Status**: ✅ accepted CI 25183916807 — tsb=112.50ms / pandas=5.34ms
 
-### c028 · island 3 · fitness 21.841 · gen 28
-
-- **Op**: exploitation; **Cell**: parallel-typed-arrays · non-comparison; **Parent**: c027/main
-- **Approach**: Merge partition+radix-init into single O(n) pass. Commit 7f76b94.
-- **Status**: ✅ accepted CI 25142515927 — tsb=116.68ms / pandas=5.34ms / fitness=21.841
-
-### ~~c027~~ (rejected — fitness=29.573; pandas faster on that run: 3.99ms)
-
-### ~~c022~~ (merged PR #226 — LSD 8-pass radix, module-level arrays)
-
-### c003 · island 1 · fitness 27.999 · gen 2
-
-- **Cell**: parallel-typed-arrays · comparison; tsb=155.63ms / pandas=5.56ms
-- **Status**: ✅ accepted CI 24843983915
+### ~~c028~~ fitness 21.841 · ~~c027~~ rejected · ~~c022~~ merged PR #226 (LSD 8-pass radix) · ~~c003~~ island 1 fitness 27.999
 
 ## 📚 Lessons Learned
 
 - LSD radix (8-pass, IEEE-754 transform) eliminates comparator callbacks; bottleneck at n=100k.
 - Module-level TypedArray buffers eliminate GC; grow lazily, never shrink.
-- `noUncheckedIndexedAccess`: use `const v=arr[i]!; arr[i]=v+1`. For repeated indexed writes use local `idx` var.
-- Fast-forward branch to origin/main before committing to prevent phantom commits.
-- Even pass count (8) → result in srcIdx/srcBuf after all passes (no final copy needed).
+- Even pass count (8) → result in srcBuf after all passes (no final copy needed).
 - Benchmark noise: pandas time varies (~4-5.5ms); need ≥10% tsb speedup to clear noise.
-- Merging partition+init saves 2×O(n) passes (c028: 116ms). AoS scatter saves cache-line evictions (c029: 112ms).
+- AoS scatter packs all 3 writes/element on same cache line; SoA is worse for writes.
+- Merging histogram accumulation into init loop saves one O(n) pass over _rxA.
+- `index.take(perm)` calls at() with bounds-check for each element; RangeIndex fast path saves this.
 
 ## 🚧 Foreclosed Avenues
 
@@ -65,24 +53,29 @@
 
 ## 🔭 Future Directions
 
-- 4-pass 16-bit radix (half passes, 64KB histogram, cache effects unknown).
-- Island 4 (hybrid): Array.prototype.sort for n < 1000, radix for n ≥ 1000.
-- ~~Pre-compute all 8 histograms in a single scan~~ → now implemented in c030.
+- 4-pass 16-bit radix (half passes, 256KB histogram; may hurt L1 cache hit rate).
+- Island 4 hybrid: Array.prototype.sort for n < 1k, radix for n ≥ 1k.
+
+## 📊 Iteration History
+
+### Iteration 31 — 2026-05-02 06:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25246208804)
+
+- **Status**: ⏳ pending CI · c031 · exploitation · island 3
+- **Change**: Merged histogram into init loop + RangeIndex fast path for index.take(perm).
 
 ### Iteration 30 — 2026-05-01 12:36 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25214403845)
 
-- **Status**: ⏳ pending CI · **Op**: exploitation · **Island**: 3 · c030
-- **Change**: Pre-compute all 8 radix histograms in one O(n) scan; saves 7×n element reads vs 8 separate per-pass count loops.
-- **Metric**: pending CI (sandbox has no bun)
+- **Status**: ⏳ pending CI (CI action_required) · c030 · exploitation · island 3
+- **Change**: Pre-compute all 8 histograms in one O(n) scan.
 
 ### Iteration 29 — 2026-04-30 18:44 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25183052353)
 
-- **Status**: ✅ Accepted fitness=21.048 (tsb=112.50ms / pandas=5.34ms); merged via PR #255. delta: -0.793
-- **Change**: AoS scatter: 6 SoA arrays → 2 AoS arrays (stride-3 [idx,lo,hi]). All 3 scatter writes per element hit same cache line.
+- **Status**: ✅ Accepted fitness=21.048 delta=-0.793; merged PR #255
+- **Change**: AoS scatter layout.
 
-### Iteration 28 — 2026-04-30 01:08 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25142029767)
+### Iteration 28 — 2026-04-30 01:08 UTC
 
-- **Status**: ✅ Accepted fitness=21.841 (tsb=116.68ms / pandas=5.34ms); PR #249 merged
-- **Change**: Merged partition+radix-init into one O(n) pass; compact fvals indexing; direct srcIdx gather. Saves ~2×O(n). delta: -6.158
+- **Status**: ✅ Accepted fitness=21.841 delta=-6.158; merged PR #249
+- **Change**: Merge partition+radix-init into one pass.
 
-### Iters 1–27 — 2026-04-23–29 — c022 ✅ merged PR #226 (LSD 8-pass radix). c027 ❌ fitness=29.573 (pandas variance). Others pending-ci or lost.
+### Iters 1–27 — c022 ✅ merged PR #226 (LSD 8-pass radix). c027 ❌ fitness=29.573.
