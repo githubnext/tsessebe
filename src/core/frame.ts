@@ -19,12 +19,12 @@
 
 import { DataFrameGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
-import { EWM } from "../window/ewm.ts";
-import type { EwmOptions } from "../window/ewm.ts";
-import { Expanding } from "../window/expanding.ts";
-import type { ExpandingOptions } from "../window/expanding.ts";
-import { Rolling } from "../window/rolling.ts";
-import type { RollingOptions } from "../window/rolling.ts";
+import { EWM } from "../window/index.ts";
+import type { EwmOptions } from "../window/index.ts";
+import { Expanding } from "../window/index.ts";
+import type { ExpandingOptions } from "../window/index.ts";
+import { Rolling } from "../window/index.ts";
+import type { RollingOptions } from "../window/index.ts";
 import { Index } from "./base-index.ts";
 import { RangeIndex } from "./range-index.ts";
 import { Series } from "./series.ts";
@@ -603,10 +603,7 @@ export class DataFrame {
    * }
    * ```
    */
-  *itertuples(
-    index = true,
-    _name?: string,
-  ): IterableIterator<Record<string, Scalar>> {
+  *itertuples(index = true, _name?: string): IterableIterator<Record<string, Scalar>> {
     const nRows = this.index.size;
     const colNames = this.columns.values as readonly string[];
     for (let i = 0; i < nRows; i++) {
