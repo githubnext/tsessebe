@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-03T01:11:19Z |
-| Iteration Count | 32 |
+| Last Run | 2026-05-03T18:35:00Z |
+| Iteration Count | 33 |
 | Best Metric | 21.048 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -17,17 +17,19 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, rejected, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, rejected, pending-ci |
 
 ## 🧬 Population
 
-### c032 · island 3 · fitness pending CI · gen 32
+### c033 · island 3 · fitness pending CI · gen 33
 
-- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c029
-- **Approach**: Histogram accumulated inline during init loop (lo/hi hot in registers), eliminating separate O(n) re-read of _rxA. Commit a9daa8b.
+- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c029 (via c030 on branch)
+- **Approach**: Histogram accumulated inline during init loop — zero `_rxHisto`, then for each numeric element compute lo/hi and update all 8 histogram buckets immediately. Removes separate O(n) AoS-buffer scan. Commit 19cabe8.
 - **Status**: ⏳ pending CI
 
-### ~~c031~~ (state inconsistency — commit e99cc8d not found on branch; superseded by c032)
+### ~~c032~~ (commit a9daa8b not found on branch; superseded by c033 same approach)
+
+### ~~c031~~ (commit e99cc8d not found on branch; superseded)
 
 ### ~~c030~~ (CI action_required; pre-computed histogram approach adopted in c032)
 
@@ -60,12 +62,17 @@
 
 ## 📊 Iteration History
 
+### Iteration 33 — 2026-05-03 18:35 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25287191173)
+
+- **Status**: ⏳ pending CI · c033 · exploitation · island 3
+- **Operator**: exploitation · **Parent**: c029/c030 (fitness 21.048)
+- **Change**: Merge histogram accumulation into init loop; eliminates separate O(n) AoS-buffer re-read. Commit 19cabe8.
+- **Metric**: pending CI (best: 21.048)
+
 ### Iteration 32 — 2026-05-03 01:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25266324977)
 
-- **Status**: ⏳ pending CI · c032 · exploitation · island 3
-- **Operator**: exploitation · **Parent**: c029 (fitness 21.048)
-- **Change**: Histogram accumulation merged into init loop; lo/hi computed once per element, 8 histogram updates done immediately without a second pass through _rxA.
-- **Metric**: pending CI (best: 21.048)
+- **Status**: ⏳ pending CI · c032 · exploitation · island 3 (commit lost)
+- **Change**: Same merged-histogram approach; commit a9daa8b not found on branch.
 
 ### Iteration 31 — 2026-05-02 06:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25246208804)
 
