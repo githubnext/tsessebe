@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-02T06:53:50Z |
-| Iteration Count | 31 |
+| Last Run | 2026-05-03T01:11:19Z |
+| Iteration Count | 32 |
 | Best Metric | 21.048 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -17,17 +17,19 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, rejected, pending-ci, pending-ci, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, rejected, pending-ci, pending-ci |
 
 ## 🧬 Population
 
-### c031 · island 3 · fitness pending CI · gen 31
+### c032 · island 3 · fitness pending CI · gen 32
 
-- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c030
-- **Approach**: Merged histogram into init loop + RangeIndex fast path for take(perm). Commit e99cc8d.
+- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c029
+- **Approach**: Histogram accumulated inline during init loop (lo/hi hot in registers), eliminating separate O(n) re-read of _rxA. Commit a9daa8b.
 - **Status**: ⏳ pending CI
 
-### ~~c030~~ (CI action_required; changes rolled into c031) · gen 30
+### ~~c031~~ (state inconsistency — commit e99cc8d not found on branch; superseded by c032)
+
+### ~~c030~~ (CI action_required; pre-computed histogram approach adopted in c032)
 
 ### c029 · island 3 · fitness 21.048 · gen 29
 
@@ -57,6 +59,13 @@
 - Island 4 hybrid: Array.prototype.sort for n < 1k, radix for n ≥ 1k.
 
 ## 📊 Iteration History
+
+### Iteration 32 — 2026-05-03 01:11 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25266324977)
+
+- **Status**: ⏳ pending CI · c032 · exploitation · island 3
+- **Operator**: exploitation · **Parent**: c029 (fitness 21.048)
+- **Change**: Histogram accumulation merged into init loop; lo/hi computed once per element, 8 histogram updates done immediately without a second pass through _rxA.
+- **Metric**: pending CI (best: 21.048)
 
 ### Iteration 31 — 2026-05-02 06:53 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25246208804)
 
