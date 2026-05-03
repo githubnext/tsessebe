@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-02T12:39:05Z |
-| Iteration Count | 302 |
-| Best Metric | 643 |
+| Last Run | 2026-05-03T07:05:54Z |
+| Iteration Count | 303 |
+| Best Metric | 646 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,15 +22,14 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, accepted, error, accepted, error, error, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
 
 ---
 
 ## 📋 Program Info
 
 **Goal**: Benchmark every tsb function vs pandas equivalent, one per iteration.
-**Metric**: benchmarked_functions (higher is better)
-**Branch**: [`autoloop/perf-comparison`](../../tree/autoloop/perf-comparison)
+**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: #265
 
 ---
 
@@ -43,31 +42,36 @@
 ## 📚 Lessons Learned
 
 - **Import paths**: `../../src/index.ts`. Series: `new Series({ data: [...] })`. DF: `DataFrame.fromColumns({...})`.
-- **Standalones**: cummax/cummin/cumprod/cumsum/diff/explode/pct_change/seriesAbs/where/mask/sample/replace/astype/pivot.
 - **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - **merge_asof**: mergeAsof(left, right, { on: "key", direction: "backward"|"forward"|"nearest" }) — DFs must be sorted.
 - **crossJoin**: crossJoin(left, right) — small DFs only (100×100 safe).
-- **string_accessor**: available as `series.str.lower()`, `.strip()`, `.len()`, `.replace(pat, repl)`, `.split(sep)`.
-- **insert_pop**: exported as `insertColumn(df, loc, col, values)` and `popColumn(df, col)`.
-- **natsort**: exported as `natSorted(arr)` from src/index.ts.
+- **string_accessor**: `series.str.lower()`, `.strip()`, `.len()`, `.replace(pat, repl)`, `.split(sep)`.
+- **insert_pop**: `insertColumn(df, loc, col, values)` / `popColumn(df, col)`. **natsort**: `natSorted(arr)`.
+- **Styler**: `dataFrameStyle(df).highlightMax().highlightMin().backgroundGradient().exportStyles()`.
+- **mergeOrdered**: `mergeOrdered(df1, df2, { on: "key" })`. **keepTrue/keepFalse**: boolean mask on Series.
 
 ## 🚧 Foreclosed Avenues
 
-- **Suffixed branches**: Never commit to `autoloop/perf-comparison-{suffix}` branches. Only `autoloop/perf-comparison` counts.
-- **Sequential run_benchmarks.sh**: Too slow for 500+ pairs. Use parallel Python runner.
-- **SSH push** and **HTTPS push without credentials**: blocked. Use safeoutputs push_to_pull_request_branch.
+- **Suffixed branches**: Only `autoloop/perf-comparison` (never with suffix).
+- **Sequential run_benchmarks.sh**: Too slow for 500+ pairs.
+- **SSH/HTTPS push**: Use safeoutputs push_to_pull_request_branch.
 
 ---
 
 ## 🔭 Future Directions
 
-- Continue adding option-variant benchmarks (axis/limit/method parameters)
-- Check for new src/ modules added to tsb library
 - More string_accessor variants: startswith, endswith, findall, extract
+- Option-variant benchmarks (axis/limit/method parameters)
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 303 — 2026-05-03T07:05:54Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25272621402)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 3 benchmark pairs: `keep_true_false` (keepTrue/keepFalse boolean mask filtering), `merge_ordered` (mergeOrdered sorted merge), `styler` (dataFrameStyle highlight+gradient).
+- **Metric**: 646 (previous best: 643, delta: +3) · **Commit**: 0f8f4a2
 
 ### Iteration 302 — 2026-05-02T12:39:05Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25251927678)
 
@@ -81,6 +85,4 @@
 - **Change**: Added 3 benchmark pairs: `xs` (xsDataFrame row cross-section), `update` (seriesUpdate NaN-aware overwrite), `compare` (seriesEq/seriesLt/seriesGe scalar comparisons).
 - **Metric**: 640 (previous best: 637, delta: +3) · **Commit**: ec8f186
 
-### Iters 295–300 — ✅/⚠️ | Metrics 634→637: truncate, filter_labels, assign, transform_agg, corrwith, autocorr, pipe_apply, to_from_dict added; one error run (bun unavailable).
-
-### Iters 1–295 — ✅/⚠️ | Metrics 0→633. See git history on autoloop/perf-comparison branch.
+### Iters 1–294 — ✅/⚠️ | Metrics 0→633. See git history on autoloop/perf-comparison branch.
