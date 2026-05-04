@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Series.map()</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <a href="index.html">← tsb playground</a>
+    <h1>Series.map()</h1>
+    <p>Map values using a function, Record, Series, or ES6 Map — mirrors <code>pandas.Series.map</code>.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Function mapper</h2>
+      <p>Apply a function <code>(value, index, pos) =&gt; U</code> to every element.</p>
+      <pre><code class="language-ts">import { Series } from "tsb";
+
+const prices = new Series({ data: [10, 20, 30], name: "price" });
+
+// Double each value
+const doubled = prices.map(v =&gt; (v as number) * 2);
+// doubled → [20, 40, 60]
+
+// Format as currency string
+const formatted = prices.map(v =&gt; `$${v}`);
+// formatted → ["$10", "$20", "$30"]</code></pre>
+    </section>
+
+    <section>
+      <h2>Record / dict mapper</h2>
+      <p>Look up each value (stringified) in a plain JS object. Missing keys produce <code>null</code>.</p>
+      <pre><code class="language-ts">import { Series } from "tsb";
+
+const codes = new Series({ data: [1, 2, 3, 9] });
+const result = codes.map({ "1": "low", "2": "med", "3": "high" });
+// result → ["low", "med", "high", null]  (9 not in dict)</code></pre>
+    </section>
+
+    <section>
+      <h2>Series mapper</h2>
+      <p>Look up each value by label in another Series. The <em>values</em> of <code>this</code> are treated as index labels into the mapper Series. Missing labels produce <code>null</code>.</p>
+      <pre><code class="language-ts">import { Index, Series } from "tsb";
+
+const cats = new Series({ data: ["dog", "cat", "fish"] });
+
+const legCounts = new Series({
+  data: [4, 4, 0],
+  index: new Index(["dog", "cat", "fish"]),
+});
+
+const result = cats.map(legCounts);
+// result → [4, 4, 0]</code></pre>
+    </section>
+
+    <section>
+      <h2>ES6 Map mapper</h2>
+      <p>Use a native <code>Map&lt;Scalar, U&gt;</code> for non-string keys (numbers, booleans, null, etc.).</p>
+      <pre><code class="language-ts">import { Series } from "tsb";
+
+const flags = new Series({ data: [true, false, true] });
+const m = new Map([[true, "yes"], [false, "no"]]);
+const result = flags.map(m);
+// result → ["yes", "no", "yes"]</code></pre>
+    </section>
+
+    <section>
+      <h2>naAction: "ignore"</h2>
+      <p>Pass <code>{ naAction: "ignore" }</code> to preserve existing <code>null</code>/<code>NaN</code> values without looking them up.</p>
+      <pre><code class="language-ts">import { Series } from "tsb";
+
+const s = new Series({ data: [1, null, 2] });
+const result = s.map({ "1": "one", "2": "two" }, { naAction: "ignore" });
+// result → ["one", null, "two"]
+// Without naAction, null would be looked up as "null" → null anyway,
+// but for NaN the distinction can matter.</code></pre>
+    </section>
+  </main>
+</body>
+</html>

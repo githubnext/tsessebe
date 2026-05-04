@@ -695,3 +695,4 @@ export type {
 export { hashPandasObject } from "./stats/index.ts";
 export type { HashPandasObjectOptions } from "./stats/index.ts";
 export { hashArray } from "./stats/index.ts";
+export { hashBijectArray, hashBijectInverse } from "./stats/index.ts";
