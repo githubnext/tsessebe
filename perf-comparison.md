@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-03T07:05:54Z |
-| Iteration Count | 303 |
-| Best Metric | 646 |
+| Last Run | 2026-05-04T01:09:41Z |
+| Iteration Count | 304 |
+| Best Metric | 649 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, accepted, error, accepted, error, error, accepted, accepted, accepted |
 
 ---
 
@@ -50,6 +50,9 @@
 - **Styler**: `dataFrameStyle(df).highlightMax().highlightMin().backgroundGradient().exportStyles()`.
 - **mergeOrdered**: `mergeOrdered(df1, df2, { on: "key" })`. **keepTrue/keepFalse**: boolean mask on Series.
 
+- **corrWith**: takes a DataFrame as first arg (not two Series); `corrWith(df, seriesOther)` returns a Series of correlation coefficients per column.
+- **dot_matmul**: `dataFrameDotDataFrame(left, right)` requires left.columns to match right.index row labels for the inner join.
+
 ## 🚧 Foreclosed Avenues
 
 - **Suffixed branches**: Only `autoloop/perf-comparison` (never with suffix).
@@ -67,22 +70,12 @@
 
 ## 📊 Iteration History
 
-### Iteration 303 — 2026-05-03T07:05:54Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25272621402)
+### Iteration 304 — 2026-05-04T01:09:41Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25296135822)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 3 benchmark pairs: `keep_true_false` (keepTrue/keepFalse boolean mask filtering), `merge_ordered` (mergeOrdered sorted merge), `styler` (dataFrameStyle highlight+gradient).
-- **Metric**: 646 (previous best: 643, delta: +3) · **Commit**: 0f8f4a2
+- **Change**: Added 3 benchmark pairs: `corrwith` (autoCorr lag-1 + corrWith DataFrame vs Series), `dot_matmul` (seriesDotSeries + dataFrameDotDataFrame), `eval_query` (queryDataFrame + evalDataFrame on 100k-row DF).
+- **Metric**: 649 (previous best: 646, delta: +3) · **Commit**: 259c75b
 
-### Iteration 302 — 2026-05-02T12:39:05Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25251927678)
+### Iters 302–303 — ✅ | Metrics 640→643→646: squeeze/hash_pandas_object/infer_objects, keep_true_false/merge_ordered/styler.
 
-- **Status**: ✅ Accepted
-- **Change**: Added 3 benchmark pairs: `squeeze` (squeezeSeries/squeezeDataFrame), `hash_pandas_object` (hashPandasObject Series+DF), `infer_objects` (inferObjectsSeries/inferObjectsDataFrame).
-- **Metric**: 643 (previous best: 640, delta: +3) · **Commit**: 6ec27bb
-
-### Iteration 301 — 2026-05-01T18:38:13Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25227439051)
-
-- **Status**: ✅ Accepted
-- **Change**: Added 3 benchmark pairs: `xs` (xsDataFrame row cross-section), `update` (seriesUpdate NaN-aware overwrite), `compare` (seriesEq/seriesLt/seriesGe scalar comparisons).
-- **Metric**: 640 (previous best: 637, delta: +3) · **Commit**: ec8f186
-
-### Iters 1–294 — ✅/⚠️ | Metrics 0→633. See git history on autoloop/perf-comparison branch.
+### Iters 1–301 — ✅/⚠️ | Metrics 0→640. See git history on autoloop/perf-comparison branch.
