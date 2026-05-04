@@ -818,14 +818,22 @@ export class Series<T extends Scalar = Scalar> {
         const lo = srcBuf[si + 1]!;
         const hi = srcBuf[si + 2]!;
         let idx: number;
-        idx = 0 * 256 + (lo & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 1 * 256 + ((lo >>> 8) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 2 * 256 + ((lo >>> 16) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 3 * 256 + ((lo >>> 24) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 4 * 256 + (hi & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 5 * 256 + ((hi >>> 8) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 6 * 256 + ((hi >>> 16) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
-        idx = 7 * 256 + ((hi >>> 24) & 0xff); _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 0 * 256 + (lo & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 1 * 256 + ((lo >>> 8) & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 2 * 256 + ((lo >>> 16) & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 3 * 256 + ((lo >>> 24) & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 4 * 256 + (hi & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 5 * 256 + ((hi >>> 8) & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 6 * 256 + ((hi >>> 16) & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
+        idx = 7 * 256 + ((hi >>> 24) & 0xff);
+        _rxHisto[idx] = _rxHisto[idx]! + 1;
       }
 
       // Convert each histogram to an exclusive prefix sum (cumulative offsets).
