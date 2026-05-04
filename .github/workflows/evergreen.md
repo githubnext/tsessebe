@@ -139,8 +139,21 @@ steps:
               state["attempts"] = int(m.group(1))
           return state
 
+      def get_behind_by(pr):
+          """Return how many commits the PR base branch is ahead of the PR head."""
+          base = pr["base"]["ref"]
+          head_sha = pr["head"]["sha"]
+          url = f"https://api.github.com/repos/{repo}/compare/{base}...{head_sha}"
+          try:
+              data = api_get(url)
+              return int(data.get("behind_by", 0) or 0)
+          except Exception as e:
+              print(f"  Warning: could not fetch compare for PR #{pr['number']}: {e}")
+              return 0
+
       def pr_needs_attention(pr):
-          """Check if a PR has merge conflicts or failing CI. Returns a list of issues."""
+          """Check if a PR has merge conflicts, is behind main, or has failing CI.
+          Returns a list of issues."""
           issues = []
 
           # Check mergeable state
@@ -156,6 +169,12 @@ steps:
                   issues.append("merge_conflict")
           except Exception as e:
               print(f"  Warning: could not fetch mergeable state for PR #{pr['number']}: {e}")
+
+          # Check if the PR branch is behind its base branch (e.g., main moved forward).
+          # We always want to merge main first before fixing CI, so flag this explicitly.
+          behind_by = get_behind_by(pr)
+          if behind_by > 0 and "merge_conflict" not in issues:
+              issues.append(f"behind_main: {behind_by} commit(s)")
 
           # Check CI status via check runs
           check_runs = get_check_runs(pr)
@@ -300,23 +319,37 @@ A pre-flight step has already identified a PR that needs attention. Read the sel
 
 2. The pre-flight step already checks out `selected.head_branch` as a named local tracking branch before you start. Keep working on that branch (do not switch back to `main` or use detached HEAD).
 
-3. **Fix the issues**:
+3. **Fix the issues** — always follow this sequence, in order. Each push is a separate `push-to-pull-request-branch` call:
 
-   ### Merge Conflicts
-   - Merge the base branch (`main`) into the PR branch
-   - Resolve any conflicts intelligently by understanding the intent of both sides
-   - If the PR is from an autoloop branch, prefer the PR's changes for feature code and main's changes for infrastructure/config
-   - Run tests after resolving to make sure the merge is clean
+   ### Step 1 — Merge `main` first if the PR is behind (or has conflicts)
+   If `selected.issues` contains `"merge_conflict"` **or** any `"behind_main: …"` entry, you must bring the branch up to date with `main` before doing anything else:
 
-   ### Failing CI Checks
-   - Read the failing check logs using GitHub tools
-   - Identify the root cause (test failures, lint errors, type errors, build failures)
-   - Fix the code on the PR branch
-   - Run the relevant checks locally to verify the fix before pushing
+   - `git fetch origin main`
+   - `git merge origin/main` (or `origin/<base_branch>` if the base isn't `main`)
+   - Resolve any conflicts intelligently by understanding the intent of both sides. If the PR is from an autoloop branch, prefer the PR's changes for feature code and `main`'s changes for infrastructure/config.
+   - Run tests/lint/typecheck locally to make sure the merge is clean.
 
-4. **Push the fix** to the PR branch using the `push-to-pull-request-branch` safe output.
+   ### Step 2 — Push the merge as its own commit
+   - Push the merge commit using `push-to-pull-request-branch` **before doing anything else**.
+   - This is the *first* push of the run. It contains *only* the merge with `main` (plus any conflict resolutions). Do **not** mix CI-fix changes into this patch.
+   - Merging `main` often fixes CI on its own (the failure was just drift). After the push, re-check whether CI is still failing on the new HEAD.
 
-5. **Update attempt tracking** by writing to repo-memory. Write a file to the repo-memory directory at `/tmp/gh-aw/repo-memory/evergreen/pr-{number}.md` with this format:
+   ### Step 3 — Re-check CI after the merge
+   - Look at the failing checks for the new HEAD SHA (the one you just pushed).
+   - If everything is green or pending-but-likely-green, you're done — skip to step 5.
+   - If checks are still failing, continue to step 4.
+
+   ### Step 4 — Fix the failing checks (second push)
+   - Read the failing check logs using GitHub tools.
+   - Identify the root cause (test failures, lint errors, type errors, build failures).
+   - Fix the code on the (now-merged) PR branch.
+   - Run the relevant checks locally to verify the fix before pushing.
+   - Push the fix using `push-to-pull-request-branch`. This is the *second* push of the run, and it contains *only* the CI fix — no merge commits.
+
+   ### Step 5 — Update tracking and comment
+   Continue to steps 4 and 5 below.
+
+4. **Update attempt tracking** by writing to repo-memory. Write a file to the repo-memory directory at `/tmp/gh-aw/repo-memory/evergreen/pr-{number}.md` with this format:
 
    ```markdown
    # Evergreen: PR #{number}
@@ -331,15 +364,17 @@ A pre-flight step has already identified a PR that needs attention. Read the sel
    | last_result | {success or failure} |
    ```
 
-   - If you **pushed a fix**, set `head_sha` to the new SHA (post-push), reset `attempts` to `0`, and set `last_result` to `success`.
+   - If you **pushed a fix** (or a clean merge), set `head_sha` to the new SHA (post-push), reset `attempts` to `0`, and set `last_result` to `success`.
    - If you **could not fix** the issue, keep the original `head_sha`, increment `attempts` by 1, and set `last_result` to `failure`.
 
-6. **Add a comment** on the PR summarizing what you did (or why you couldn't fix it).
+5. **Add a comment** on the PR summarizing what you did (or why you couldn't fix it). If you pushed both a merge and a CI fix, mention both.
 
 ## Rules
 
 - **Be surgical**: make the minimum changes needed to fix the issue. Do not refactor, improve, or add features.
 - **Don't break things**: always run tests/lint/typecheck locally before pushing.
+- **Always merge `main` first, as its own push.** If the PR branch is behind `main` (or has merge conflicts), the *first* `push-to-pull-request-branch` call of the run must contain only the merge commit (and any conflict resolutions). Do **NOT** include a merge of `main` inside a CI-fix patch — that's a separate, second push. Mixing the two causes patch conflicts when the remote PR branch hasn't been merged yet.
+- **One concern per push**: the merge push contains only the merge; the fix push contains only the fix. Never combine them.
 - **Give up gracefully**: if you cannot fix the issue after investigating, update the attempt counter and leave a comment explaining what went wrong. Do not force-push or make destructive changes.
 - **One PR per run**: only fix the selected PR. Do not touch other PRs.
 - **Respect the 5-attempt limit**: the pre-flight step will stop selecting this PR once attempts reach 5 on the same HEAD SHA. If the SHA changes (someone else pushes), the counter resets.
