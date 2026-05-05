@@ -45,8 +45,8 @@ function fnvByte(hash: bigint, byte: number): bigint {
 }
 
 /** Hash an arbitrary string (UTF-8 bytes) into the FNV state. */
-function fnvString(initialHash: bigint, s: string): bigint {
-  let h = initialHash;
+function fnvString(hash: bigint, s: string): bigint {
+  let h = hash;
   for (let i = 0; i < s.length; i++) {
     const code = s.charCodeAt(i);
     // Encode as UTF-8 bytes
@@ -79,11 +79,11 @@ function fnvScalar(hash: bigint, val: Scalar): bigint {
     }
     // Encode as little-endian 8-byte IEEE 754
     const buf = new ArrayBuffer(8);
-    const view = new DataView(buf);
-    view.setFloat64(0, val, true);
+    new DataView(buf).setFloat64(0, val, true);
+    const bytes = new Uint8Array(buf);
     let h = hash;
     for (let i = 0; i < 8; i++) {
-      h = fnvByte(h, view.getUint8(i));
+      h = fnvByte(h, bytes[i] ?? 0);
     }
     return h;
   }
