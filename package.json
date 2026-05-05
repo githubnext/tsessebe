@@ -14,7 +14,8 @@
     }
   },
   "scripts": {
-    "test": "bun test",
+    "test": "bun test ./tests/",
+    "test:e2e": "bun test --timeout 600000 tests-e2e",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit",
@@ -23,8 +24,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.1.14",
     "fast-check": "^3.22.0",
-    "@types/bun": "^1.1.14"
+    "playwright": "1.59.1"
   },
   "peerDependencies": {
     "typescript": "^5.7.0"

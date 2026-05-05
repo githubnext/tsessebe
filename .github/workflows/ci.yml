@@ -36,7 +36,33 @@ jobs:
         run: bun run lint
 
       - name: Test
-        run: bun test --coverage
+        run: bun test --coverage ./tests/
+
+  playground-e2e:
+    name: Playground E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run Playwright playground tests
+        run: bun run test:e2e
 
   build:
     name: Build
