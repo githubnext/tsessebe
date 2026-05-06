@@ -341,9 +341,7 @@ describe("xsDataFrame — 3-level MultiIndex", () => {
     { names: ["L0", "L1", "L2"] },
   );
   const df3 = new DataFrame(
-    new Map([
-      ["v", new Series({ data: [1, 2, 3, 4], index: mi3 as unknown as Index<string> })],
-    ]),
+    new Map([["v", new Series({ data: [1, 2, 3, 4], index: mi3 as unknown as Index<string> })]]),
     mi3 as unknown as Index<string>,
     ["v"],
   );
