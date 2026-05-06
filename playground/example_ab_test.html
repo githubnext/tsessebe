@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — A/B Test — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>🧪 A/B Test Results</h1>
+  <div class="scenario"><strong>Scenario:</strong> A product manager just shipped a new checkout button (variant B) to half of users. Compare conversion rates and order values between the control (A) and the variant (B).</div>
+  <p>Skills: <code>groupby().agg()</code>, <code>describe</code>, lift calculation, boolean masks.</p>
+
+  <div class="section">
+    <h2>1 · Conversion rate by variant</h2>
+    <p>Each row is one user session: which arm they were in, whether they converted, and order value.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+
+const variant = [
+  "A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A",
+  "B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B",
+];
+const converted = [
+  0,1,0,0,1,0,0,0,1,0, 1,0,0,0,1,0,0,1,0,0,   // 5 / 20 = 25%
+  1,1,0,1,0,1,1,0,1,0, 1,1,0,1,1,0,0,1,1,1,   // 13 / 20 = 65%
+];
+const order_value = [
+  0, 42, 0, 0, 35, 0, 0, 0, 51, 0, 28, 0, 0, 0, 60, 0, 0, 33, 0, 0,
+  47, 51, 0, 39, 0, 64, 38, 0, 55, 0, 41, 47, 0, 33, 58, 0, 0, 49, 36, 52,
+];
+
+const sessions = DataFrame.fromColumns({ variant, converted, order_value });
+
+const summary = sessions.groupby("variant").agg({
+  converted:   "mean",
+  order_value: "mean",
+}, false);
+const out = summary.rename({
+  converted:   "conv_rate",
+  order_value: "avg_order_value",
+});
+console.log(out.toString());
+
+const a = Number(out.col("conv_rate").iloc(0));
+const b = Number(out.col("conv_rate").iloc(1));
+const lift = ((b - a) / a) * 100;
+console.log(`\nLift in conversion rate: ${lift.toFixed(1)}%`);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+summary = sessions.groupby("variant", as_index=False).agg(
+    conv_rate=("converted", "mean"),
+    avg_order_value=("order_value", "mean"),
+)
+print(summary)</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2 · Order value distribution per variant</h2>
+    <p>Use <code>describe</code> to compare full distributions, not just means.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, describe } from "tsb";
+
+const variant = [
+  "A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A","A",
+  "B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B","B",
+];
+const order_value = [
+  0, 42, 0, 0, 35, 0, 0, 0, 51, 0, 28, 0, 0, 0, 60, 0, 0, 33, 0, 0,
+  47, 51, 0, 39, 0, 64, 38, 0, 55, 0, 41, 47, 0, 33, 58, 0, 0, 49, 36, 52,
+];
+const sessions = DataFrame.fromColumns({ variant, order_value });
+
+// Filter to converted-only orders for AOV
+const isConverted = sessions.col("order_value").map(v =&gt; Number(v) &gt; 0);
+const converted = sessions.filter(isConverted);
+
+const isA = converted.col("variant").map(v =&gt; v === "A");
+const isB = converted.col("variant").map(v =&gt; v === "B");
+const a = converted.filter(isA).col("order_value");
+const b = converted.filter(isB).col("order_value");
+
+console.log("Variant A order values:");
+console.log(describe(a).toString());
+console.log("\nVariant B order values:");
+console.log(describe(b).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+converted = sessions[sessions["order_value"] &gt; 0]
+print(converted[converted["variant"]=="A"]["order_value"].describe())
+print(converted[converted["variant"]=="B"]["order_value"].describe())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

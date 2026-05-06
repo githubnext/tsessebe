@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Pricing Buckets — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>🏷️ Product Pricing Tiers</h1>
+  <div class="scenario"><strong>Scenario:</strong> An e-commerce merchandiser wants to bucket the catalogue into 4 price tiers (Budget / Mid / Premium / Luxury) and see the count and average margin per tier.</div>
+  <p>Skills: <code>cut</code> with custom labels, <code>valueCounts</code>, <code>groupby</code>.</p>
+
+  <div class="section">
+    <h2>1 · Bucket products into price tiers</h2>
+    <p>Use fixed bin edges with <code>cut</code> and named labels.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, cut, valueCounts } from "tsb";
+
+const catalogue = DataFrame.fromColumns({
+  sku:    ["A1","A2","A3","B1","B2","B3","C1","C2","C3","D1","D2","D3","E1","E2","E3"],
+  price:  [9.99, 14.50, 19.00, 22.00, 29.50, 39.00, 49.00, 65.00, 79.99, 99.00, 129.00, 149.00, 199.00, 249.00, 349.00],
+  margin: [0.30, 0.32, 0.28, 0.34, 0.36, 0.40, 0.42, 0.45, 0.46, 0.48, 0.50, 0.52, 0.55, 0.58, 0.60],
+});
+
+// cut(...) with labels returns a Series of label strings directly
+const tier = cut(catalogue.col("price"), [0, 25, 75, 150, 1000], {
+  labels: ["Budget", "Mid", "Premium", "Luxury"],
+});
+
+const enriched = catalogue.assign({ tier });
+console.log(enriched.toString());
+
+console.log("\nProducts per tier:");
+console.log(valueCounts(enriched.col("tier")).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+catalogue["tier"] = pd.cut(
+    catalogue["price"],
+    bins=[0, 25, 75, 150, 1000],
+    labels=["Budget","Mid","Premium","Luxury"])
+print(catalogue)
+print(catalogue["tier"].value_counts())</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2 · Avg margin by tier</h2>
+    <p>Strategy question: do premium products carry meaningfully higher margins?</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+
+const enriched = DataFrame.fromColumns({
+  sku:    ["A1","A2","A3","B1","B2","B3","C1","C2","C3","D1","D2","D3","E1","E2","E3"],
+  price:  [9.99, 14.50, 19.00, 22.00, 29.50, 39.00, 49.00, 65.00, 79.99, 99.00, 129.00, 149.00, 199.00, 249.00, 349.00],
+  margin: [0.30, 0.32, 0.28, 0.34, 0.36, 0.40, 0.42, 0.45, 0.46, 0.48, 0.50, 0.52, 0.55, 0.58, 0.60],
+  tier:   ["Budget","Budget","Budget","Budget","Mid","Mid","Mid","Mid","Premium","Premium","Premium","Premium","Luxury","Luxury","Luxury"],
+});
+
+const byTier = enriched.groupby("tier").agg({
+  price:  "mean",
+  margin: "mean",
+  sku:    "count",
+}, false);
+const out = byTier.rename({
+  price:  "avg_price",
+  margin: "avg_margin",
+  sku:    "products",
+});
+console.log(out.toString());
+
+function bar(label: string, value: number, max: number, width = 28): string {
+  const len = max &gt; 0 ? Math.round((value / max) * width) : 0;
+  return label.padEnd(14) + " | " + "\u2588".repeat(len) + " " + value.toFixed(2);
+}
+function chart(title: string, rows: Array&lt;[string, number]&gt;): void {
+  const maxV = Math.max(...rows.map(r =&gt; r[1]));
+  console.log(title);
+  for (const [label, value] of rows) console.log(bar(label, value, maxV));
+}
+
+const tiers   = [...out.col("tier").values].map(String);
+const margins = [...out.col("avg_margin").values].map(v =&gt; Number(v) * 100);
+const order   = ["Budget","Mid","Premium","Luxury"];
+const rows: Array&lt;[string, number]&gt; = [];
+for (const t of order) {
+  const i = tiers.indexOf(t);
+  if (i &gt;= 0) rows.push([t, margins[i] as number]);
+}
+console.log("");
+chart("Avg margin % per tier", rows);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+by_tier = enriched.groupby("tier", as_index=False).agg(
+    avg_price=("price","mean"),
+    avg_margin=("margin","mean"),
+    products=("sku","count"))
+print(by_tier)</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Log Analysis — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>🪵 Server Access Log Analysis</h1>
+  <div class="scenario"><strong>Scenario:</strong> An on-call engineer wants to know how many 5xx errors hit the API per hour during the last incident, broken down by status code class.</div>
+  <p>Skills: column transforms via <code>Series.map</code>, <code>groupby</code>, <code>pivot</code>, error rates.</p>
+
+  <div class="section">
+    <h2>1 · Parse and bucket access logs</h2>
+    <p>Each row is one HTTP request. Extract the hour and the status class (2xx/4xx/5xx).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, pivot } from "tsb";
+
+const log = DataFrame.fromColumns({
+  ts: [
+    "10:01","10:03","10:09","10:14","10:22","10:31","10:47","10:55",
+    "11:02","11:04","11:09","11:18","11:25","11:33","11:41","11:50","11:55","11:58",
+    "12:01","12:03","12:08","12:14","12:22","12:31","12:38","12:45",
+    "13:02","13:09","13:14","13:25","13:31","13:48","13:55",
+  ],
+  status: [
+    200,200,200,404,200,500,200,200,
+    200,500,500,500,200,200,404,500,500,500,
+    200,200,200,200,200,200,404,200,
+    200,500,200,200,200,200,200,
+  ],
+});
+
+const hour = log.col("ts").map(v =&gt; Number(String(v).slice(0, 2)));
+const cls  = log.col("status").map(v =&gt; {
+  const s = Number(v);
+  if (s &gt;= 500) return "5xx";
+  if (s &gt;= 400) return "4xx";
+  return "2xx";
+});
+const enriched = log.assign({ hour, cls });
+
+// Count requests per (hour, cls)
+const counts = enriched.groupby(["hour", "cls"]).size();
+const grouped = DataFrame.fromColumns({
+  hour: [...counts.index.values].map(k =&gt; Number(String(k).split("__SEP__")[0])),
+  cls:  [...counts.index.values].map(k =&gt; String(String(k).split("__SEP__")[1])),
+  n:    [...counts.values].map(Number),
+});
+
+const piv = pivot(grouped, { index: "hour", columns: "cls", values: "n" }).fillna(0);
+console.log("Requests per hour by status class:");
+console.log(piv.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+log["hour"] = log["ts"].str.slice(0, 2).astype(int)
+log["cls"]  = log["status"].apply(lambda s: "5xx" if s&gt;=500 else ("4xx" if s&gt;=400 else "2xx"))
+piv = log.groupby(["hour","cls"]).size().unstack(fill_value=0)
+print(piv)</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2 · Error rate per hour & alert threshold</h2>
+    <p>Compute the 5xx error percentage per hour and flag any hour above 30%.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, roundSeries } from "tsb";
+
+const byHour = DataFrame.fromColumns({
+  hour: [10, 11, 12, 13],
+  "2xx": [6, 5, 7, 6],
+  "4xx": [1, 1, 1, 0],
+  "5xx": [1, 6, 0, 1],
+});
+
+const total  = byHour.col("2xx").add(byHour.col("4xx")).add(byHour.col("5xx"));
+const errPct = roundSeries(byHour.col("5xx").div(total).mul(100), 1);
+const out    = byHour.assign({ total, "5xx_pct": errPct });
+console.log(out.toString());
+
+console.log("\n🚨 Hours with &gt; 30% 5xx errors:");
+const hours = [...out.col("hour").values].map(Number);
+const pcts  = [...out.col("5xx_pct").values].map(Number);
+let flagged = 0;
+for (let i = 0; i &lt; hours.length; i++) {
+  if (pcts[i] &gt; 30) {
+    console.log(`  hour ${hours[i]} → ${pcts[i]}%`);
+    flagged++;
+  }
+}
+if (flagged === 0) console.log("  (all hours healthy)");</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+by_hour["total"]   = by_hour[["2xx","4xx","5xx"]].sum(axis=1)
+by_hour["5xx_pct"] = (by_hour["5xx"] / by_hour["total"] * 100).round(1)
+print(by_hour)
+print(by_hour[by_hour["5xx_pct"] &gt; 30])</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

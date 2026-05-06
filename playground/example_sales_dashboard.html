@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Sales Dashboard — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>💰 Sales Dashboard</h1>
+  <div class="scenario"><strong>Scenario:</strong> You're an analyst at a regional retail chain. Q1 sales just landed in a CSV. Find top-performing regions and products, then visualize revenue with a quick ASCII bar chart.</div>
+  <p>Skills you'll use: <code>readCsv</code>, <code>groupby().agg()</code>, <code>sortValues</code>, <code>nlargestDataFrame</code>.</p>
+
+  <div class="section">
+    <h2>1 · Load the sales CSV</h2>
+    <p>A typical first step: parse a CSV string into a DataFrame and inspect the schema.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readCsv } from "tsb";
+
+const csv = `order_id,date,region,product,units,unit_price
+1001,2024-01-03,North,Widget,4,19.99
+1002,2024-01-05,South,Gadget,2,49.50
+1003,2024-01-09,East,Widget,7,19.99
+1004,2024-01-12,West,Gizmo,1,129.00
+1005,2024-01-18,North,Gadget,3,49.50
+1006,2024-01-22,South,Widget,5,19.99
+1007,2024-02-02,East,Gizmo,2,129.00
+1008,2024-02-08,North,Widget,6,19.99
+1009,2024-02-14,West,Gadget,4,49.50
+1010,2024-02-19,South,Gizmo,1,129.00
+1011,2024-03-01,East,Widget,8,19.99
+1012,2024-03-05,North,Gizmo,2,129.00
+1013,2024-03-11,West,Widget,3,19.99
+1014,2024-03-17,South,Gadget,6,49.50
+1015,2024-03-25,East,Gadget,2,49.50`;
+
+const sales = readCsv(csv);
+console.log("Rows:", sales.shape[0], "Columns:", [...sales.columns.values].join(", "));
+console.log(sales.head(5).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+from io import StringIO
+
+csv = """order_id,date,region,product,units,unit_price
+1001,2024-01-03,North,Widget,4,19.99
+..."""
+sales = pd.read_csv(StringIO(csv))
+print("Rows:", sales.shape[0], "Columns:", list(sales.columns))
+print(sales.head(5))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2 · Compute revenue & rank regions</h2>
+    <p>Add a derived <code>revenue</code> column, then group by region.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readCsv } from "tsb";
+
+const csv = `order_id,region,product,units,unit_price
+1001,North,Widget,4,19.99
+1002,South,Gadget,2,49.50
+1003,East,Widget,7,19.99
+1004,West,Gizmo,1,129.00
+1005,North,Gadget,3,49.50
+1006,South,Widget,5,19.99
+1007,East,Gizmo,2,129.00
+1008,North,Widget,6,19.99
+1009,West,Gadget,4,49.50
+1010,South,Gizmo,1,129.00
+1011,East,Widget,8,19.99
+1012,North,Gizmo,2,129.00
+1013,West,Widget,3,19.99
+1014,South,Gadget,6,49.50
+1015,East,Gadget,2,49.50`;
+
+const sales = readCsv(csv);
+
+// Add revenue = units * unit_price (element-wise)
+const revenue = sales.col("units").mul(sales.col("unit_price"));
+const enriched = sales.assign({ revenue });
+
+// asIndex=false → keep "region" as a column
+const byRegion = enriched.groupby("region").agg({ revenue: "sum" }, false);
+console.log("Revenue by region:");
+console.log(byRegion.toString());
+
+function bar(label: string, value: number, max: number, width = 28): string {
+  const len = max &gt; 0 ? Math.round((value / max) * width) : 0;
+  return label.padEnd(14) + " | " + "\u2588".repeat(len) + " " + value.toFixed(2);
+}
+function chart(title: string, rows: Array&lt;[string, number]&gt;): void {
+  const maxV = Math.max(...rows.map(r =&gt; r[1]));
+  console.log(title);
+  for (const [label, value] of rows) console.log(bar(label, value, maxV));
+}
+
+const rows: Array&lt;[string, number]&gt; = [];
+for (let i = 0; i &lt; byRegion.shape[0]; i++) {
+  const region = String(byRegion.col("region").iloc(i));
+  const rev = Number(byRegion.col("revenue").iloc(i));
+  rows.push([region, rev]);
+}
+rows.sort((a, b) =&gt; b[1] - a[1]);
+console.log("");
+chart("Revenue by region ($)", rows);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+sales["revenue"] = sales["units"] * sales["unit_price"]
+by_region = sales.groupby("region", as_index=False)["revenue"].sum()
+print(by_region)
+
+# ASCII bar chart
+m = by_region["revenue"].max()
+for _, r in by_region.sort_values("revenue", ascending=False).iterrows():
+    n = round(r["revenue"] / m * 28)
+    print(f"{r['region']:14} | {'#' * n} {r['revenue']:.2f}")</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3 · Top products & best single order</h2>
+    <p>Use <code>groupby</code> + <code>nlargestDataFrame</code> to surface the headline numbers.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readCsv, nlargestDataFrame } from "tsb";
+
+const csv = `order_id,region,product,units,unit_price
+1001,North,Widget,4,19.99
+1002,South,Gadget,2,49.50
+1003,East,Widget,7,19.99
+1004,West,Gizmo,1,129.00
+1005,North,Gadget,3,49.50
+1006,South,Widget,5,19.99
+1007,East,Gizmo,2,129.00
+1008,North,Widget,6,19.99
+1009,West,Gadget,4,49.50
+1010,South,Gizmo,1,129.00
+1011,East,Widget,8,19.99
+1012,North,Gizmo,2,129.00
+1013,West,Widget,3,19.99
+1014,South,Gadget,6,49.50
+1015,East,Gadget,2,49.50`;
+
+let sales = readCsv(csv);
+sales = sales.assign({
+  revenue: sales.col("units").mul(sales.col("unit_price")),
+});
+
+const byProduct = sales.groupby("product").agg({ revenue: "sum", units: "sum" }, false);
+console.log("By product:");
+console.log(byProduct.toString());
+
+const top3 = nlargestDataFrame(sales, 3, { columns: "revenue" });
+console.log("\nTop 3 single orders by revenue:");
+console.log(top3.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+sales["revenue"] = sales["units"] * sales["unit_price"]
+by_product = sales.groupby("product", as_index=False).agg(
+    revenue=("revenue", "sum"), units=("units", "sum"))
+print(by_product)
+print(sales.nlargest(3, "revenue"))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

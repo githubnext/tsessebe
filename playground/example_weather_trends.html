@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Weather Trends — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>🌦️ Monthly Weather Trends</h1>
+  <div class="scenario"><strong>Scenario:</strong> A climate journalist has a year of daily temperature observations and wants monthly averages, the hottest month, and a quick visual of the warming curve.</div>
+  <p>Skills: datetime parsing via the <code>dt</code> accessor, <code>groupby</code>, <code>idxmaxSeries</code>.</p>
+
+  <div class="section">
+    <h2>1 · Aggregate daily readings into monthly means</h2>
+    <p>Synthetic but realistic year of daily highs in °C.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, Series } from "tsb";
+
+// 365 daily readings simulating a temperate climate (cold winter, warm summer)
+const days: Date[] = [];
+const temps: number[] = [];
+const start = Date.UTC(2024, 0, 1);
+for (let d = 0; d &lt; 365; d++) {
+  days.push(new Date(start + d * 86400000));
+  // Sinusoidal seasonal pattern + small deterministic "noise"
+  const seasonal = 14 + 12 * Math.sin(((d - 110) / 365) * 2 * Math.PI);
+  const noise = ((d * 9301 + 49297) % 233280) / 233280 * 4 - 2;
+  temps.push(Number((seasonal + noise).toFixed(1)));
+}
+
+// Use a Series so we can reach for the dt accessor
+const dateSeries = new Series({ data: days, name: "date" });
+const months = dateSeries.dt.month();
+
+const df = DataFrame.fromColumns({ temp_c: temps }).assign({ month: months });
+
+const monthly = df.groupby("month").agg({ temp_c: "mean" }, false);
+console.log(monthly.toString());
+
+console.log("\nMin month avg:", Number(monthly.col("temp_c").min()).toFixed(2), "°C");
+console.log("Max month avg:", Number(monthly.col("temp_c").max()).toFixed(2), "°C");</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+df = pd.DataFrame({"date": days, "temp_c": temps})
+df["date"] = pd.to_datetime(df["date"])
+df["month"] = df["date"].dt.month
+monthly = df.groupby("month", as_index=False)["temp_c"].mean()
+print(monthly)</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>2 · Visualise the seasonal curve</h2>
+    <p>An ASCII bar chart of monthly averages — a quick health-check before reaching for proper plotting.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame } from "tsb";
+
+const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const avg = [3.2, 4.7, 8.1, 12.6, 17.5, 22.0, 25.4, 24.8, 20.1, 14.2, 8.4, 4.5];
+const df = DataFrame.fromColumns({ month: months, avg_temp_c: avg });
+console.log(df.toString());
+
+function bar(label: string, value: number, max: number, width = 28): string {
+  const len = max &gt; 0 ? Math.round((value / max) * width) : 0;
+  return label.padEnd(14) + " | " + "\u2588".repeat(len) + " " + value.toFixed(2);
+}
+function chart(title: string, rows: Array&lt;[string, number]&gt;): void {
+  const maxV = Math.max(...rows.map(r =&gt; r[1]));
+  console.log(title);
+  for (const [label, value] of rows) console.log(bar(label, value, maxV));
+}
+const rows = months.map((m, i) =&gt; [m, avg[i] as number] as [string, number]);
+console.log("");
+chart("Avg high temperature (°C)", rows);
+
+const hottestIdx = avg.indexOf(Math.max(...avg));
+console.log(`\nHottest month: ${months[hottestIdx]} at ${avg[hottestIdx]} °C`);</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+df = pd.DataFrame({"month": months, "avg_temp_c": avg})
+print(df)
+hottest = df.loc[df["avg_temp_c"].idxmax(), "month"]
+print("Hottest month:", hottest)</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
