@@ -119,9 +119,7 @@ steps:
       python3 .github/workflows/scripts/autoloop_scheduler.py
 
 source: githubnext/autoloop
-engine:
-  id: copilot
-  model: claude-opus-4-6
+engine: copilot
 
 features:
   copilot-requests: true
