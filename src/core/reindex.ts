@@ -156,58 +156,63 @@ function applyBfill(
  * On a tie (equidistant left and right), prefer the right (forward) value —
  * matching pandas' `method="nearest"` behaviour.
  */
-function applyNearest(values: Scalar[], present: readonly boolean[]): Scalar[] {
+function buildLeftNearest(
+  values: Scalar[],
+  present: readonly boolean[],
+): { dist: number[]; val: Scalar[] } {
   const n = values.length;
-  const out = values.slice();
-
-  // left[i] = { dist, val } of the nearest valid position to the left (or null)
-  const leftDist: number[] = new Array(n).fill(-1);
-  const leftVal: Scalar[] = new Array(n).fill(null);
+  const dist: number[] = new Array(n).fill(-1);
+  const val: Scalar[] = new Array(n).fill(null);
   let lastIdx = -1;
   for (let i = 0; i < n; i++) {
-    if (present[i]) {
-      lastIdx = i;
-    }
+    if (present[i]) lastIdx = i;
     if (lastIdx >= 0) {
-      leftDist[i] = i - lastIdx;
-      leftVal[i] = values[lastIdx];
+      dist[i] = i - lastIdx;
+      val[i] = values[lastIdx];
     }
   }
+  return { dist, val };
+}
 
-  // right[i] = { dist, val } of the nearest valid position to the right (or null)
-  const rightDist: number[] = new Array(n).fill(-1);
-  const rightVal: Scalar[] = new Array(n).fill(null);
+function buildRightNearest(
+  values: Scalar[],
+  present: readonly boolean[],
+): { dist: number[]; val: Scalar[] } {
+  const n = values.length;
+  const dist: number[] = new Array(n).fill(-1);
+  const val: Scalar[] = new Array(n).fill(null);
   let nextIdx = -1;
   for (let i = n - 1; i >= 0; i--) {
-    if (present[i]) {
-      nextIdx = i;
-    }
+    if (present[i]) nextIdx = i;
     if (nextIdx >= 0) {
-      rightDist[i] = nextIdx - i;
-      rightVal[i] = values[nextIdx];
+      dist[i] = nextIdx - i;
+      val[i] = values[nextIdx];
     }
   }
+  return { dist, val };
+}
 
-  for (let i = 0; i < n; i++) {
-    if (present[i]) {
-      continue;
-    }
-    const ld = leftDist[i];
-    const rd = rightDist[i];
-    if (ld === -1 && rd === -1) {
-      out[i] = null;
-    } else if (ld === -1) {
-      out[i] = rightVal[i];
-    } else if (rd === -1) {
-      out[i] = leftVal[i];
-    } else if (rd !== undefined && ld !== undefined && rd <= ld) {
-      // prefer right on tie
-      out[i] = rightVal[i];
-    } else {
-      out[i] = leftVal[i];
+function pickNearest(ld: number, rd: number, leftVal: Scalar, rightVal: Scalar): Scalar {
+  if (ld === -1 && rd === -1) return null;
+  if (ld === -1) return rightVal;
+  if (rd === -1) return leftVal;
+  return rd <= ld ? rightVal : leftVal; // prefer right on tie
+}
+
+function applyNearest(values: Scalar[], present: readonly boolean[]): Scalar[] {
+  const out = values.slice();
+  const left = buildLeftNearest(values, present);
+  const right = buildRightNearest(values, present);
+  for (let i = 0; i < values.length; i++) {
+    if (!present[i]) {
+      out[i] = pickNearest(
+        left.dist[i] ?? -1,
+        right.dist[i] ?? -1,
+        left.val[i] ?? null,
+        right.val[i] ?? null,
+      );
     }
   }
-
   return out;
 }
 

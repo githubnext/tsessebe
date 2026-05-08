@@ -118,6 +118,54 @@ cp node_modules/typescript/lib/typescript.js ./playground/dist/typescript.js
 
 The CI pipeline (`pages.yml`) runs this automatically during deployment.
 
+## End-to-End Cell Execution Tests
+
+To make sure every code cell on every playground page actually works (no
+TypeScript errors, no runtime errors, real output), the project ships a
+Playwright-based test suite under `tests-e2e/playground-cells.test.ts`.
+
+It launches headless Chromium, navigates to every `playground/*.html` page,
+clicks **▶ Run** on every `.playground-block`, and asserts that the cell
+output is not an error and is not the "(no output …)" sentinel.
+
+```bash
+bun install
+bunx playwright install --with-deps chromium
+bun run test:e2e
+```
+
+CI runs this in the dedicated `playground-e2e` job (see `.github/workflows/ci.yml`).
+
+### Known-failures allowlist
+
+A large number of pages currently have at least one broken cell — most often
+because:
+
+1. The "TypeScript" cell actually contains Python source (so TS lexing fails
+   on the `import pandas as pd` line).
+2. A cell references a variable defined in a previous cell. **Each cell runs
+   in its own `new Function()` scope, so nothing persists between cells** —
+   every cell needs its own `import { … } from "tsb"` and its own data setup.
+3. A cell never calls `console.log()` — the playground only shows what the
+   user explicitly logs.
+
+The file `tests-e2e/known-failures.json` enumerates the (file → cell numbers)
+that are currently broken so CI can pass while progress is made. Each entry
+should be **removed from the allowlist as the corresponding cell is fixed** —
+the test framework also fails if a cell now passes but is still listed
+(forward-progress check).
+
+### Authoring rule
+
+Every cell on every playground page **must** be self-contained:
+
+- Import everything it uses from `"tsb"` directly inside the cell.
+- Re-declare any helper data it depends on inside the cell.
+- Call `console.log(…)` (or `console.warn` / `console.error`) so output is
+  visible.
+
+See `playground/merge_ordered.html` for the canonical pattern.
+
 ## Non-Goals (Current Scope)
 
 - **Infinite loop protection**: long-running or infinite loops will hang the

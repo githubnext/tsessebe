@@ -244,7 +244,7 @@ console.log("hashes:", [...h.values]);</pre>
       </div>
       <pre class="playground-editor" contenteditable="true" spellcheck="false">import { DataFrame, hashPandasObject } from "tsb";
 
-const df = new DataFrame({
+const df = DataFrame.fromColumns({
   id:   [1, 2, 3],
   name: ["Alice", "Bob", "Alice"],
   age:  [30, 25, 30],
@@ -276,7 +276,7 @@ console.log("row0===row1:", rowHashes.iat(0) === rowHashes.iat(1)); // false</pr
       </div>
       <pre class="playground-editor" contenteditable="true" spellcheck="false">import { DataFrame, hashPandasObject } from "tsb";
 
-const df = new DataFrame({
+const df = DataFrame.fromColumns({
   a: [1, 2, 1, 3],
   b: ["x", "y", "x", "z"],
 });

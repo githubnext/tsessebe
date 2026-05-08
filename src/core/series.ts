@@ -140,8 +140,13 @@ function pearsonCorrFromArrays(
  */
 let _rxA: Uint32Array = new Uint32Array(0);
 let _rxB: Uint32Array = new Uint32Array(0);
-/** 256-bucket histogram reused every pass (never reallocated). */
-const _rxCnt: Uint32Array = new Uint32Array(256);
+/**
+ * Pre-computed histogram for all 8 radix passes (8 × 256 buckets).
+ * Layout: histo[pass * 256 + byte] = count of elements with that byte in that pass.
+ * A single O(n) scan fills all 8 histograms before any scatter pass runs,
+ * eliminating 7 redundant count loops vs the previous per-pass approach.
+ */
+const _rxHisto: Uint32Array = new Uint32Array(8 * 256);
 /** Pre-partition index buffers (grow lazily, never shrink). */
 let _finBuf: Uint32Array = new Uint32Array(0);
 let _nanBuf: Uint32Array = new Uint32Array(0);
@@ -759,8 +764,12 @@ export class Series<T extends Scalar = Scalar> {
     let nanCount = 0;
     let allNumeric = true;
 
-    // Single pass: partition NaN/null and initialise AoS radix entries for finite numerics.
-    // fvals is indexed by compact slot (finCount) so reads and writes are sequential.
+    // Clear histograms before the init loop so we can accumulate them inline.
+    _rxHisto.fill(0);
+
+    // Single pass: partition NaN/null, initialise AoS radix entries for finite
+    // numerics, and accumulate all 8 histograms simultaneously — eliminating the
+    // separate O(n) histogram scan that the previous implementation required.
     for (let i = 0; i < n; i++) {
       const v = vals[i];
       if (v === null || v === undefined || (typeof v === "number" && Number.isNaN(v))) {
@@ -786,6 +795,24 @@ export class Series<T extends Scalar = Scalar> {
           _rxA[base] = i;
           _rxA[base + 1] = lo;
           _rxA[base + 2] = hi;
+          // Accumulate all 8 histogram passes inline — no second scan needed.
+          let idx: number;
+          idx = lo & 0xff;
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 256 + ((lo >>> 8) & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 512 + ((lo >>> 16) & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 768 + ((lo >>> 24) & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 1024 + (hi & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 1280 + ((hi >>> 8) & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 1536 + ((hi >>> 16) & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
+          idx = 1792 + ((hi >>> 24) & 0xff);
+          _rxHisto[idx] = _rxHisto[idx]! + 1;
         } else {
           allNumeric = false;
         }
@@ -802,33 +829,33 @@ export class Series<T extends Scalar = Scalar> {
 
     if (allNumeric && finCount > 0) {
       // ── LSD radix sort: 8 passes × 8 bits over IEEE-754 transformed keys ──
-      // _rxA is already initialised by the merged loop above.
+      // _rxA and _rxHisto are already initialised by the merged loop above.
       // AoS layout: srcBuf[i*3]=origIdx, srcBuf[i*3+1]=loKey, srcBuf[i*3+2]=hiKey.
+
+      // Convert each histogram to an exclusive prefix sum (cumulative offsets).
+      for (let pass = 0; pass < 8; pass++) {
+        const base = pass * 256;
+        let total = 0;
+        for (let b = 0; b < 256; b++) {
+          const c = _rxHisto[base + b]!;
+          _rxHisto[base + b] = total;
+          total = total + c;
+        }
+      }
 
       let dstBuf = _rxB;
 
       for (let pass = 0; pass < 8; pass++) {
-        _rxCnt.fill(0);
         // keyOff: offset within the AoS triple for the key word this pass reads.
         // pass 0-3 use lo (offset 1); pass 4-7 use hi (offset 2).
         const keyOff = pass < 4 ? 1 : 2;
         const shift = (pass % 4) * 8;
-        for (let i = 0; i < finCount; i++) {
-          const bucket = (srcBuf[i * 3 + keyOff]! >>> shift) & 0xff;
-          const c = _rxCnt[bucket]!;
-          _rxCnt[bucket] = c + 1;
-        }
-        let total = 0;
-        for (let b = 0; b < 256; b++) {
-          const c = _rxCnt[b]!;
-          _rxCnt[b] = total;
-          total = total + c;
-        }
-        for (let i = 0; i < finCount; i++) {
-          const si = i * 3;
+        const histoBase = pass * 256;
+        // Use accumulated stride counter (si += 3) to avoid i*3 multiply per element.
+        for (let i = 0, si = 0; i < finCount; i++, si += 3) {
           const bucket = (srcBuf[si + keyOff]! >>> shift) & 0xff;
-          const p = _rxCnt[bucket]!;
-          _rxCnt[bucket] = p + 1;
+          const p = _rxHisto[histoBase + bucket]!;
+          _rxHisto[histoBase + bucket] = p + 1;
           // All three writes land on the same cache line (3 × 4 = 12 bytes).
           const di = p * 3;
           dstBuf[di] = srcBuf[si]!;
@@ -873,15 +900,15 @@ export class Series<T extends Scalar = Scalar> {
       }
       if (allNumeric) {
         if (ascending) {
-          for (let i = 0; i < finCount; i++) {
-            const idx = srcBuf[i * 3]!;
+          for (let i = 0, si = 0; i < finCount; i++, si += 3) {
+            const idx = srcBuf[si]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
           }
         } else {
-          for (let i = finCount - 1; i >= 0; i--) {
-            const idx = srcBuf[i * 3]!;
+          for (let i = finCount - 1, si = (finCount - 1) * 3; i >= 0; i--, si -= 3) {
+            const idx = srcBuf[si]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
@@ -898,15 +925,15 @@ export class Series<T extends Scalar = Scalar> {
     } else {
       if (allNumeric) {
         if (ascending) {
-          for (let i = 0; i < finCount; i++) {
-            const idx = srcBuf[i * 3]!;
+          for (let i = 0, si = 0; i < finCount; i++, si += 3) {
+            const idx = srcBuf[si]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
           }
         } else {
-          for (let i = finCount - 1; i >= 0; i--) {
-            const idx = srcBuf[i * 3]!;
+          for (let i = finCount - 1, si = (finCount - 1) * 3; i >= 0; i--, si -= 3) {
+            const idx = srcBuf[si]!;
             perm[pos] = idx;
             outData[pos] = vals[idx] as T;
             pos = pos + 1;
@@ -928,9 +955,16 @@ export class Series<T extends Scalar = Scalar> {
       }
     }
 
+    // RangeIndex fast path: for a default 0-based RangeIndex the output index is
+    // just perm itself — skip 100k bounds-checked at() calls from index.take().
+    const outIndex: Index<Label> =
+      this.index instanceof RangeIndex && this.index.start === 0 && this.index.step === 1
+        ? new Index<Label>(perm, this.index.name)
+        : this.index.take(perm);
+
     return new Series<T>({
       data: outData,
-      index: this.index.take(perm),
+      index: outIndex,
       dtype: this.dtype,
       name: this.name,
     });
