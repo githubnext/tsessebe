@@ -114,7 +114,7 @@ describe("rollingApply", () => {
   });
 
   test("product function over window", () => {
-    const prod = (nums: readonly number[]) => nums.reduce((a, b) => a * b, 1);
+    const prod = (nums: readonly number[]): number => nums.reduce((a, b) => a * b, 1);
     const out = rollingApply(s(2, 3, 4, 5), 3, prod);
     expect(out.toArray()).toEqual([null, null, 24, 60]);
   });

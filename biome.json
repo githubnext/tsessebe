@@ -13,7 +13,8 @@
       "*.d.ts",
       "playground/**/*.js",
       "playground/serve.ts",
-      "benchmarks/**"
+      "benchmarks/**",
+      ".autoloop/**"
     ]
   },
   "formatter": {
@@ -68,6 +69,7 @@
     }
   },
   "javascript": {
+    "globals": ["Bun"],
     "formatter": {
       "quoteStyle": "double",
       "trailingCommas": "all",

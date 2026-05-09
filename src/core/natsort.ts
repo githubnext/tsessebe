@@ -88,7 +88,13 @@ function cmpTokens(a: Token, b: Token, ignoreCase: boolean): number {
   if (typeof a === "string" && typeof b === "string") {
     const la = ignoreCase ? a.toLowerCase() : a;
     const lb = ignoreCase ? b.toLowerCase() : b;
-    return la < lb ? -1 : la > lb ? 1 : 0;
+    if (la < lb) {
+      return -1;
+    }
+    if (la > lb) {
+      return 1;
+    }
+    return 0;
   }
   // Mixed: digit tokens sort before string tokens
   return typeof a === "number" ? -1 : 1;
@@ -205,6 +211,27 @@ export function natSortKey(
   return tokens.map((t) => (typeof t === "string" ? t.toLowerCase() : t));
 }
 
+/** Compare two pre-tokenised keys for use inside `natArgSort`'s sort callback. */
+function cmpTokenArrays(ta: readonly Token[], tb: readonly Token[], reverse: boolean): number {
+  const len = Math.min(ta.length, tb.length);
+  for (let k = 0; k < len; k++) {
+    const taToken = ta[k];
+    const tbToken = tb[k];
+    if (taToken === undefined || tbToken === undefined) {
+      break;
+    }
+    const c = cmpTokens(taToken, tbToken, false); // already case-folded
+    if (c !== 0) {
+      return reverse ? -c : c;
+    }
+  }
+  const lc = ta.length - tb.length;
+  if (lc === 0) {
+    return 0;
+  }
+  return reverse ? -lc : lc;
+}
+
 /**
  * Return the integer permutation that would sort `arr` in natural order.
  *
@@ -229,23 +256,7 @@ export function natArgSort(arr: readonly string[], options: NatSortOptions = {})
     if (ta === undefined || tb === undefined) {
       throw new RangeError("natArgSort: index out of bounds");
     }
-    const len = Math.min(ta.length, tb.length);
-    for (let k = 0; k < len; k++) {
-      const taToken = ta[k];
-      const tbToken = tb[k];
-      if (taToken === undefined || tbToken === undefined) {
-        break;
-      }
-      const c = cmpTokens(taToken, tbToken, false); // already case-folded
-      if (c !== 0) {
-        return reverse ? -c : c;
-      }
-    }
-    const lc = ta.length - tb.length;
-    if (lc === 0) {
-      return 0;
-    }
-    return reverse ? -lc : lc;
+    return cmpTokenArrays(ta, tb, reverse);
   });
   return indices;
 }

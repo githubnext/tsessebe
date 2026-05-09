@@ -73,8 +73,9 @@ export function isScalar(val: unknown): boolean {
 }
 
 /**
- * Return `true` if `val` is "list-like" — i.e. iterable (but not a string)
- * or has a non-negative integer `length` property.
+ * Return `true` if `val` is "list-like" — i.e. iterable or has a
+ * non-negative integer `length` property. Strings are included, matching
+ * the behaviour of `pandas.api.types.is_list_like`.
  *
  * Mirrors `pandas.api.types.is_list_like`.
  *
@@ -82,7 +83,7 @@ export function isScalar(val: unknown): boolean {
  * ```ts
  * isListLike([1, 2, 3]);      // true
  * isListLike(new Set([1]));   // true
- * isListLike("abc");          // false  (strings excluded)
+ * isListLike("abc");          // true
  * isListLike(42);             // false
  * isListLike({ a: 1 });       // false
  * ```
@@ -92,7 +93,7 @@ export function isListLike(val: unknown): boolean {
     return false;
   }
   if (typeof val === "string") {
-    return false;
+    return true;
   }
   // Has Symbol.iterator and is not a plain number/boolean/bigint/symbol
   if (

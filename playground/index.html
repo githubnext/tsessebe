@@ -285,6 +285,21 @@
           <div class="status done">✅ Complete</div>
         </div>
         <div class="feature-card">
+          <h3><a href="window_indexers.html" style="color: var(--accent); text-decoration: none;">🪟 Window Indexers</a></h3>
+          <p>Custom window indexers for rolling computations: <code>BaseIndexer</code> (abstract base), <code>FixedForwardWindowIndexer</code> (forward-looking N-row window), <code>VariableOffsetWindowIndexer</code> (per-row variable depth), and <code>applyIndexer()</code> helper. Mirrors <code>pandas.api.indexers</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="series-map.html" style="color: var(--accent); text-decoration: none;">🗺️ Series.map()</a></h3>
+          <p>Map Series values using a function, Record/dict, another Series (index-label lookup), or ES6 Map. Missing keys produce <code>null</code>. Optional <code>naAction: "ignore"</code> passes NA values through unchanged. Mirrors <code>pandas.Series.map()</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
+          <h3><a href="options.html" style="color: var(--accent); text-decoration: none;">⚙️ pd.options system</a></h3>
+          <p><code>getOption</code> · <code>setOption</code> · <code>resetOption</code> · <code>describeOption</code> · <code>optionContext</code> · <code>options</code> proxy. Full validator support and 20+ built-in options across <code>display.*</code>, <code>mode.*</code>, <code>compute.*</code> namespaces. Mirrors <code>pandas.get_option</code> / <code>pandas.set_option</code>.</p>
+          <div class="status done">✅ Complete</div>
+        </div>
+        <div class="feature-card">
           <h3><a href="where_mask.html" style="color: var(--accent); text-decoration: none;">🎭 where / mask</a></h3>
           <p>Element-wise conditional selection: <code>seriesWhere</code> / <code>seriesMask</code> and <code>dataFrameWhere</code> / <code>dataFrameMask</code>. Accepts boolean arrays, label-aligned boolean Series/DataFrame, or callables. Mirrors <code>pandas.Series.where</code>, <code>pandas.DataFrame.where</code>, and their <code>.mask()</code> inverses.</p>
           <div class="status done">✅ Complete</div>

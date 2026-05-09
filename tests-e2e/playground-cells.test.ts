@@ -44,7 +44,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { type Browser, type BrowserContext, chromium } from "playwright";
+import { type Browser, type BrowserContext, type Locator, type Page, chromium } from "playwright";
 
 const PROJECT_ROOT = join(import.meta.dir, "..");
 const PLAYGROUND_DIR = join(PROJECT_ROOT, "playground");
@@ -97,8 +97,8 @@ async function startPlaygroundServer(): Promise<ServerHandle> {
     minify: true,
   });
   if (!buildResult.success) {
-    for (const log of buildResult.logs) console.error(log);
-    throw new Error("Failed to build tsb browser bundle");
+    const buildLogs = buildResult.logs.map((l) => String(l)).join("\n");
+    throw new Error(`Failed to build tsb browser bundle:\n${buildLogs}`);
   }
   const tsSrc = join(PROJECT_ROOT, "node_modules", "typescript", "lib", "typescript.js");
   await Bun.write(join(PLAYGROUND_DIR, "dist", "typescript.js"), Bun.file(tsSrc));
@@ -126,7 +126,42 @@ async function startPlaygroundServer(): Promise<ServerHandle> {
       return new Response("Not found", { status: 404 });
     },
   });
-  return { kill: () => server.stop(true) };
+  return {
+    kill: (): void => {
+      server.stop(true);
+    },
+  };
+}
+
+function classifyOutput(text: string, cls: string): CellOutcome["reason"] | null {
+  const trimmed = text.trim();
+  if (cls.includes("error") || trimmed.startsWith("❌")) {
+    return `error: ${trimmed.slice(0, 200)}`;
+  }
+  if (trimmed === "" || trimmed.startsWith("(no output") || trimmed.startsWith("Click ▶")) {
+    return "no output produced";
+  }
+  return null; // success
+}
+
+async function runCell(block: Locator, cellIndex: number, page: Page): Promise<CellOutcome> {
+  try {
+    await block.locator(".playground-run").click();
+    // Output is updated synchronously inside the click handler, but give
+    // the event loop a tick for the DOM update to flush.
+    await page.waitForTimeout(50);
+    const outputLoc = block.locator(".playground-output").first();
+    const text = (await outputLoc.textContent()) ?? "";
+    const cls = (await outputLoc.getAttribute("class")) ?? "";
+    const reason = classifyOutput(text, cls);
+    if (reason !== null) {
+      return { cellIndex, ok: false, reason };
+    }
+    return { cellIndex, ok: true, reason: "" };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { cellIndex, ok: false, reason: `playwright error: ${msg}` };
+  }
 }
 
 async function executePageCells(ctx: BrowserContext, file: string): Promise<CellOutcome[]> {
@@ -151,36 +186,10 @@ async function executePageCells(ctx: BrowserContext, file: string): Promise<Cell
     const blocks = await page.locator(".playground-block").all();
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
-      if (!block) continue;
-      const cellIndex = i + 1;
-      try {
-        await block.locator(".playground-run").click();
-        // Output is updated synchronously inside the click handler, but give
-        // the event loop a tick for the DOM update to flush.
-        await page.waitForTimeout(50);
-        const outputLoc = block.locator(".playground-output").first();
-        const text = (await outputLoc.textContent()) ?? "";
-        const cls = (await outputLoc.getAttribute("class")) ?? "";
-        const trimmed = text.trim();
-        if (cls.includes("error") || trimmed.startsWith("❌")) {
-          outcomes.push({
-            cellIndex,
-            ok: false,
-            reason: `error: ${trimmed.slice(0, 200)}`,
-          });
-        } else if (
-          trimmed === "" ||
-          trimmed.startsWith("(no output") ||
-          trimmed.startsWith("Click ▶")
-        ) {
-          outcomes.push({ cellIndex, ok: false, reason: "no output produced" });
-        } else {
-          outcomes.push({ cellIndex, ok: true, reason: "" });
-        }
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        outcomes.push({ cellIndex, ok: false, reason: `playwright error: ${msg}` });
+      if (!block) {
+        continue;
       }
+      outcomes.push(await runCell(block, i + 1, page));
     }
   } finally {
     if (pageErrors.length > 0) {
@@ -194,6 +203,48 @@ async function executePageCells(ctx: BrowserContext, file: string): Promise<Cell
     await page.close();
   }
   return outcomes;
+}
+
+function assertPageOutcomes(
+  file: string,
+  outcomes: CellOutcome[] | undefined,
+  allowed: KnownFailures,
+): void {
+  if (outcomes === undefined) {
+    throw new Error(`no outcomes recorded for ${file}`);
+  }
+  const allowedCells = new Set(allowed[file] ?? []);
+  const unexpectedFailures: string[] = [];
+  const unexpectedPasses: number[] = [];
+
+  for (const o of outcomes ?? []) {
+    if (o.cellIndex === 0) {
+      // Page-level failure (e.g., uncaught page error) — never allowlist.
+      unexpectedFailures.push(`page-level: ${o.reason}`);
+      continue;
+    }
+    const inAllowlist = allowedCells.has(o.cellIndex);
+    if (!(o.ok || inAllowlist)) {
+      unexpectedFailures.push(`cell ${o.cellIndex}: ${o.reason}`);
+    } else if (o.ok && inAllowlist) {
+      unexpectedPasses.push(o.cellIndex);
+    }
+  }
+
+  const messages: string[] = [];
+  if (unexpectedFailures.length > 0) {
+    messages.push(
+      `${unexpectedFailures.length} regression(s) in ${file}:\n  - ${unexpectedFailures.join("\n  - ")}`,
+    );
+  }
+  if (unexpectedPasses.length > 0) {
+    messages.push(
+      `${unexpectedPasses.length} cell(s) in ${file} now PASS but are still listed in tests-e2e/known-failures.json — please remove them: [${unexpectedPasses.join(", ")}]`,
+    );
+  }
+  if (messages.length > 0) {
+    throw new Error(messages.join("\n\n"));
+  }
 }
 
 let server: ServerHandle | null = null;
@@ -216,7 +267,9 @@ beforeAll(async () => {
     while (nextIdx < files.length) {
       const i = nextIdx++;
       const file = files[i];
-      if (!file || !context) continue;
+      if (!(file && context)) {
+        continue;
+      }
       const outcomes = await executePageCells(context, file);
       allOutcomes.set(file, outcomes);
     }
@@ -225,9 +278,15 @@ beforeAll(async () => {
 }, 600_000);
 
 afterAll(async () => {
-  if (context) await context.close();
-  if (browser) await browser.close();
-  if (server) server.kill();
+  if (context) {
+    await context.close();
+  }
+  if (browser) {
+    await browser.close();
+  }
+  if (server) {
+    server.kill();
+  }
 });
 
 describe("playground page execution", () => {
@@ -237,40 +296,7 @@ describe("playground page execution", () => {
 
   for (const file of files) {
     it(`every cell on ${file} produces non-error, non-empty output`, () => {
-      const outcomes = allOutcomes.get(file);
-      expect(outcomes, `no outcomes recorded for ${file}`).toBeDefined();
-      const allowedCells = new Set(knownFailures[file] ?? []);
-      const unexpectedFailures: string[] = [];
-      const unexpectedPasses: number[] = [];
-
-      for (const o of outcomes ?? []) {
-        if (o.cellIndex === 0) {
-          // Page-level failure (e.g., uncaught page error) — never allowlist.
-          unexpectedFailures.push(`page-level: ${o.reason}`);
-          continue;
-        }
-        const inAllowlist = allowedCells.has(o.cellIndex);
-        if (!o.ok && !inAllowlist) {
-          unexpectedFailures.push(`cell ${o.cellIndex}: ${o.reason}`);
-        } else if (o.ok && inAllowlist) {
-          unexpectedPasses.push(o.cellIndex);
-        }
-      }
-
-      const messages: string[] = [];
-      if (unexpectedFailures.length > 0) {
-        messages.push(
-          `${unexpectedFailures.length} regression(s) in ${file}:\n  - ${unexpectedFailures.join("\n  - ")}`,
-        );
-      }
-      if (unexpectedPasses.length > 0) {
-        messages.push(
-          `${unexpectedPasses.length} cell(s) in ${file} now PASS but are still listed in tests-e2e/known-failures.json — please remove them: [${unexpectedPasses.join(", ")}]`,
-        );
-      }
-      if (messages.length > 0) {
-        throw new Error(messages.join("\n\n"));
-      }
+      assertPageOutcomes(file, allOutcomes.get(file), knownFailures);
     });
   }
 });
