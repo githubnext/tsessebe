@@ -48,6 +48,8 @@ export { DataFrameGroupBy, SeriesGroupBy } from "./groupby/index.ts";
 export type { AggFn, AggName, AggSpec } from "./groupby/index.ts";
 export { NamedAgg, namedAgg, isNamedAggSpec } from "./groupby/index.ts";
 export type { NamedAggSpec } from "./groupby/index.ts";
+export { Grouper, isGrouper } from "./groupby/index.ts";
+export type { GrouperOptions } from "./groupby/index.ts";
 export { describe, quantile } from "./stats/index.ts";
 export type { DescribeOptions } from "./stats/index.ts";
 export { readCsv, toCsv } from "./io/index.ts";
@@ -75,6 +77,13 @@ export {
   dataFrameRollingAgg,
 } from "./window/index.ts";
 export type { RollingApplyOptions, RollingAggOptions, AggFunctions } from "./window/index.ts";
+export {
+  BaseIndexer,
+  FixedForwardWindowIndexer,
+  VariableOffsetWindowIndexer,
+  applyIndexer,
+} from "./window/index.ts";
+export type { WindowBoundsOptions, WindowBounds } from "./window/index.ts";
 export { DataFrameEwm } from "./core/index.ts";
 export { CategoricalAccessor } from "./core/index.ts";
 export type { CatSeriesLike } from "./core/index.ts";
@@ -685,3 +694,24 @@ export type {
 } from "./stats/index.ts";
 export { hashPandasObject } from "./stats/index.ts";
 export type { HashPandasObjectOptions } from "./stats/index.ts";
+export { hashArray } from "./stats/index.ts";
+export { hashBijectArray, hashBijectInverse } from "./stats/index.ts";
+// pd.options system
+export {
+  getOption,
+  setOption,
+  resetOption,
+  describeOption,
+  optionContext,
+  registerOption,
+  options,
+} from "./core/options.ts";
+export type {
+  OptionValue,
+  OptionValidator,
+  OptionContextToken,
+  OptionsProxy,
+} from "./core/options.ts";
+// pd.api namespace
+export { api, apiTypes } from "./core/pd_api.ts";
+export type { Api, ApiTypes } from "./core/pd_api.ts";

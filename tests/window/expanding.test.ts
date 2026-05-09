@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import * as fc from "fast-check";
+import { assert, array, float, integer, option, property } from "fast-check";
 import { DataFrame, Series } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -290,9 +290,9 @@ describe("DataFrame.expanding()", () => {
 
 describe("Expanding — property tests", () => {
   test("expanding().sum() at position i equals sum of all valid values up to i", () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.option(fc.float({ noNaN: true, min: -100, max: 100 }), { nil: null }), {
+    assert(
+      property(
+        array(option(float({ noNaN: true, min: -100, max: 100 }), { nil: null }), {
           minLength: 0,
           maxLength: 30,
         }),
@@ -317,9 +317,9 @@ describe("Expanding — property tests", () => {
   });
 
   test("expanding().max() at position i >= expanding().min() at position i", () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.float({ noNaN: true, min: -1000, max: 1000 }), {
+    assert(
+      property(
+        array(float({ noNaN: true, min: -1000, max: 1000 }), {
           minLength: 1,
           maxLength: 50,
         }),
@@ -341,23 +341,20 @@ describe("Expanding — property tests", () => {
   });
 
   test("expanding().count() is non-decreasing", () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.option(fc.integer(), { nil: null }), { minLength: 0, maxLength: 30 }),
-        (data) => {
-          const result = new Series<number | null>({ data }).expanding().count().toArray();
-          for (let i = 1; i < result.length; i++) {
-            expect(result[i] as number).toBeGreaterThanOrEqual(result[i - 1] as number);
-          }
-        },
-      ),
+    assert(
+      property(array(option(integer(), { nil: null }), { minLength: 0, maxLength: 30 }), (data) => {
+        const result = new Series<number | null>({ data }).expanding().count().toArray();
+        for (let i = 1; i < result.length; i++) {
+          expect(result[i] as number).toBeGreaterThanOrEqual(result[i - 1] as number);
+        }
+      }),
     );
   });
 
   test("expanding().mean() matches manual computation", () => {
-    fc.assert(
-      fc.property(
-        fc.array(fc.float({ noNaN: true, min: -100, max: 100 }), {
+    assert(
+      property(
+        array(float({ noNaN: true, min: -100, max: 100 }), {
           minLength: 1,
           maxLength: 20,
         }),

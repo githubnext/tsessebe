@@ -90,9 +90,9 @@ describe("isListLike", () => {
     expect(isListLike(new Map())).toBe(true);
   });
 
-  it("returns false for strings (excluded)", () => {
-    expect(isListLike("abc")).toBe(false);
-    expect(isListLike("")).toBe(false);
+  it("returns true for strings", () => {
+    expect(isListLike("abc")).toBe(true);
+    expect(isListLike("")).toBe(true);
   });
 
   it("returns false for numbers and booleans", () => {

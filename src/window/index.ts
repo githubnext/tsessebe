@@ -17,3 +17,10 @@ export {
   dataFrameRollingAgg,
 } from "./rolling_apply.ts";
 export type { RollingApplyOptions, RollingAggOptions, AggFunctions } from "./rolling_apply.ts";
+export {
+  BaseIndexer,
+  FixedForwardWindowIndexer,
+  VariableOffsetWindowIndexer,
+  applyIndexer,
+} from "./indexers.ts";
+export type { WindowBoundsOptions, WindowBounds } from "./indexers.ts";

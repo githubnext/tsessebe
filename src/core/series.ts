@@ -1083,11 +1083,111 @@ export class Series<T extends Scalar = Scalar> {
   }
 
   /**
-   * Apply a function to each value, returning a new Series.
+   * Apply a mapper to each value, returning a new Series.
+   *
+   * Three forms are supported (mirroring `pandas.Series.map`):
+   *
+   * 1. **Function** `(value, index, pos) => U` — called for every element.
+   * 2. **Plain object / Record** `{ [key: string]: U }` — each value is looked
+   *    up by its string representation; missing keys map to `null`.
+   * 3. **Series mapper** — each value is looked up in the mapper Series by
+   *    index label; missing labels map to `null`.
+   * 4. **ES6 Map** — direct `Map<Scalar, U>` lookup; missing keys map to `null`.
+   *
+   * When `naAction` is `"ignore"`, existing `null`/`undefined`/`NaN` values
+   * are passed through unchanged instead of being looked up in the mapper.
+   * The option is only meaningful for dict/Series/Map forms.
+   *
+   * @example
+   * ```ts
+   * import { Series } from "tsb";
+   * const s = new Series({ data: [1, 2, 3], name: "x" });
+   * s.map(v => v * 10);                  // [10, 20, 30]
+   * s.map({ "1": "one", "2": "two" });   // ["one", "two", null]
+   * ```
    */
-  map<U extends Scalar>(fn: (value: T, index: Label, pos: number) => U): Series<U> {
-    return new Series<U>({
-      data: this._values.map((v, i) => fn(v, this.index.at(i), i)),
+  map<U extends Scalar>(fn: (value: T, index: Label, pos: number) => U): Series<U>;
+  map<U extends Scalar>(
+    mapper: Record<string, U>,
+    options?: { naAction?: "ignore" | null },
+  ): Series<U | null>;
+  map<U extends Scalar>(
+    mapper: Series<U>,
+    options?: { naAction?: "ignore" | null },
+  ): Series<U | null>;
+  map<U extends Scalar>(
+    mapper: Map<Scalar, U>,
+    options?: { naAction?: "ignore" | null },
+  ): Series<U | null>;
+  map<U extends Scalar>(
+    mapperOrFn:
+      | ((value: T, index: Label, pos: number) => U)
+      | Record<string, U>
+      | Series<U>
+      | Map<Scalar, U>,
+    options?: { naAction?: "ignore" | null },
+  ): Series<U> | Series<U | null> {
+    const naAction = options?.naAction ?? null;
+
+    if (typeof mapperOrFn === "function") {
+      return new Series<U>({
+        data: this._values.map((v, i) =>
+          (mapperOrFn as (value: T, index: Label, pos: number) => U)(v, this.index.at(i), i),
+        ),
+        index: this.index,
+        name: this.name,
+      });
+    }
+
+    // Helper: is a value "NA" for the purposes of naAction
+    const isNa = (v: Scalar): boolean =>
+      v === null || v === undefined || (typeof v === "number" && Number.isNaN(v));
+
+    if (mapperOrFn instanceof Map) {
+      const m = mapperOrFn as Map<Scalar, U>;
+      const data = this._values.map((v): U | null => {
+        if (naAction === "ignore" && isNa(v)) {
+          return v as unknown as U | null;
+        }
+        const result = m.get(v);
+        return result !== undefined ? result : null;
+      });
+      return new Series<U | null>({
+        data,
+        index: this.index,
+        name: this.name,
+      });
+    }
+
+    if (mapperOrFn instanceof Series) {
+      const seriesMapper = mapperOrFn as Series<U>;
+      const data = this._values.map((v): U | null => {
+        if (naAction === "ignore" && isNa(v)) {
+          return v as unknown as U | null;
+        }
+        if (!seriesMapper.index.contains(v as Label)) {
+          return null;
+        }
+        return seriesMapper.loc(v as Label) as U | null;
+      });
+      return new Series<U | null>({
+        data,
+        index: this.index,
+        name: this.name,
+      });
+    }
+
+    // Plain object / Record
+    const rec = mapperOrFn as Record<string, U>;
+    const data = this._values.map((v): U | null => {
+      if (naAction === "ignore" && isNa(v)) {
+        return v as unknown as U | null;
+      }
+      const key = String(v);
+      return Object.prototype.hasOwnProperty.call(rec, key) ? (rec[key] as U) : null;
+    });
+    return new Series<U | null>({
+      data,
       index: this.index,
       name: this.name,
     });
@@ -1213,6 +1313,34 @@ export class Series<T extends Scalar = Scalar> {
    */
   groupby(by: readonly Scalar[] | Series<Scalar>): SeriesGroupBy {
     return new SeriesGroupBy(this as Series<Scalar>, by);
+  }
+
+  // ─── items / iteritems ────────────────────────────────────────────────────
+
+  /**
+   * Lazily iterate over `(label, value)` pairs — mirrors `Series.items()`.
+   *
+   * @example
+   * ```ts
+   * const s = new Series({ data: [10, 20], index: ["a", "b"] });
+   * for (const [label, value] of s.items()) {
+   *   console.log(label, value); // "a" 10  then  "b" 20
+   * }
+   * ```
+   */
+  *items(): IterableIterator<[Label, T]> {
+    const n = this.index.size;
+    for (let i = 0; i < n; i++) {
+      yield [this.index.at(i) as Label, this.iat(i) as T];
+    }
+  }
+
+  /**
+   * Alias for `items()` — mirrors `Series.iteritems()` (deprecated in pandas
+   * 1.5 but still widely used).
+   */
+  *iteritems(): IterableIterator<[Label, T]> {
+    yield* this.items();
   }
 }
 
