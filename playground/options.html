@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — pd.options system</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #1a1a2e; }
+    pre { background: #f4f4f8; padding: 16px; border-radius: 8px; overflow-x: auto; }
+    .result { background: #e8f5e9; padding: 12px; border-radius: 6px; margin: 8px 0; font-family: monospace; }
+    button { background: #4f46e5; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; cursor: pointer; margin: 4px 2px; }
+    button:hover { background: #4338ca; }
+    hr { border: none; border-top: 1px solid #e0e0e0; margin: 32px 0; }
+  </style>
+</head>
+<body>
+  <h1>📦 pd.options system</h1>
+  <p>The <strong>options system</strong> mirrors <code>pandas.get_option</code> / <code>pandas.set_option</code>. It manages display, mode, and compute settings with full validation support.</p>
+
+  <hr />
+
+  <h2>Cell 1 — getOption / setOption / resetOption</h2>
+  <pre>
+import { getOption, setOption, resetOption } from "tsb";
+
+getOption("display.max_rows");          // 60
+setOption("display.max_rows", 20);
+getOption("display.max_rows");          // 20
+resetOption("display.max_rows");
+getOption("display.max_rows");          // 60 (restored)
+  </pre>
+  <button onclick="cell1()">Run</button>
+  <div id="out1" class="result">(not run yet)</div>
+
+  <hr />
+
+  <h2>Cell 2 — describeOption</h2>
+  <pre>
+import { describeOption } from "tsb";
+describeOption("display.precision");
+  </pre>
+  <button onclick="cell2()">Run</button>
+  <div id="out2" class="result">(not run yet)</div>
+
+  <hr />
+
+  <h2>Cell 3 — optionContext (scoped override)</h2>
+  <pre>
+import { optionContext, getOption } from "tsb";
+
+const ctx = optionContext("display.max_rows", 5, "display.precision", 2);
+ctx.enter();
+// inside context:
+getOption("display.max_rows");   // 5
+getOption("display.precision");  // 2
+ctx.exit();
+// restored:
+getOption("display.max_rows");   // 60
+  </pre>
+  <button onclick="cell3()">Run</button>
+  <div id="out3" class="result">(not run yet)</div>
+
+  <hr />
+
+  <h2>Cell 4 — options proxy</h2>
+  <pre>
+import { options } from "tsb";
+
+options.display.max_rows;          // 60
+options.display.max_rows = 99;
+options.display.max_rows;          // 99
+  </pre>
+  <button onclick="cell4()">Run</button>
+  <div id="out4" class="result">(not run yet)</div>
+
+  <script type="module">
+    // Inline minimal shim for demo purposes
+    const _registry = new Map();
+    function _normalizeKey(k) { return k.toLowerCase().replace(/-/g, "_"); }
+    function _lookupEntry(key) {
+      const k = _normalizeKey(key);
+      const e = _registry.get(k);
+      if (!e) throw new Error(`No such option: ${key}`);
+      return e;
+    }
+    function registerOption(key, defaultValue, doc = "", validator) {
+      const k = _normalizeKey(key);
+      if (_registry.has(k)) return; // idempotent in demo
+      _registry.set(k, { defaultValue, currentValue: defaultValue, doc, validator });
+    }
+    function getOption(key) { return _lookupEntry(key).currentValue; }
+    function setOption(key, value) {
+      const e = _lookupEntry(key);
+      if (e.validator) { const err = e.validator(value); if (err) throw new Error(err); }
+      e.currentValue = value;
+    }
+    function resetOption(key) {
+      if (_normalizeKey(key) === "all") { for (const e of _registry.values()) e.currentValue = e.defaultValue; return; }
+      const e = _lookupEntry(key); e.currentValue = e.defaultValue;
+    }
+    function describeOption(key) {
+      const prefix = key ? _normalizeKey(key) : "";
+      const lines = [];
+      for (const [k, e] of _registry.entries()) {
+        if (!prefix || k === prefix || k.startsWith(prefix + ".")) {
+          lines.push(`${k}\n  Default : ${e.defaultValue}\n  Current : ${e.currentValue}\n  ${e.doc}`);
+        }
+      }
+      if (!lines.length) throw new Error(`No option matching: ${key}`);
+      return lines.join("\n\n");
+    }
+    function optionContext(...kvs) {
+      if (kvs.length % 2 !== 0) throw new Error("pairs required");
+      const pairs = [];
+      for (let i = 0; i < kvs.length; i += 2) pairs.push({ key: kvs[i], value: kvs[i+1] });
+      const saved = new Map();
+      return {
+        enter() { for (const {key,value} of pairs) { saved.set(key, getOption(key)); setOption(key, value); } },
+        exit()  { for (const {key} of [...pairs].reverse()) { const p = saved.get(key); if (p !== undefined) setOption(key, p); } saved.clear(); },
+      };
+    }
+    function makeProxy(prefix) {
+      return new Proxy({}, {
+        get(_, prop) {
+          if (typeof prop !== "string") return undefined;
+          const k = prefix ? `${prefix}.${prop}` : prop;
+          const nk = _normalizeKey(k);
+          if (_registry.has(nk)) return _registry.get(nk).currentValue;
+          return makeProxy(nk);
+        },
+        set(_, prop, value) {
+          if (typeof prop !== "string") return false;
+          setOption(prefix ? `${prefix}.${prop}` : prop, value); return true;
+        },
+      });
+    }
+    const options = makeProxy("");
+    // seed options
+    const posInt = (n) => (v) => (typeof v === "number" && Number.isInteger(v) && v >= 0) ? undefined : `${n} must be a non-negative integer`;
+    const bool_ = (n) => (v) => typeof v === "boolean" ? undefined : `${n} must be a boolean`;
+    registerOption("display.max_rows", 60, "Maximum rows to display.", posInt("display.max_rows"));
+    registerOption("display.min_rows", 10, "Minimum rows when truncated.", posInt("display.min_rows"));
+    registerOption("display.precision", 6, "Floating-point display precision.", posInt("display.precision"));
+    registerOption("display.max_columns", 20, "Maximum columns.", posInt("display.max_columns"));
+    registerOption("mode.use_inf_as_na", false, "Treat infinity as NA.", bool_("mode.use_inf_as_na"));
+    registerOption("mode.dtype_backend", "numpy", "Default dtype backend.");
+
+    window.cell1 = function() {
+      resetOption("all");
+      const lines = [];
+      lines.push(`getOption("display.max_rows") → ${getOption("display.max_rows")}`);
+      setOption("display.max_rows", 20);
+      lines.push(`After setOption(20): ${getOption("display.max_rows")}`);
+      resetOption("display.max_rows");
+      lines.push(`After resetOption: ${getOption("display.max_rows")}`);
+      document.getElementById("out1").textContent = lines.join("\n");
+    };
+    window.cell2 = function() {
+      document.getElementById("out2").textContent = describeOption("display.precision");
+    };
+    window.cell3 = function() {
+      resetOption("all");
+      const lines = [];
+      const ctx = optionContext("display.max_rows", 5, "display.precision", 2);
+      ctx.enter();
+      lines.push(`Inside context — max_rows: ${getOption("display.max_rows")}, precision: ${getOption("display.precision")}`);
+      ctx.exit();
+      lines.push(`After exit     — max_rows: ${getOption("display.max_rows")}, precision: ${getOption("display.precision")}`);
+      document.getElementById("out3").textContent = lines.join("\n");
+    };
+    window.cell4 = function() {
+      resetOption("all");
+      const lines = [];
+      lines.push(`options.display.max_rows (before) → ${options.display.max_rows}`);
+      options.display.max_rows = 99;
+      lines.push(`options.display.max_rows (after)  → ${options.display.max_rows}`);
+      document.getElementById("out4").textContent = lines.join("\n");
+    };
+  </script>
+</body>
+</html>
