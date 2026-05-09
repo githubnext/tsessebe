@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-05T18:48:00Z |
-| Iteration Count | 306 |
-| Best Metric | 653 |
+| Last Run | 2026-05-09T07:28:52Z |
+| Iteration Count | 307 |
+| Best Metric | 655 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -63,12 +63,20 @@
 
 ## 🔭 Future Directions
 
-- More string_accessor variants: startswith, endswith, findall, extract
+- More string_accessor variants: startswith, endswith
 - Option-variant benchmarks (axis/limit/method parameters)
+- `window_extended` (rollingSem/rollingSkew/rollingKurt/rollingQuantile)
+- `format_ops`, `scalar_extract`, `swaplevel`
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 307 — 2026-05-09T07:28:52Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25595320643)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 2 benchmark pairs: `str_findall` (strFindall/strFindallCount/strFindFirst on strings) and `combine` (combineSeries/combineDataFrame element-wise).
+- **Metric**: 655 (previous best: 653, delta: +2) · **Commit**: d283599
 
 ### Iteration 306 — 2026-05-05T18:48:00Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25395459295)
 
