@@ -609,7 +609,7 @@ export class DataFrame {
     for (let i = 0; i < nRows; i++) {
       const row: Record<string, Scalar> = {};
       if (index) {
-        row.Index = this.index.at(i) as Scalar;
+        row["Index"] = this.index.at(i) as Scalar;
       }
       for (const name of colNames) {
         row[name] = this.col(name).iat(i);
@@ -816,9 +816,9 @@ function isIndexLike(v: unknown): v is Index<Label> {
   }
   const rec = v as Record<string, unknown>;
   return (
-    typeof rec.size === "number" &&
-    typeof rec.at === "function" &&
-    typeof rec.getLoc === "function"
+    typeof rec["size"] === "number" &&
+    typeof rec["at"] === "function" &&
+    typeof rec["getLoc"] === "function"
   );
 }
 
