@@ -68,6 +68,7 @@
     }
   },
   "javascript": {
+    "globals": ["Bun"],
     "formatter": {
       "quoteStyle": "double",
       "trailingCommas": "all",
