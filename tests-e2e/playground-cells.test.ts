@@ -126,7 +126,11 @@ async function startPlaygroundServer(): Promise<ServerHandle> {
       return new Response("Not found", { status: 404 });
     },
   });
-  return { kill: (): void => { server.stop(true); } };
+  return {
+    kill: (): void => {
+      server.stop(true);
+    },
+  };
 }
 
 function classifyOutput(text: string, cls: string): CellOutcome["reason"] | null {
@@ -243,7 +247,6 @@ function assertPageOutcomes(
   }
 }
 
-
 let server: ServerHandle | null = null;
 let browser: Browser | null = null;
 let context: BrowserContext | null = null;
@@ -264,7 +267,9 @@ beforeAll(async () => {
     while (nextIdx < files.length) {
       const i = nextIdx++;
       const file = files[i];
-      if (!(file && context)) { continue; }
+      if (!(file && context)) {
+        continue;
+      }
       const outcomes = await executePageCells(context, file);
       allOutcomes.set(file, outcomes);
     }
@@ -273,9 +278,15 @@ beforeAll(async () => {
 }, 600_000);
 
 afterAll(async () => {
-  if (context) { await context.close(); }
-  if (browser) { await browser.close(); }
-  if (server) { server.kill(); }
+  if (context) {
+    await context.close();
+  }
+  if (browser) {
+    await browser.close();
+  }
+  if (server) {
+    server.kill();
+  }
 });
 
 describe("playground page execution", () => {

@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { api, apiTypes } from "../../src/index.ts";
 import { Dtype } from "../../src/index.ts";
 

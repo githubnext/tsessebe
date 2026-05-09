@@ -1,12 +1,12 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import {
-  getOption,
-  setOption,
-  resetOption,
   describeOption,
+  getOption,
   optionContext,
-  registerOption,
   options,
+  registerOption,
+  resetOption,
+  setOption,
 } from "../../src/index.ts";
 
 describe("options system", () => {

@@ -158,11 +158,21 @@ export class Grouper {
    */
   toString(): string {
     const parts: string[] = [];
-    if (this.key !== undefined) { parts.push(`key="${this.key}"`); }
-    if (this.freq !== undefined) { parts.push(`freq="${this.freq}"`); }
-    if (this.level !== undefined) { parts.push(`level=${String(this.level)}`); }
-    if (this.sort) { parts.push("sort=true"); }
-    if (!this.dropna) { parts.push("dropna=false"); }
+    if (this.key !== undefined) {
+      parts.push(`key="${this.key}"`);
+    }
+    if (this.freq !== undefined) {
+      parts.push(`freq="${this.freq}"`);
+    }
+    if (this.level !== undefined) {
+      parts.push(`level=${String(this.level)}`);
+    }
+    if (this.sort) {
+      parts.push("sort=true");
+    }
+    if (!this.dropna) {
+      parts.push("dropna=false");
+    }
     return `Grouper(${parts.join(", ")})`;
   }
 }

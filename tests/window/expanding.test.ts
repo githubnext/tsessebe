@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { array, assert, float, integer, option, property } from "fast-check";
+import { assert, array, float, integer, option, property } from "fast-check";
 import { DataFrame, Series } from "../../src/index.ts";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -342,15 +342,12 @@ describe("Expanding — property tests", () => {
 
   test("expanding().count() is non-decreasing", () => {
     assert(
-      property(
-        array(option(integer(), { nil: null }), { minLength: 0, maxLength: 30 }),
-        (data) => {
-          const result = new Series<number | null>({ data }).expanding().count().toArray();
-          for (let i = 1; i < result.length; i++) {
-            expect(result[i] as number).toBeGreaterThanOrEqual(result[i - 1] as number);
-          }
-        },
-      ),
+      property(array(option(integer(), { nil: null }), { minLength: 0, maxLength: 30 }), (data) => {
+        const result = new Series<number | null>({ data }).expanding().count().toArray();
+        for (let i = 1; i < result.length; i++) {
+          expect(result[i] as number).toBeGreaterThanOrEqual(result[i - 1] as number);
+        }
+      }),
     );
   });
 

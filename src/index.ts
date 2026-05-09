@@ -706,7 +706,12 @@ export {
   registerOption,
   options,
 } from "./core/options.ts";
-export type { OptionValue, OptionValidator, OptionContextToken, OptionsProxy } from "./core/options.ts";
+export type {
+  OptionValue,
+  OptionValidator,
+  OptionContextToken,
+  OptionsProxy,
+} from "./core/options.ts";
 // pd.api namespace
 export { api, apiTypes } from "./core/pd_api.ts";
 export type { Api, ApiTypes } from "./core/pd_api.ts";
