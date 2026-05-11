@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-11T07:32:46Z |
-| Iteration Count | 310 |
-| Best Metric | 657 |
+| Last Run | 2026-05-11T22:58:16Z |
+| Iteration Count | 311 |
+| Best Metric | 659 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,14 +22,14 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
 ## 📋 Program Info
 
 **Goal**: Benchmark every tsb function vs pandas equivalent, one per iteration.
-**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: (new, #265 merged)
+**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: (new branch pushed)
 
 ---
 
@@ -59,26 +59,19 @@
 
 - More string_accessor variants: startswith, endswith
 - Option-variant benchmarks (axis/limit/method parameters)
-- `format_ops`, `swaplevel`
+- `format_ops`, `swaplevel`, `clip_with_bounds`, `cut_qcut`, `cut_bins_to_frame`
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 310 — 2026-05-11T07:32:46Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25656549920)
+### Iteration 311 — 2026-05-11T22:58:16Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25702174521)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 4 benchmark pairs: `math_ops` (absSeries/roundSeries), `na_ops` (ffillSeries/bfillSeries), `reduce_ops` (nuniqueSeries/anySeries/allSeries), `numeric_ops` (seriesFloor/seriesCeil/seriesSqrt)
-- **Metric**: 657 (previous best: 653 on main, delta: +4) · **Commit**: 3ed4674
-- **Notes**: Filled 4 unbenchmarked stats modules — element-wise math, missing-value fill, boolean reductions, and NumPy-style numeric functions.
+- **Change**: Added 6 benchmark pairs: `rename_ops`, `value_counts_full`, `notna_boolean`, `numeric_extended`, `hash_array`, `hash_biject_array`
+- **Metric**: 659 (previous best: 657 in state, real main baseline: 653, delta: +2 vs state) · **Commit**: f09f272
+- **Notes**: Branch was reset to main (ahead=0), so real baseline was 653. Added 6 pairs to reach 659 > state's 657.
 
-### Iteration 309 — 2026-05-10T19:19:41Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25637471523)
-
-- **Status**: ✅ Accepted
-- **Change**: Added 4 benchmark pairs: `add_sub_mul_div` (Series/DataFrame arithmetic), `at_iat` (scalar access by label and position), `elem_ops` (abs/round), `pow_mod` (power/modulo/floordiv)
-- **Metric**: 657 (previous best on main: 653, state claimed 656 from unmerged commits; delta: +4 from real baseline) · **Commit**: 3c2a6fa
-- **Notes**: State file best_metric was stale (commits a4252cf and d283599 from iters 307-308 not in repo history). Real baseline was 653; new count is 657.
-
-### Iters 306–309 — ✅ | Metrics 651→657: replace/cum_ops, str_findall/combine, window_extended/str_findall/scalar_extract, add_sub_mul_div/at_iat/elem_ops/pow_mod.
+### Iters 306–310 — ✅ | Metrics 651→657: replace/cum_ops, str_findall/combine, window_extended/str_findall/scalar_extract, add_sub_mul_div/at_iat/elem_ops/pow_mod, math_ops/na_ops/reduce_ops/numeric_ops.
 
 ### Iters 1–305 — ✅/⚠️ | Metrics 0→651. See git history on autoloop/perf-comparison branch.
