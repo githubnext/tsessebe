@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-10T13:22:18Z |
-| Iteration Count | 38 |
+| Last Run | 2026-05-11T02:37:10Z |
+| Iteration Count | 39 |
 | Best Metric | 21.048 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -17,9 +17,15 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, pending-ci, pending-ci, rejected, rejected |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, pending-ci, pending-ci, rejected, pending-ci |
 
 ## 🧬 Population
+
+### c039 · island 3 · fitness pending-ci · gen 39
+
+- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c029
+- **Approach**: Module-level perm buffer reuse (save 1 alloc/call) + invMap (Uint32Array) for typed-array gather from `_fvals` instead of HOLEY `vals[]`.
+- **Status**: ⏳ pending CI evaluation
 
 ### c038 · island 3 · fitness 11.721 (noise) · gen 38
 
@@ -55,12 +61,18 @@
 ## 🔭 Future Directions
 
 - Profile what fraction of 112ms is: scatter writes vs gather vs JS/JIT overhead vs perm/outData allocation.
-- Reduce gather allocation: perm (Array<number>) and outData (Array<T>) are 100k JS arrays per call. Try module-level typed arrays for perm; reuse buffers for outData.
-- Use `_fvals` (Float64Array, unboxed) instead of `vals[idx]` (boxed T[]) in gather loop.
+- **c039 in progress**: perm reuse + invMap typed-array gather — CI pending.
 - Skip-pass: if a histogram bucket is 100% (all elements same byte), skip scatter without swap.
 - Island 4 hybrid: native sort for n < 1k, radix for n ≥ 1k.
+- If invMap+fvals doesn't help: try outData as pre-allocated Float64Array (returned as backing store for Series).
 
 ## 📊 Iteration History
+
+### Iteration 39 — 2026-05-11 02:37 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25647336180)
+
+- **Status**: ⏳ Pending CI · c039 · exploitation · island 3
+- **Change**: Perm reuse (module-level `_permBuf`) + invMap typed-array gather (`_fvals[_invMap[idx]]`).
+- **Metric**: pending CI evaluation (sandbox has no bun runtime)
 
 ### Iteration 38 — 2026-05-10 13:22 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25629811599)
 
