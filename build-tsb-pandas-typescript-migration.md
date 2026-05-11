@@ -10,20 +10,20 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-10T07:39:18Z |
-| Iteration Count | 306 |
-| Best Metric | 144 |
+| Last Run | 2026-05-11T01:31:26Z |
+| Iteration Count | 307 |
+| Best Metric | 145 |
 | Target Metric | — |
 | Metric Direction | higher |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
-| PR | #264 |
+| PR | — |
 | Issue | #1 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, pending-ci, accepted, pending-ci, accepted, pending-ci, pending-ci, accepted, pending-ci, accepted |
+| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci |
 
 ---
 
@@ -46,7 +46,8 @@
 - ✅ pd.options system (set_option, get_option, reset_option, option_context, options proxy) added (iter 303/304)
 - ✅ pd.options system (options.ts) + pd.api namespace (pd_api.ts with api.types) added (iter 305)
 - ✅ interval_range() added (iter 306)
-- Next: period_range(), pd.api.extensions, more pd.util utilities
+- ✅ period_range() + pd.util namespace added (iter 307)
+- Next: pd.api.extensions, more util helpers, infer_freq()
 
 ---
 
@@ -71,14 +72,22 @@
 ## 🔭 Future Directions
 
 - More `pd.api.types` predicates (is_float_dtype, is_integer_dtype, is_numeric_dtype, etc.)
-- `pd.util.hash_biject_array()` — hash bijection for deduplicated categorical arrays
+- `infer_freq()` — infer frequency string from DatetimeIndex or TimedeltaIndex
 - `DataFrame.xs()` improvements (multi-level key lookup)
-- `Series.map()` with dict/Series as mapper
 - Full `groupby(Grouper)` integration (use Grouper.key in DataFrameGroupBy/SeriesGroupBy)
+- `pd.api.extensions` — ExtensionDtype/ExtensionArray base classes
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 307 — 2026-05-11 01:31 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25645612809)
+
+- **Status**: pending-ci (awaiting CI gate)
+- **Change**: Add `period_range()` top-level factory + `pd.util` namespace object
+- **Metric**: 145 (previous best: 144, delta: +1)
+- **Commit**: 1796793
+- **Notes**: period_range() mirrors pandas.period_range() — supports start+periods, end+periods, start+end with all PeriodFreq codes. pd.util bundles hash_pandas_object, hash_array, hash_biject_array, hash_biject_inverse.
 
 ### Iteration 306 — 2026-05-10 07:39 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25623094296)
 
