@@ -176,6 +176,8 @@ const ct = crosstab(survey.col("experience"), survey.col("language"));
 console.log("Counts (rows = experience, cols = language):");
 console.log(ct.toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+langs = ["Python","JavaScript","Rust","Go","Python","JavaScript","Python","Rust","Go","JavaScript","Python","JavaScript","Rust","Python","Go","JavaScript","Python","Rust","Python","JavaScript","Go","Python","JavaScript","Rust","Python","Go","JavaScript","Python","Python","Rust"]
+exp   = ["Junior","Junior","Senior","Mid","Mid","Senior","Junior","Senior","Junior","Mid","Senior","Junior","Senior","Mid","Senior","Senior","Mid","Mid","Junior","Senior","Mid","Senior","Mid","Senior","Mid","Junior","Senior","Junior","Senior","Mid"]
 survey = pd.DataFrame({"language": langs, "experience": exp})
 ct = pd.crosstab(survey["experience"], survey["language"])
 print(ct)</textarea>
@@ -211,6 +213,9 @@ console.log(ct.toString());
 
 console.log("\nObservation: the largest cell in each row tells you that cohort's favourite language.");</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+langs = ["Python","JavaScript","Rust","Go","Python","JavaScript","Python","Rust","Go","JavaScript","Python","JavaScript","Rust","Python","Go","JavaScript","Python","Rust","Python","JavaScript","Go","Python","JavaScript","Rust","Python","Go","JavaScript","Python","Python","Rust"]
+exp   = ["Junior","Junior","Senior","Mid","Mid","Senior","Junior","Senior","Junior","Mid","Senior","Junior","Senior","Mid","Senior","Senior","Mid","Mid","Junior","Senior","Mid","Senior","Mid","Senior","Mid","Junior","Senior","Junior","Senior","Mid"]
+survey = pd.DataFrame({"language": langs, "experience": exp})
 ct = pd.crosstab(survey["experience"], survey["language"], normalize="index")
 print(ct.round(3))</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>

@@ -194,6 +194,13 @@ const out = monthly.assign({ cumulative, mom_growth_pct: momPct });
 console.log("");
 console.log(out.toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+events = pd.DataFrame({
+    "customer_id": list(range(1000, 1060)),
+    "signup_month": (
+        ["2024-01"]*4 + ["2024-02"]*6 + ["2024-03"]*5 + ["2024-04"]*8 +
+        ["2024-05"]*7 + ["2024-06"]*9 + ["2024-07"]*11 + ["2024-08"]*10
+    ),
+})
 monthly = events.groupby("signup_month", as_index=False).size()
 monthly["cumulative"] = monthly["size"].cumsum()
 monthly["mom_growth_pct"] = (monthly["size"].pct_change() * 100).round(1)
@@ -241,6 +248,10 @@ const best  = monthsArr[signupsArr.indexOf(Math.max(...signupsArr))];
 console.log(`\nTotal customers: ${total}`);
 console.log(`Best cohort   : ${best}`);</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+monthly = pd.DataFrame({
+    "month": ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug"],
+    "signups": [4, 6, 5, 8, 7, 9, 11, 10],
+})
 print(monthly)
 print("Total:", monthly["signups"].sum())
 print("Best :", monthly.loc[monthly["signups"].idxmax(), "month"])</textarea>

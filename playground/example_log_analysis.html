@@ -199,6 +199,20 @@ const piv = pivot(grouped, { index: "hour", columns: "cls", values: "n" }).filln
 console.log("Requests per hour by status class:");
 console.log(piv.toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+log = pd.DataFrame({
+    "ts": [
+        "10:01","10:03","10:09","10:14","10:22","10:31","10:47","10:55",
+        "11:02","11:04","11:09","11:18","11:25","11:33","11:41","11:50","11:55","11:58",
+        "12:01","12:03","12:08","12:14","12:22","12:31","12:38","12:45",
+        "13:02","13:09","13:14","13:25","13:31","13:48","13:55",
+    ],
+    "status": [
+        200,200,200,404,200,500,200,200,
+        200,500,500,500,200,200,404,500,500,500,
+        200,200,200,200,200,200,404,200,
+        200,500,200,200,200,200,200,
+    ],
+})
 log["hour"] = log["ts"].str.slice(0, 2).astype(int)
 log["cls"]  = log["status"].apply(lambda s: "5xx" if s&gt;=500 else ("4xx" if s&gt;=400 else "2xx"))
 piv = log.groupby(["hour","cls"]).size().unstack(fill_value=0)
@@ -245,6 +259,12 @@ for (let i = 0; i &lt; hours.length; i++) {
 }
 if (flagged === 0) console.log("  (all hours healthy)");</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+by_hour = pd.DataFrame({
+    "hour": [10, 11, 12, 13],
+    "2xx": [6, 5, 7, 6],
+    "4xx": [1, 1, 1, 0],
+    "5xx": [1, 6, 0, 1],
+})
 by_hour["total"]   = by_hour[["2xx","4xx","5xx"]].sum(axis=1)
 by_hour["5xx_pct"] = (by_hour["5xx"] / by_hour["total"] * 100).round(1)
 print(by_hour)

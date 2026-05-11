@@ -188,7 +188,20 @@ from io import StringIO
 
 csv = """order_id,date,region,product,units,unit_price
 1001,2024-01-03,North,Widget,4,19.99
-..."""
+1002,2024-01-05,South,Gadget,2,49.50
+1003,2024-01-09,East,Widget,7,19.99
+1004,2024-01-12,West,Gizmo,1,129.00
+1005,2024-01-18,North,Gadget,3,49.50
+1006,2024-01-22,South,Widget,5,19.99
+1007,2024-02-02,East,Gizmo,2,129.00
+1008,2024-02-08,North,Widget,6,19.99
+1009,2024-02-14,West,Gadget,4,49.50
+1010,2024-02-19,South,Gizmo,1,129.00
+1011,2024-03-01,East,Widget,8,19.99
+1012,2024-03-05,North,Gizmo,2,129.00
+1013,2024-03-11,West,Widget,3,19.99
+1014,2024-03-17,South,Gadget,6,49.50
+1015,2024-03-25,East,Gadget,2,49.50"""
 sales = pd.read_csv(StringIO(csv))
 print("Rows:", sales.shape[0], "Columns:", list(sales.columns))
 print(sales.head(5))</textarea>
@@ -258,6 +271,25 @@ rows.sort((a, b) =&gt; b[1] - a[1]);
 console.log("");
 chart("Revenue by region ($)", rows);</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+from io import StringIO
+
+csv = """order_id,region,product,units,unit_price
+1001,North,Widget,4,19.99
+1002,South,Gadget,2,49.50
+1003,East,Widget,7,19.99
+1004,West,Gizmo,1,129.00
+1005,North,Gadget,3,49.50
+1006,South,Widget,5,19.99
+1007,East,Gizmo,2,129.00
+1008,North,Widget,6,19.99
+1009,West,Gadget,4,49.50
+1010,South,Gizmo,1,129.00
+1011,East,Widget,8,19.99
+1012,North,Gizmo,2,129.00
+1013,West,Widget,3,19.99
+1014,South,Gadget,6,49.50
+1015,East,Gadget,2,49.50"""
+sales = pd.read_csv(StringIO(csv))
 
 sales["revenue"] = sales["units"] * sales["unit_price"]
 by_region = sales.groupby("region", as_index=False)["revenue"].sum()
@@ -316,6 +348,25 @@ const top3 = nlargestDataFrame(sales, 3, { columns: "revenue" });
 console.log("\nTop 3 single orders by revenue:");
 console.log(top3.toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+from io import StringIO
+
+csv = """order_id,region,product,units,unit_price
+1001,North,Widget,4,19.99
+1002,South,Gadget,2,49.50
+1003,East,Widget,7,19.99
+1004,West,Gizmo,1,129.00
+1005,North,Gadget,3,49.50
+1006,South,Widget,5,19.99
+1007,East,Gizmo,2,129.00
+1008,North,Widget,6,19.99
+1009,West,Gadget,4,49.50
+1010,South,Gizmo,1,129.00
+1011,East,Widget,8,19.99
+1012,North,Gizmo,2,129.00
+1013,West,Widget,3,19.99
+1014,South,Gadget,6,49.50
+1015,East,Gadget,2,49.50"""
+sales = pd.read_csv(StringIO(csv))
 
 sales["revenue"] = sales["units"] * sales["unit_price"]
 by_product = sales.groupby("product", as_index=False).agg(

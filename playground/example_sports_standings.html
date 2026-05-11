@@ -205,6 +205,12 @@ const withRank = final.assign({ rank });
 console.log("League table:");
 console.log(withRank.toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+matches = pd.DataFrame({
+    "home": ["Lions","Tigers","Bears","Wolves","Lions","Bears","Tigers","Wolves","Lions","Tigers","Bears","Wolves"],
+    "away": ["Tigers","Bears","Wolves","Lions","Wolves","Tigers","Lions","Bears","Bears","Wolves","Lions","Tigers"],
+    "home_goals": [2,1,3,0,4,2,1,2,1,2,3,1],
+    "away_goals": [1,1,2,2,0,2,3,1,1,1,2,1],
+})
 home = matches.rename(columns={"home":"team","home_goals":"gf","away_goals":"ga"})[["team","gf","ga"]]
 away = matches.rename(columns={"away":"team","away_goals":"gf","home_goals":"ga"})[["team","gf","ga"]]
 team_matches = pd.concat([home, away], ignore_index=True)

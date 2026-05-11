@@ -193,6 +193,13 @@ const b = Number(out.col("conv_rate").iloc(1));
 const lift = ((b - a) / a) * 100;
 console.log(`\nLift in conversion rate: ${lift.toFixed(1)}%`);</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+sessions = pd.DataFrame({
+    "variant": ["A"]*20 + ["B"]*20,
+    "converted": [0,1,0,0,1,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,
+                  1,1,0,1,0,1,1,0,1,0,1,1,0,1,1,0,0,1,1,1],
+    "order_value": [0,42,0,0,35,0,0,0,51,0,28,0,0,0,60,0,0,33,0,0,
+                    47,51,0,39,0,64,38,0,55,0,41,47,0,33,58,0,0,49,36,52],
+})
 summary = sessions.groupby("variant", as_index=False).agg(
     conv_rate=("converted", "mean"),
     avg_order_value=("order_value", "mean"),
@@ -240,6 +247,11 @@ console.log(describe(a).toString());
 console.log("\nVariant B order values:");
 console.log(describe(b).toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+sessions = pd.DataFrame({
+    "variant": ["A"]*20 + ["B"]*20,
+    "order_value": [0,42,0,0,35,0,0,0,51,0,28,0,0,0,60,0,0,33,0,0,
+                    47,51,0,39,0,64,38,0,55,0,41,47,0,33,58,0,0,49,36,52],
+})
 converted = sessions[sessions["order_value"] &gt; 0]
 print(converted[converted["variant"]=="A"]["order_value"].describe())
 print(converted[converted["variant"]=="B"]["order_value"].describe())</textarea>

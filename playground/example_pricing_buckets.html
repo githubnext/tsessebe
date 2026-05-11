@@ -180,6 +180,11 @@ console.log(enriched.toString());
 console.log("\nProducts per tier:");
 console.log(valueCounts(enriched.col("tier")).toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+catalogue = pd.DataFrame({
+    "sku":    ["A1","A2","A3","B1","B2","B3","C1","C2","C3","D1","D2","D3","E1","E2","E3"],
+    "price":  [9.99,14.50,19.00,22.00,29.50,39.00,49.00,65.00,79.99,99.00,129.00,149.00,199.00,249.00,349.00],
+    "margin": [0.30,0.32,0.28,0.34,0.36,0.40,0.42,0.45,0.46,0.48,0.50,0.52,0.55,0.58,0.60],
+})
 catalogue["tier"] = pd.cut(
     catalogue["price"],
     bins=[0, 25, 75, 150, 1000],
@@ -244,6 +249,13 @@ for (const t of order) {
 console.log("");
 chart("Avg margin % per tier", rows);</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+enriched = pd.DataFrame({
+    "sku":    ["A1","A2","A3","B1","B2","B3","C1","C2","C3","D1","D2","D3","E1","E2","E3"],
+    "price":  [9.99,14.50,19.00,22.00,29.50,39.00,49.00,65.00,79.99,99.00,129.00,149.00,199.00,249.00,349.00],
+    "margin": [0.30,0.32,0.28,0.34,0.36,0.40,0.42,0.45,0.46,0.48,0.50,0.52,0.55,0.58,0.60],
+    "tier":   ["Budget","Budget","Budget","Budget","Mid","Mid","Mid","Mid",
+               "Premium","Premium","Premium","Premium","Luxury","Luxury","Luxury"],
+})
 by_tier = enriched.groupby("tier", as_index=False).agg(
     avg_price=("price","mean"),
     avg_margin=("margin","mean"),

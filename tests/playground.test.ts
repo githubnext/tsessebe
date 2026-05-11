@@ -28,6 +28,8 @@ const NON_PLAYGROUND_PAGES = new Set<string>([
   "index.html",
   // The benchmarks page is a results chart (tsb vs pandas), not a playground.
   "benchmarks.html",
+  // The examples page is an index/gallery page linking to individual examples.
+  "examples.html",
 ]);
 
 function listPlaygroundHtmlFiles(): string[] {

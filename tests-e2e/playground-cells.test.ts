@@ -51,7 +51,7 @@ const PLAYGROUND_DIR = join(PROJECT_ROOT, "playground");
 const KNOWN_FAILURES_PATH = join(import.meta.dir, "known-failures.json");
 
 // Pages that are intentionally not interactive playgrounds.
-const NON_PLAYGROUND_PAGES = new Set<string>(["index.html", "benchmarks.html"]);
+const NON_PLAYGROUND_PAGES = new Set<string>(["index.html", "benchmarks.html", "examples.html"]);
 
 const PORT = 3399;
 const BASE_URL = `http://localhost:${PORT}`;

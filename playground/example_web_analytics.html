@@ -191,6 +191,23 @@ const piv = pivotTable(events, {
 console.log("Pageviews by source × device:");
 console.log(piv.toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+events = pd.DataFrame({
+    "source": [
+        "google","google","google","facebook","facebook","facebook","direct","direct","direct",
+        "google","facebook","direct","google","facebook","direct",
+        "google","google","facebook","direct","direct",
+    ],
+    "device": [
+        "mobile","desktop","tablet","mobile","desktop","tablet","mobile","desktop","tablet",
+        "mobile","mobile","mobile","desktop","desktop","desktop",
+        "tablet","mobile","mobile","desktop","mobile",
+    ],
+    "pageviews": [
+        420, 310, 80, 250, 180, 60, 95, 70, 30,
+        380, 220, 110, 290, 170, 65,
+        75, 410, 240, 80, 100,
+    ],
+})
 piv = events.pivot_table(
     index="source", columns="device", values="pageviews",
     aggfunc="sum", fill_value=0)
@@ -241,6 +258,13 @@ rows.sort((a, b) =&gt; b[1] - a[1]);
 console.log("");
 chart("Total pageviews by source", rows);</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
+piv = pd.DataFrame({
+    "source":   ["direct", "facebook", "google"],
+    "desktop":  [150, 350, 600],
+    "mobile":   [305, 470, 1210],
+    "tablet":   [30, 60, 155],
+}).set_index("source")
+piv.columns.name = "device"
 piv["total"] = piv.sum(axis=1)
 print(piv)</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
