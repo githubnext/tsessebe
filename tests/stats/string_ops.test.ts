@@ -352,11 +352,12 @@ describe("strNormalize — properties", () => {
 });
 
 describe("strRemovePrefix — properties", () => {
-  it("result never starts with prefix (when prefix non-empty)", () => {
+  it("removes exactly one occurrence of prefix when present, else returns str unchanged", () => {
     fc.assert(
       fc.property(fc.asciiString(), fc.asciiString({ minLength: 1 }), (str, prefix) => {
         const result = strRemovePrefix(str, prefix);
-        return !(result.startsWith(prefix) && str.startsWith(prefix));
+        // Mirrors Python's str.removeprefix(): strips at most one leading occurrence.
+        return str.startsWith(prefix) ? prefix + result === str : result === str;
       }),
     );
   });
