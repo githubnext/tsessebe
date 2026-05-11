@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-11T22:58:16Z |
+| Last Run | 2026-05-11T23:15:05Z |
 | Iteration Count | 311 |
-| Best Metric | 659 |
+| Best Metric | 655 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,14 +22,14 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
 
 ---
 
 ## 📋 Program Info
 
 **Goal**: Benchmark every tsb function vs pandas equivalent, one per iteration.
-**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: (new branch pushed)
+**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: (new, #265 merged)
 
 ---
 
@@ -59,19 +59,25 @@
 
 - More string_accessor variants: startswith, endswith
 - Option-variant benchmarks (axis/limit/method parameters)
-- `format_ops`, `swaplevel`, `clip_with_bounds`, `cut_qcut`, `cut_bins_to_frame`
+- `format_ops`, `swaplevel`
 
 ---
 
 ## 📊 Iteration History
 
-### Iteration 311 — 2026-05-11T22:58:16Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25702174521)
+### Iteration 311 — 2026-05-11T23:15:05Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25702866515)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 6 benchmark pairs: `rename_ops`, `value_counts_full`, `notna_boolean`, `numeric_extended`, `hash_array`, `hash_biject_array`
-- **Metric**: 659 (previous best: 657 in state, real main baseline: 653, delta: +2 vs state) · **Commit**: f09f272
-- **Notes**: Branch was reset to main (ahead=0), so real baseline was 653. Added 6 pairs to reach 659 > state's 657.
+- **Change**: Added 2 benchmark pairs: `apply` (Series.apply/DataFrame.applymap/DataFrame.apply axis=0) and `rename_ops` (renameSeriesIndex, renameDataFrame, addPrefix/addSuffix, setAxis)
+- **Metric**: 655 (previous best: 653 real baseline, state stale at 657; delta: +2) · **Commit**: f260ab1
+- **Notes**: Filled apply and rename_ops — key functional modules for element-wise function application and label renaming.
 
-### Iters 306–310 — ✅ | Metrics 651→657: replace/cum_ops, str_findall/combine, window_extended/str_findall/scalar_extract, add_sub_mul_div/at_iat/elem_ops/pow_mod, math_ops/na_ops/reduce_ops/numeric_ops.
+### Iteration 310 — 2026-05-11T07:32:46Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25656549920)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 4 benchmark pairs: `math_ops` (absSeries/roundSeries), `na_ops` (ffillSeries/bfillSeries), `reduce_ops` (nuniqueSeries/anySeries/allSeries), `numeric_ops` (seriesFloor/seriesCeil/seriesSqrt)
+- **Metric**: 657 (delta: +4) · **Commit**: 3ed4674
+
+### Iters 306–309 — ✅ | Metrics 651→657: replace/cum_ops, str_findall/combine, window_extended/str_findall/scalar_extract, add_sub_mul_div/at_iat/elem_ops/pow_mod.
 
 ### Iters 1–305 — ✅/⚠️ | Metrics 0→651. See git history on autoloop/perf-comparison branch.
