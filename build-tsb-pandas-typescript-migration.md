@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-11T01:31:26Z |
-| Iteration Count | 307 |
-| Best Metric | 145 |
+| Last Run | 2026-05-11T13:19:16Z |
+| Iteration Count | 308 |
+| Best Metric | 144 |
 | Target Metric | — |
 | Metric Direction | higher |
 | Branch | `autoloop/build-tsb-pandas-typescript-migration` |
@@ -23,7 +23,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, accepted, pending-ci, accepted, pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, accepted, pending-ci, accepted, pending-ci, pending-ci, accepted, pending-ci, accepted |
 
 ---
 
@@ -47,7 +47,8 @@
 - ✅ pd.options system (options.ts) + pd.api namespace (pd_api.ts with api.types) added (iter 305)
 - ✅ interval_range() added (iter 306)
 - ✅ period_range() + pd.util namespace added (iter 307)
-- Next: pd.api.extensions, more util helpers, infer_freq()
+- ✅ infer_freq() added (iter 308)
+- Next: pd.api.extensions, more type predicates, infer_freq improvements
 
 ---
 
@@ -81,22 +82,14 @@
 
 ## 📊 Iteration History
 
-### Iteration 307 — 2026-05-11 01:31 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25645612809)
+### Iteration 308 — 2026-05-11 13:19 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25672568067)
 
 - **Status**: pending-ci (awaiting CI gate)
-- **Change**: Add `period_range()` top-level factory + `pd.util` namespace object
-- **Metric**: 145 (previous best: 144, delta: +1)
-- **Commit**: 1796793
-- **Notes**: period_range() mirrors pandas.period_range() — supports start+periods, end+periods, start+end with all PeriodFreq codes. pd.util bundles hash_pandas_object, hash_array, hash_biject_array, hash_biject_inverse.
-
-### Iteration 306 — 2026-05-10 07:39 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25623094296)
-
-- **Status**: ✅ Accepted
-- **Change**: Add `interval_range()` — fixed-frequency `IntervalIndex` factory
+- **Change**: Add `infer_freq()` — mirrors `pandas.infer_freq`
 - **Metric**: 144 (previous best: 143, delta: +1)
-- **Commit**: 30c606a
-- **Notes**: Mirrors pandas.interval_range(); supports start/end/periods/freq with all 4 closure modes; full test suite + playground page.
+- **Commit**: 684dc6b
+- **Notes**: Supports fixed-ms and calendar frequencies, returns null for irregular inputs.
 
-### Iters 273–305 — accepted/pending-ci (130→143): +Grouper, +lreshape, +str ops, +swapaxes, +readFwf, +unionCategoricals, +info, +extractAll, +rows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html, +hashPandasObject, +hashArray/iteritems, +Grouper spec, +api.indexers, +Series.map/hashBiject, +pd.options, +pd.api namespace.
+### Iters 273–307 — accepted/pending-ci (130→144): +Grouper, +lreshape, +str ops, +swapaxes, +readFwf, +unionCategoricals, +info, +extractAll, +rows, +monthName/dayName, +itertuples, +dropLevel, +flags, +to_html, +hashPandasObject, +hashArray/iteritems, +Grouper spec, +api.indexers, +Series.map/hashBiject, +pd.options, +pd.api namespace, +interval_range, +period_range/pd.util.
 
 ### Iters 1–272 — accepted (0→130): full pandas core + stats + io + merge + reshape + window + groupby.
