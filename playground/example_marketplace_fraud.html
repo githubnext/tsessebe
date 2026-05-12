@@ -200,8 +200,23 @@ console.log("\nManual review queue:");
 console.log(nlargestDataFrame(highRisk, 3, { columns: "risk_score" }).select(["txn_id", "merchant_name", "risk_score"]).toString());</textarea>
       <textarea class="playground-python" style="display:none">import pandas as pd
 
-transactions = pd.DataFrame([...])
-merchants = pd.DataFrame([...])
+transactions = pd.DataFrame([
+    {"txn_id": "t001", "merchant_id": "m01", "segment": "electronics", "device": "mobile", "amount": 1299, "card_testing": 0},
+    {"txn_id": "t002", "merchant_id": "m02", "segment": "fashion", "device": "desktop", "amount": 184, "card_testing": 0},
+    {"txn_id": "t003", "merchant_id": "m03", "segment": "gaming", "device": "mobile", "amount": 720, "card_testing": 1},
+    {"txn_id": "t004", "merchant_id": "m01", "segment": "electronics", "device": "desktop", "amount": 899, "card_testing": 0},
+    {"txn_id": "t005", "merchant_id": "m04", "segment": "travel", "device": "mobile", "amount": 1450, "card_testing": 1},
+    {"txn_id": "t006", "merchant_id": "m05", "segment": "fashion", "device": "mobile", "amount": 92, "card_testing": 0},
+    {"txn_id": "t007", "merchant_id": "m03", "segment": "gaming", "device": "desktop", "amount": 610, "card_testing": 0},
+    {"txn_id": "t008", "merchant_id": "m04", "segment": "travel", "device": "desktop", "amount": 980, "card_testing": 0},
+])
+merchants = pd.DataFrame([
+    {"merchant_id": "m01", "merchant_name": "Northstar Cameras", "chargeback_rate": 0.018},
+    {"merchant_id": "m02", "merchant_name": "Threadline", "chargeback_rate": 0.012},
+    {"merchant_id": "m03", "merchant_name": "Pixel Arcade", "chargeback_rate": 0.071},
+    {"merchant_id": "m04", "merchant_name": "FlyAway Deals", "chargeback_rate": 0.096},
+    {"merchant_id": "m05", "merchant_name": "Studio Basics", "chargeback_rate": 0.009},
+])
 triaged = transactions.merge(merchants, on="merchant_id", how="left")
 triaged["expected_loss"] = triaged["amount"] * triaged["chargeback_rate"]
 triaged["risk_score"] = triaged["expected_loss"] + triaged["card_testing"] * 25
@@ -253,7 +268,19 @@ const merchantExposure = triaged
   .sortValues("expected_loss", false);
 console.log("\nMerchant exposure leaderboard:");
 console.log(merchantExposure.toString());</textarea>
-      <textarea class="playground-python" style="display:none">heatmap = pd.pivot_table(
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+triaged = pd.DataFrame([
+    {"merchant_id": "m01", "segment": "electronics", "device": "mobile", "amount": 1299, "expected_loss": 23.38},
+    {"merchant_id": "m02", "segment": "fashion", "device": "desktop", "amount": 184, "expected_loss": 2.21},
+    {"merchant_id": "m03", "segment": "gaming", "device": "mobile", "amount": 720, "expected_loss": 51.12},
+    {"merchant_id": "m01", "segment": "electronics", "device": "desktop", "amount": 899, "expected_loss": 16.18},
+    {"merchant_id": "m04", "segment": "travel", "device": "mobile", "amount": 1450, "expected_loss": 139.20},
+    {"merchant_id": "m05", "segment": "fashion", "device": "mobile", "amount": 92, "expected_loss": 0.83},
+    {"merchant_id": "m03", "segment": "gaming", "device": "desktop", "amount": 610, "expected_loss": 43.31},
+    {"merchant_id": "m04", "segment": "travel", "device": "desktop", "amount": 980, "expected_loss": 94.08},
+])
+heatmap = pd.pivot_table(
     triaged, index="segment", columns="device", values="expected_loss",
     aggfunc="sum", fill_value=0, margins=True,
 )

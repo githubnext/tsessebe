@@ -198,8 +198,25 @@ console.log(byCategory.toString());</textarea>
       <textarea class="playground-python" style="display:none">from io import StringIO
 import pandas as pd
 
+csv = """date,sku,store,units_sold,on_hand,unit_cost
+2024-04-01,A100,Downtown,8,40,12
+2024-04-02,A100,Downtown,11,31,12
+2024-04-03,A100,Downtown,9,22,12
+2024-04-04,A100,Downtown,10,14,12
+2024-04-01,B200,Downtown,4,28,22
+2024-04-02,B200,Downtown,5,23,22
+2024-04-03,B200,Downtown,7,16,22
+2024-04-04,B200,Downtown,6,10,22
+2024-04-01,C300,Uptown,3,18,35
+2024-04-02,C300,Uptown,2,16,35
+2024-04-03,C300,Uptown,4,12,35
+2024-04-04,C300,Uptown,5,7,35"""
 sales = pd.read_csv(StringIO(csv))
-master = pd.DataFrame([...])
+master = pd.DataFrame([
+    {"sku": "A100", "category": "accessories", "supplier": "Acme", "lead_days": 5},
+    {"sku": "B200", "category": "apparel", "supplier": "Northwind", "lead_days": 8},
+    {"sku": "C300", "category": "home", "supplier": "Acme", "lead_days": 6},
+])
 enriched = sales.merge(master, on="sku", how="left")
 enriched["inventory_value"] = enriched["on_hand"] * enriched["unit_cost"]
 enriched["sell_through"] = enriched["units_sold"] / (enriched["on_hand"] + enriched["units_sold"])
@@ -260,7 +277,24 @@ const heatmap = pivotTableFull(plan, {
 });
 console.log("\nDemand by reorder status:");
 console.log(heatmap.toString());</textarea>
-      <textarea class="playground-python" style="display:none">plan = pd.DataFrame(rows).sort_values(["sku", "date"])
+      <textarea class="playground-python" style="display:none">import numpy as np
+import pandas as pd
+
+rows = [
+    {"date": "2024-04-01", "sku": "A100", "units_sold": 8, "on_hand": 40, "lead_days": 5},
+    {"date": "2024-04-02", "sku": "A100", "units_sold": 11, "on_hand": 31, "lead_days": 5},
+    {"date": "2024-04-03", "sku": "A100", "units_sold": 9, "on_hand": 22, "lead_days": 5},
+    {"date": "2024-04-04", "sku": "A100", "units_sold": 10, "on_hand": 14, "lead_days": 5},
+    {"date": "2024-04-01", "sku": "B200", "units_sold": 4, "on_hand": 28, "lead_days": 8},
+    {"date": "2024-04-02", "sku": "B200", "units_sold": 5, "on_hand": 23, "lead_days": 8},
+    {"date": "2024-04-03", "sku": "B200", "units_sold": 7, "on_hand": 16, "lead_days": 8},
+    {"date": "2024-04-04", "sku": "B200", "units_sold": 6, "on_hand": 10, "lead_days": 8},
+    {"date": "2024-04-01", "sku": "C300", "units_sold": 3, "on_hand": 18, "lead_days": 6},
+    {"date": "2024-04-02", "sku": "C300", "units_sold": 2, "on_hand": 16, "lead_days": 6},
+    {"date": "2024-04-03", "sku": "C300", "units_sold": 4, "on_hand": 12, "lead_days": 6},
+    {"date": "2024-04-04", "sku": "C300", "units_sold": 5, "on_hand": 7, "lead_days": 6},
+]
+plan = pd.DataFrame(rows).sort_values(["sku", "date"])
 plan["rolling_3d_demand"] = plan.groupby("sku")["units_sold"].transform(lambda s: s.rolling(3, min_periods=1).mean())
 plan["reorder_point"] = plan["rolling_3d_demand"] * plan["lead_days"]
 plan["status"] = np.where(plan["on_hand"] &lt;= plan["reorder_point"], "reorder", "ok")

@@ -203,7 +203,30 @@ const channelRollup = joined
   .sortValues("roas", false);
 console.log("\nChannel rollup:");
 console.log(channelRollup.toString());</textarea>
-      <textarea class="playground-python" style="display:none">spend = spend_wide.melt(id_vars=["date", "region"], value_vars=["search", "social", "email"], var_name="channel", value_name="spend")
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+spend_wide = pd.DataFrame({
+    "date": ["2024-05-01", "2024-05-01", "2024-05-02", "2024-05-02"],
+    "region": ["NA", "EU", "NA", "EU"],
+    "search": [1200, 900, 1350, 980],
+    "social": [800, 740, 880, 790],
+    "email": [300, 260, 320, 280],
+})
+conversions = pd.DataFrame([
+    {"date": "2024-05-01", "region": "NA", "channel": "search", "orders": 62, "revenue": 8680},
+    {"date": "2024-05-01", "region": "NA", "channel": "social", "orders": 35, "revenue": 3920},
+    {"date": "2024-05-01", "region": "NA", "channel": "email", "orders": 18, "revenue": 2520},
+    {"date": "2024-05-01", "region": "EU", "channel": "search", "orders": 44, "revenue": 5280},
+    {"date": "2024-05-01", "region": "EU", "channel": "social", "orders": 31, "revenue": 3100},
+    {"date": "2024-05-01", "region": "EU", "channel": "email", "orders": 16, "revenue": 1760},
+    {"date": "2024-05-02", "region": "NA", "channel": "search", "orders": 71, "revenue": 9940},
+    {"date": "2024-05-02", "region": "NA", "channel": "social", "orders": 42, "revenue": 5040},
+    {"date": "2024-05-02", "region": "NA", "channel": "email", "orders": 21, "revenue": 3150},
+    {"date": "2024-05-02", "region": "EU", "channel": "search", "orders": 49, "revenue": 6370},
+    {"date": "2024-05-02", "region": "EU", "channel": "social", "orders": 33, "revenue": 3465},
+    {"date": "2024-05-02", "region": "EU", "channel": "email", "orders": 19, "revenue": 2280},
+])
+spend = spend_wide.melt(id_vars=["date", "region"], value_vars=["search", "social", "email"], var_name="channel", value_name="spend")
 joined = spend.merge(conversions, on=["date", "region", "channel"], how="left")
 joined["roas"] = joined["revenue"] / joined["spend"]
 joined["cost_per_order"] = joined["spend"] / joined["orders"]
@@ -255,7 +278,23 @@ console.log(roasTable.toString());
 const efficient = nlargestDataFrame(joined, 4, { columns: "roas" }).select(["region", "channel", "spend", "revenue", "roas"]);
 console.log("\nBest daily placements:");
 console.log(efficient.toString());</textarea>
-      <textarea class="playground-python" style="display:none">joined["roas"] = joined["revenue"] / joined["spend"]
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+joined = pd.DataFrame([
+    {"region": "NA", "channel": "search", "spend": 1200, "revenue": 8680, "orders": 62},
+    {"region": "NA", "channel": "social", "spend": 800, "revenue": 3920, "orders": 35},
+    {"region": "NA", "channel": "email", "spend": 300, "revenue": 2520, "orders": 18},
+    {"region": "EU", "channel": "search", "spend": 900, "revenue": 5280, "orders": 44},
+    {"region": "EU", "channel": "social", "spend": 740, "revenue": 3100, "orders": 31},
+    {"region": "EU", "channel": "email", "spend": 260, "revenue": 1760, "orders": 16},
+    {"region": "NA", "channel": "search", "spend": 1350, "revenue": 9940, "orders": 71},
+    {"region": "NA", "channel": "social", "spend": 880, "revenue": 5040, "orders": 42},
+    {"region": "NA", "channel": "email", "spend": 320, "revenue": 3150, "orders": 21},
+    {"region": "EU", "channel": "search", "spend": 980, "revenue": 6370, "orders": 49},
+    {"region": "EU", "channel": "social", "spend": 790, "revenue": 3465, "orders": 33},
+    {"region": "EU", "channel": "email", "spend": 280, "revenue": 2280, "orders": 19},
+])
+joined["roas"] = joined["revenue"] / joined["spend"]
 print(pd.pivot_table(joined, index="region", columns="channel", values="roas", aggfunc="mean", fill_value=0, margins=True))
 print(joined.nlargest(4, "roas")[["region", "channel", "spend", "revenue", "roas"]])</textarea>
       <div class="playground-output">Click ▶ Run to execute</div>
