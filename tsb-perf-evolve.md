@@ -4,8 +4,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-12T04:12:08Z |
-| Iteration Count | 41 |
+| Last Run | 2026-05-12T13:00:45Z |
+| Iteration Count | 42 |
 | Best Metric | 21.048 |
 | Target Metric | — |
 | Metric Direction | lower |
@@ -17,9 +17,15 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, pending-ci, accepted, pending-ci, pending-ci, rejected, pending-ci |
+| Recent Statuses | pending-ci, pending-ci, pending-ci, pending-ci, accepted, pending-ci, pending-ci, rejected, pending-ci, pending-ci |
 
 ## 🧬 Population
+
+### c042 · island 3 · fitness pending-ci · gen 42
+
+- **Op**: exploitation; **Cell**: aos-typed-array · non-comparison; **Parent**: c041
+- **Approach**: Module-level `_permBuf: number[]` + `_outBuf: number[]` grown lazily. Replace `new Array<number>(n)` + `new Array<T>(n)` per call with reused buffers (safe: Index/Series both copy via `Object.freeze([...data])`). Eliminates 2 × 800KB JS allocations per sort call.
+- **Status**: ⏳ pending CI evaluation
 
 ### c041 · island 3 · fitness pending-ci · gen 41
 
@@ -71,6 +77,15 @@
 - If inverse-transform gather (c041) helps: also try pre-allocating perm as module-level number[] to save one allocation.
 
 ## 📊 Iteration History
+
+### Iteration 42 — 2026-05-12 13:00 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25735886900)
+
+- **Status**: ⏳ Pending CI · c042 · exploitation · island 3
+- **Op**: exploitation; **Parent**: c041 (fitness pending, same island 3)
+- **Change**: Add module-level `_permBuf` + `_outBuf` (grown lazily). Reuse instead of allocating `new Array<number>(n)` + `new Array<T>(n)` per call.
+- **Metric**: pending CI evaluation (no bun in sandbox)
+- **Hypothesis**: 55 calls × 2 × 800KB = ~88MB of per-call JS array allocations drive GC. Both Index and Series copy their inputs so buffer reuse is safe. Eliminating these allocations should reduce mean_ms.
+- **Notes**: c041 was merged to main via PR #297. c042 builds on it by addressing the per-call allocation overhead identified in iter 38 notes.
 
 ### Iteration 41 — 2026-05-12 04:12 UTC — [Run](https://github.com/githubnext/tsessebe/actions/runs/25712799061)
 
