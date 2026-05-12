@@ -10,8 +10,8 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-11T23:15:05Z |
-| Iteration Count | 311 |
+| Last Run | 2026-05-12T06:36:28Z |
+| Iteration Count | 312 |
 | Best Metric | 655 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, accepted, error, accepted, error, error, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -41,17 +41,14 @@
 
 ## 📚 Lessons Learned
 
-- **Import paths**: `../../src/index.ts` for Series/DataFrame; direct stats module for specific functions (e.g. `../../src/stats/math_ops.ts`).
+- **Import paths**: Always `../../src/index.js` (not `.ts`) for all benchmark files.
 - **groupby AggName**: "sum"|"mean"|"min"|"max"|"count"|"std"|"first"|"last"|"size" only.
 - **merge_asof**: `mergeAsof(left, right, { on, direction })` — DFs must be sorted.
-- **string_accessor**: `series.str.lower()`, `.strip()`, `.len()`, `.replace(pat, repl)`, `.split(sep)`.
 - **corrWith**: `corrWith(df, seriesOther)` — DF as first arg, returns Series per column.
 
 ## 🚧 Foreclosed Avenues
 
-- **Suffixed branches**: Only `autoloop/perf-comparison` (never with suffix).
-- **Sequential run_benchmarks.sh**: Too slow for 500+ pairs.
-- **SSH/HTTPS push**: Use safeoutputs push_to_pull_request_branch.
+- Branch suffixes, sequential run_benchmarks.sh, SSH/HTTPS push.
 
 ---
 
@@ -59,11 +56,18 @@
 
 - More string_accessor variants: startswith, endswith
 - Option-variant benchmarks (axis/limit/method parameters)
-- `format_ops`, `swaplevel`
+- `format_ops`, `hash_biject_array`, `timedelta_range`, `cat_accessor`, `datetime_tz`
 
 ---
 
 ## 📊 Iteration History
+
+### Iteration 312 — 2026-05-12T06:36:28Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25717773514)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 2 benchmark pairs: `hash_array` (FNV-1a hashing of mixed scalar arrays) and `swaplevel` (swapLevelSeries + reorderLevelsSeries on 3-level MultiIndex)
+- **Metric**: 655 (previous best: 655, delta: +2 over current main baseline of 653) · **Commit**: 5dd1faf
+- **Notes**: hash_array and swaplevel were the last two stats modules with zero coverage; all imports use `../../src/index.js` extension.
 
 ### Iteration 311 — 2026-05-11T23:15:05Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25702866515)
 
@@ -75,9 +79,7 @@
 ### Iteration 310 — 2026-05-11T07:32:46Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25656549920)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 4 benchmark pairs: `math_ops` (absSeries/roundSeries), `na_ops` (ffillSeries/bfillSeries), `reduce_ops` (nuniqueSeries/anySeries/allSeries), `numeric_ops` (seriesFloor/seriesCeil/seriesSqrt)
+- **Change**: Added 4 benchmark pairs: `math_ops`, `na_ops`, `reduce_ops`, `numeric_ops`
 - **Metric**: 657 (delta: +4) · **Commit**: 3ed4674
 
-### Iters 306–309 — ✅ | Metrics 651→657: replace/cum_ops, str_findall/combine, window_extended/str_findall/scalar_extract, add_sub_mul_div/at_iat/elem_ops/pow_mod.
-
-### Iters 1–305 — ✅/⚠️ | Metrics 0→651. See git history on autoloop/perf-comparison branch.
+### Iters 1–309 — ✅/⚠️ | Metrics 0→653. See git history on autoloop/perf-comparison branch.
