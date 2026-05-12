@@ -901,16 +901,34 @@ export class Series<T extends Scalar = Scalar> {
       if (allNumeric) {
         if (ascending) {
           for (let i = 0, si = 0; i < finCount; i++, si += 3) {
-            const idx = srcBuf[si]!;
-            perm[pos] = idx;
-            outData[pos] = vals[idx] as T;
+            const origIdx = srcBuf[si]!;
+            const keyLo = srcBuf[si + 1]!;
+            const keyHi = srcBuf[si + 2]!;
+            perm[pos] = origIdx;
+            if (keyHi & 0x80000000) {
+              _fvalsU32[0] = keyLo;
+              _fvalsU32[1] = (keyHi ^ 0x80000000) >>> 0;
+            } else {
+              _fvalsU32[0] = ~keyLo >>> 0;
+              _fvalsU32[1] = ~keyHi >>> 0;
+            }
+            outData[pos] = _fvals[0] as T;
             pos = pos + 1;
           }
         } else {
           for (let i = finCount - 1, si = (finCount - 1) * 3; i >= 0; i--, si -= 3) {
-            const idx = srcBuf[si]!;
-            perm[pos] = idx;
-            outData[pos] = vals[idx] as T;
+            const origIdx = srcBuf[si]!;
+            const keyLo = srcBuf[si + 1]!;
+            const keyHi = srcBuf[si + 2]!;
+            perm[pos] = origIdx;
+            if (keyHi & 0x80000000) {
+              _fvalsU32[0] = keyLo;
+              _fvalsU32[1] = (keyHi ^ 0x80000000) >>> 0;
+            } else {
+              _fvalsU32[0] = ~keyLo >>> 0;
+              _fvalsU32[1] = ~keyHi >>> 0;
+            }
+            outData[pos] = _fvals[0] as T;
             pos = pos + 1;
           }
         }
@@ -926,16 +944,36 @@ export class Series<T extends Scalar = Scalar> {
       if (allNumeric) {
         if (ascending) {
           for (let i = 0, si = 0; i < finCount; i++, si += 3) {
-            const idx = srcBuf[si]!;
-            perm[pos] = idx;
-            outData[pos] = vals[idx] as T;
+            const origIdx = srcBuf[si]!;
+            const keyLo = srcBuf[si + 1]!;
+            const keyHi = srcBuf[si + 2]!;
+            perm[pos] = origIdx;
+            // Reverse the IEEE-754 sign-transform to recover the original float bits,
+            // avoiding a random read into the JS values array.
+            if (keyHi & 0x80000000) {
+              _fvalsU32[0] = keyLo;
+              _fvalsU32[1] = (keyHi ^ 0x80000000) >>> 0;
+            } else {
+              _fvalsU32[0] = ~keyLo >>> 0;
+              _fvalsU32[1] = ~keyHi >>> 0;
+            }
+            outData[pos] = _fvals[0] as T;
             pos = pos + 1;
           }
         } else {
           for (let i = finCount - 1, si = (finCount - 1) * 3; i >= 0; i--, si -= 3) {
-            const idx = srcBuf[si]!;
-            perm[pos] = idx;
-            outData[pos] = vals[idx] as T;
+            const origIdx = srcBuf[si]!;
+            const keyLo = srcBuf[si + 1]!;
+            const keyHi = srcBuf[si + 2]!;
+            perm[pos] = origIdx;
+            if (keyHi & 0x80000000) {
+              _fvalsU32[0] = keyLo;
+              _fvalsU32[1] = (keyHi ^ 0x80000000) >>> 0;
+            } else {
+              _fvalsU32[0] = ~keyLo >>> 0;
+              _fvalsU32[1] = ~keyHi >>> 0;
+            }
+            outData[pos] = _fvals[0] as T;
             pos = pos + 1;
           }
         }
