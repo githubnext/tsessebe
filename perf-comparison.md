@@ -10,26 +10,26 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-12T06:36:28Z |
-| Iteration Count | 312 |
-| Best Metric | 655 |
+| Last Run | 2026-05-12T18:51:56Z |
+| Iteration Count | 313 |
+| Best Metric | 657 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | — |
+| PR | #300 |
 | Issue | #221 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, accepted, error, error, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
 ## 📋 Program Info
 
 **Goal**: Benchmark every tsb function vs pandas equivalent, one per iteration.
-**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: (new, #265 merged)
+**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: #300
 
 ---
 
@@ -56,30 +56,29 @@
 
 - More string_accessor variants: startswith, endswith
 - Option-variant benchmarks (axis/limit/method parameters)
-- `format_ops`, `hash_biject_array`, `timedelta_range`, `cat_accessor`, `datetime_tz`
+- `timedelta_range`, `datetime_tz` (still uncovered)
 
 ---
 
 ## 📊 Iteration History
 
+### Iteration 313 — 2026-05-12T18:51:56Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25755262251)
+
+- **Status**: ✅ Accepted
+- **Change**: Added 2 benchmark pairs: `cat_accessor` (CategoricalAccessor.categories/codes/addCategories/removeUnusedCategories on 50k-row Series) and `hash_biject_array` (hashBijectArray + hashBijectInverse on mixed string/int array)
+- **Metric**: 657 (previous best: 655, delta: +2) · **Commit**: 5ae546a
+- **Notes**: cat_accessor and hash_biject_array were both listed in Future Directions with zero benchmark coverage; Python equivalents simulate the same bijection logic.
+
 ### Iteration 312 — 2026-05-12T06:36:28Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25717773514)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 2 benchmark pairs: `hash_array` (FNV-1a hashing of mixed scalar arrays) and `swaplevel` (swapLevelSeries + reorderLevelsSeries on 3-level MultiIndex)
-- **Metric**: 655 (previous best: 655, delta: +2 over current main baseline of 653) · **Commit**: 5dd1faf
-- **Notes**: hash_array and swaplevel were the last two stats modules with zero coverage; all imports use `../../src/index.js` extension.
+- **Change**: Added hash_array and swaplevel benchmark pairs
+- **Metric**: 655 (delta: +2) · **Commit**: 5dd1faf
 
 ### Iteration 311 — 2026-05-11T23:15:05Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25702866515)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 2 benchmark pairs: `apply` (Series.apply/DataFrame.applymap/DataFrame.apply axis=0) and `rename_ops` (renameSeriesIndex, renameDataFrame, addPrefix/addSuffix, setAxis)
-- **Metric**: 655 (previous best: 653 real baseline, state stale at 657; delta: +2) · **Commit**: f260ab1
-- **Notes**: Filled apply and rename_ops — key functional modules for element-wise function application and label renaming.
+- **Change**: Added apply and rename_ops benchmark pairs
+- **Metric**: 655 (delta: +2) · **Commit**: f260ab1
 
-### Iteration 310 — 2026-05-11T07:32:46Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25656549920)
-
-- **Status**: ✅ Accepted
-- **Change**: Added 4 benchmark pairs: `math_ops`, `na_ops`, `reduce_ops`, `numeric_ops`
-- **Metric**: 657 (delta: +4) · **Commit**: 3ed4674
-
-### Iters 1–309 — ✅/⚠️ | Metrics 0→653. See git history on autoloop/perf-comparison branch.
+### Iters 310–312 — ✅ | Metrics 653→655: Added math_ops, na_ops, reduce_ops, numeric_ops, apply, rename_ops, hash_array, swaplevel (8 pairs).
