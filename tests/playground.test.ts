@@ -30,6 +30,8 @@ const NON_PLAYGROUND_PAGES = new Set<string>([
   "benchmarks.html",
   // The examples page is an index/gallery page linking to individual examples.
   "examples.html",
+  // The extensions page is a static reference page — no interactive code blocks.
+  "extensions.html",
 ]);
 
 const REAL_WORLD_EXAMPLE_PAGES = [
