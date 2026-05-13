@@ -142,13 +142,13 @@ export function toMarkdown(df: DataFrame, options: ToMarkdownOptions = {}): stri
     const isIndexCol = index && ci === 0;
     const align = isIndexCol ? "none" : colAlign;
     if (align === "left") {
-      return `:${"-".repeat(w - 1)}`;
+      return `:${"-".repeat(Math.max(w - 1, 3))}`;
     }
     if (align === "right") {
-      return `${"-".repeat(w - 1)}:`;
+      return `${"-".repeat(Math.max(w - 1, 3))}:`;
     }
     if (align === "center") {
-      return `:${"-".repeat(Math.max(w - 2, 1))}:`;
+      return `:${"-".repeat(Math.max(w - 2, 3))}:`;
     }
     return "-".repeat(w);
   });
@@ -219,9 +219,9 @@ export function seriesToMarkdown(s: Series<Scalar>, options: ToMarkdownOptions =
   const separators: string[] = widths.map((w, ci) => {
     const isIndexCol = index && ci === 0;
     const align = isIndexCol ? "none" : colAlign;
-    if (align === "left") return `:${"-".repeat(w - 1)}`;
-    if (align === "right") return `${"-".repeat(w - 1)}:`;
-    if (align === "center") return `:${"-".repeat(Math.max(w - 2, 1))}:`;
+    if (align === "left") return `:${"-".repeat(Math.max(w - 1, 3))}`;
+    if (align === "right") return `${"-".repeat(Math.max(w - 1, 3))}:`;
+    if (align === "center") return `:${"-".repeat(Math.max(w - 2, 3))}:`;
     return "-".repeat(w);
   });
 
