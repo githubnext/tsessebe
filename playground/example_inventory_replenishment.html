@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Inventory Replenishment Planning — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>📦 Inventory Replenishment Planning</h1>
+  <div class="scenario"><strong>Scenario:</strong> A retail operations analyst combines daily sell-through with SKU master data to find categories moving fastest and flag items whose on-hand stock is below lead-time demand.</div>
+  <p>Skills you'll use: <code>readCsv</code>, <code>merge</code>, function-valued <code>assign</code>, rolling-style demand features, filters, and pivot tables.</p>
+
+  <div class="section">
+    <h2>1 · Enrich sales with product master data</h2>
+    <p>Parse store/SKU sales, join attributes, and compute inventory value and sell-through.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, merge, readCsv } from "tsb";
+
+const csv = `date,sku,store,units_sold,on_hand,unit_cost
+2024-04-01,A100,Downtown,8,40,12
+2024-04-02,A100,Downtown,11,31,12
+2024-04-03,A100,Downtown,9,22,12
+2024-04-04,A100,Downtown,10,14,12
+2024-04-01,B200,Downtown,4,28,22
+2024-04-02,B200,Downtown,5,23,22
+2024-04-03,B200,Downtown,7,16,22
+2024-04-04,B200,Downtown,6,10,22
+2024-04-01,C300,Uptown,3,18,35
+2024-04-02,C300,Uptown,2,16,35
+2024-04-03,C300,Uptown,4,12,35
+2024-04-04,C300,Uptown,5,7,35`;
+const sales = readCsv(csv);
+const master = DataFrame.fromRecords([
+  { sku: "A100", category: "accessories", supplier: "Acme", lead_days: 5 },
+  { sku: "B200", category: "apparel", supplier: "Northwind", lead_days: 8 },
+  { sku: "C300", category: "home", supplier: "Acme", lead_days: 6 },
+]);
+
+const enriched = merge(sales, master, { on: "sku", how: "left" }).assign({
+  inventory_value: (df) =&gt; df.col("on_hand").mul(df.col("unit_cost")),
+  sell_through: (df) =&gt; df.col("units_sold").div(df.col("on_hand").add(df.col("units_sold"))),
+});
+console.log(enriched.select(["date", "sku", "category", "units_sold", "on_hand", "sell_through", "inventory_value"]).head(8).toString());
+
+const byCategory = enriched
+  .groupby("category")
+  .agg({ units_sold: "sum", inventory_value: "sum", sell_through: "mean" }, false)
+  .sortValues("units_sold", false);
+console.log("\nCategory summary:");
+console.log(byCategory.toString());</textarea>
+      <textarea class="playground-python" style="display:none">from io import StringIO
+import pandas as pd
+
+csv = """date,sku,store,units_sold,on_hand,unit_cost
+2024-04-01,A100,Downtown,8,40,12
+2024-04-02,A100,Downtown,11,31,12
+2024-04-03,A100,Downtown,9,22,12
+2024-04-04,A100,Downtown,10,14,12
+2024-04-01,B200,Downtown,4,28,22
+2024-04-02,B200,Downtown,5,23,22
+2024-04-03,B200,Downtown,7,16,22
+2024-04-04,B200,Downtown,6,10,22
+2024-04-01,C300,Uptown,3,18,35
+2024-04-02,C300,Uptown,2,16,35
+2024-04-03,C300,Uptown,4,12,35
+2024-04-04,C300,Uptown,5,7,35"""
+sales = pd.read_csv(StringIO(csv))
+master = pd.DataFrame([
+    {"sku": "A100", "category": "accessories", "supplier": "Acme", "lead_days": 5},
+    {"sku": "B200", "category": "apparel", "supplier": "Northwind", "lead_days": 8},
+    {"sku": "C300", "category": "home", "supplier": "Acme", "lead_days": 6},
+])
+enriched = sales.merge(master, on="sku", how="left")
+enriched["inventory_value"] = enriched["on_hand"] * enriched["unit_cost"]
+enriched["sell_through"] = enriched["units_sold"] / (enriched["on_hand"] + enriched["units_sold"])
+print(enriched.head(8))
+print(enriched.groupby("category", as_index=False).agg({"units_sold":"sum", "inventory_value":"sum", "sell_through":"mean"}))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>2 · Calculate reorder points from recent demand</h2>
+    <p>Estimate rolling demand per SKU, compare it to on-hand stock, and summarize reorder status.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, pivotTableFull } from "tsb";
+
+const rows = [
+  { date: "2024-04-01", sku: "A100", units_sold: 8, on_hand: 40, lead_days: 5 },
+  { date: "2024-04-02", sku: "A100", units_sold: 11, on_hand: 31, lead_days: 5 },
+  { date: "2024-04-03", sku: "A100", units_sold: 9, on_hand: 22, lead_days: 5 },
+  { date: "2024-04-04", sku: "A100", units_sold: 10, on_hand: 14, lead_days: 5 },
+  { date: "2024-04-01", sku: "B200", units_sold: 4, on_hand: 28, lead_days: 8 },
+  { date: "2024-04-02", sku: "B200", units_sold: 5, on_hand: 23, lead_days: 8 },
+  { date: "2024-04-03", sku: "B200", units_sold: 7, on_hand: 16, lead_days: 8 },
+  { date: "2024-04-04", sku: "B200", units_sold: 6, on_hand: 10, lead_days: 8 },
+  { date: "2024-04-01", sku: "C300", units_sold: 3, on_hand: 18, lead_days: 6 },
+  { date: "2024-04-02", sku: "C300", units_sold: 2, on_hand: 16, lead_days: 6 },
+  { date: "2024-04-03", sku: "C300", units_sold: 4, on_hand: 12, lead_days: 6 },
+  { date: "2024-04-04", sku: "C300", units_sold: 5, on_hand: 7, lead_days: 6 },
+];
+const rollingDemand = rows.map((row, i) =&gt; {
+  const peers = rows.slice(0, i + 1).filter((r) =&gt; r.sku === row.sku).slice(-3);
+  return peers.reduce((sum, r) =&gt; sum + r.units_sold, 0) / peers.length;
+});
+const reorderPoint = rows.map((row, i) =&gt; rollingDemand[i]! * row.lead_days);
+const status = rows.map((row, i) =&gt; row.on_hand &lt;= reorderPoint[i]! ? "reorder" : "ok");
+const plan = DataFrame.fromRecords(rows).assign({ rolling_3d_demand: rollingDemand, reorder_point: reorderPoint, status });
+
+console.log(plan.select(["date", "sku", "on_hand", "rolling_3d_demand", "reorder_point", "status"]).tail(6).toString());
+
+const openOrders = plan.filter(plan.col("status").eq("reorder"));
+console.log("\nReplenishment queue:");
+console.log(openOrders.select(["date", "sku", "on_hand", "reorder_point"]).toString());
+
+const heatmap = pivotTableFull(plan, {
+  index: "sku",
+  columns: "status",
+  values: "units_sold",
+  aggfunc: "sum",
+  fill_value: 0,
+  margins: true,
+});
+console.log("\nDemand by reorder status:");
+console.log(heatmap.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import numpy as np
+import pandas as pd
+
+rows = [
+    {"date": "2024-04-01", "sku": "A100", "units_sold": 8, "on_hand": 40, "lead_days": 5},
+    {"date": "2024-04-02", "sku": "A100", "units_sold": 11, "on_hand": 31, "lead_days": 5},
+    {"date": "2024-04-03", "sku": "A100", "units_sold": 9, "on_hand": 22, "lead_days": 5},
+    {"date": "2024-04-04", "sku": "A100", "units_sold": 10, "on_hand": 14, "lead_days": 5},
+    {"date": "2024-04-01", "sku": "B200", "units_sold": 4, "on_hand": 28, "lead_days": 8},
+    {"date": "2024-04-02", "sku": "B200", "units_sold": 5, "on_hand": 23, "lead_days": 8},
+    {"date": "2024-04-03", "sku": "B200", "units_sold": 7, "on_hand": 16, "lead_days": 8},
+    {"date": "2024-04-04", "sku": "B200", "units_sold": 6, "on_hand": 10, "lead_days": 8},
+    {"date": "2024-04-01", "sku": "C300", "units_sold": 3, "on_hand": 18, "lead_days": 6},
+    {"date": "2024-04-02", "sku": "C300", "units_sold": 2, "on_hand": 16, "lead_days": 6},
+    {"date": "2024-04-03", "sku": "C300", "units_sold": 4, "on_hand": 12, "lead_days": 6},
+    {"date": "2024-04-04", "sku": "C300", "units_sold": 5, "on_hand": 7, "lead_days": 6},
+]
+plan = pd.DataFrame(rows).sort_values(["sku", "date"])
+plan["rolling_3d_demand"] = plan.groupby("sku")["units_sold"].transform(lambda s: s.rolling(3, min_periods=1).mean())
+plan["reorder_point"] = plan["rolling_3d_demand"] * plan["lead_days"]
+plan["status"] = np.where(plan["on_hand"] &lt;= plan["reorder_point"], "reorder", "ok")
+print(plan.tail(6))
+print(plan[plan["status"] == "reorder"])
+print(pd.pivot_table(plan, index="sku", columns="status", values="units_sold", aggfunc="sum", fill_value=0, margins=True))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

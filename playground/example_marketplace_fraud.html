@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Marketplace Fraud Triage — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>🛡️ Marketplace Fraud Triage</h1>
+  <div class="scenario"><strong>Scenario:</strong> A payments risk team needs a repeatable notebook-style workflow: join live transactions to merchant chargeback history, estimate loss exposure, and produce a review queue plus a segment/device heatmap.</div>
+  <p>Skills you'll use: <code>merge</code>, derived columns, boolean filters, <code>groupby().agg()</code>, <code>nlargestDataFrame</code>, <code>pivotTableFull</code>.</p>
+
+  <div class="section">
+    <h2>1 · Join risk signals and score transactions</h2>
+    <p>Blend transaction-level events with merchant risk metadata, then calculate expected loss and a risk score.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, merge, nlargestDataFrame } from "tsb";
+
+const transactions = DataFrame.fromRecords([
+  { txn_id: "t001", merchant_id: "m01", segment: "electronics", device: "mobile", amount: 1299, card_testing: 0 },
+  { txn_id: "t002", merchant_id: "m02", segment: "fashion", device: "desktop", amount: 184, card_testing: 0 },
+  { txn_id: "t003", merchant_id: "m03", segment: "gaming", device: "mobile", amount: 720, card_testing: 1 },
+  { txn_id: "t004", merchant_id: "m01", segment: "electronics", device: "desktop", amount: 899, card_testing: 0 },
+  { txn_id: "t005", merchant_id: "m04", segment: "travel", device: "mobile", amount: 1450, card_testing: 1 },
+  { txn_id: "t006", merchant_id: "m05", segment: "fashion", device: "mobile", amount: 92, card_testing: 0 },
+  { txn_id: "t007", merchant_id: "m03", segment: "gaming", device: "desktop", amount: 610, card_testing: 0 },
+  { txn_id: "t008", merchant_id: "m04", segment: "travel", device: "desktop", amount: 980, card_testing: 0 },
+]);
+const merchants = DataFrame.fromRecords([
+  { merchant_id: "m01", merchant_name: "Northstar Cameras", chargeback_rate: 0.018 },
+  { merchant_id: "m02", merchant_name: "Threadline", chargeback_rate: 0.012 },
+  { merchant_id: "m03", merchant_name: "Pixel Arcade", chargeback_rate: 0.071 },
+  { merchant_id: "m04", merchant_name: "FlyAway Deals", chargeback_rate: 0.096 },
+  { merchant_id: "m05", merchant_name: "Studio Basics", chargeback_rate: 0.009 },
+]);
+
+const joined = merge(transactions, merchants, { on: "merchant_id", how: "left" });
+const expectedLoss = joined.col("amount").mul(joined.col("chargeback_rate"));
+const riskScore = expectedLoss.add(joined.col("card_testing").mul(25));
+const triaged = joined.assign({ expected_loss: expectedLoss, risk_score: riskScore });
+
+console.log(triaged.select(["txn_id", "merchant_name", "segment", "amount", "expected_loss", "risk_score"]).toString());
+
+const bySegment = triaged
+  .groupby("segment")
+  .agg({ amount: "sum", expected_loss: "sum", risk_score: "mean" }, false)
+  .sortValues("expected_loss", false);
+console.log("\nSegment exposure:");
+console.log(bySegment.toString());
+
+const highRisk = triaged.filter(triaged.col("risk_score").ge(45));
+console.log("\nManual review queue:");
+console.log(nlargestDataFrame(highRisk, 3, { columns: "risk_score" }).select(["txn_id", "merchant_name", "risk_score"]).toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+transactions = pd.DataFrame([
+    {"txn_id": "t001", "merchant_id": "m01", "segment": "electronics", "device": "mobile", "amount": 1299, "card_testing": 0},
+    {"txn_id": "t002", "merchant_id": "m02", "segment": "fashion", "device": "desktop", "amount": 184, "card_testing": 0},
+    {"txn_id": "t003", "merchant_id": "m03", "segment": "gaming", "device": "mobile", "amount": 720, "card_testing": 1},
+    {"txn_id": "t004", "merchant_id": "m01", "segment": "electronics", "device": "desktop", "amount": 899, "card_testing": 0},
+    {"txn_id": "t005", "merchant_id": "m04", "segment": "travel", "device": "mobile", "amount": 1450, "card_testing": 1},
+    {"txn_id": "t006", "merchant_id": "m05", "segment": "fashion", "device": "mobile", "amount": 92, "card_testing": 0},
+    {"txn_id": "t007", "merchant_id": "m03", "segment": "gaming", "device": "desktop", "amount": 610, "card_testing": 0},
+    {"txn_id": "t008", "merchant_id": "m04", "segment": "travel", "device": "desktop", "amount": 980, "card_testing": 0},
+])
+merchants = pd.DataFrame([
+    {"merchant_id": "m01", "merchant_name": "Northstar Cameras", "chargeback_rate": 0.018},
+    {"merchant_id": "m02", "merchant_name": "Threadline", "chargeback_rate": 0.012},
+    {"merchant_id": "m03", "merchant_name": "Pixel Arcade", "chargeback_rate": 0.071},
+    {"merchant_id": "m04", "merchant_name": "FlyAway Deals", "chargeback_rate": 0.096},
+    {"merchant_id": "m05", "merchant_name": "Studio Basics", "chargeback_rate": 0.009},
+])
+triaged = transactions.merge(merchants, on="merchant_id", how="left")
+triaged["expected_loss"] = triaged["amount"] * triaged["chargeback_rate"]
+triaged["risk_score"] = triaged["expected_loss"] + triaged["card_testing"] * 25
+print(triaged[["txn_id", "merchant_name", "segment", "amount", "expected_loss", "risk_score"]])
+print(triaged.groupby("segment", as_index=False).agg({"amount":"sum", "expected_loss":"sum", "risk_score":"mean"}))
+print(triaged[triaged["risk_score"] &gt;= 45].nlargest(3, "risk_score"))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>2 · Build a fraud heatmap and merchant leaderboard</h2>
+    <p>Summarize exposure by segment/device and rank merchants by estimated loss.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, pivotTableFull } from "tsb";
+
+const triaged = DataFrame.fromRecords([
+  { merchant_id: "m01", segment: "electronics", device: "mobile", amount: 1299, expected_loss: 23.38 },
+  { merchant_id: "m02", segment: "fashion", device: "desktop", amount: 184, expected_loss: 2.21 },
+  { merchant_id: "m03", segment: "gaming", device: "mobile", amount: 720, expected_loss: 51.12 },
+  { merchant_id: "m01", segment: "electronics", device: "desktop", amount: 899, expected_loss: 16.18 },
+  { merchant_id: "m04", segment: "travel", device: "mobile", amount: 1450, expected_loss: 139.20 },
+  { merchant_id: "m05", segment: "fashion", device: "mobile", amount: 92, expected_loss: 0.83 },
+  { merchant_id: "m03", segment: "gaming", device: "desktop", amount: 610, expected_loss: 43.31 },
+  { merchant_id: "m04", segment: "travel", device: "desktop", amount: 980, expected_loss: 94.08 },
+]);
+
+const heatmap = pivotTableFull(triaged, {
+  index: "segment",
+  columns: "device",
+  values: "expected_loss",
+  aggfunc: "sum",
+  fill_value: 0,
+  margins: true,
+});
+console.log("Expected loss by segment/device:");
+console.log(heatmap.toString());
+
+const merchantExposure = triaged
+  .groupby("merchant_id")
+  .agg({ amount: "sum", expected_loss: "sum" }, false)
+  .sortValues("expected_loss", false);
+console.log("\nMerchant exposure leaderboard:");
+console.log(merchantExposure.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+triaged = pd.DataFrame([
+    {"merchant_id": "m01", "segment": "electronics", "device": "mobile", "amount": 1299, "expected_loss": 23.38},
+    {"merchant_id": "m02", "segment": "fashion", "device": "desktop", "amount": 184, "expected_loss": 2.21},
+    {"merchant_id": "m03", "segment": "gaming", "device": "mobile", "amount": 720, "expected_loss": 51.12},
+    {"merchant_id": "m01", "segment": "electronics", "device": "desktop", "amount": 899, "expected_loss": 16.18},
+    {"merchant_id": "m04", "segment": "travel", "device": "mobile", "amount": 1450, "expected_loss": 139.20},
+    {"merchant_id": "m05", "segment": "fashion", "device": "mobile", "amount": 92, "expected_loss": 0.83},
+    {"merchant_id": "m03", "segment": "gaming", "device": "desktop", "amount": 610, "expected_loss": 43.31},
+    {"merchant_id": "m04", "segment": "travel", "device": "desktop", "amount": 980, "expected_loss": 94.08},
+])
+heatmap = pd.pivot_table(
+    triaged, index="segment", columns="device", values="expected_loss",
+    aggfunc="sum", fill_value=0, margins=True,
+)
+print(heatmap)
+print(triaged.groupby("merchant_id", as_index=False).agg({"amount":"sum", "expected_loss":"sum"}).sort_values("expected_loss", ascending=False))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>

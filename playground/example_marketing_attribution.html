@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — Marketing Attribution ROAS — Examples</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 920px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    h3 { font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    p  { color: #8b949e; margin-bottom: 1rem; }
+    ul { color: #8b949e; margin-left: 1.25rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 1.25rem; display: inline-block; }
+    .scenario {
+      background: rgba(88, 166, 255, 0.06);
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.4rem 0.4rem 0;
+      margin: 1rem 0 1.5rem;
+      color: #c9d1d9;
+    }
+    .scenario strong { color: var(--accent); }
+    #playground-loading {
+      position: fixed; inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 1000; gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #1c2128; border: 1px solid var(--border);
+      border-bottom: none; border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem; color: #8b949e;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent; color: var(--accent);
+      border: 1px solid var(--border); border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem; font-size: 0.8rem;
+      cursor: pointer; font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block; width: 100%; min-height: 80px;
+      background: #0d1117; color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none; border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem; line-height: 1.55;
+      resize: vertical; outline: none;
+      tab-size: 2; white-space: pre; overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: #8b949e;
+      white-space: pre-wrap; min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    .playground-hint {
+      font-size: 0.75rem; color: #484f58;
+      margin-top: 0.35rem; text-align: right;
+    }
+    footer {
+      text-align: center; padding: 2rem 0;
+      color: #8b949e; font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+</style>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+
+  <a class="back" href="examples.html">← Back to examples</a>
+  <h1>📣 Marketing Attribution ROAS</h1>
+  <div class="scenario"><strong>Scenario:</strong> A growth team has campaign spend in spreadsheet-wide format and conversions in event format. Normalize the spend, join conversion facts, and compare return on ad spend across regions and channels.</div>
+  <p>Skills you'll use: <code>melt</code>, multi-column <code>merge</code>, KPI columns, <code>groupby().agg()</code>, <code>pivotTableFull</code>, and top-N selection.</p>
+
+  <div class="section">
+    <h2>1 · Normalize spend and join conversions</h2>
+    <p>Turn wide channel spend into a tidy table, join conversion facts, and compute ROAS and cost per order.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, melt, merge } from "tsb";
+
+const spendWide = DataFrame.fromColumns({
+  date: ["2024-05-01", "2024-05-01", "2024-05-02", "2024-05-02"],
+  region: ["NA", "EU", "NA", "EU"],
+  search: [1200, 900, 1350, 980],
+  social: [800, 740, 880, 790],
+  email: [300, 260, 320, 280],
+});
+const spend = melt(spendWide, {
+  id_vars: ["date", "region"],
+  value_vars: ["search", "social", "email"],
+  var_name: "channel",
+  value_name: "spend",
+});
+const conversions = DataFrame.fromRecords([
+  { date: "2024-05-01", region: "NA", channel: "search", orders: 62, revenue: 8680 },
+  { date: "2024-05-01", region: "NA", channel: "social", orders: 35, revenue: 3920 },
+  { date: "2024-05-01", region: "NA", channel: "email", orders: 18, revenue: 2520 },
+  { date: "2024-05-01", region: "EU", channel: "search", orders: 44, revenue: 5280 },
+  { date: "2024-05-01", region: "EU", channel: "social", orders: 31, revenue: 3100 },
+  { date: "2024-05-01", region: "EU", channel: "email", orders: 16, revenue: 1760 },
+  { date: "2024-05-02", region: "NA", channel: "search", orders: 71, revenue: 9940 },
+  { date: "2024-05-02", region: "NA", channel: "social", orders: 42, revenue: 5040 },
+  { date: "2024-05-02", region: "NA", channel: "email", orders: 21, revenue: 3150 },
+  { date: "2024-05-02", region: "EU", channel: "search", orders: 49, revenue: 6370 },
+  { date: "2024-05-02", region: "EU", channel: "social", orders: 33, revenue: 3465 },
+  { date: "2024-05-02", region: "EU", channel: "email", orders: 19, revenue: 2280 },
+]);
+
+const joined = merge(spend, conversions, { on: ["date", "region", "channel"], how: "left" }).assign({
+  roas: (df) =&gt; df.col("revenue").div(df.col("spend")),
+  cost_per_order: (df) =&gt; df.col("spend").div(df.col("orders")),
+});
+console.log(joined.head(8).toString());
+
+const channelRollup = joined
+  .groupby("channel")
+  .agg({ spend: "sum", revenue: "sum", orders: "sum", roas: "mean", cost_per_order: "mean" }, false)
+  .sortValues("roas", false);
+console.log("\nChannel rollup:");
+console.log(channelRollup.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+spend_wide = pd.DataFrame({
+    "date": ["2024-05-01", "2024-05-01", "2024-05-02", "2024-05-02"],
+    "region": ["NA", "EU", "NA", "EU"],
+    "search": [1200, 900, 1350, 980],
+    "social": [800, 740, 880, 790],
+    "email": [300, 260, 320, 280],
+})
+conversions = pd.DataFrame([
+    {"date": "2024-05-01", "region": "NA", "channel": "search", "orders": 62, "revenue": 8680},
+    {"date": "2024-05-01", "region": "NA", "channel": "social", "orders": 35, "revenue": 3920},
+    {"date": "2024-05-01", "region": "NA", "channel": "email", "orders": 18, "revenue": 2520},
+    {"date": "2024-05-01", "region": "EU", "channel": "search", "orders": 44, "revenue": 5280},
+    {"date": "2024-05-01", "region": "EU", "channel": "social", "orders": 31, "revenue": 3100},
+    {"date": "2024-05-01", "region": "EU", "channel": "email", "orders": 16, "revenue": 1760},
+    {"date": "2024-05-02", "region": "NA", "channel": "search", "orders": 71, "revenue": 9940},
+    {"date": "2024-05-02", "region": "NA", "channel": "social", "orders": 42, "revenue": 5040},
+    {"date": "2024-05-02", "region": "NA", "channel": "email", "orders": 21, "revenue": 3150},
+    {"date": "2024-05-02", "region": "EU", "channel": "search", "orders": 49, "revenue": 6370},
+    {"date": "2024-05-02", "region": "EU", "channel": "social", "orders": 33, "revenue": 3465},
+    {"date": "2024-05-02", "region": "EU", "channel": "email", "orders": 19, "revenue": 2280},
+])
+spend = spend_wide.melt(id_vars=["date", "region"], value_vars=["search", "social", "email"], var_name="channel", value_name="spend")
+joined = spend.merge(conversions, on=["date", "region", "channel"], how="left")
+joined["roas"] = joined["revenue"] / joined["spend"]
+joined["cost_per_order"] = joined["spend"] / joined["orders"]
+print(joined.head(8))
+print(joined.groupby("channel", as_index=False).agg({"spend":"sum", "revenue":"sum", "orders":"sum", "roas":"mean", "cost_per_order":"mean"}))</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>2 · Compare region/channel performance</h2>
+    <p>Create a pivot-table scorecard and list the strongest daily placements.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, nlargestDataFrame, pivotTableFull } from "tsb";
+
+const joined = DataFrame.fromRecords([
+  { region: "NA", channel: "search", spend: 1200, revenue: 8680, orders: 62 },
+  { region: "NA", channel: "social", spend: 800, revenue: 3920, orders: 35 },
+  { region: "NA", channel: "email", spend: 300, revenue: 2520, orders: 18 },
+  { region: "EU", channel: "search", spend: 900, revenue: 5280, orders: 44 },
+  { region: "EU", channel: "social", spend: 740, revenue: 3100, orders: 31 },
+  { region: "EU", channel: "email", spend: 260, revenue: 1760, orders: 16 },
+  { region: "NA", channel: "search", spend: 1350, revenue: 9940, orders: 71 },
+  { region: "NA", channel: "social", spend: 880, revenue: 5040, orders: 42 },
+  { region: "NA", channel: "email", spend: 320, revenue: 3150, orders: 21 },
+  { region: "EU", channel: "search", spend: 980, revenue: 6370, orders: 49 },
+  { region: "EU", channel: "social", spend: 790, revenue: 3465, orders: 33 },
+  { region: "EU", channel: "email", spend: 280, revenue: 2280, orders: 19 },
+]).assign({ roas: (df) =&gt; df.col("revenue").div(df.col("spend")) });
+
+const roasTable = pivotTableFull(joined, {
+  index: "region",
+  columns: "channel",
+  values: "roas",
+  aggfunc: "mean",
+  fill_value: 0,
+  margins: true,
+});
+console.log("Mean ROAS by region/channel:");
+console.log(roasTable.toString());
+
+const efficient = nlargestDataFrame(joined, 4, { columns: "roas" }).select(["region", "channel", "spend", "revenue", "roas"]);
+console.log("\nBest daily placements:");
+console.log(efficient.toString());</textarea>
+      <textarea class="playground-python" style="display:none">import pandas as pd
+
+joined = pd.DataFrame([
+    {"region": "NA", "channel": "search", "spend": 1200, "revenue": 8680, "orders": 62},
+    {"region": "NA", "channel": "social", "spend": 800, "revenue": 3920, "orders": 35},
+    {"region": "NA", "channel": "email", "spend": 300, "revenue": 2520, "orders": 18},
+    {"region": "EU", "channel": "search", "spend": 900, "revenue": 5280, "orders": 44},
+    {"region": "EU", "channel": "social", "spend": 740, "revenue": 3100, "orders": 31},
+    {"region": "EU", "channel": "email", "spend": 260, "revenue": 1760, "orders": 16},
+    {"region": "NA", "channel": "search", "spend": 1350, "revenue": 9940, "orders": 71},
+    {"region": "NA", "channel": "social", "spend": 880, "revenue": 5040, "orders": 42},
+    {"region": "NA", "channel": "email", "spend": 320, "revenue": 3150, "orders": 21},
+    {"region": "EU", "channel": "search", "spend": 980, "revenue": 6370, "orders": 49},
+    {"region": "EU", "channel": "social", "spend": 790, "revenue": 3465, "orders": 33},
+    {"region": "EU", "channel": "email", "spend": 280, "revenue": 2280, "orders": 19},
+])
+joined["roas"] = joined["revenue"] / joined["spend"]
+print(pd.pivot_table(joined, index="region", columns="channel", values="roas", aggfunc="mean", fill_value=0, margins=True))
+print(joined.nlargest(4, "roas")[["region", "channel", "spend", "revenue", "roas"]])</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+      <div class="playground-hint">Ctrl+Enter to run · Tab to indent</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>
+      <a href="examples.html">All examples</a> ·
+      <a href="index.html">tsb playground</a> ·
+      Built by <a href="https://github.com/githubnext/autoloop">Autoloop</a>
+    </p>
+  </footer>
+  <script type="module" src="playground-runtime.js"></script>
+</body>
+</html>
