@@ -30,8 +30,8 @@
  * @module
  */
 
-import { DataFrame } from "../core/frame.ts";
-import { Series } from "../core/series.ts";
+import type { DataFrame } from "../core/frame.ts";
+import type { Series } from "../core/series.ts";
 import type { Label, Scalar } from "../types.ts";
 
 // ─── shared helpers ───────────────────────────────────────────────────────────

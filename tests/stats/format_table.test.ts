@@ -76,7 +76,9 @@ describe("toMarkdown", () => {
   });
 
   it("null/undefined/NaN cells render as empty/NaN", () => {
-    const df = DataFrame.fromColumns({ a: [null, Number.NaN, undefined] as (null | number | undefined)[] });
+    const df = DataFrame.fromColumns({
+      a: [null, Number.NaN, undefined] as (null | number | undefined)[],
+    });
     const md = toMarkdown(df);
     expect(md).toContain("NaN");
   });

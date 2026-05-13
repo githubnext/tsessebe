@@ -56,6 +56,7 @@ const NON_PLAYGROUND_PAGES = new Set<string>([
   "benchmarks.html",
   "examples.html",
   "extensions.html",
+  "format_table.html",
 ]);
 
 const PORT = 3399;
