@@ -734,3 +734,10 @@ export type {
 } from "./core/extensions.ts";
 
 export { pdArray, PandasArray } from "./core/pd_array.ts";
+export {
+  toMarkdown,
+  seriesToMarkdown,
+  toLaTeX,
+  seriesToLaTeX,
+} from "./stats/format_table.ts";
+export type { ToMarkdownOptions, ToLaTeXOptions } from "./stats/format_table.ts";

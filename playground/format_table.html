@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb · Table Formatters — to_markdown / to_latex</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1 { color: #2563eb; }
+    h2 { margin-top: 2rem; border-bottom: 1px solid #e5e7eb; padding-bottom: .25rem; }
+    pre { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+    code { font-family: 'Fira Code', monospace; font-size: .875rem; }
+    textarea { width: 100%; height: 120px; font-family: monospace; font-size: .875rem; padding: .5rem; border: 1px solid #9ca3af; border-radius: 6px; box-sizing: border-box; }
+    button { background: #2563eb; color: white; border: none; padding: .5rem 1.2rem; border-radius: 6px; cursor: pointer; font-size: .9rem; margin-top: .5rem; }
+    button:hover { background: #1d4ed8; }
+    .output { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1rem; margin-top: 1rem; white-space: pre-wrap; font-family: monospace; font-size: .85rem; min-height: 3rem; }
+    .tabs { display: flex; gap: .5rem; margin-bottom: 1rem; }
+    .tab { padding: .4rem .9rem; border: 1px solid #9ca3af; border-radius: 6px; cursor: pointer; background: white; }
+    .tab.active { background: #2563eb; color: white; border-color: #2563eb; }
+    table { border-collapse: collapse; width: 100%; margin-top: .5rem; }
+    th, td { border: 1px solid #d1d5db; padding: .4rem .8rem; text-align: left; }
+    th { background: #f3f4f6; }
+    .note { color: #6b7280; font-size: .85rem; }
+    nav { margin-bottom: 1.5rem; }
+    nav a { color: #2563eb; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <nav><a href="index.html">← tsb playground</a></nav>
+  <h1>Table Formatters</h1>
+  <p class="note">
+    Port of <code>pandas.DataFrame.to_markdown()</code> and
+    <code>pandas.DataFrame.to_latex()</code>. Render any DataFrame or Series
+    as a Markdown or LaTeX table string.
+  </p>
+
+  <!-- ── MARKDOWN ── -->
+  <h2>to_markdown()</h2>
+  <p>Renders a DataFrame as a GitHub-Flavoured Markdown table.</p>
+
+  <pre><code>import { DataFrame, toMarkdown } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name: ["Alice", "Bob", "Carol"],
+  score: [92, 85, 78],
+  grade: ["A", "B", "C"],
+});
+
+console.log(toMarkdown(df));
+// |   | name  | score | grade |
+// |---|-------|-------|-------|
+// | 0 | Alice | 92    | A     |
+// | 1 | Bob   | 85    | B     |
+// | 2 | Carol | 78    | C     |
+
+// Right-align numeric columns
+console.log(toMarkdown(df, { colAlign: "right" }));
+
+// Without index
+console.log(toMarkdown(df, { index: false }));
+
+// Round floats to 2 decimal places
+const df2 = DataFrame.fromColumns({ x: [1.2345, 6.789], y: [0.1, 0.2] });
+console.log(toMarkdown(df2, { floatFormat: 2 }));</code></pre>
+
+  <h3>Live editor</h3>
+  <div class="tabs">
+    <button class="tab active" onclick="setMode('markdown')">Markdown</button>
+    <button class="tab" onclick="setMode('latex')">LaTeX</button>
+  </div>
+
+  <label><strong>Comma-separated column definitions (name:v1,v2,v3):</strong></label>
+  <textarea id="input">name:Alice,Bob,Carol
+score:92,85,78
+grade:A,B,C</textarea>
+
+  <div id="md-options">
+    <label>Alignment:
+      <select id="align">
+        <option value="none">none (default)</option>
+        <option value="left">left</option>
+        <option value="right">right</option>
+        <option value="center">center</option>
+      </select>
+    </label>
+    &nbsp;
+    <label>Show index: <input type="checkbox" id="showIndex" checked /></label>
+    &nbsp;
+    <label>Float decimals: <input type="number" id="floatDec" value="" placeholder="none" min="0" max="10" style="width:60px" /></label>
+  </div>
+
+  <div id="latex-options" style="display:none">
+    <label>booktabs: <input type="checkbox" id="booktabs" checked /></label>
+    &nbsp;
+    <label>longtable: <input type="checkbox" id="longtable" /></label>
+    &nbsp;
+    <label>Show index: <input type="checkbox" id="latexIndex" checked /></label>
+    &nbsp;
+    <label>Float decimals: <input type="number" id="latexFloat" value="" placeholder="none" min="0" max="10" style="width:60px" /></label>
+    <br/>
+    <label>Caption: <input type="text" id="latexCaption" placeholder="optional" style="width:200px" /></label>
+    &nbsp;
+    <label>Label: <input type="text" id="latexLabel" placeholder="optional" style="width:150px" /></label>
+  </div>
+
+  <button onclick="runConverter()">Convert</button>
+
+  <h4>Output</h4>
+  <div class="output" id="output">Click "Convert" to render.</div>
+  <div id="preview" style="display:none">
+    <h4>Preview (Markdown rendered)</h4>
+    <div id="previewTable"></div>
+  </div>
+
+  <!-- ── LATEX SECTION ── -->
+  <h2>to_latex()</h2>
+  <p>Renders a DataFrame as a LaTeX <code>tabular</code> (or <code>longtable</code>) environment.</p>
+
+  <pre><code>import { DataFrame, toLaTeX } from "tsb";
+
+const df = DataFrame.fromColumns({
+  method: ["Newton", "Euler", "RK4"],
+  error:  [0.0001, 0.01, 0.000001],
+});
+
+// Default: booktabs rules, with index
+console.log(toLaTeX(df));
+// \begin{tabular}{lll}
+// \toprule
+//  & method & error \\
+// \midrule
+// 0 & Newton & 0.0001 \\
+// 1 & Euler & 0.01 \\
+// 2 & RK4 & 1e-6 \\
+// \bottomrule
+// \end{tabular}
+
+// With caption and table environment
+console.log(toLaTeX(df, {
+  tableEnv: true,
+  caption: "Numerical methods comparison",
+  label: "tab:methods",
+  floatFormat: 6,
+}));</code></pre>
+
+  <!-- ── SERIES SECTION ── -->
+  <h2>seriesToMarkdown / seriesToLaTeX</h2>
+  <p>Same functions work directly on a <code>Series</code>.</p>
+
+  <pre><code>import { Series, seriesToMarkdown, seriesToLaTeX } from "tsb";
+
+const s = new Series({ data: [10, 20, 30], name: "price" });
+
+console.log(seriesToMarkdown(s));
+// |   | price |
+// |---|-------|
+// | 0 | 10    |
+// | 1 | 20    |
+// | 2 | 30    |
+
+console.log(seriesToLaTeX(s));
+// \begin{tabular}{ll}
+// \toprule
+//  & price \\
+// \midrule
+// 0 & 10 \\
+// ...
+// \end{tabular}</code></pre>
+
+  <!-- ── API ── -->
+  <h2>API Reference</h2>
+  <table>
+    <tr><th>Function</th><th>Description</th></tr>
+    <tr><td><code>toMarkdown(df, opts?)</code></td><td>Render DataFrame as Markdown table string</td></tr>
+    <tr><td><code>seriesToMarkdown(s, opts?)</code></td><td>Render Series as Markdown table string</td></tr>
+    <tr><td><code>toLaTeX(df, opts?)</code></td><td>Render DataFrame as LaTeX tabular/longtable string</td></tr>
+    <tr><td><code>seriesToLaTeX(s, opts?)</code></td><td>Render Series as LaTeX table string</td></tr>
+  </table>
+
+  <h3>ToMarkdownOptions</h3>
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>index</code></td><td>boolean</td><td>true</td><td>Include row index column</td></tr>
+    <tr><td><code>colAlign</code></td><td>"left"|"center"|"right"|"none"</td><td>"none"</td><td>Column alignment in separator row</td></tr>
+    <tr><td><code>floatFormat</code></td><td>number</td><td>undefined</td><td>Decimal places for numeric values</td></tr>
+  </table>
+
+  <h3>ToLaTeXOptions</h3>
+  <table>
+    <tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>index</code></td><td>boolean</td><td>true</td><td>Include row index column</td></tr>
+    <tr><td><code>colFormat</code></td><td>string</td><td>auto "l…l"</td><td>LaTeX column format spec</td></tr>
+    <tr><td><code>booktabs</code></td><td>boolean</td><td>true</td><td>Use \\toprule/\\midrule/\\bottomrule</td></tr>
+    <tr><td><code>longtable</code></td><td>boolean</td><td>false</td><td>Use longtable instead of tabular</td></tr>
+    <tr><td><code>tableEnv</code></td><td>boolean</td><td>false</td><td>Wrap in table environment</td></tr>
+    <tr><td><code>caption</code></td><td>string</td><td>—</td><td>\\caption{} text (requires tableEnv)</td></tr>
+    <tr><td><code>label</code></td><td>string</td><td>—</td><td>\\label{} text (requires tableEnv)</td></tr>
+    <tr><td><code>floatFormat</code></td><td>number</td><td>undefined</td><td>Decimal places for numeric values</td></tr>
+  </table>
+
+  <script type="module">
+    // Inline minimal tsb subset for playground (no module bundler)
+    // We implement the core logic directly here for the demo.
+
+    function cellStr(v) {
+      if (v === null || v === undefined) return "";
+      if (typeof v === "number" && isNaN(v)) return "NaN";
+      return String(v);
+    }
+
+    function toMarkdown(data, cols, rowLabels, opts = {}) {
+      const { colAlign = "none", index = true, floatFormat } = opts;
+      const fmt = (v) => {
+        if (floatFormat !== undefined && typeof v === "number" && isFinite(v))
+          return v.toFixed(floatFormat);
+        return cellStr(v);
+      };
+      const headers = index ? ["", ...cols] : [...cols];
+      const rows = data.map((row, i) => {
+        const cells = [];
+        if (index) cells.push(String(rowLabels[i] ?? i));
+        cols.forEach((_, c) => cells.push(fmt(row[c])));
+        return cells;
+      });
+      const nCols = headers.length;
+      const widths = headers.map(h => Math.max(h.length, 3));
+      rows.forEach(row => row.forEach((c, i) => { if (c.length > widths[i]) widths[i] = c.length; }));
+      const seps = widths.map((w, ci) => {
+        const align = (index && ci === 0) ? "none" : colAlign;
+        if (align === "left") return `:${"-".repeat(w-1)}`;
+        if (align === "right") return `${"-".repeat(w-1)}:`;
+        if (align === "center") return `:${"-".repeat(Math.max(w-2,1))}:`;
+        return "-".repeat(w);
+      });
+      const pad = (s, w) => s.padEnd(w);
+      return [
+        `| ${headers.map((h,i) => pad(h, widths[i])).join(" | ")} |`,
+        `| ${seps.join(" | ")} |`,
+        ...rows.map(r => `| ${r.map((c,i) => pad(c, widths[i])).join(" | ")} |`)
+      ].join("\n");
+    }
+
+    function latexEsc(s) {
+      return String(s)
+        .replace(/\\/g, "\\textbackslash{}")
+        .replace(/&/g, "\\&").replace(/%/g, "\\%").replace(/\$/g, "\\$")
+        .replace(/#/g, "\\#").replace(/_/g, "\\_").replace(/\{/g, "\\{")
+        .replace(/\}/g, "\\}").replace(/~/g, "\\textasciitilde{}")
+        .replace(/\^/g, "\\textasciicircum{}");
+    }
+
+    function toLaTeX(data, cols, rowLabels, opts = {}) {
+      const { index = true, booktabs = true, longtable = false, tableEnv = false, floatFormat, caption, label } = opts;
+      const nCols = index ? cols.length + 1 : cols.length;
+      const colFmt = "l".repeat(nCols);
+      const env = longtable ? "longtable" : "tabular";
+      const fmt = (v) => {
+        if (floatFormat !== undefined && typeof v === "number" && isFinite(v))
+          return latexEsc(v.toFixed(floatFormat));
+        return latexEsc(cellStr(v));
+      };
+      const lines = [];
+      if (tableEnv) {
+        lines.push("\\begin{table}");
+        if (caption) lines.push(`\\caption{${latexEsc(caption)}}`);
+        if (label) lines.push(`\\label{${latexEsc(label)}}`);
+        lines.push("\\centering");
+      }
+      lines.push(`\\begin{${env}}{${colFmt}}`);
+      lines.push(booktabs ? "\\toprule" : "\\hline");
+      const hdrCells = index ? ["", ...cols.map(latexEsc)] : cols.map(latexEsc);
+      lines.push(`${hdrCells.join(" & ")} \\\\`);
+      lines.push(booktabs ? "\\midrule" : "\\hline");
+      data.forEach((row, i) => {
+        const cells = index ? [latexEsc(String(rowLabels[i] ?? i)), ...row.map(fmt)] : row.map(fmt);
+        lines.push(`${cells.join(" & ")} \\\\`);
+      });
+      lines.push(booktabs ? "\\bottomrule" : "\\hline");
+      lines.push(`\\end{${env}}`);
+      if (tableEnv) lines.push("\\end{table}");
+      return lines.join("\n");
+    }
+
+    function parseInput(text) {
+      const lines = text.trim().split("\n").filter(l => l.trim());
+      const cols = [], data = [];
+      lines.forEach(line => {
+        const idx = line.indexOf(":");
+        if (idx < 0) return;
+        const name = line.slice(0, idx).trim();
+        const vals = line.slice(idx + 1).split(",").map(v => {
+          const t = v.trim();
+          const n = Number(t);
+          return isNaN(n) || t === "" ? (t === "" ? null : t) : n;
+        });
+        cols.push(name);
+        data.push(vals);
+      });
+      const nRows = data.reduce((m, c) => Math.max(m, c.length), 0);
+      const rows = Array.from({length: nRows}, (_, i) => data.map(c => c[i] ?? null));
+      const rowLabels = Array.from({length: nRows}, (_, i) => i);
+      return { cols, rows, rowLabels };
+    }
+
+    let currentMode = "markdown";
+    window.setMode = (m) => {
+      currentMode = m;
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab").forEach(t => {
+        if (t.textContent.toLowerCase().includes(m)) t.classList.add("active");
+      });
+      document.getElementById("md-options").style.display = m === "markdown" ? "" : "none";
+      document.getElementById("latex-options").style.display = m === "latex" ? "" : "none";
+      document.getElementById("preview").style.display = m === "markdown" ? "" : "none";
+    };
+
+    window.runConverter = () => {
+      const { cols, rows, rowLabels } = parseInput(document.getElementById("input").value);
+      let result;
+      if (currentMode === "markdown") {
+        const align = document.getElementById("align").value;
+        const index = document.getElementById("showIndex").checked;
+        const fd = document.getElementById("floatDec").value;
+        const floatFormat = fd !== "" ? parseInt(fd) : undefined;
+        result = toMarkdown(rows, cols, rowLabels, { colAlign: align, index, floatFormat });
+        // Render preview
+        document.getElementById("preview").style.display = "";
+        const lines = result.split("\n");
+        let html = "<table><tr>" + lines[0].split("|").filter(c => c.trim() !== "").map(c => `<th>${c.trim()}</th>`).join("") + "</tr>";
+        lines.slice(2).forEach(line => {
+          html += "<tr>" + line.split("|").filter(c => c.trim() !== "").map(c => `<td>${c.trim()}</td>`).join("") + "</tr>";
+        });
+        html += "</table>";
+        document.getElementById("previewTable").innerHTML = html;
+      } else {
+        const booktabs = document.getElementById("booktabs").checked;
+        const longtable = document.getElementById("longtable").checked;
+        const index = document.getElementById("latexIndex").checked;
+        const fd = document.getElementById("latexFloat").value;
+        const floatFormat = fd !== "" ? parseInt(fd) : undefined;
+        const caption = document.getElementById("latexCaption").value || undefined;
+        const label = document.getElementById("latexLabel").value || undefined;
+        const tableEnv = !!(caption || label);
+        result = toLaTeX(rows, cols, rowLabels, { booktabs, longtable, index, floatFormat, caption, label, tableEnv });
+      }
+      document.getElementById("output").textContent = result;
+    };
+  </script>
+</body>
+</html>

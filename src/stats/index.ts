@@ -505,3 +505,10 @@ export { hashPandasObject } from "./hash_pandas_object.ts";
 export type { HashPandasObjectOptions } from "./hash_pandas_object.ts";
 export { hashArray } from "./hash_array.ts";
 export { hashBijectArray, hashBijectInverse } from "./hash_biject_array.ts";
+export {
+  toMarkdown,
+  seriesToMarkdown,
+  toLaTeX,
+  seriesToLaTeX,
+} from "./format_table.ts";
+export type { ToMarkdownOptions, ToLaTeXOptions } from "./format_table.ts";
