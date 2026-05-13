@@ -732,3 +732,5 @@ export type {
   ExtensionDtypeConstructor,
   ExtensionArrayConstructor,
 } from "./core/extensions.ts";
+
+export { pdArray, PandasArray } from "./core/pd_array.ts";
