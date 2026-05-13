@@ -377,7 +377,7 @@ export class EWM {
       if (v === null || v === undefined || (typeof v === "number" && Number.isNaN(v))) {
         return null;
       }
-      return Math.sqrt(v as number);
+      return Math.sqrt(Math.max(0, v as number));
     });
     return this._series.withValues(result);
   }
