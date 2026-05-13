@@ -32,6 +32,12 @@ const NON_PLAYGROUND_PAGES = new Set<string>([
   "examples.html",
 ]);
 
+const REAL_WORLD_EXAMPLE_PAGES = [
+  "example_marketplace_fraud.html",
+  "example_inventory_replenishment.html",
+  "example_marketing_attribution.html",
+] as const;
+
 function listPlaygroundHtmlFiles(): string[] {
   return readdirSync(PLAYGROUND_DIR)
     .filter((f) => f.endsWith(".html"))
@@ -48,6 +54,14 @@ describe("playground page conformance", () => {
 
   it("discovers playground pages", () => {
     expect(files.length).toBeGreaterThan(0);
+  });
+
+  it("links the complex real-world examples from the gallery", () => {
+    const html = read("examples.html");
+    for (const file of REAL_WORLD_EXAMPLE_PAGES) {
+      expect(html).toContain(`href="${file}"`);
+      expect(files).toContain(file);
+    }
   });
 
   for (const file of files) {
