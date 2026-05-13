@@ -176,7 +176,6 @@ steps:
           the push is attributed to a real user (pushes via GITHUB_TOKEN don't
           trigger other workflows)."""
           ci_token = os.environ.get("GH_AW_CI_TRIGGER_TOKEN", "") or token
-          auth_header = base64.b64encode(f"x-access-token:{ci_token}".encode()).decode()
           try:
               # Get current HEAD SHA
               url = f"https://api.github.com/repos/{repo}/git/ref/heads/{branch}"
