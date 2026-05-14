@@ -11,8 +11,8 @@ import {
   FixedForwardWindowIndexer,
   VariableOffsetWindowIndexer,
   applyIndexer,
-} from "../../src/window/index.ts";
-import type { WindowBounds } from "../../src/window/index.ts";
+} from "../../src/index.ts";
+import type { WindowBounds } from "../../src/index.ts";
 
 // ─── FixedForwardWindowIndexer ────────────────────────────────────────────────
 

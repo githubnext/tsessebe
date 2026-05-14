@@ -74,7 +74,9 @@ function inferDtype(data: readonly Scalar[]): DtypeName {
   let hasBigInt = false;
 
   for (const v of data) {
-    if (v === null || v === undefined) { continue; }
+    if (v === null || v === undefined) {
+      continue;
+    }
     if (typeof v === "boolean") {
       hasBool = true;
     } else if (typeof v === "bigint") {
@@ -92,12 +94,24 @@ function inferDtype(data: readonly Scalar[]): DtypeName {
     }
   }
 
-  if (hasDate) { return "datetime"; }
-  if (hasBigInt) { return "int64"; }
-  if (hasFloat) { return "float64"; }
-  if (hasInt && !hasString && !hasBool) { return "int64"; }
-  if (hasBool && !hasInt && !hasFloat && !hasString) { return "bool"; }
-  if (hasString) { return "string"; }
+  if (hasDate) {
+    return "datetime";
+  }
+  if (hasBigInt) {
+    return "int64";
+  }
+  if (hasFloat) {
+    return "float64";
+  }
+  if (hasInt && !hasString && !hasBool) {
+    return "int64";
+  }
+  if (hasBool && !hasInt && !hasFloat && !hasString) {
+    return "bool";
+  }
+  if (hasString) {
+    return "string";
+  }
   return "object";
 }
 
