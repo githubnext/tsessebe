@@ -14,17 +14,17 @@
 
 /** TypeError-compatible base for value-related errors (mirrors Python's ValueError). */
 export class ValueError extends TypeError {
-  override readonly name = "ValueError";
+  override readonly name: string = "ValueError";
 }
 
 /** Error-compatible base for key-related errors (mirrors Python's KeyError). */
 export class KeyError extends Error {
-  override readonly name = "KeyError";
+  override readonly name: string = "KeyError";
 }
 
 /** Error-compatible base for index-related errors (mirrors Python's IndexError). */
 export class IndexError extends RangeError {
-  override readonly name = "IndexError";
+  override readonly name: string = "IndexError";
 }
 
 // ---------------------------------------------------------------------------

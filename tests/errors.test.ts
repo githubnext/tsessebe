@@ -43,12 +43,12 @@ import {
 // ---------------------------------------------------------------------------
 // Helper: assert that a class is throwable and catchable
 // ---------------------------------------------------------------------------
-function assertThrowable<T extends Error>(
-  Cls: new (...args: never[]) => T,
-  args: ConstructorParameters<typeof Cls>,
+function assertThrowable<T extends Error, A extends unknown[]>(
+  Cls: new (...args: A) => T,
+  args: A,
   expectedMessage?: string,
 ): void {
-  const instance = new Cls(...(args as ConstructorParameters<typeof Cls>));
+  const instance = new Cls(...args);
   expect(instance).toBeInstanceOf(Error);
   expect(instance).toBeInstanceOf(Cls);
   if (expectedMessage !== undefined) {
