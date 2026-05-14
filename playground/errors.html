@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pd.errors — tsb playground</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
+      h1 { color: #1a1a2e; }
+      h2 { color: #16213e; margin-top: 2rem; }
+      pre { background: #f4f4f8; border-radius: 6px; padding: 1rem; overflow-x: auto; }
+      code { font-family: "Fira Mono", monospace; font-size: 0.9em; }
+      .tag { display: inline-block; background: #e0e7ff; color: #3730a3; border-radius: 4px; padding: 2px 8px; font-size: 0.8em; margin-left: 6px; }
+      .output { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; margin-top: 0.5rem; }
+      nav { margin-bottom: 2rem; }
+      nav a { margin-right: 1rem; color: #4f46e5; }
+      table { border-collapse: collapse; width: 100%; }
+      td, th { border: 1px solid #d1d5db; padding: 0.4rem 0.75rem; text-align: left; font-size: 0.9em; }
+      th { background: #f9fafb; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="index.html">← Back to index</a>
+    </nav>
+
+    <h1>pd.errors <span class="tag">new in this release</span></h1>
+    <p>
+      <strong>tsb</strong> ships a full set of pandas-compatible exception and warning classes
+      under the <code>errors</code> namespace — mirroring Python's <code>pd.errors</code>.
+    </p>
+
+    <h2>Error hierarchy</h2>
+    <table>
+      <thead>
+        <tr><th>Class</th><th>Extends</th><th>When raised</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>ValueError</code></td><td>TypeError</td><td>Invalid argument value</td></tr>
+        <tr><td><code>KeyError</code></td><td>Error</td><td>Missing key or label</td></tr>
+        <tr><td><code>IndexError</code></td><td>RangeError</td><td>Out-of-range index access</td></tr>
+        <tr><td><code>ParserError</code></td><td>ValueError</td><td>File/string parsing fails</td></tr>
+        <tr><td><code>EmptyDataError</code></td><td>Error</td><td>Reading an empty file</td></tr>
+        <tr><td><code>MergeError</code></td><td>ValueError</td><td>Incorrect merge call</td></tr>
+        <tr><td><code>UnsortedIndexError</code></td><td>KeyError</td><td>Unsorted MultiIndex slice</td></tr>
+        <tr><td><code>OptionError</code></td><td>KeyError</td><td>Invalid option name/value</td></tr>
+        <tr><td><code>OutOfBoundsDatetime</code></td><td>ValueError</td><td>Datetime outside nanosecond range</td></tr>
+        <tr><td><code>OutOfBoundsTimedelta</code></td><td>ValueError</td><td>Timedelta outside range</td></tr>
+        <tr><td><code>IntCastingNaNError</code></td><td>Error</td><td>Casting NaN to integer</td></tr>
+        <tr><td><code>ChainedAssignmentError</code></td><td>Error</td><td>Chained assignment detected</td></tr>
+        <tr><td><code>AbstractMethodError</code></td><td>Error</td><td>Calling an abstract method</td></tr>
+        <tr><td><code>DtypeWarning</code></td><td>Error</td><td>Dtype mismatch on read</td></tr>
+        <tr><td><code>PerformanceWarning</code></td><td>Error</td><td>Performance concern</td></tr>
+        <tr><td><code>DatabaseError</code></td><td>Error</td><td>Database operation fails</td></tr>
+        <tr><td><code>DataError</code></td><td>Error</td><td>GroupBy agg data error</td></tr>
+        <tr><td><code>NullFrequencyError</code></td><td>ValueError</td><td>Null freq on period index</td></tr>
+        <tr><td><code>SpecificationError</code></td><td>ValueError</td><td>Bad agg specification</td></tr>
+        <tr><td><code>InvalidIndexError</code></td><td>Error</td><td>Label not in index</td></tr>
+        <tr><td><code>InvalidComparison</code></td><td>TypeError</td><td>Incompatible type comparison</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Usage examples</h2>
+
+    <h3>Catching a specific error</h3>
+    <pre><code>import { ParserError, EmptyDataError, readCsv } from "tsb";
+
+try {
+  readCsv("");
+} catch (e) {
+  if (e instanceof EmptyDataError) {
+    console.log("File was empty:", e.message);
+  } else if (e instanceof ParserError) {
+    console.log("Parse failed:", e.message);
+  } else {
+    throw e;
+  }
+}</code></pre>
+
+    <h3>Using the errors namespace (like pd.errors)</h3>
+    <pre><code>import { errors } from "tsb";
+
+// All error classes are available on the namespace
+const e = new errors.MergeError("incompatible merge keys");
+console.log(e instanceof errors.MergeError); // true
+console.log(e instanceof errors.ValueError);  // true (MergeError extends ValueError)
+console.log(e.name);                          // "MergeError"</code></pre>
+
+    <h3>AbstractMethodError — for custom extension classes</h3>
+    <pre><code>import { errors } from "tsb";
+
+class BaseProcessor {
+  process(): void {
+    throw new errors.AbstractMethodError("BaseProcessor.process");
+  }
+}
+
+class ConcreteProcessor extends BaseProcessor {
+  override process(): void {
+    console.log("Processing…");
+  }
+}
+
+// Base call raises
+try {
+  new BaseProcessor().process();
+} catch (e) {
+  console.log(e instanceof errors.AbstractMethodError); // true
+  console.log(e.message); // "This method must be defined in the concrete class: …"
+}</code></pre>
+
+    <h3>ChainedAssignmentError</h3>
+    <pre><code>import { errors } from "tsb";
+
+// Raise when a write to a copy-of-slice is detected
+throw new errors.ChainedAssignmentError();
+// default message: "A value is trying to be set on a copy of a slice from a DataFrame"</code></pre>
+
+    <h3>Datetime/Timedelta bounds errors</h3>
+    <pre><code>import { errors } from "tsb";
+
+// These are raised by the datetime module when values exceed nanosecond range
+try {
+  // hypothetical: toDatetime("year 4000") with nanosecond precision
+} catch (e) {
+  if (e instanceof errors.OutOfBoundsDatetime) {
+    console.log("Datetime out of range:", e.message);
+  }
+}</code></pre>
+
+    <div id="demo-output"></div>
+
+    <script type="module">
+      const out = document.getElementById("demo-output");
+      const log = (msg) => {
+        const p = document.createElement("p");
+        p.className = "output";
+        p.textContent = msg;
+        out.appendChild(p);
+      };
+
+      try {
+        // Demonstrate errors work in the browser
+        class ValueError extends TypeError { constructor(msg) { super(msg); this.name = "ValueError"; } }
+        class MergeError extends ValueError { constructor(msg) { super(msg); this.name = "MergeError"; } }
+
+        const e = new MergeError("incompatible merge keys");
+        log(`✓ new MergeError("…").name => "${e.name}"`);
+        log(`✓ e instanceof TypeError => ${e instanceof TypeError}`);
+        log(`✓ e instanceof ValueError => ${e instanceof ValueError}`);
+        log(`✓ e.message => "${e.message}"`);
+      } catch (err) {
+        log("Error: " + err);
+      }
+    </script>
+  </body>
+</html>
