@@ -165,7 +165,9 @@ function buildLeftNearest(
   const val: Scalar[] = new Array(n).fill(null);
   let lastIdx = -1;
   for (let i = 0; i < n; i++) {
-    if (present[i]) { lastIdx = i; }
+    if (present[i]) {
+      lastIdx = i;
+    }
     if (lastIdx >= 0) {
       dist[i] = i - lastIdx;
       val[i] = values[lastIdx];
@@ -183,7 +185,9 @@ function buildRightNearest(
   const val: Scalar[] = new Array(n).fill(null);
   let nextIdx = -1;
   for (let i = n - 1; i >= 0; i--) {
-    if (present[i]) { nextIdx = i; }
+    if (present[i]) {
+      nextIdx = i;
+    }
     if (nextIdx >= 0) {
       dist[i] = nextIdx - i;
       val[i] = values[nextIdx];
@@ -193,9 +197,15 @@ function buildRightNearest(
 }
 
 function pickNearest(ld: number, rd: number, leftVal: Scalar, rightVal: Scalar): Scalar {
-  if (ld === -1 && rd === -1) { return null; }
-  if (ld === -1) { return rightVal; }
-  if (rd === -1) { return leftVal; }
+  if (ld === -1 && rd === -1) {
+    return null;
+  }
+  if (ld === -1) {
+    return rightVal;
+  }
+  if (rd === -1) {
+    return leftVal;
+  }
   return rd <= ld ? rightVal : leftVal; // prefer right on tie
 }
 

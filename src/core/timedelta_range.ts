@@ -219,53 +219,60 @@ export function timedelta_range(options: TimedeltaRangeOptions): TimedeltaIndex 
   const hasFreq = options.freq !== undefined;
   const hasPeriods = periods !== undefined;
 
-  // Validate: at least two of the four parameters must be provided
   const given = [hasStart, hasEnd, hasPeriods, hasFreq].filter(Boolean).length;
   if (given < 2) {
     throw new Error(
       "timedelta_range: must specify at least two of 'start', 'end', 'periods', 'freq'",
     );
   }
-
-  let values: number[];
-  const startMs = hasStart ? toMs(options.start as Timedelta | string | number) : null;
-  const endMs = hasEnd ? toMs(options.end as Timedelta | string | number) : null;
-
   if (hasPeriods && periods !== undefined && periods < 0) {
     throw new RangeError("timedelta_range: periods must be non-negative");
   }
 
-  if (hasStart && hasEnd && !hasFreq && hasPeriods && periods !== undefined) {
-    // Linear spacing between start and end with exactly `periods` points
-    values = buildLinear(startMs as number, endMs as number, periods);
-  } else if (hasStart && hasEnd && hasFreq) {
-    // Build from start to end stepping by freq
-    const stepMs = freqToMs(options.freq as TimedeltaFreq | number);
-    values = buildStartEnd(startMs as number, endMs as number, stepMs);
-  } else if (hasStart && hasFreq && hasPeriods && periods !== undefined) {
-    // Build forward from start for `periods` items
-    const stepMs = freqToMs(options.freq as TimedeltaFreq | number);
-    values = buildStartPeriods(startMs as number, stepMs, periods);
-  } else if (hasEnd && hasFreq && hasPeriods && periods !== undefined) {
-    // Build backward from end for `periods` items
-    const stepMs = freqToMs(options.freq as TimedeltaFreq | number);
-    values = buildEndPeriods(endMs as number, stepMs, periods);
-  } else if (hasStart && hasEnd && !hasFreq && !hasPeriods) {
-    // Only start and end given — include both endpoints (single step if equal)
-    values = startMs === endMs ? [startMs as number] : [startMs as number, endMs as number];
-  } else if (hasStart && hasPeriods && !hasFreq && periods !== undefined) {
-    // start + periods with no freq: default to 1-day step
-    values = buildStartPeriods(startMs as number, 86_400_000, periods);
-  } else {
-    throw new Error(
-      "timedelta_range: unsupported combination of parameters — " +
-        "provide start+end+freq, start+periods+freq, end+periods+freq, or start+end+periods",
-    );
-  }
+  const startMs = hasStart ? toMs(options.start as Timedelta | string | number) : null;
+  const endMs = hasEnd ? toMs(options.end as Timedelta | string | number) : null;
+  const values = buildValues(options, hasStart, hasEnd, hasFreq, hasPeriods, startMs, endMs, periods);
 
   const filtered = applyClosedFilter(values, startMs, endMs, closed);
   const deltas = filtered.map((ms) => Timedelta.fromMilliseconds(ms));
   return TimedeltaIndex.fromTimedeltas(deltas, { name });
+}
+
+function buildValues(
+  options: TimedeltaRangeOptions,
+  hasStart: boolean,
+  hasEnd: boolean,
+  hasFreq: boolean,
+  hasPeriods: boolean,
+  startMs: number | null,
+  endMs: number | null,
+  periods: number | undefined,
+): number[] {
+  if (hasStart && hasEnd && !hasFreq && hasPeriods && periods !== undefined) {
+    return buildLinear(startMs as number, endMs as number, periods);
+  }
+  if (hasStart && hasEnd && hasFreq) {
+    const stepMs = freqToMs(options.freq as TimedeltaFreq | number);
+    return buildStartEnd(startMs as number, endMs as number, stepMs);
+  }
+  if (hasStart && hasFreq && hasPeriods && periods !== undefined) {
+    const stepMs = freqToMs(options.freq as TimedeltaFreq | number);
+    return buildStartPeriods(startMs as number, stepMs, periods);
+  }
+  if (hasEnd && hasFreq && hasPeriods && periods !== undefined) {
+    const stepMs = freqToMs(options.freq as TimedeltaFreq | number);
+    return buildEndPeriods(endMs as number, stepMs, periods);
+  }
+  if (hasStart && hasEnd && !hasFreq && !hasPeriods) {
+    return startMs === endMs ? [startMs as number] : [startMs as number, endMs as number];
+  }
+  if (hasStart && hasPeriods && !hasFreq && periods !== undefined) {
+    return buildStartPeriods(startMs as number, 86_400_000, periods);
+  }
+  throw new Error(
+    "timedelta_range: unsupported combination of parameters — " +
+      "provide start+end+freq, start+periods+freq, end+periods+freq, or start+end+periods",
+  );
 }
 
 // ─── internal builders ────────────────────────────────────────────────────────

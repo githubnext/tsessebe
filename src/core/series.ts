@@ -9,8 +9,8 @@
 
 import { SeriesGroupBy } from "../groupby/index.ts";
 import type { Label, Scalar } from "../types.ts";
-import { EWM } from "../window/ewm.ts";
-import type { EwmOptions } from "../window/ewm.ts";
+import { EWM } from "../window/index.ts";
+import type { EwmOptions } from "../window/index.ts";
 import { Expanding } from "../window/expanding.ts";
 import type { ExpandingOptions } from "../window/expanding.ts";
 import { Rolling } from "../window/rolling.ts";
