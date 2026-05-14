@@ -10,26 +10,26 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-13T13:02:48Z |
-| Iteration Count | 314 |
-| Best Metric | 659 |
+| Last Run | 2026-05-14T05:59:24Z |
+| Iteration Count | 315 |
+| Best Metric | 660 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
-| PR | #300 |
+| PR | (new PR pending — #300 was merged) |
 | Issue | #221 |
 | Paused | false |
 | Pause Reason | — |
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | accepted, accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
 ## 📋 Program Info
 
 **Goal**: Benchmark every tsb function vs pandas equivalent, one per iteration.
-**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: #300
+**Metric**: benchmarked_functions (higher is better) · **Issue**: #221 · **PR**: (new PR pending)
 
 ---
 
@@ -62,18 +62,23 @@
 
 ## 📊 Iteration History
 
+### Iteration 315 — 2026-05-14T05:59:24Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25844508188)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `to_markdown` benchmark pair: `toMarkdown` + `toLaTeX` on a 1000-row DataFrame (3 columns: float, string, int)
+- **Metric**: 660 (previous best: 659, delta: +1) · **Commit**: 76f3e1e
+- **Notes**: `toMarkdown`/`toLaTeX` (from `stats/format_table.ts`) had no benchmark coverage; Python equivalents use `df.to_markdown()` and `df.to_latex()`. New PR created since #300 was merged.
+
 ### Iteration 314 — 2026-05-13T13:02:48Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25800686638)
 
 - **Status**: ✅ Accepted
-- **Change**: Added `indexers` (FixedForwardWindowIndexer + VariableOffsetWindowIndexer on 100k rows) and `scalar_extract` (squeezeSeries, squeezeDataFrame, firstValidIndex, lastValidIndex on 100k-row Series/DataFrame) benchmark pairs
-- **Metric**: 659 (previous best: 657, delta: +2) · **Commit**: 6ed3c7b
-- **Notes**: Both modules had no benchmark coverage; pandas equivalents use `pd.api.indexers` and the `.first_valid_index()`/`.last_valid_index()` methods.
+- **Change**: Added `indexers` and `scalar_extract` benchmark pairs
+- **Metric**: 659 (delta: +2) · **Commit**: 6ed3c7b
 
 ### Iteration 313 — 2026-05-12T18:51:56Z — [Run](https://github.com/githubnext/tsessebe/actions/runs/25755262251)
 
 - **Status**: ✅ Accepted
-- **Change**: Added 2 benchmark pairs: `cat_accessor` (CategoricalAccessor.categories/codes/addCategories/removeUnusedCategories on 50k-row Series) and `hash_biject_array` (hashBijectArray + hashBijectInverse on mixed string/int array)
-- **Metric**: 657 (previous best: 655, delta: +2) · **Commit**: 5ae546a
-- **Notes**: cat_accessor and hash_biject_array were both listed in Future Directions with zero benchmark coverage; Python equivalents simulate the same bijection logic.
+- **Change**: Added `cat_accessor` and `hash_biject_array` benchmark pairs
+- **Metric**: 657 (delta: +2) · **Commit**: 5ae546a
 
-### Iters 310–313 — ✅ | Metrics 653→657: Added math_ops, na_ops, reduce_ops, numeric_ops, apply, rename_ops, hash_array, swaplevel, cat_accessor, hash_biject_array (10 pairs).
+### Iters 1–313 — ✅ | Metrics 0→657: Built out full benchmark suite across all tsb modules (Series, DataFrame, GroupBy, merge, reshape, window, stats, io, string/datetime accessors, categorical, etc.).
