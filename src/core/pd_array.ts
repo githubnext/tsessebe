@@ -65,6 +65,28 @@ export class PandasArray {
 
 // ─── dtype inference ──────────────────────────────────────────────────────────
 
+function classifyScalar(v: Scalar): "date" | "bigint" | "float" | "int" | "string" | "bool" | null {
+  if (v === null || v === undefined) {
+    return null;
+  }
+  if (v instanceof Date) {
+    return "date";
+  }
+  if (typeof v === "bigint") {
+    return "bigint";
+  }
+  if (typeof v === "number") {
+    return Number.isInteger(v) ? "int" : "float";
+  }
+  if (typeof v === "string") {
+    return "string";
+  }
+  if (typeof v === "boolean") {
+    return "bool";
+  }
+  return null;
+}
+
 function inferDtype(data: readonly Scalar[]): DtypeName {
   let hasFloat = false;
   let hasInt = false;
@@ -74,23 +96,19 @@ function inferDtype(data: readonly Scalar[]): DtypeName {
   let hasBigInt = false;
 
   for (const v of data) {
-    if (v === null || v === undefined) {
-      continue;
-    }
-    if (typeof v === "boolean") {
-      hasBool = true;
-    } else if (typeof v === "bigint") {
-      hasBigInt = true;
-    } else if (typeof v === "number") {
-      if (Number.isInteger(v)) {
-        hasInt = true;
-      } else {
-        hasFloat = true;
-      }
-    } else if (typeof v === "string") {
-      hasString = true;
-    } else if (v instanceof Date) {
+    const kind = classifyScalar(v);
+    if (kind === "date") {
       hasDate = true;
+    } else if (kind === "bigint") {
+      hasBigInt = true;
+    } else if (kind === "float") {
+      hasFloat = true;
+    } else if (kind === "int") {
+      hasInt = true;
+    } else if (kind === "string") {
+      hasString = true;
+    } else if (kind === "bool") {
+      hasBool = true;
     }
   }
 

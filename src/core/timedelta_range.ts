@@ -231,7 +231,16 @@ export function timedelta_range(options: TimedeltaRangeOptions): TimedeltaIndex 
 
   const startMs = hasStart ? toMs(options.start as Timedelta | string | number) : null;
   const endMs = hasEnd ? toMs(options.end as Timedelta | string | number) : null;
-  const values = buildValues(options, hasStart, hasEnd, hasFreq, hasPeriods, startMs, endMs, periods);
+  const values = buildValues(
+    options,
+    hasStart,
+    hasEnd,
+    hasFreq,
+    hasPeriods,
+    startMs,
+    endMs,
+    periods,
+  );
 
   const filtered = applyClosedFilter(values, startMs, endMs, closed);
   const deltas = filtered.map((ms) => Timedelta.fromMilliseconds(ms));
