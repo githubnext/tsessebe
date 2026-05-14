@@ -35,9 +35,7 @@ export class IndexError extends RangeError {
 export class AbstractMethodError extends Error {
   override readonly name = "AbstractMethodError";
   constructor(classOrMethod: string) {
-    super(
-      `This method must be defined in the concrete class: ${classOrMethod}`,
-    );
+    super(`This method must be defined in the concrete class: ${classOrMethod}`);
   }
 }
 

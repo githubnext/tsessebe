@@ -8,8 +8,8 @@ import {
   AttributeConflictWarning,
   CSSWarning,
   ChainedAssignmentError,
-  DatabaseError,
   DataError,
+  DatabaseError,
   DtypeWarning,
   EmptyDataError,
   IndexError,
@@ -118,8 +118,7 @@ describe("AccessorRegistrationWarning", () => {
 });
 
 describe("AttributeConflictWarning", () => {
-  test("throwable", () =>
-    assertThrowable(AttributeConflictWarning, ["conflict"]));
+  test("throwable", () => assertThrowable(AttributeConflictWarning, ["conflict"]));
 });
 
 describe("CSSWarning", () => {
