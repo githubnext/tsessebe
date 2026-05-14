@@ -55,6 +55,33 @@ function isMissing(v: Scalar): v is null | undefined {
   return v === null || v === undefined;
 }
 
+/** Compare two ordered (same-type) values: returns -1, 0, or 1. */
+function compareOrdered<T extends bigint | string>(a: T, b: T): number {
+  if (a < b) {
+    return -1;
+  }
+  if (a > b) {
+    return 1;
+  }
+  return 0;
+}
+
+/** Compare two numbers, treating NaN as greater than everything. */
+function compareNumbers(a: number, b: number): number {
+  const aNaN = Number.isNaN(a);
+  const bNaN = Number.isNaN(b);
+  if (aNaN && bNaN) {
+    return 0;
+  }
+  if (aNaN) {
+    return 1;
+  }
+  if (bNaN) {
+    return -1;
+  }
+  return a - b;
+}
+
 /**
  * Default scalar comparator.
  *
@@ -78,23 +105,11 @@ function defaultCompare(a: Scalar, b: Scalar): number {
 
   // Same type fast-paths
   if (typeof a === "number" && typeof b === "number") {
-    // NaN sorts last (treat NaN as greater than everything)
-    const aNaN = Number.isNaN(a);
-    const bNaN = Number.isNaN(b);
-    if (aNaN && bNaN) {
-      return 0;
-    }
-    if (aNaN) {
-      return 1;
-    }
-    if (bNaN) {
-      return -1;
-    }
-    return a - b;
+    return compareNumbers(a, b);
   }
 
   if (typeof a === "bigint" && typeof b === "bigint") {
-    return a < b ? -1 : a > b ? 1 : 0;
+    return compareOrdered(a, b);
   }
 
   if (a instanceof Date && b instanceof Date) {
@@ -102,7 +117,7 @@ function defaultCompare(a: Scalar, b: Scalar): number {
   }
 
   if (typeof a === "string" && typeof b === "string") {
-    return a < b ? -1 : a > b ? 1 : 0;
+    return compareOrdered(a, b);
   }
 
   if (typeof a === "boolean" && typeof b === "boolean") {
@@ -110,9 +125,7 @@ function defaultCompare(a: Scalar, b: Scalar): number {
   }
 
   // Cross-type fallback
-  const sa = String(a);
-  const sb = String(b);
-  return sa < sb ? -1 : sa > sb ? 1 : 0;
+  return compareOrdered(String(a), String(b));
 }
 
 /**
@@ -235,7 +248,9 @@ export function searchsortedMany(
   const { side = "left", sorter, compareFn = defaultCompare } = options;
   const n = a.length;
   const get: (i: number) => Scalar =
-    sorter !== undefined ? (i) => valueAtSorted(a, sorter, i) : (i) => valueAt(a, i);
+    sorter !== undefined
+      ? (i: number): Scalar => valueAtSorted(a, sorter, i)
+      : (i: number): Scalar => valueAt(a, i);
   return vs.map((v) => bisect(n, get, v, side, compareFn));
 }
 

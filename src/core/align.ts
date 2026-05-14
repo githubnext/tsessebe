@@ -92,6 +92,8 @@ function resolveIndex(left: Index<Label>, right: Index<Label>, join: JoinHow): I
       return left;
     case "right":
       return right;
+    default:
+      return left.union(right);
   }
 }
 
@@ -161,8 +163,14 @@ export function alignDataFrame(
   const { join = "outer", fillValue = null, axis } = options;
 
   // Normalise axis: null/undefined → align both
-  const normalised: 0 | 1 | null =
-    axis === null || axis === undefined ? null : axis === 0 || axis === "index" ? 0 : 1;
+  let normalised: 0 | 1 | null;
+  if (axis === null || axis === undefined) {
+    normalised = null;
+  } else if (axis === 0 || axis === "index") {
+    normalised = 0;
+  } else {
+    normalised = 1;
+  }
 
   const alignRows = normalised === null || normalised === 0;
   const alignCols = normalised === null || normalised === 1;

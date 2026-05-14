@@ -70,10 +70,10 @@ function lcgNext(seed: number): [number, number] {
 /** Build a seeded random float generator that returns [0,1). */
 function makeRng(seed: number | undefined): () => number {
   if (seed === undefined) {
-    return () => Math.random();
+    return (): number => Math.random();
   }
   let s = seed >>> 0; // ensure 32-bit unsigned
-  return () => {
+  return (): number => {
     const [ns, r] = lcgNext(s);
     s = ns;
     return r;
