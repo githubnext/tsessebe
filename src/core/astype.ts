@@ -31,6 +31,41 @@ const INT_RANGES: Readonly<Record<string, { lo: number; hi: number; unsigned: bo
   uint64: { lo: 0, hi: Number.MAX_SAFE_INTEGER, unsigned: true },
 };
 
+function castIntScalar(v: Scalar, dtype: Dtype): Scalar {
+  if (typeof v === "boolean") { return v ? 1 : 0; }
+  if (v instanceof Date) { return Math.trunc(v.getTime()); }
+  const n = Number(v);
+  if (Number.isNaN(n)) { return null; }
+  const range = INT_RANGES[dtype.name];
+  if (range === undefined) { return Math.trunc(n); }
+  const t = Math.trunc(n);
+  return Math.max(range.lo, Math.min(range.hi, t));
+}
+
+function castFloatScalar(v: Scalar): Scalar {
+  if (typeof v === "boolean") { return v ? 1.0 : 0.0; }
+  if (v instanceof Date) { return v.getTime(); }
+  return Number(v);
+}
+
+function castBoolScalar(v: Scalar): Scalar {
+  if (typeof v === "number") { return !Number.isNaN(v) && v !== 0; }
+  if (v instanceof Date) { return true; }
+  return Boolean(v);
+}
+
+function castStringScalar(v: Scalar): Scalar {
+  if (v instanceof Date) { return v.toISOString(); }
+  return String(v);
+}
+
+function castDatetimeScalar(v: Scalar): Scalar {
+  if (v instanceof Date) { return v; }
+  if (typeof v === "number") { return new Date(v); }
+  const d = new Date(String(v));
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 /**
  * Cast a single scalar value to the target dtype.
  *
@@ -52,62 +87,11 @@ export function castScalar(v: Scalar, dtype: Dtype): Scalar {
 
   const k = dtype.kind;
 
-  if (k === "int" || k === "uint") {
-    if (typeof v === "boolean") {
-      return v ? 1 : 0;
-    }
-    if (v instanceof Date) {
-      return Math.trunc(v.getTime());
-    }
-    const n = Number(v);
-    if (Number.isNaN(n)) {
-      return null;
-    }
-    const range = INT_RANGES[dtype.name];
-    if (range === undefined) {
-      return Math.trunc(n);
-    }
-    const t = Math.trunc(n);
-    return Math.max(range.lo, Math.min(range.hi, t));
-  }
-
-  if (k === "float") {
-    if (typeof v === "boolean") {
-      return v ? 1.0 : 0.0;
-    }
-    if (v instanceof Date) {
-      return v.getTime();
-    }
-    return Number(v);
-  }
-
-  if (k === "bool") {
-    if (typeof v === "number") {
-      return !Number.isNaN(v) && v !== 0;
-    }
-    if (v instanceof Date) {
-      return true;
-    }
-    return Boolean(v);
-  }
-
-  if (k === "string") {
-    if (v instanceof Date) {
-      return v.toISOString();
-    }
-    return String(v);
-  }
-
-  if (k === "datetime") {
-    if (v instanceof Date) {
-      return v;
-    }
-    if (typeof v === "number") {
-      return new Date(v);
-    }
-    const d = new Date(String(v));
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
+  if (k === "int" || k === "uint") { return castIntScalar(v, dtype); }
+  if (k === "float") { return castFloatScalar(v); }
+  if (k === "bool") { return castBoolScalar(v); }
+  if (k === "string") { return castStringScalar(v); }
+  if (k === "datetime") { return castDatetimeScalar(v); }
 
   // object / category / timedelta — return unchanged
   return v;
