@@ -98,9 +98,7 @@ function stripTags(html: string): string {
     .replace(/&gt;/gi, ">")
     .replace(/&nbsp;/gi, " ")
     .replace(/&quot;/gi, '"')
-    .replace(/&#(\d+);/g, (_, code: string) =>
-      String.fromCharCode(Number(code)),
-    )
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code)))
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) =>
       String.fromCharCode(Number.parseInt(hex, 16)),
     );
@@ -129,29 +127,26 @@ function extractBlocks(html: string, tag: string): string[] {
 
 /** Extract all `<table>…</table>` blocks (nested tables are not unwrapped). */
 function extractTables(html: string): string[] {
-  const tables: string[] = [];
-  let depth = 0;
-  let start = -1;
+  const tables: { start: number; html: string }[] = [];
+  const starts: number[] = [];
 
-  // Walk through all <table> and </table> tags to handle nesting.
   const allTags = /<\/?table(?:\s[^>]*)?>/gi;
   let m: RegExpExecArray | null;
   while ((m = allTags.exec(html)) !== null) {
     const tag = m[0].toLowerCase();
-    if (!tag.startsWith("</")) {
-      if (depth === 0) {
-        start = m.index;
+    if (tag.startsWith("</")) {
+      const start = starts.pop();
+      if (start !== undefined) {
+        tables.push({
+          start,
+          html: html.slice(start, m.index + m[0].length),
+        });
       }
-      depth++;
     } else {
-      depth--;
-      if (depth === 0 && start >= 0) {
-        tables.push(html.slice(start, m.index + m[0].length));
-        start = -1;
-      }
+      starts.push(m.index);
     }
   }
-  return tables;
+  return tables.sort((a, b) => a.start - b.start).map((t) => t.html);
 }
 
 /** Parse `<tr>` blocks out of a table section (`<thead>` or `<tbody>`). */
@@ -334,9 +329,7 @@ export function readHtml(html: string, opts: ReadHtmlOptions = {}): DataFrame[] 
     for (const row of bodyRows) {
       for (let ci = 0; ci < ncols; ci++) {
         const raw = row[ci] ?? "";
-        colArrays[ci]!.push(
-          coerceValue(raw, naSet, converters, thousands, decimal),
-        );
+        colArrays[ci]!.push(coerceValue(raw, naSet, converters, thousands, decimal));
       }
     }
 

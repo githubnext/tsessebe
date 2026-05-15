@@ -10,9 +10,7 @@ import { readHtml } from "../../src/index.ts";
 
 function simpleTable(headers: string[], rows: string[][]): string {
   const thRow = headers.map((h) => `<th>${h}</th>`).join("");
-  const trRows = rows
-    .map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`)
-    .join("\n");
+  const trRows = rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("\n");
   return `<table><thead><tr>${thRow}</tr></thead><tbody>${trRows}</tbody></table>`;
 }
 
@@ -20,11 +18,17 @@ function simpleTable(headers: string[], rows: string[][]): string {
 
 describe("readHtml – basic", () => {
   test("parses single table", () => {
-    const html = simpleTable(["a", "b"], [["1", "2"], ["3", "4"]]);
+    const html = simpleTable(
+      ["a", "b"],
+      [
+        ["1", "2"],
+        ["3", "4"],
+      ],
+    );
     const dfs = readHtml(html);
     expect(dfs.length).toBe(1);
     const df = dfs[0]!;
-    expect(df.columns).toEqual(["a", "b"]);
+    expect(df.columns.toArray()).toEqual(["a", "b"]);
     expect(df.shape).toEqual([2, 2]);
   });
 
@@ -33,8 +37,8 @@ describe("readHtml – basic", () => {
     const t2 = simpleTable(["y"], [["20"]]);
     const dfs = readHtml(t1 + t2);
     expect(dfs.length).toBe(2);
-    expect(dfs[0]!.columns).toEqual(["x"]);
-    expect(dfs[1]!.columns).toEqual(["y"]);
+    expect(dfs[0]!.columns.toArray()).toEqual(["x"]);
+    expect(dfs[1]!.columns.toArray()).toEqual(["y"]);
   });
 
   test("returns empty array when no tables found", () => {
@@ -57,9 +61,9 @@ describe("readHtml – basic", () => {
   });
 
   test("header=null uses integer column names", () => {
-    const html = `<table><tr><td>a</td><td>b</td></tr><tr><td>1</td><td>2</td></tr></table>`;
+    const html = "<table><tr><td>a</td><td>b</td></tr><tr><td>1</td><td>2</td></tr></table>";
     const [df] = readHtml(html, { header: null });
-    expect(df!.columns).toEqual(["0", "1"]);
+    expect(df!.columns.toArray()).toEqual(["0", "1"]);
     expect(df!.shape[0]).toBe(2);
   });
 });
@@ -73,7 +77,7 @@ describe("readHtml – header", () => {
       <tr><td>Alice</td><td>30</td></tr>
     </table>`;
     const [df] = readHtml(html, { header: 0 });
-    expect(df!.columns).toEqual(["Name", "Age"]);
+    expect(df!.columns.toArray()).toEqual(["Name", "Age"]);
     expect(df!.shape[0]).toBe(1);
   });
 
@@ -83,9 +87,10 @@ describe("readHtml – header", () => {
       <tr><td>1</td><td>2</td><td>3</td></tr>
     </table>`;
     const [df] = readHtml(html);
-    expect(df!.columns[0]).toBe("x");
-    expect(df!.columns[1]).toBe("x.1");
-    expect(df!.columns[2]).toBe("y");
+    const cols = df!.columns.toArray();
+    expect(cols[0]).toBe("x");
+    expect(cols[1]).toBe("x.1");
+    expect(cols[2]).toBe("y");
   });
 });
 
@@ -94,7 +99,7 @@ describe("readHtml – header", () => {
 describe("readHtml – NA values", () => {
   test("empty string becomes null", () => {
     const html = simpleTable(["v"], [[""], ["1"]]);
-    const [df] = readHtml(html);
+    const [df] = readHtml(html, { skipBlankLines: false });
     expect(df!.col("v").toArray()[0]).toBeNull();
     expect(df!.col("v").toArray()[1]).toBe(1);
   });
@@ -133,7 +138,7 @@ describe("readHtml – converters", () => {
   test("decimal separator", () => {
     const html = simpleTable(["n"], [["3,14"]]);
     const [df] = readHtml(html, { decimal: "," });
-    expect((df!.col("n").toArray()[0] as number)).toBeCloseTo(3.14);
+    expect(df!.col("n").toArray()[0] as number).toBeCloseTo(3.14);
   });
 });
 
@@ -146,7 +151,7 @@ describe("readHtml – filtering", () => {
     const t2 = simpleTable(["c"], [["3"]]);
     const dfs = readHtml(t0 + t1 + t2, { match: [1] });
     expect(dfs.length).toBe(1);
-    expect(dfs[0]!.columns).toEqual(["b"]);
+    expect(dfs[0]!.columns.toArray()).toEqual(["b"]);
   });
 
   test("skipRows", () => {
@@ -181,18 +186,30 @@ describe("readHtml – filtering", () => {
 
 describe("readHtml – indexCol", () => {
   test("sets named column as index", () => {
-    const html = simpleTable(["id", "val"], [["a", "1"], ["b", "2"]]);
+    const html = simpleTable(
+      ["id", "val"],
+      [
+        ["a", "1"],
+        ["b", "2"],
+      ],
+    );
     const [df] = readHtml(html, { indexCol: "id" });
     // "id" column removed from columns
-    expect(df!.columns).toEqual(["val"]);
+    expect(df!.columns.toArray()).toEqual(["val"]);
     // index contains "a", "b"
     expect(df!.index.toArray()).toEqual(["a", "b"]);
   });
 
   test("sets column by integer position as index", () => {
-    const html = simpleTable(["id", "val"], [["x", "10"], ["y", "20"]]);
+    const html = simpleTable(
+      ["id", "val"],
+      [
+        ["x", "10"],
+        ["y", "20"],
+      ],
+    );
     const [df] = readHtml(html, { indexCol: 0 });
-    expect(df!.columns).toEqual(["val"]);
+    expect(df!.columns.toArray()).toEqual(["val"]);
   });
 });
 
@@ -235,7 +252,7 @@ describe("readHtml – structure variants", () => {
       <tr><td>1</td><td>2</td></tr>
     </table>`;
     const [df] = readHtml(html);
-    expect(df!.columns).toEqual(["x", "y"]);
+    expect(df!.columns.toArray()).toEqual(["x", "y"]);
     expect(df!.shape[0]).toBe(1);
   });
 
@@ -257,7 +274,7 @@ describe("readHtml – structure variants", () => {
       <tr><td id="c1">Alice</td></tr>
     </table>`;
     const [df] = readHtml(html, { converters: false });
-    expect(df!.columns).toEqual(["Name"]);
+    expect(df!.columns.toArray()).toEqual(["Name"]);
     expect(df!.col("Name").toArray()[0]).toBe("Alice");
   });
 
@@ -276,10 +293,15 @@ describe("readHtml – property tests", () => {
   test("roundtrip: all numeric values survive parse", () => {
     fc.assert(
       fc.property(
-        fc.array(fc.array(fc.integer({ min: -1000, max: 1000 }), { minLength: 1, maxLength: 5 }), {
-          minLength: 1,
-          maxLength: 10,
-        }),
+        fc.integer({ min: 1, max: 5 }).chain((ncols) =>
+          fc.array(
+            fc.array(fc.integer({ min: -1000, max: 1000 }), {
+              minLength: ncols,
+              maxLength: ncols,
+            }),
+            { minLength: 1, maxLength: 10 },
+          ),
+        ),
         (rows) => {
           const ncols = rows[0]!.length;
           const headers = Array.from({ length: ncols }, (_, i) => `col${i}`);
@@ -287,8 +309,8 @@ describe("readHtml – property tests", () => {
           const html = simpleTable(headers, strRows);
           const [df] = readHtml(html);
           const flatIn = rows.flat();
-          const flatOut = headers.flatMap((h) =>
-            (df?.col(h).toArray() ?? []).map(Number),
+          const flatOut = (df?.toRecords() ?? []).flatMap((record) =>
+            rows[0]!.map((_, ci) => Number(record[headers[ci]!])),
           );
           // same length
           if (flatIn.length !== flatOut.length) return false;
@@ -302,9 +324,9 @@ describe("readHtml – property tests", () => {
   test("number of returned DataFrames equals number of tables in HTML", () => {
     fc.assert(
       fc.property(fc.integer({ min: 0, max: 6 }), (n) => {
-        const tables = Array.from({ length: n }, (_, i) =>
-          simpleTable([`c${i}`], [["1"]]),
-        ).join(" ");
+        const tables = Array.from({ length: n }, (_, i) => simpleTable([`c${i}`], [["1"]])).join(
+          " ",
+        );
         const dfs = readHtml(tables);
         return dfs.length === n;
       }),
@@ -332,7 +354,7 @@ describe("readHtml – realistic HTML", () => {
 
   test("parses Wikipedia-style table from full HTML doc", () => {
     const [df] = readHtml(wikipedia);
-    expect(df!.columns).toEqual(["Country", "Population (M)", "GDP (B USD)"]);
+    expect(df!.columns.toArray()).toEqual(["Country", "Population (M)", "GDP (B USD)"]);
     expect(df!.shape).toEqual([3, 3]);
   });
 
