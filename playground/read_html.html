@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb – readHtml() playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #2563eb; }
+    h2 { color: #1e40af; margin-top: 2rem; }
+    textarea { width: 100%; font-family: monospace; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; box-sizing: border-box; }
+    pre { background: #f1f5f9; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    button { background: #2563eb; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1d4ed8; }
+    .output { margin-top: 1rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+    th, td { border: 1px solid #d1d5db; padding: 6px 12px; text-align: left; font-size: 13px; }
+    th { background: #f1f5f9; font-weight: 600; }
+    .example-list li { margin-bottom: 0.4rem; }
+  </style>
+</head>
+<body>
+  <h1>🐼 tsb – <code>readHtml()</code></h1>
+  <p>
+    <code>readHtml(html, opts?)</code> mirrors <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_html.html" target="_blank"><code>pandas.read_html()</code></a>.
+    It scans an HTML string for <code>&lt;table&gt;</code> elements and returns one <strong>DataFrame</strong> per table found.
+  </p>
+
+  <h2>Live Demo</h2>
+  <p>Paste or edit HTML below, then click <strong>Parse</strong>.</p>
+  <textarea id="html-input" rows="14">
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;&lt;th&gt;Country&lt;/th&gt;&lt;th&gt;Population (M)&lt;/th&gt;&lt;th&gt;GDP (B USD)&lt;/th&gt;&lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;USA&lt;/td&gt;&lt;td&gt;331&lt;/td&gt;&lt;td&gt;23000&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;China&lt;/td&gt;&lt;td&gt;1411&lt;/td&gt;&lt;td&gt;17700&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;Germany&lt;/td&gt;&lt;td&gt;84&lt;/td&gt;&lt;td&gt;4500&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+  </textarea>
+  <br /><br />
+  <label>header row index: <input id="header-input" type="number" value="0" style="width:60px" /></label>
+  &nbsp;
+  <label>converters (numeric): <input id="converters-input" type="checkbox" checked /></label>
+  &nbsp;
+  <label>nrows: <input id="nrows-input" type="number" placeholder="all" style="width:60px" /></label>
+  <br /><br />
+  <button onclick="run()">▶ Parse</button>
+
+  <div id="output" class="output"></div>
+
+  <h2>Code Example</h2>
+  <pre><code>import { readHtml } from "tsb";
+
+const html = `&lt;table&gt;
+  &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Age&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;Alice&lt;/td&gt;&lt;td&gt;30&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;Bob&lt;/td&gt;&lt;td&gt;25&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;`;
+
+const [df] = readHtml(html);
+console.log(df.columns);   // ["Name", "Age"]
+console.log(df.shape);     // [2, 2]
+console.log(df.toRecords());
+// [{ Name: "Alice", Age: 30 }, { Name: "Bob", Age: 25 }]</code></pre>
+
+  <h2>Supported Options</h2>
+  <ul class="example-list">
+    <li><code>header</code> — which row to use as column names (default <code>0</code>). Use <code>null</code> for no header.</li>
+    <li><code>indexCol</code> — column name or index to use as the row index.</li>
+    <li><code>match</code> — array of table indices to return (e.g. <code>[0, 2]</code>).</li>
+    <li><code>naValues</code> — extra strings to treat as NaN (default includes <code>""</code>, <code>"NA"</code>, <code>"NaN"</code>, <code>"None"</code>).</li>
+    <li><code>converters</code> — try to convert cells to numbers (default <code>true</code>).</li>
+    <li><code>thousands</code> — thousands-separator character, e.g. <code>","</code>.</li>
+    <li><code>decimal</code> — decimal separator, default <code>"."</code>.</li>
+    <li><code>skipRows</code> — 0-based row indices to skip in the body.</li>
+    <li><code>nrows</code> — maximum rows to return.</li>
+    <li><code>skipBlankLines</code> — skip rows where all cells are whitespace (default <code>true</code>).</li>
+  </ul>
+
+  <script type="module">
+    // In a real app: import { readHtml } from "tsb"
+    // Here we inline the core logic for the demo.
+
+    // ── mini HTML parser (same as src/io/read_html.ts) ──────────────────────
+    function stripTags(html) {
+      return html
+        .replace(/<[^>]*>/g, "")
+        .replace(/&amp;/gi, "&").replace(/&lt;/gi, "<")
+        .replace(/&gt;/gi, ">").replace(/&nbsp;/gi, " ")
+        .replace(/&quot;/gi, '"')
+        .replace(/&#(\d+);/g, (_, c) => String.fromCharCode(Number(c)))
+        .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+    }
+    function extractBlocks(html, tag) {
+      const open = new RegExp(`<${tag}(?:\\s[^>]*)?>`, "gi");
+      const close = new RegExp(`</${tag}>`, "gi");
+      const results = [];
+      let m;
+      open.lastIndex = 0;
+      while ((m = open.exec(html)) !== null) {
+        const start = m.index + m[0].length;
+        close.lastIndex = start;
+        const end = close.exec(html);
+        if (end) results.push(html.slice(start, end.index));
+      }
+      return results;
+    }
+    function extractTables(html) {
+      const tables = [], allTags = /<\/?table(?:\s[^>]*)?>/gi;
+      let depth = 0, start = -1, m;
+      while ((m = allTags.exec(html)) !== null) {
+        if (!m[0].toLowerCase().startsWith("</")) {
+          if (depth === 0) start = m.index;
+          depth++;
+        } else {
+          if (--depth === 0 && start >= 0) { tables.push(html.slice(start, m.index + m[0].length)); start = -1; }
+        }
+      }
+      return tables;
+    }
+    function parseRows(sectionHtml) {
+      const rows = [];
+      for (const rowHtml of extractBlocks(sectionHtml, "tr")) {
+        const cells = [], cp = /<t[dh](?:\s[^>]*)?>([\s\S]*?)<\/t[dh]>/gi;
+        let cm;
+        while ((cm = cp.exec(rowHtml)) !== null) cells.push(stripTags(cm[1] ?? "").trim());
+        rows.push(cells);
+      }
+      return rows;
+    }
+    function parseTableHtml(tableHtml) {
+      const rows = [];
+      for (const t of extractBlocks(tableHtml, "thead")) for (const r of parseRows(t)) rows.push(r);
+      const tbodies = extractBlocks(tableHtml, "tbody");
+      if (tbodies.length) { for (const t of tbodies) for (const r of parseRows(t)) rows.push(r); }
+      else { const s = tableHtml.replace(/<thead[\s\S]*?<\/thead>/gi,"").replace(/<tfoot[\s\S]*?<\/tfoot>/gi,""); for (const r of parseRows(s)) rows.push(r); }
+      for (const t of extractBlocks(tableHtml, "tfoot")) for (const r of parseRows(t)) rows.push(r);
+      return rows;
+    }
+    const DEFAULT_NA = new Set(["","NA","NaN","N/A","null","None","nan"]);
+    function coerce(raw, na, num, thousands, decimal) {
+      if (na.has(raw)) return null;
+      if (!num) return raw;
+      let s = thousands ? raw.split(thousands).join("") : raw;
+      if (decimal !== ".") s = s.replace(decimal, ".");
+      const n = Number(s);
+      return (!isNaN(n) && s.trim() !== "") ? n : raw;
+    }
+    function readHtml(html, opts = {}) {
+      const { header=0, indexCol=null, match: matchOpt, naValues, converters=true, skipBlankLines=true, skipRows, nrows, thousands=null, decimal="." } = opts;
+      const na = naValues ? new Set(naValues) : DEFAULT_NA;
+      const tables = extractTables(html);
+      const result = [];
+      tables.forEach((tableHtml, ti) => {
+        if (matchOpt && !matchOpt.includes(ti)) return;
+        let raw = parseTableHtml(tableHtml);
+        let cols, dataStart;
+        if (header === null) { const nc = raw[0]?.length ?? 0; cols = Array.from({length:nc},(_,i)=>String(i)); dataStart=0; }
+        else { const hr = raw[header] ?? []; const seen=new Map(); cols=hr.map(n=>{const e=seen.get(n);if(e!==undefined){const r=`${n}.${e}`;seen.set(n,e+1);return r;}seen.set(n,1);return n;}); dataStart=header+1; }
+        let body = raw.slice(dataStart);
+        if (skipRows?.length) { const ss=new Set(skipRows); body=body.filter((_,i)=>!ss.has(i)); }
+        if (skipBlankLines) body=body.filter(r=>r.some(c=>c.trim()!==""));
+        if (nrows!==undefined) body=body.slice(0,nrows);
+        const nc=cols.length, colArrays=Array.from({length:nc},()=>[]);
+        for (const row of body) for (let ci=0;ci<nc;ci++) colArrays[ci].push(coerce(row[ci]??'',na,converters,thousands,decimal));
+        result.push({ columns: cols, data: colArrays, indexCol });
+      });
+      return result;
+    }
+
+    // ── demo renderer ──────────────────────────────────────────────────────────
+    window.run = function () {
+      const htmlRaw = document.getElementById("html-input").value;
+      const headerVal = document.getElementById("header-input").value;
+      const convertersVal = document.getElementById("converters-input").checked;
+      const nrowsVal = document.getElementById("nrows-input").value;
+
+      const opts = {
+        header: headerVal === "" ? null : Number(headerVal),
+        converters: convertersVal,
+      };
+      if (nrowsVal) opts.nrows = Number(nrowsVal);
+
+      let dfs;
+      try {
+        // Decode textarea HTML entities back to raw HTML
+        const ta = document.createElement("textarea");
+        ta.innerHTML = htmlRaw;
+        dfs = readHtml(ta.value, opts);
+      } catch (e) {
+        document.getElementById("output").innerHTML = `<pre style="color:red">${e}</pre>`;
+        return;
+      }
+
+      if (dfs.length === 0) {
+        document.getElementById("output").innerHTML = "<p>No tables found.</p>";
+        return;
+      }
+
+      let html = `<p>Found <strong>${dfs.length}</strong> table(s).</p>`;
+      for (let i = 0; i < dfs.length; i++) {
+        const df = dfs[i];
+        html += `<h3>Table ${i}</h3>`;
+        html += `<p>Shape: ${df.data[0]?.length ?? 0} rows × ${df.columns.length} cols</p>`;
+        html += "<table><thead><tr>";
+        for (const c of df.columns) html += `<th>${c}</th>`;
+        html += "</tr></thead><tbody>";
+        const nrow = df.data[0]?.length ?? 0;
+        for (let r = 0; r < nrow; r++) {
+          html += "<tr>";
+          for (let c = 0; c < df.columns.length; c++) {
+            const v = df.data[c]?.[r];
+            html += `<td>${v === null ? "<em>null</em>" : v}</td>`;
+          }
+          html += "</tr>";
+        }
+        html += "</tbody></table>";
+      }
+      document.getElementById("output").innerHTML = html;
+    };
+
+    // Auto-run on load
+    window.run();
+  </script>
+</body>
+</html>
