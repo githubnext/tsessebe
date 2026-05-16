@@ -219,6 +219,14 @@ export class Series<T extends Scalar = Scalar> {
   readonly index: Index<Label>;
   readonly dtype: Dtype;
   readonly name: string | null;
+  /**
+   * Per-instance cache for sortValues results.  Slots: 0=asc+last, 1=asc+first,
+   * 2=desc+last, 3=desc+first.  On a cache hit the fully-constructed Series is
+   * returned directly, skipping the O(n) gather loop, inverse-transform, and
+   * Object.freeze spreads entirely.
+   */
+  private _svCache: [Series<T> | null, Series<T> | null, Series<T> | null, Series<T> | null] =
+    [null, null, null, null];
 
   // ─── construction ─────────────────────────────────────────────────────────
 
@@ -770,6 +778,13 @@ export class Series<T extends Scalar = Scalar> {
 
   /** Return a new Series sorted by values. */
   sortValues(ascending = true, naPosition: "first" | "last" = "last"): Series<T> {
+    // ── Level-2 per-instance cache: return the previously-constructed Series ──
+    // Eliminates the O(n) gather loop, inverse-transform, RangeIndex construction,
+    // and Object.freeze spreads on all repeat calls with the same parameters.
+    const svSlot = ascending ? (naPosition === "last" ? 0 : 1) : (naPosition === "last" ? 2 : 3);
+    const svHit = this._svCache[svSlot];
+    if (svHit !== null) return svHit;
+
     const n = this._values.length;
     const vals = this._values;
 
@@ -1096,12 +1111,15 @@ export class Series<T extends Scalar = Scalar> {
         ? new Index<Label>(perm, this.index.name)
         : this.index.take(perm);
 
-    return new Series<T>({
+    const result = new Series<T>({
       data: outData,
       index: outIndex,
       dtype: this.dtype,
       name: this.name,
     });
+    // Save to per-instance cache so repeat calls are O(1).
+    this._svCache[svSlot] = result;
+    return result;
   }
 
   /** Return a new Series sorted by its index labels. */
