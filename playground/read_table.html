@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb – readTable() playground</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { color: #2563eb; }
+    h2 { color: #1e40af; margin-top: 2rem; }
+    textarea { width: 100%; font-family: monospace; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px; box-sizing: border-box; }
+    pre { background: #f1f5f9; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+    button { background: #2563eb; color: white; border: none; border-radius: 6px; padding: 8px 18px; cursor: pointer; font-size: 14px; margin-right: 0.5rem; }
+    button:hover { background: #1d4ed8; }
+    .output { margin-top: 1rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 0.5rem; }
+    th, td { border: 1px solid #d1d5db; padding: 6px 12px; text-align: left; font-size: 13px; }
+    th { background: #f1f5f9; font-weight: 600; }
+    .controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    label { font-size: 13px; font-weight: 500; }
+    input[type=text] { font-family: monospace; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 10px; width: 80px; }
+    input[type=number] { font-family: monospace; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px; padding: 6px 10px; width: 80px; }
+    .example-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+    .example-btn { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px; text-align: left; }
+    .example-btn:hover { background: #bae6fd; }
+    .badge { display: inline-block; background: #dcfce7; color: #166534; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; margin-left: 6px; }
+    .error { color: #dc2626; background: #fee2e2; padding: 0.5rem 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>🐼 tsb – <code>readTable()</code></h1>
+  <p>
+    <code>readTable(text, opts?)</code> mirrors
+    <a href="https://pandas.pydata.org/docs/reference/api/pandas.read_table.html" target="_blank"><code>pandas.read_table()</code></a>.
+    It parses delimiter-separated text into a <strong>DataFrame</strong>, defaulting to
+    a <strong>tab</strong> (<code>\t</code>) separator — unlike <code>readCsv</code> which defaults to a comma.
+  </p>
+
+  <h2>Quick Examples</h2>
+  <div class="example-grid">
+    <button class="example-btn" onclick="loadExample('basic_tsv')">📋 Basic TSV</button>
+    <button class="example-btn" onclick="loadExample('pipe_sep')">🔀 Pipe separator</button>
+    <button class="example-btn" onclick="loadExample('semicolon')">📌 Semicolon sep</button>
+    <button class="example-btn" onclick="loadExample('index_col')">🗂 indexCol</button>
+    <button class="example-btn" onclick="loadExample('nrows')">✂️ nRows limit</button>
+    <button class="example-btn" onclick="loadExample('skip_rows')">⏭ skipRows</button>
+    <button class="example-btn" onclick="loadExample('na_values')">❓ naValues</button>
+    <button class="example-btn" onclick="loadExample('dtype')">🏷 dtype override</button>
+    <button class="example-btn" onclick="loadExample('no_header')">🚫 No header</button>
+  </div>
+
+  <h2>Live Demo</h2>
+  <p>Edit the text below and configure options, then click <strong>Parse</strong>.</p>
+
+  <div class="controls">
+    <label>sep: <input id="sep" type="text" value="\t" placeholder="\t" /></label>
+    <label>indexCol: <input id="indexCol" type="text" value="" placeholder="none" /></label>
+    <label>nRows: <input id="nRows" type="number" value="" placeholder="all" min="1" /></label>
+    <label>skipRows: <input id="skipRows" type="number" value="0" min="0" /></label>
+    <label>naValues (comma-sep): <input id="naValues" type="text" value="" placeholder="e.g. N/A,?" style="width:140px" /></label>
+  </div>
+
+  <textarea id="input" rows="10">name	age	city	score
+Alice	30	New York	95.5
+Bob	25	Los Angeles	87.2
+Carol	35	Chicago	91.8
+Dave	28	Houston	78.4
+Eve	32	Phoenix	88.9</textarea>
+
+  <div style="margin-top: 0.5rem">
+    <button onclick="parseTable()">▶ Parse</button>
+    <button onclick="clearOutput()" style="background:#6b7280">Clear</button>
+  </div>
+
+  <div class="output" id="output"></div>
+
+  <h2>API Reference</h2>
+  <pre><code>readTable(text: string, options?: ReadTableOptions): DataFrame
+
+interface ReadTableOptions {
+  sep?:      string;              // separator (default: "\t")
+  header?:   number | null;       // header row index (default: 0)
+  indexCol?: string | number | null; // column to use as index
+  dtype?:    Record&lt;string, DtypeName&gt;;
+  naValues?: string[];            // extra NA string values
+  skipRows?: number;              // rows to skip after header
+  nRows?:    number;              // max rows to read
+}</code></pre>
+
+  <h2>Comparison: readTable vs readCsv</h2>
+  <pre><code>// readTable defaults to tab separator:
+const df1 = readTable("a\tb\n1\t2");   // sep="\t" by default
+
+// readCsv defaults to comma separator:
+const df2 = readCsv("a,b\n1,2");      // sep="," by default
+
+// readTable with explicit comma sep = same as readCsv:
+const df3 = readTable("a,b\n1,2", { sep: "," });  // identical result</code></pre>
+
+  <script type="module">
+    import { readTable, DataFrame } from "https://esm.sh/tsb@latest" ;
+    // fallback: local module for dev
+    let _readTable = null;
+
+    async function getReadTable() {
+      if (_readTable) return _readTable;
+      try {
+        const m = await import("../src/index.ts");
+        _readTable = m.readTable;
+      } catch {
+        // Try esm.sh fallback
+        try {
+          const m = await import("https://esm.sh/tsb");
+          _readTable = m.readTable;
+        } catch (e2) {
+          throw new Error("Could not import readTable: " + e2);
+        }
+      }
+      return _readTable;
+    }
+
+    const EXAMPLES = {
+      basic_tsv: {
+        text: "name\tage\tcity\nAlice\t30\tNY\nBob\t25\tLA\nCarol\t35\tChicago",
+        sep: "\\t", indexCol: "", nRows: "", skipRows: "0", naValues: "",
+      },
+      pipe_sep: {
+        text: "product|price|qty\nApple|1.20|50\nBanana|0.50|120\nCherry|3.00|30",
+        sep: "|", indexCol: "", nRows: "", skipRows: "0", naValues: "",
+      },
+      semicolon: {
+        text: "x;y;z\n10;20;30\n40;50;60\n70;80;90",
+        sep: ";", indexCol: "", nRows: "", skipRows: "0", naValues: "",
+      },
+      index_col: {
+        text: "id\tname\tval\n1\tAlice\t100\n2\tBob\t200\n3\tCarol\t300",
+        sep: "\\t", indexCol: "id", nRows: "", skipRows: "0", naValues: "",
+      },
+      nrows: {
+        text: "a\tb\n1\t10\n2\t20\n3\t30\n4\t40\n5\t50",
+        sep: "\\t", indexCol: "", nRows: "3", skipRows: "0", naValues: "",
+      },
+      skip_rows: {
+        text: "col\tval\nMETA1\tignore\nMETA2\tignore\n1\t100\n2\t200",
+        sep: "\\t", indexCol: "", nRows: "", skipRows: "2", naValues: "",
+      },
+      na_values: {
+        text: "a\tb\nc\td\n1\tN/A\n2\t?\n3\t15",
+        sep: "\\t", indexCol: "", nRows: "", skipRows: "0", naValues: "N/A,?",
+      },
+      dtype: {
+        text: "id\tscore\n1\t99\n2\t87\n3\t94",
+        sep: "\\t", indexCol: "", nRows: "", skipRows: "0", naValues: "",
+        _note: "dtype override: score as float64",
+      },
+      no_header: {
+        text: "Alice\t30\tNY\nBob\t25\tLA\nCarol\t35\tChicago",
+        sep: "\\t", indexCol: "", nRows: "", skipRows: "0", naValues: "",
+        _header: "null",
+      },
+    };
+
+    window.loadExample = function (name) {
+      const ex = EXAMPLES[name];
+      if (!ex) return;
+      document.getElementById("input").value = ex.text;
+      document.getElementById("sep").value = ex.sep ?? "\\t";
+      document.getElementById("indexCol").value = ex.indexCol ?? "";
+      document.getElementById("nRows").value = ex.nRows ?? "";
+      document.getElementById("skipRows").value = ex.skipRows ?? "0";
+      document.getElementById("naValues").value = ex.naValues ?? "";
+      parseTable();
+    };
+
+    window.clearOutput = function () {
+      document.getElementById("output").innerHTML = "";
+    };
+
+    window.parseTable = async function () {
+      const outEl = document.getElementById("output");
+      outEl.innerHTML = "<em>Parsing…</em>";
+      try {
+        const fn = await getReadTable();
+        const text = document.getElementById("input").value;
+        const sepRaw = document.getElementById("sep").value || "\\t";
+        const sep = sepRaw === "\\t" ? "\t" : sepRaw;
+        const indexColRaw = document.getElementById("indexCol").value.trim();
+        const indexCol = indexColRaw === "" ? null : (isNaN(Number(indexColRaw)) ? indexColRaw : Number(indexColRaw));
+        const nRowsRaw = document.getElementById("nRows").value.trim();
+        const nRows = nRowsRaw === "" ? undefined : Number(nRowsRaw);
+        const skipRowsRaw = document.getElementById("skipRows").value.trim();
+        const skipRows = skipRowsRaw === "" ? 0 : Number(skipRowsRaw);
+        const naValuesRaw = document.getElementById("naValues").value.trim();
+        const naValues = naValuesRaw === "" ? undefined : naValuesRaw.split(",").map(s => s.trim());
+
+        const opts = { sep, indexCol, nRows, skipRows, naValues };
+        const df = fn(text, opts);
+
+        let html = `<p><strong>Shape:</strong> ${df.shape[0]} rows × ${df.shape[1]} columns <span class="badge">DataFrame</span></p>`;
+        html += renderTable(df);
+        html += `<h3>Column dtypes</h3><pre>${[...df.columns.values].map(c => `${c}: ${df.col(String(c)).dtype.name}`).join("\n")}</pre>`;
+        outEl.innerHTML = html;
+      } catch (err) {
+        outEl.innerHTML = `<div class="error">Error: ${err.message}</div>`;
+      }
+    };
+
+    function renderTable(df) {
+      const cols = [...df.columns.values];
+      const rows = df.shape[0];
+      let html = "<div style='overflow-x:auto'><table><thead><tr><th>#</th>";
+      for (const c of cols) html += `<th>${c}</th>`;
+      html += "</tr></thead><tbody>";
+      const maxRows = Math.min(rows, 20);
+      for (let i = 0; i < maxRows; i++) {
+        const idxVal = [...df.index.values][i];
+        html += `<tr><td><em>${idxVal}</em></td>`;
+        for (const c of cols) {
+          const v = df.col(String(c)).values[i];
+          html += `<td>${v === null || (typeof v === "number" && isNaN(v)) ? "<em>NaN</em>" : v}</td>`;
+        }
+        html += "</tr>";
+      }
+      if (rows > 20) html += `<tr><td colspan="${cols.length + 1}" style="text-align:center;color:#6b7280">… ${rows - 20} more rows</td></tr>`;
+      html += "</tbody></table></div>";
+      return html;
+    }
+
+    // Auto-parse on load
+    window.addEventListener("DOMContentLoaded", () => parseTable());
+  </script>
+</body>
+</html>

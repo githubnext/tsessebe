@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tsb — readXml &amp; toXml</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    a { color: var(--accent); }
+    h1 { color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem; }
+    p { color: #8b949e; margin-bottom: 1rem; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.3rem;
+      padding: 0.1rem 0.4rem;
+    }
+    .back { margin-bottom: 2rem; display: inline-block; }
+    #playground-loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(13, 17, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #playground-status { color: #8b949e; font-size: 0.95rem; }
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .section p { margin-bottom: 0.75rem; }
+    .playground-block { margin-top: 0.75rem; }
+    .playground-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1c2128;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 0.5rem 0.5rem 0 0;
+      padding: 0.4rem 0.75rem;
+    }
+    .playground-label {
+      font-size: 0.75rem;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .playground-actions { display: flex; gap: 0.5rem; }
+    .playground-actions button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 0.35rem;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .playground-actions button:hover:not(:disabled) {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: var(--accent);
+    }
+    .playground-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .playground-run { font-weight: 600; }
+    .playground-editor {
+      display: block;
+      width: 100%;
+      min-height: 80px;
+      background: #0d1117;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-bottom: none;
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+      tab-size: 2;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .playground-editor:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+    .playground-output {
+      background: #1c2333;
+      border: 1px solid var(--border);
+      border-radius: 0 0 0.5rem 0.5rem;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #8b949e;
+      white-space: pre-wrap;
+      min-height: 2rem;
+      word-break: break-word;
+    }
+    .playground-output.active { color: var(--green); border-color: var(--green); }
+    .playground-output.error { color: var(--red); border-color: var(--red); }
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: #8b949e;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+    }
+  </style>
+  <script src="playground-runtime.js"></script>
+</head>
+<body>
+  <div id="playground-loading">
+    <div class="spinner"></div>
+    <div id="playground-status">Initializing playground…</div>
+  </div>
+  <a class="back" href="index.html">← Back to roadmap</a>
+  <h1>📄 readXml &amp; toXml — Interactive Playground</h1>
+  <p>Parse XML text into a <strong style="color: var(--text);">DataFrame</strong> with
+    auto-detection of row elements, attribute and child-element columns, entity decoding,
+    CDATA support, namespace stripping, and numeric coercion. Serialize any DataFrame
+    back to well-formed XML with full formatting control. Mirrors
+    <code>pandas.read_xml()</code> and <code>pandas.DataFrame.to_xml()</code>.<br>
+    <strong style="color: var(--text);">Edit any code block below and press ▶ Run
+    (or Ctrl+Enter) to execute it live in your browser.</strong>
+  </p>
+
+  <!-- 1 · Basic readXml -->
+  <div class="section">
+    <h2>1 · Basic readXml — child-element rows</h2>
+    <p>The most common XML layout: a root element containing repeating row elements,
+      each with child elements as columns.  <code>readXml</code> auto-detects the row
+      tag and coerces numeric strings automatically.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readXml } from "tsb";
+
+const xml = `<?xml version="1.0"?>
+<data>
+  <row><name>Alice</name><age>30</age><city>New York</city></row>
+  <row><name>Bob</name><age>25</age><city>Los Angeles</city></row>
+  <row><name>Carol</name><age>35</age><city>Chicago</city></row>
+</data>`;
+
+const df = readXml(xml);
+console.log("shape:", df.shape);
+console.log("columns:", df.columns.toArray());
+console.log("names:", df.col("name").toArray());
+console.log("ages:", df.col("age").toArray());
+console.log("mean age:", df.col("age").mean());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 2 · Attribute rows -->
+  <div class="section">
+    <h2>2 · Attribute rows</h2>
+    <p>XML elements can carry data as attributes instead of (or in addition to) child
+      elements.  Use <code>attribs: true</code> (the default) to include them.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readXml } from "tsb";
+
+const xml = `<inventory>
+  <item id="1" name="apple"  price="0.99" qty="150"/>
+  <item id="2" name="banana" price="0.45" qty="200"/>
+  <item id="3" name="cherry" price="2.50" qty="80"/>
+</inventory>`;
+
+const df = readXml(xml, { rowTag: "item" });
+console.log(df.toString());
+console.log("total inventory value:",
+  df.col("price").mul(df.col("qty")).sum());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 3 · usecols, nrows, indexCol -->
+  <div class="section">
+    <h2>3 · usecols, nrows, indexCol</h2>
+    <p>Restrict the columns returned with <code>usecols</code>, limit rows with
+      <code>nrows</code>, and promote a column to the index with <code>indexCol</code>.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readXml } from "tsb";
+
+const xml = `<data>
+  <row><id>X1</id><score>88</score><grade>B</grade><notes>good</notes></row>
+  <row><id>X2</id><score>95</score><grade>A</grade><notes>excellent</notes></row>
+  <row><id>X3</id><score>72</score><grade>C</grade><notes>average</notes></row>
+  <row><id>X4</id><score>61</score><grade>D</grade><notes>below avg</notes></row>
+</data>`;
+
+// Only score and grade, first 3 rows, id as index
+const df = readXml(xml, {
+  usecols: ["id", "score", "grade"],
+  nrows: 3,
+  indexCol: "id",
+  converters: false,
+});
+console.log(df.toString());
+console.log("index:", df.index.toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 4 · naValues -->
+  <div class="section">
+    <h2>4 · naValues — custom NA strings</h2>
+    <p>Built-in NA strings include <code>""</code>, <code>"NA"</code>, <code>"NaN"</code>,
+      <code>"N/A"</code>, <code>"null"</code>, <code>"None"</code>, <code>"nan"</code>.
+      Use <code>naValues</code> to add your own.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readXml } from "tsb";
+
+const xml = `<data>
+  <row><sensor>A</sensor><reading>23.5</reading></row>
+  <row><sensor>B</sensor><reading>MISSING</reading></row>
+  <row><sensor>C</sensor><reading>N/A</reading></row>
+  <row><sensor>D</sensor><reading>19.2</reading></row>
+</data>`;
+
+const df = readXml(xml, { naValues: ["MISSING"] });
+console.log(df.toString());
+console.log("null count:", df.col("reading").isna().sum());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 5 · Entities and CDATA -->
+  <div class="section">
+    <h2>5 · Entities &amp; CDATA</h2>
+    <p>Named entities (<code>&amp;amp;</code>, <code>&amp;lt;</code>, …), decimal/hex
+      character references (<code>&amp;#65;</code>, <code>&amp;#x41;</code>), and
+      CDATA sections (<code>&lt;![CDATA[…]]&gt;</code>) are all handled transparently.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { readXml } from "tsb";
+
+const xml = `<data>
+  <row>
+    <formula>a &amp; b &lt; c &gt; d</formula>
+    <emoji>&#x1F600;</emoji>
+  </row>
+  <row>
+    <formula><![CDATA[x < y && y > z]]></formula>
+    <emoji>&#128512;</emoji>
+  </row>
+</data>`;
+
+const df = readXml(xml, { converters: false });
+console.log("formulas:", df.col("formula").toArray());
+console.log("emojis:",   df.col("emoji").toArray());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 6 · toXml — child elements -->
+  <div class="section">
+    <h2>6 · toXml — child elements (default)</h2>
+    <p><code>toXml(df)</code> produces a well-formed XML document with an XML declaration,
+      a configurable root element, and one child element per row containing one sub-element
+      per column.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, toXml } from "tsb";
+
+const df = DataFrame.fromColumns({
+  name:  ["Alice", "Bob", "Carol"],
+  score: [95, 87, 92],
+  grade: ["A", "B", "A"],
+});
+
+console.log(toXml(df));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 7 · toXml — attribs mode -->
+  <div class="section">
+    <h2>7 · toXml — attribs mode</h2>
+    <p>Set <code>attribs: true</code> to emit column values as XML attributes on each
+      row element instead of as child elements — produces more compact output.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, toXml } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:    [1, 2, 3],
+  name:  ["Alice", "Bob", "Carol"],
+  score: [95, 87, 92],
+});
+
+console.log(toXml(df, {
+  attribs: true,
+  xmlDeclaration: false,
+  rootName: "students",
+  rowName: "student",
+}));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 8 · toXml — namespaces and CDATA -->
+  <div class="section">
+    <h2>8 · toXml — namespaces &amp; CDATA columns</h2>
+    <p>Declare XML namespace prefixes on the root element with <code>namespaces</code>.
+      Wrap sensitive columns in CDATA sections with <code>cdataCols</code> to preserve
+      special characters literally.</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, toXml } from "tsb";
+
+const df = DataFrame.fromColumns({
+  id:      [1, 2],
+  html:    ["<b>Hello</b>", "<em>World &amp; more</em>"],
+  summary: ["Simple text", "Another row"],
+});
+
+console.log(toXml(df, {
+  rootName: "feed",
+  rowName:  "entry",
+  namespaces: { dc: "http://purl.org/dc/elements/1.1/" },
+  cdataCols: ["html"],
+}));</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <!-- 9 · Round-trip -->
+  <div class="section">
+    <h2>9 · Round-trip: toXml → readXml</h2>
+    <p>Serializing a DataFrame to XML and reading it back should produce an identical
+      DataFrame (shape and values).</p>
+    <div class="playground-block">
+      <div class="playground-header">
+        <span class="playground-label">TypeScript</span>
+        <div class="playground-actions">
+          <button class="playground-run" disabled>▶ Run</button>
+          <button class="playground-reset">↺ Reset</button>
+        </div>
+      </div>
+      <textarea class="playground-editor" spellcheck="false">import { DataFrame, toXml, readXml } from "tsb";
+
+const original = DataFrame.fromColumns({
+  city: ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
+  pop:  [8336817, 3979576, 2693976, 2304580, 1608139],
+  rank: [1, 2, 3, 4, 5],
+});
+
+const xml = toXml(original);
+console.log("--- XML ---");
+console.log(xml);
+
+const restored = readXml(xml);
+console.log("--- Restored ---");
+console.log(restored.toString());
+console.log("shapes equal:",
+  JSON.stringify(original.shape) === JSON.stringify(restored.shape));
+console.log("pop sum match:",
+  original.col("pop").sum() === restored.col("pop").sum());</textarea>
+      <div class="playground-output">Click ▶ Run to execute</div>
+    </div>
+  </div>
+
+  <footer>
+    tsb — TypeScript port of pandas &nbsp;·&nbsp;
+    <a href="https://github.com/githubnext/tsb">GitHub</a> &nbsp;·&nbsp;
+    <a href="index.html">All features</a>
+  </footer>
+</body>
+</html>
