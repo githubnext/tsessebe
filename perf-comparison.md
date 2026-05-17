@@ -10,9 +10,9 @@
 
 | Field | Value |
 |-------|-------|
-| Last Run | 2026-05-16T13:24:01Z |
-| Iteration Count | 318 |
-| Best Metric | 663 |
+| Last Run | 2026-05-17T07:46:03Z |
+| Iteration Count | 319 |
+| Best Metric | 664 |
 | Target Metric | — |
 | Branch | `autoloop/perf-comparison` |
 | PR | — |
@@ -22,7 +22,7 @@
 | Completed | false |
 | Completed Reason | — |
 | Consecutive Errors | 0 |
-| Recent Statuses | accepted, error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
+| Recent Statuses | error, error, accepted, accepted, accepted, accepted, accepted, accepted, accepted, accepted |
 
 ---
 
@@ -63,6 +63,13 @@
 ---
 
 ## 📊 Iteration History
+
+### Iteration 319 — 2026-05-17T07:46:03Z — [Run](https://github.com/githubnext/tsb/actions/runs/25984977778)
+
+- **Status**: ✅ Accepted
+- **Change**: Added `pdArray`/`PandasArray` benchmark pair — 10k-element arrays of int, float, string, and nullable int types; tests creation, `.at()`, `.toArray()`, `.length`
+- **Metric**: 664 (previous best: 663, delta: +1) · **Commit**: 2d75133
+- **Notes**: `pdArray` and `PandasArray` (from `src/core/pd_array.ts`) had no benchmark coverage. Python equivalent uses `pd.array()` with nullable dtypes (`Int64`, `Float64`, `string`).
 
 ### Iteration 318 — 2026-05-16T13:24:01Z — [Run](https://github.com/githubnext/tsb/actions/runs/25963034091)
 
